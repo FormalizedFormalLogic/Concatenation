@@ -52,6 +52,8 @@ lemma complexity_concat [L.Concat] (t u : Semiterm L ξ n) :
 
 end Semiterm
 
+instance (L S : Language) [L.Concat] : (L.add S).Concat := ⟨Sum.inl Language.Concat.concat⟩
+
 syntax:50 first_order_term:50 " ⌢ " first_order_term:51 : first_order_term
 
 macro_rules

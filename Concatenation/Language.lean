@@ -1,6 +1,7 @@
 module
 
 public import Concatenation.ToFoundation.Concat
+public import Concatenation.ToFoundation.Prefix
 
 /-!
 # Language of the theory of concatenation
@@ -82,9 +83,98 @@ instance : (ℒ⌢).Eq := ⟨Rel.eq⟩
 
 end Concatenation
 
+/-- The single symbol for the prefix relation. -/
+inductive PrefixRel : ℕ → Type
+  | pref : PrefixRel 2
+
+/-- The language whose only symbol is the prefix relation. -/
+@[reducible]
+def prefixRel : Language where
+  Func := fun _ ↦ Empty
+  Rel := PrefixRel
+
+namespace PrefixRel
+
+instance (k) : DecidableEq (PrefixRel k) := fun a b ↦ by
+  rcases a; rcases b; exact .isTrue rfl
+
+instance (k) : Encodable (PrefixRel k) where
+  encode
+    | .pref => 0
+  decode e :=
+    match k, e with
+    | 2, 0 => some .pref
+    | _, _ => none
+  encodek x := by rcases x; simp
+
+end PrefixRel
+
+/--
+Language of the theory of concatenation with the empty string, written `⋆` in formulas.
+- [HH14, §2]
+-/
+abbrev concatenationEmpty : Language := ℒ⌢.add unit.{0}
+
+@[inherit_doc]
+notation "ℒ⌢ₑ" => concatenationEmpty
+
+/--
+Language of the theory of concatenation with the prefix relation.
+- [Mur22, §2]
+-/
+abbrev concatenationPrefix : Language := ℒ⌢.add prefixRel
+
+@[inherit_doc]
+notation "ℒ⌢≼" => concatenationPrefix
+
+instance : (ℒ⌢≼).Prefix := ⟨Sum.inr PrefixRel.pref⟩
+
+section
+
+variable (k : ℕ)
+
+instance : DecidableEq (Constant.Func PUnit.{1} k) := fun a b ↦ by
+  rcases a; rcases b; exact .isTrue rfl
+
+instance : Encodable (Constant.Func PUnit.{1} k) where
+  encode _ := 0
+  decode e :=
+    match k, e with
+    | 0, 0 => some (.const ⟨⟩)
+    | _, _ => none
+  encodek x := by rcases x; simp
+
+instance : DecidableEq ((ℒ⌢ₑ).Func k) :=
+  inferInstanceAs (DecidableEq (Concatenation.Func k ⊕ Constant.Func PUnit k))
+
+instance : DecidableEq ((ℒ⌢ₑ).Rel k) :=
+  inferInstanceAs (DecidableEq (Concatenation.Rel k ⊕ PEmpty))
+
+instance : Encodable ((ℒ⌢ₑ).Func k) :=
+  inferInstanceAs (Encodable (Concatenation.Func k ⊕ Constant.Func PUnit k))
+
+instance : Encodable ((ℒ⌢ₑ).Rel k) := inferInstanceAs (Encodable (Concatenation.Rel k ⊕ PEmpty))
+
+instance : DecidableEq ((ℒ⌢≼).Func k) :=
+  inferInstanceAs (DecidableEq (Concatenation.Func k ⊕ Empty))
+
+instance : DecidableEq ((ℒ⌢≼).Rel k) :=
+  inferInstanceAs (DecidableEq (Concatenation.Rel k ⊕ PrefixRel k))
+
+instance : Encodable ((ℒ⌢≼).Func k) := inferInstanceAs (Encodable (Concatenation.Func k ⊕ Empty))
+
+instance : Encodable ((ℒ⌢≼).Rel k) :=
+  inferInstanceAs (Encodable (Concatenation.Rel k ⊕ PrefixRel k))
+
+end
+
 end Language
 
 abbrev ConcatenationTheory := Theory ℒ⌢
+
+abbrev ConcatenationEmptyTheory := Theory ℒ⌢ₑ
+
+abbrev ConcatenationPrefixTheory := Theory ℒ⌢≼
 
 abbrev ConcatenationSemiterm (ξ : Type*) (n : ℕ) := Semiterm ℒ⌢ ξ n
 

@@ -60,7 +60,7 @@ notation "𝗜𝗗" => ID
 instance : 𝗘𝗤 ℒ⌢≼ ⪯ 𝗜𝗗 := Entailment.WeakerThan.ofSubset fun φ hφ ↦ IsIDAxiom.equal φ hφ
 
 /--
-Axioms of the theory $\mathsf{D}$, without the axiom $\forall x\,[x \preceq 1 \leftrightarrow x = 1]$.
+Axioms of the theory $\mathsf{D}$, without $\forall x\,[x \preceq 1 \leftrightarrow x = 1]$.
 - [Mur22, §2]
 -/
 inductive IsDAxiom : Sentence ℒ⌢≼ → Prop

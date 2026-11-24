@@ -1,0 +1,148 @@
+# Bibliography for Concatenation, in Hayagriva YAML format.
+# https://github.com/typst/hayagriva/blob/main/docs/file-format.md
+#
+# The keys are the citation keys used in docstrings, e.g. `- [Grz05, §3]`;
+# see docs/conventions.md. Entries are sorted by key.
+
+GZ08:
+  type: Chapter
+  title: Undecidability and Concatenation
+  author:
+  - Grzegorczyk, Andrzej
+  - Zdanowski, Konrad
+  page-range: 72-91
+  date: 2008
+  serial-number:
+    doi: "10.3233/978-1-58603-782-6-72"
+  parent:
+    type: Anthology
+    title: Andrzej Mostowski and Foundational Studies
+    editor:
+    - Ehrenfeucht, Andrzej
+    - Marek, Victor W.
+    - Srebrny, Marian
+    date: 2008
+    publisher:
+      name: IOS Press
+      location: Amsterdam
+
+Gan09:
+  type: Article
+  title: Arithmetic on Semigroups
+  author: Ganea, Mihai
+  date: 2009
+  page-range: 265-278
+  parent:
+    type: Periodical
+    title: Journal of Symbolic Logic
+    volume: 74
+    issue: 1
+
+Grz05:
+  type: Article
+  title: Undecidability without Arithmetization
+  author: Grzegorczyk, Andrzej
+  date: 2005
+  page-range: 163-230
+  serial-number:
+    doi: "10.1007/s11225-005-2976-1"
+  parent:
+    type: Periodical
+    title: Studia Logica
+    volume: 79
+    issue: 2
+
+HH14:
+  type: Article
+  title: Weak theories of concatenation and minimal essentially undecidable theories
+  author:
+  - Higuchi, Kojiro
+  - Horihata, Yoshihiro
+  date: 2014
+  page-range: 835-853
+  serial-number:
+    doi: "10.1007/s00153-014-0391-x"
+  parent:
+    type: Periodical
+    title: Archive for Mathematical Logic
+    volume: 53
+
+Hec15:
+  type: Article
+  title: Consistency and the Theory of Truth
+  author: Heck, Richard G.
+  date: 2015
+  page-range: 424-466
+  serial-number:
+    doi: "10.1017/S1755020314000549"
+  parent:
+    type: Periodical
+    title: The Review of Symbolic Logic
+    volume: 8
+    issue: 3
+
+Hor11:
+  type: Article
+  title: Theories of concatenation and essential undecidability (in Japanese)
+  author: Horihata, Yoshihiro
+  date: 2011
+  page-range: 18-35
+  parent:
+    type: Periodical
+    title: RIMS Kôkyûroku
+    volume: 1729
+
+Mur22:
+  type: Article
+  title: Weak essentially undecidable theories of concatenation
+  author: Murwanashyaka, Juvenal
+  date: 2022
+  page-range: 939-976
+  serial-number:
+    doi: "10.1007/s00153-022-00820-y"
+  parent:
+    type: Periodical
+    title: Archive for Mathematical Logic
+    volume: 61
+
+Mur24:
+  type: Article
+  title: Weak essentially undecidable theories of concatenation, part II
+  author: Murwanashyaka, Juvenal
+  date: 2024
+  page-range: 353-390
+  serial-number:
+    doi: "10.1007/s00153-023-00898-y"
+  parent:
+    type: Periodical
+    title: Archive for Mathematical Logic
+    volume: 63
+
+Sve08:
+  type: Chapter
+  title: Weak Theories and Essential Incompleteness
+  author: Švejdar, Vítězslav
+  page-range: 213-224
+  date: 2008
+  parent:
+    type: Anthology
+    title: "The Logica Yearbook 2007: Proceedings of the Logica 07 International Conference"
+    editor: Peliš, Michal
+    date: 2008
+    publisher:
+      name: Philosophia
+      location: Prague
+
+Vis09:
+  type: Article
+  title: Growing Commas. A Study of Sequentiality and Concatenation
+  author: Visser, Albert
+  date: 2009
+  page-range: 61-85
+  serial-number:
+    doi: "10.1215/00294527-2008-028"
+  parent:
+    type: Periodical
+    title: Notre Dame Journal of Formal Logic
+    volume: 50
+    issue: 1

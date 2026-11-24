@@ -1,0 +1,129 @@
+# Coding conventions
+
+Concatenation follows **Foundation's contribution guidelines**: [`index.md`](index.md),
+[`style.md`](style.md), and [`refactoring.md`](refactoring.md) in this directory are copied
+verbatim from the `contribute/` directory of
+[Foundation](https://github.com/FormalizedFormalLogic/Foundation/tree/master/contribute),
+under its Apache-2.0 license:
+
+- [`index.md`](index.md): the flow to the main branch, PR titles and the commit convention,
+  pre-submission checks, disclosure of AI involvement.
+- [`style.md`](style.md): proof style, naming of intermediate steps, comments and docstrings,
+  citations, `grind`, no `sorry`, `set_option`.
+- [`refactoring.md`](refactoring.md): priorities and rules for writing and refactoring proofs.
+
+Those documents are the authority; Concatenation follows them as written. This file does not
+restate them; it records only where Concatenation differs or adds. Where the two conflict,
+Foundation's guidelines win, and the conflict is reported in an issue — with one standing
+exception: [`style.md`](style.md)'s citation rule requires a docstring to say so and explain why
+when a definition or theorem has no source; AGENTS.md's "Cite the source" rule instead has such
+a declaration omit the docstring outright, unless a genuinely useful statement-level explanation
+remains. AGENTS.md's rule wins here. When the Foundation pin is bumped, re-copy the three files
+above in the same PR if they changed upstream.
+
+Where they say "Foundation", read "Foundation, and Concatenation"; where they name
+Foundation-specific files (`Foundation.lean`, `references.bib`, `just` recipes), the
+counterparts here are the ones named below.
+
+The reason is practical: material developed here is meant to move into Foundation without a
+rewrite, so it is written as if it were already there.
+
+## Concatenation-specific additions
+
+- **Module system.** Every file opts into the Lean module system exactly as Foundation does:
+  it starts with `module`, imports are `public import`, and the module docstring precedes
+  `@[expose] public section`.
+- **Root module.** `Concatenation.lean` imports every module and is regenerated with
+  `just mk-all` (`lake exe mk_all --lib Concatenation --module`); CI checks it.
+- **Linters.** The library builds with Mathlib's standard linter set, which `lakefile.toml`
+  opts into wholesale (`weak.linter.mathlibStandardSet`), minus the header linter; `autoImplicit`
+  is off, as in Mathlib. A warning is an error: CI and the pre-push hook build with
+  `lake build Concatenation --wfail`. Fix a warning, never suppress it.
+- **Citations.** The bibliography is [`references.yml`](../references.yml) at the repository
+  root, written in [Hayagriva](https://github.com/typst/hayagriva) YAML rather than
+  Foundation's BibTeX `references.bib`; there is no `bibtool` step, the file is edited by
+  hand and kept sorted by key. Its keys are the citation keys (`Grz05`, `GZ08`, `Vis09`, …), cited at the end of the docstring in Foundation's form, one line per key:
+  ```
+  - [Grz05, §3]
+  - [Vis09, Theorem 4.3]
+  ```
+  A key appears at most once in a docstring: results from the same reference go on one line,
+  separated by commas, never on one line each:
+  ```
+  - [Mur22, §3, Lemma 1]
+  ```
+  A key used in a docstring must have an entry in `references.yml`; add the entry in the same
+  pull request.
+- **No `sorry`; unproved statements are axioms.** Foundation's guidelines forbid `sorry` in
+  finished work. Concatenation forbids it outright, including in the statement-only stage of
+  [`workflow.md`](workflow.md): a statement that is not proved yet is declared as an `axiom`
+  under the name its theorem will keep, and recorded in [`forgive.yml`](../forgive.yml)
+  forgiving that name. The reason is legibility of the audit — an `axiom` is reported under its
+  own name, so the report says which unproved results a declaration leans on, where every
+  `sorry` collapses into one anonymous `sorryAx`. Proving the statement turns the `axiom` into a
+  `theorem` and deletes its entry; a `sorry` that would sit inside a proof becomes its own named
+  axiom for the fact it stands for.
+- **An `axiom` can silently drop a hypothesis.** Lean pulls a `variable`-bound instance argument
+  into a declaration only when the declaration's own type mentions it; an `axiom` has no body to
+  mention it indirectly, so a hypothesis like `[U.Δ₁]` or `[𝗜𝚺₁ ⪯ T]` can vanish from the type
+  without any error — the resulting statement is *stronger* than intended, and neither
+  `lake build`, `just axiom-audit`, nor `just mk-all` catches it. This has happened in
+  [AlphaCentauri](https://github.com/FormalizedFormalLogic/AlphaCentauri) (its PR #107, fixed in its
+  PR #112). A `statement-formalized` PR must run `#check @Name` on every `axiom` it adds
+  and confirm the printed type keeps every intended hypothesis.
+- **Open problems are stated with `open_problem`, never as axioms.** An `axiom` is reserved for a
+  known theorem awaiting formalization: a statement of unknown truth may be false, or contradict
+  a known theorem together with another one. `open_problem Name := p` (from
+  `Concatenation/OpenProblem.lean`) declares `def Name : Prop := p` and records it, so that
+  `just open-problems` lists it, with its docstring, on the project's pages; it is not listed in
+  `forgive.yml`. `Name` is the name the theorem would carry, following the naming of theorems
+  (`essentiallyUndecidable_TC`), so that proving it
+  keeps the name. The docstring is mandatory and asks `p` as a question (`Does
+  $\mathsf{WTC} + \mathrm{TC3}$ interpret $\mathsf{TC}$?`), then cites the source; it does not say
+  that the problem is open. A result that depends on an open problem takes it as a hypothesis
+  `(h : Name)`.
+- **No `axiom` or `open_problem` in a `Basic.lean`.** As a rule, a `Basic.lean` holds only the
+  definitions of its subject and the facts proved about them, which every other module of the
+  subject imports. An `axiom` or an `open_problem` goes in a module of its own, or in the module
+  of the results it is about, never in `Basic.lean`.
+- **Reuse before restating.** Foundation's theories, notations, definability classes, and the
+  hierarchy are the vocabulary. A definition that duplicates a Foundation definition under a
+  new name is rejected in review. If Foundation's API is missing or awkward, say so in the
+  issue you are working on rather than working around it; a human takes it upstream.
+- **`<|` for low-precedence application.** Write `f <| x`, not `f $ x`, and prefer it to
+  parentheses whenever the argument runs to the end of the term: `exact Or.inr <| Or.inl h`, not
+  `exact Or.inr (Or.inl h)`. Foundation's guidelines do not choose between the two spellings;
+  Mathlib's `style.dollarSyntax` linter does, and this repository follows it.
+- **Attributes on their own line.** An attribute goes on the line above the declaration it
+  marks, never in front of it on the same line, so that it does not lengthen the header:
+  ```
+  @[simp]
+  lemma card_empty : …
+  ```
+  not `@[simp] lemma card_empty : …`. The same holds for modifiers after the attribute
+  (`@[simp]` above `private lemma …`) and for `@[inherit_doc]` above a `notation`; only
+  `@[expose] public section` stays on one line.
+- **Avoid `?_`.** Prefer `apply f` to `refine f ?_`, and a direct term to a `refine` with holes;
+  [`style.md`](style.md)'s preference for direct term construction is the same rule seen from the
+  other side. `use` takes data only — a witness of a `Type`, never a proof of a hypothesis: split
+  what remains with `and_intros` rather than passing the proof to `use`.
+- **A declaration header takes as few lines as fit.** A header that fits within the
+  100-character line limit is written on one line,
+  `noncomputable def interpretation : Interpretation T U where`, not with its type
+  broken onto a second line. A header too long for one line is broken as late as possible, each
+  line filled up to the limit, with continuation lines indented four spaces.
+- **AI disclosure.** As in Foundation: every commit carries a `Co-Authored-By` trailer for the
+  model, and the PR body says an AI agent wrote it. Here that is the normal case, not the
+  exception, so every PR body says so explicitly.
+
+## Checks before opening a pull request
+
+```bash
+lake build Concatenation --wfail   # no errors and no warnings
+just axiom-audit                   # no axiom outside the allowlist, except what forgive.yml forgives
+just no-sorry                      # no `sorry` in the sources, no `sorryAx` in forgive.yml
+just mk-all                        # Concatenation.lean up to date
+```
+
+A `statement-formalized` PR additionally runs `#check @Name` on every `axiom` it adds — see
+"An `axiom` can silently drop a hypothesis" above.

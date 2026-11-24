@@ -1,0 +1,27 @@
+.lake
+
+# import graph (`just import-graph`)
+import_graph.*
+
+# Verso
+_out
+
+# VSCode
+.vscode/settings.json
+.vscode/mcp.json
+
+# direnv
+.envrc
+
+# Working material stays out of git: reference PDFs (copyrighted), plans, proof notes, worktrees,
+# and the per-clone operating notes in `.local/AGENTS.md`.
+.local/
+
+# `.claude/` holds nothing but the shared configuration Claude Code reads from there.
+.claude/*
+!.claude/settings.json
+!.claude/commands/
+!.claude/commands/**
+
+# lefthook per-clone overrides (see lefthook.yml)
+lefthook-local.yml

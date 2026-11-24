@@ -1,0 +1,144 @@
+# Working in Concatenation
+
+This is the contract for AI agents working in this repository. `README.md` says what the project
+is; [`docs/workflow.md`](docs/workflow.md) says how work moves through GitHub and is normative.
+This file adds only the rules an agent must hold itself to.
+
+## Setup
+
+Proof work uses the `lean4` plugin (marketplace `lean4-skills`, providing `/lean4:autoprove` etc.)
+and the `lean-lsp` MCP server (defined in `.mcp.json`; requires `uv` and `ripgrep`):
+
+```
+/plugin marketplace add cameronfreer/lean4-skills
+/plugin install lean4@lean4-skills
+```
+
+This file is the only instruction file here; no `CLAUDE.md` is checked in. Claude Code reads
+`AGENTS.md` through its built-in `agents-md` plugin, whose default mode steps in only for a project
+with no instruction file of its own — a `CLAUDE.md`, `.claude/CLAUDE.md` or `CLAUDE.local.md`
+anywhere from the filesystem root down to the working directory makes it stand down and leaves this
+file unread; never create one of them.
+
+## Local working material: `.local/`
+
+Everything that is not for the repository — reference texts, proof notes, plans, agent briefs,
+per-clone notes, scratch files, worktrees — lives in `.local/` of the **main checkout**, which is
+git-ignored. Do not put any of it in `.claude/`, which holds only the configuration that Claude Code
+reads from there (`settings.json`, `commands/`).
+
+Nothing loads `.local/` automatically. At the start of a session read `.local/AGENTS.md`, the
+per-clone operating notes, if it exists; it extends this file. From a worktree, `.local/` is that of
+the main checkout, whose path is `dirname "$(git rev-parse --path-format=absolute --git-common-dir)"`:
+never write notes to a `.local/` inside a worktree, which is lost with it.
+
+| Path | Contents |
+| --- | --- |
+| `.local/AGENTS.md` | Per-clone operating notes |
+| `.local/references/` | Reference texts, named by citation key (`Grz05.pdf`) |
+| `.local/proofs/` | Proof notes in Typst; its `README.md` fixes how they are written |
+| `.local/agents/` | Roles to hand to subagents: proof writing, proof refactoring |
+| `.local/skills/` | Writing guides, read as plain files |
+| `.local/scripts/` | Checks and helpers for the notes and the references |
+| `.local/worktrees/` | Git worktrees |
+
+## GitHub is the only workbench
+
+- **A unit of new mathematics is an issue.** Work only on an open issue. Humans open the issues
+  for new mathematics; never start from a private to-do list. Improvements to existing code are
+  the exception: see below.
+- **Claim by assigning yourself** (`gh issue edit <n> --add-assignee @me`) before you write
+  code, and never work on an issue assigned to someone else. Unassign yourself if you stop.
+- **One branch, one pull request.** Branch from `main` as `<n>-<slug>` for an issue, whose PR
+  body contains `Closes #<n>`, or as `<slug>` for issue-less work. Ship a prerequisite refactor
+  as its own PR.
+- **Never push to `main`.** Never force-push over someone else's commits: pushing to a branch
+  you did not create uses `--force-with-lease` against the tip you observed.
+- **Don't merge without being told to.** Landing a PR is the review pipeline's job (a human's,
+  while the project bootstraps); merge only once the user has explicitly told you to for that
+  PR. Do not use admin overrides, and do not close other people's PRs.
+- **Address review in the same PR.** Push commits; do not open a replacement PR. If two
+  findings contradict each other, say so in the thread with both quoted, rather than
+  satisfying one silently.
+
+## Humans decide what mathematics gets formalized
+
+The open issues are the plan, and humans write them. Add a new definition, theorem, instance,
+or file only when an open issue asks for it, or it is a prerequisite that issue needs. If a
+mathematical gap blocks the issue you're working on, say so in that issue's thread and leave
+it to a human; never open an issue for new mathematics yourself and never build off-issue
+material "in passing". Gaps outside the mathematics — missing CI, infrastructure, or anything
+under a human-owned path (see [`docs/workflow.md`](docs/workflow.md)) — are not issues to
+open; mention them in a PR comment or leave them for a human to notice.
+
+Improving existing code needs no issue at all: refactoring, simplifying proofs, modest
+generalization of an existing lemma, relocation, documentation. Branch from `main` with a
+descriptive slug and open the pull request directly; the PR is the record.
+
+## The rules of the code
+
+- `main` is always green; see [`docs/workflow.md`](docs/workflow.md#ci) for what CI checks. Never
+  try to disable a check; if a proof needs `maxHeartbeats`, restructure it instead.
+- **Never write `sorry`.** A statement you have not proved is declared as an `axiom` under the
+  name the theorem will keep, and listed in `forgive.yml` forgiving that name; proving it
+  later turns the `axiom` into a `theorem` and deletes the entry. That way the audit names the
+  unproved results a declaration leans on instead of collapsing them all into `sorryAx`. A
+  `sorry` inside a proof is extracted into its own named axiom for the fact it stands for. CI
+  rejects `sorry` in the sources and `sorryAx` in `forgive.yml` (`just no-sorry`). An `axiom` has
+  no body, so Lean silently drops any `variable` instance argument its type doesn't mention: run
+  `#check @Name` on every `axiom` you add and confirm the printed type keeps every intended
+  hypothesis (see [`docs/conventions.md`](docs/conventions.md)).
+- **Follow Foundation's contribution guidelines**, copied verbatim into this repository as
+  [`docs/index.md`](docs/index.md), [`docs/style.md`](docs/style.md), and
+  [`docs/refactoring.md`](docs/refactoring.md). [`docs/conventions.md`](docs/conventions.md)
+  lists the few things Concatenation adds. Code here should be movable into Foundation
+  without a rewrite.
+- **Cite the source.** Every non-trivial definition and theorem carries, at the end of its
+  docstring, the reference it formalizes, one line per key: `- [Grz05, §3]`,
+  `- [Vis09, Theorem 4.3]`. A key appears once per docstring; several results from the same
+  reference share its line: `- [Mur22, §3, Lemma 1]`. If none exists, omit the docstring unless a concise
+  statement-level explanation is useful; never add prose merely to say that a result is routine
+  or has no source.
+- **Keep docstrings informative, not redundant.** A docstring may state only what its declaration
+  says, never how or why its proof works; omit it when it merely repeats or paraphrases the
+  declaration, unless a citation or a genuinely useful statement-level explanation remains. In
+  prose — docstrings, pull request bodies, issues — write hierarchy classes in TeX, e.g.
+  `$\Pi_{m + 1}$`, not the Lean notation `𝚷-[m + 1]` and not `𝚷ₘ₊₁`; Lean identifiers stay in
+  backticks as code. In a declaration's *name* a hierarchy class is spelled out capitalised with
+  an arabic index, e.g. `Sigma1`, `Pi1`, `Delta0` — never `sigmaOne`, `piOne` or `delta₀`.
+- **Use Foundation's vocabulary.** Search Foundation (and Mathlib) before defining anything; see
+  [`docs/conventions.md`](docs/conventions.md) ("Reuse before restating") for the rule. Never
+  patch Foundation's sources under `.lake/`.
+- **Generic material goes to its own module, sorted by where it is headed.** A lemma that
+  mentions none of the notions the module is about — a Mathlib or Foundation gap, a transfer
+  principle, a coding identity — does not belong next to the theorem that first needed it.
+  `Concatenation/ToFoundation/` takes what is destined for Foundation: anything stated in an
+  `FFL.*` namespace, or about Foundation's syntax, semantics, theories or hierarchy.
+  `Concatenation/ToMathlib/` takes what mentions none of that and would be at home in Mathlib.
+  A module that straddles the two is split.
+- **No compatibility layer.** When you rename, move, or delete a declaration, update every use
+  in the same PR and remove the old name. No aliases, wrappers, forwarding modules, or
+  deprecation shims.
+- **No development artifacts** in the code: plan steps, issue numbers, "TODO after review",
+  skeleton-era comments.
+- `Concatenation/` and `Concatenation.lean` are the only places code goes. `docs/`,
+  `.github/`, `lakefile.toml`, `Justfile`, `lefthook.yml`, `README.md`, and `AGENTS.md` are
+  human-owned; a PR that touches them always needs a human review. The pins (Foundation's
+  revision in `lake-manifest.json` and `lean-toolchain`) move **forward only**, and a workflow
+  moves them: never bump them yourself, work in the open pull request labelled `update-deps`,
+  whose branch also carries the repairs the bump needs — including replacing anything Foundation
+  has absorbed from here with Foundation's own version (see
+  [`docs/workflow.md`](docs/workflow.md#dependency-pins-and-foundation)).
+
+## Pull requests
+
+Title, body, and AI-disclosure conventions are in
+[`docs/workflow.md`](docs/workflow.md#pull-requests); the title becomes the commit message on
+`main`, so follow them exactly. PRs, issues, commit messages, code, and docstrings are written
+in English.
+
+## Sources
+
+The reference texts are kept locally in `.local/references/`, each as `<key>.pdf` for its key in
+`references.yml`. They are copyrighted and git-ignored: read them, cite them, never commit them or
+paste long passages from them.

@@ -1,0 +1,28 @@
+# The outstanding debt of the library, declaration by declaration.
+#
+# Concatenation does not use `sorry`: a statement that is formalized but not yet proved is
+# declared as an `axiom`, so the audit reports it under its own name and every declaration that
+# leans on it says which unproved result it leans on. This file is that ledger, read by
+# `lake exe forgive Concatenation` (`just axiom-audit`); the format is documented in
+# https://github.com/FormalizedFormalLogic/forgive.
+#
+#   declaration:
+#     Concatenation.someLemma:
+#       forgive:
+#         - Concatenation.someLemma    # the axiom standing in for its own proof
+#     Concatenation.usesSomeLemma:
+#       forgive:
+#         - Concatenation.someLemma    # only the debt reached through `someLemma`
+#
+# Every entry and every forgiven name must be needed, so the file stays exact: proving a
+# statement means deleting its `axiom` and every entry that named it. `sorryAx` must never
+# appear here; CI checks that it does not.
+
+version: v0
+
+# The axioms every declaration may use.
+accept:
+  - propext
+  - Classical.choice
+  - Quot.sound
+

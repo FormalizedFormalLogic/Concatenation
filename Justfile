@@ -1,0 +1,52 @@
+default:
+    @just --list
+
+cache:
+    lake exe cache get
+    LAKE_CONFIG=lake-cache.toml lake cache get --service ffl --max-revs=100 \
+      --repo FormalizedFormalLogic/Foundation --package Foundation \
+      || echo "Foundation's cache is incomplete; the build will compile the rest from source"
+    LAKE_CONFIG=lake-cache.toml lake cache get --service ffl --max-revs=100 \
+      --repo FormalizedFormalLogic/Concatenation \
+      || echo "Concatenation's cache is incomplete; the build will compile the rest from source"
+
+build: cache
+    lake build
+
+axiom-audit:
+    lake exe forgive Concatenation
+
+no-sorry:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if grep -rnE '\bsorry' --include='*.lean' Concatenation.lean Concatenation; then
+        echo >&2 "no-sorry: 'sorry' is not allowed; declare the unproved statement as an 'axiom'"
+        echo >&2 "no-sorry: under the name its theorem will keep and list it in forgive.yml"
+        exit 1
+    fi
+    if ! command -v yq >/dev/null 2>&1; then
+        echo >&2 "no-sorry: yq is required to check forgive.yml (https://github.com/mikefarah/yq)"
+        exit 1
+    fi
+    if [ "$(yq '[.. | select(. == "sorryAx")] | length' forgive.yml)" != 0 ]; then
+        echo >&2 "no-sorry: forgive.yml forgives 'sorryAx'; forgive the axiom's own name instead"
+        exit 1
+    fi
+    echo "no-sorry: ok"
+
+check-pr-title title:
+    PR_TITLE={{ quote(title) }} python3 .github/scripts/check-pr-title.py
+
+open-problems:
+    lake exe open_problems pages/open-problems/open-problems.json
+    yq --output-format=json . references.yml \
+      | python3 references.py > pages/open-problems/references.json
+
+import-graph:
+    lake exe graph --to Concatenation import_graph.png import_graph.pdf import_graph.html
+
+mk-all:
+    lake exe mk_all --lib Concatenation --module
+
+hooks:
+    lefthook install

@@ -103,10 +103,9 @@ which is the same file in every repository that uses it. `just cache` fetches al
 The scope of an entry is the package's GitHub repository and the revision it was built at, not a
 branch. Foundation's CI publishes on every push to its `master`, so **the revision this repository
 pins is one that has been published**, and moving that pin costs a download rather than the hour
-that building Foundation from source takes — which is what makes a dependency bump cheap. This repository publishes its own
-outputs the same way, from the merge queue and on pushes to `main` only: a pull request builds a
-tree that will not exist after the squash-merge, whereas a merge-queue commit becomes `main` as is,
-so the push run that follows restores it instead of compiling it again.
+that building Foundation from source takes — which is what makes a dependency bump cheap. This
+repository publishes its own outputs the same way, on pushes to `main` only and only when the secret
+below is set: a pull request builds a tree that will not exist after the squash-merge.
 
 `ci.yml` fetches all three through
 [`.github/actions/setup-lean`](../.github/actions/setup-lean/action.yml) and calls
@@ -122,12 +121,11 @@ against one rubric adapted from
 humans. Findings are addressed by pushing to the same branch; contradictory findings are
 contested in the thread, not resolved silently.
 
-`main` is behind a merge queue, so nothing merges into it directly: "Merge when ready" puts the
-pull request in the queue, the queue squashes it onto the tip and runs `Build project`,
-`Check mk_all executed` and `Check no sorry` there (`merge_group` in `ci.yml`), and it lands only
-if they pass. Queue it once CI is green and every review approves; a human does that, or an agent
-when the user has explicitly told it to for that PR. Nothing has to be up to date with `main`
-first — that is what the queue is for.
+`main` is protected: a pull request is squash-merged once `Build project`, `Check mk_all executed` and
+`Check no sorry` pass on a branch that is up to date with `main`. There is no merge queue, which
+GitHub offers to organizations only; bring a branch up to date with "Update branch" instead. Enable
+auto-merge once every review approves; a human does that, or an agent when the user has explicitly
+told it to for that PR.
 
 ## Labels
 
@@ -175,14 +173,14 @@ branch, `update-deps`, behind one open pull request labelled `update-deps` and t
 committed on top of it — never a force-push, since the repairs made for the previous bump live
 on that branch; otherwise the branch restarts from `main` and the pull request is opened. The
 workflow moves the pins and nothing else: it does not build, and the bump is red until something
-makes it green. It pushes as the organization's GitHub App (the variable `BOT_APP_ID` and the
-secret `BOT_APP_PRIVATE_KEY`), because a push made with `github.token` starts no checks.
+makes it green. It pushes as a GitHub App when one is configured (the variable `BOT_APP_ID` and the
+secret `BOT_APP_PRIVATE_KEY`), because a push made with
+`github.token` starts no checks; without the App, close and reopen the pull request to start them.
 
 A bump that breaks nothing lands by itself. When the branch's diff against `main` is the pin
 files alone, the workflow queues its merge (`gh pr merge --squash --auto`) and GitHub performs
 it once the checks are green; the checks are the whole review, because there is nothing else in
-the diff to read. A branch that carries more than the pins is never queued. Nothing waits on the
-branch being current, because the merge queue tests each entry against the tip of `main` itself.
+the diff to read. A branch that carries more than the pins is never queued.
 
 A bump that breaks something waits for a repair on its branch; `/update-deps` is the runbook
 for a local session.

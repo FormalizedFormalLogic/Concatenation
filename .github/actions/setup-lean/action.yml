@@ -35,5 +35,5 @@ runs:
         lake cache get \
           --service ffl \
           --max-revs=100 \
-          --repo FormalizedFormalLogic/Concatenation \
+          --repo SnO2WMaN/Concatenation \
         || echo "::warning::Concatenation's cache is incomplete; the build will compile the rest from source"

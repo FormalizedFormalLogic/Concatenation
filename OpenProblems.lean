@@ -23,7 +23,7 @@ open Lean
 namespace Concatenation.OpenProblems
 
 /-- The repository the source links point to. -/
-def repository : String := "FormalizedFormalLogic/Concatenation"
+def repository : String := "SnO2WMaN/Concatenation"
 
 /-- A citation `- [Vis09, Theorem 4.3]` of a docstring: the key and the locator after it. -/
 structure Citation where

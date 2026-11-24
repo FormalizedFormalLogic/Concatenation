@@ -6,7 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        An open problem is stated in Lean as a proposition with `open_problem` and listed, with its statement and its sources, on the [list of open problems](https://formalizedformallogic.github.io/Concatenation/open-problems/). Check that the problem is not on the list already.
+        An open problem is stated in Lean as a proposition with `open_problem` and listed, with its statement and its sources, on the [list of open problems](https://sno2wman.github.io/Concatenation/open-problems/). Check that the problem is not on the list already.
   - type: textarea
     id: statement
     attributes:

@@ -23,7 +23,7 @@ env:
 jobs:
   update:
     name: Bump the pins
-    if: github.repository == 'FormalizedFormalLogic/Concatenation'
+    if: github.repository == 'SnO2WMaN/Concatenation'
     runs-on: ubuntu-latest
     steps:
       - name: Mint the app token

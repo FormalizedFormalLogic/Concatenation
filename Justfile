@@ -7,7 +7,7 @@ cache:
       --repo FormalizedFormalLogic/Foundation --package Foundation \
       || echo "Foundation's cache is incomplete; the build will compile the rest from source"
     LAKE_CONFIG=lake-cache.toml lake cache get --service ffl --max-revs=100 \
-      --repo FormalizedFormalLogic/Concatenation \
+      --repo SnO2WMaN/Concatenation \
       || echo "Concatenation's cache is incomplete; the build will compile the rest from source"
 
 build: cache

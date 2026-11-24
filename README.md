@@ -6,7 +6,7 @@ strings, built on
 mathematical logic of the [Formalized Formal Logic](https://github.com/FormalizedFormalLogic)
 organization. It is also an experiment in autonomous AI formalization.
 
-The [website](https://formalizedformallogic.org/Concatenation/) gathers the list of open problems and the import graph.
+The [website](https://sno2wman.github.io/Concatenation/) gathers the list of open problems and the import graph.
 
 Humans decide what to formalize, one GitHub issue at a time; AI agents write, review and maintain
 the Lean code. Every step happens on GitHub. The process is [`docs/workflow.md`](docs/workflow.md),
@@ -30,11 +30,11 @@ just import-graph    # the module import graph, as import_graph.{png,pdf,html}
 
 ## Open problems
 
-The [list of open problems](https://formalizedformallogic.github.io/Concatenation/open-problems/) stated in Concatenation, each declared by `open_problem` with its docstring and references. Its data is generated from the environment by [`OpenProblems.lean`](./OpenProblems.lean) on every push to `main`, and the page is [`pages/open-problems/`](./pages/open-problems); run `just open-problems` to regenerate the data locally. To add a problem, open an issue from the [Open problem template](https://github.com/FormalizedFormalLogic/Concatenation/issues/new?template=open-problem.yml) with its statement and a source.
+The [list of open problems](https://sno2wman.github.io/Concatenation/open-problems/) stated in Concatenation, each declared by `open_problem` with its docstring and references. Its data is generated from the environment by [`OpenProblems.lean`](./OpenProblems.lean) on every push to `main`, and the page is [`pages/open-problems/`](./pages/open-problems); run `just open-problems` to regenerate the data locally. To add a problem, open an issue from the [Open problem template](https://github.com/SnO2WMaN/Concatenation/issues/new?template=open-problem.yml) with its statement and a source.
 
 ## Import graph
 
-The import graph of the modules of Concatenation, regenerated on every push to `main`: [PNG](https://formalizedformallogic.github.io/Concatenation/import_graph.png), [PDF](https://formalizedformallogic.github.io/Concatenation/import_graph.pdf), [HTML](https://formalizedformallogic.github.io/Concatenation/import_graph.html).
+The import graph of the modules of Concatenation, regenerated on every push to `main`: [PNG](https://sno2wman.github.io/Concatenation/import_graph.png), [PDF](https://sno2wman.github.io/Concatenation/import_graph.pdf), [HTML](https://sno2wman.github.io/Concatenation/import_graph.html).
 
 ## Related projects
 

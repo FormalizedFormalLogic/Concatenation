@@ -125,9 +125,9 @@ Language of the theory of concatenation with the prefix relation.
 abbrev concatenationPrefix : Language := ℒ⌢.add prefixRel
 
 @[inherit_doc]
-notation "ℒ⌢≼" => concatenationPrefix
+notation "ℒ⌢⊑" => concatenationPrefix
 
-instance : (ℒ⌢≼).Prefix := ⟨Sum.inr PrefixRel.pref⟩
+instance : (ℒ⌢⊑).Prefix := ⟨Sum.inr PrefixRel.pref⟩
 
 section
 
@@ -155,15 +155,15 @@ instance : Encodable ((ℒ⌢ₑ).Func k) :=
 
 instance : Encodable ((ℒ⌢ₑ).Rel k) := inferInstanceAs (Encodable (Concatenation.Rel k ⊕ PEmpty))
 
-instance : DecidableEq ((ℒ⌢≼).Func k) :=
+instance : DecidableEq ((ℒ⌢⊑).Func k) :=
   inferInstanceAs (DecidableEq (Concatenation.Func k ⊕ Empty))
 
-instance : DecidableEq ((ℒ⌢≼).Rel k) :=
+instance : DecidableEq ((ℒ⌢⊑).Rel k) :=
   inferInstanceAs (DecidableEq (Concatenation.Rel k ⊕ PrefixRel k))
 
-instance : Encodable ((ℒ⌢≼).Func k) := inferInstanceAs (Encodable (Concatenation.Func k ⊕ Empty))
+instance : Encodable ((ℒ⌢⊑).Func k) := inferInstanceAs (Encodable (Concatenation.Func k ⊕ Empty))
 
-instance : Encodable ((ℒ⌢≼).Rel k) :=
+instance : Encodable ((ℒ⌢⊑).Rel k) :=
   inferInstanceAs (Encodable (Concatenation.Rel k ⊕ PrefixRel k))
 
 end
@@ -174,7 +174,7 @@ abbrev ConcatenationTheory := Theory ℒ⌢
 
 abbrev ConcatenationEmptyTheory := Theory ℒ⌢ₑ
 
-abbrev ConcatenationPrefixTheory := Theory ℒ⌢≼
+abbrev ConcatenationPrefixTheory := Theory ℒ⌢⊑
 
 abbrev ConcatenationSemiterm (ξ : Type*) (n : ℕ) := Semiterm ℒ⌢ ξ n
 

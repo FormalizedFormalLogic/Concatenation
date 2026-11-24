@@ -5,7 +5,7 @@ public import Foundation.FirstOrder.Syntax.Classical.BinderNotation
 /-!
 # Prefix symbol
 
-Languages with a binary relation symbol for prefixes, and the formula notation `t ≼ u`.
+Languages with a binary relation symbol for prefixes, and the formula notation `t ⊑ u`.
 -/
 
 @[expose] public section
@@ -23,9 +23,9 @@ namespace Semiformula.Operator
 protected class Prefix (L : Language) where
   pref : Semiformula.Operator L 2
 
-notation "op(≼)" => Prefix.pref
+notation "op(⊑)" => Prefix.pref
 
-notation "op(≼)[" L "]" => Prefix.pref (L := L)
+notation "op(⊑)[" L "]" => Prefix.pref (L := L)
 
 variable {L : Language}
 
@@ -37,10 +37,10 @@ lemma Prefix.sentence_eq [L.Prefix] :
 
 end Semiformula.Operator
 
-syntax:45 first_order_term:45 " ≼ " first_order_term:0 : first_order_formula
+syntax:45 first_order_term:45 " ⊑ " first_order_term:0 : first_order_formula
 
 macro_rules
-  | `(⤫formula(lit)[ $binders* | $fbinders* | $t:first_order_term ≼ $u:first_order_term ]) =>
+  | `(⤫formula(lit)[ $binders* | $fbinders* | $t:first_order_term ⊑ $u:first_order_term ]) =>
     `(Semiformula.Operator.operator Semiformula.Operator.Prefix.pref
       ![⤫term(lit)[ $binders* | $fbinders* | $t ], ⤫term(lit)[ $binders* | $fbinders* | $u ]])
 

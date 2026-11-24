@@ -27,7 +27,7 @@ inductive IsWBTAxiom : Sentence ℒ⌢ → Prop
 The weakest $\Sigma_1$-complete theory of concatenation $\mathsf{WBT}$.
 - [Mur22, §2]
 -/
-abbrev WBT : ConcatenationTheory := Set.ofPred IsWBTAxiom
+abbrev WBT : Theory ℒ⌢ := Set.ofPred IsWBTAxiom
 
 @[inherit_doc]
 notation "𝗪𝗕𝗧" => WBT
@@ -54,7 +54,7 @@ The theory $\mathsf{BT}$, also called $\mathsf{ID}^*$.
 - [Mur22, §2]
 - [Mur24, §1]
 -/
-abbrev BT : ConcatenationTheory := Set.ofPred IsBTAxiom
+abbrev BT : Theory ℒ⌢ := Set.ofPred IsBTAxiom
 
 @[inherit_doc]
 notation "𝗕𝗧" => BT
@@ -80,7 +80,7 @@ inductive IsBTQAxiom : Sentence ℒ⌢ → Prop
 The theory $\mathsf{BTQ}$.
 - [Mur22, §2]
 -/
-abbrev BTQ : ConcatenationTheory := Set.ofPred IsBTQAxiom
+abbrev BTQ : Theory ℒ⌢ := Set.ofPred IsBTQAxiom
 
 @[inherit_doc]
 notation "𝗕𝗧𝗤" => BTQ

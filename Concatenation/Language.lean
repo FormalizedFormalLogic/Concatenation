@@ -170,31 +170,9 @@ end
 
 end Language
 
-abbrev ConcatenationTheory := Theory ℒ⌢
-
-abbrev ConcatenationEmptyTheory := Theory ℒ⌢ₑ
-
-abbrev ConcatenationPrefixTheory := Theory ℒ⌢⊑
-
-abbrev ConcatenationSemiterm (ξ : Type*) (n : ℕ) := Semiterm ℒ⌢ ξ n
-
-abbrev ConcatenationTerm (ξ : Type*) := Term ℒ⌢ ξ
-
-abbrev ConcatenationSemiformula (ξ : Type*) (n : ℕ) := Semiformula ℒ⌢ ξ n
-
-abbrev ConcatenationFormula (ξ : Type*) := Formula ℒ⌢ ξ
-
-abbrev ConcatenationSemisentence (n : ℕ) := Semisentence ℒ⌢ n
-
-abbrev ConcatenationSentence := Sentence ℒ⌢
-
-abbrev ConcatenationSemiproposition (n : ℕ) := Semiproposition ℒ⌢ n
-
-abbrev ConcatenationProposition := Proposition ℒ⌢
-
 variable {ξ : Type*} {n : ℕ} [ToString ξ]
 
-def Semiterm.toStringConcatenation : ConcatenationSemiterm ξ n → String
+def Semiterm.toStringConcatenation : Semiterm ℒ⌢ ξ n → String
   | #x => "x_{" ++ toString (n - 1 - (x : ℕ)) ++ "}"
   | &x => "a_{" ++ toString x ++ "}"
   | func Language.Zero.zero _ => "0"
@@ -202,8 +180,8 @@ def Semiterm.toStringConcatenation : ConcatenationSemiterm ξ n → String
   | func Language.Concat.concat v =>
     s!"({(v 0).toStringConcatenation} ⌢ {(v 1).toStringConcatenation})"
 
-instance : Repr (ConcatenationSemiterm ξ n) := ⟨fun t _ ↦ t.toStringConcatenation⟩
+instance : Repr (Semiterm ℒ⌢ ξ n) := ⟨fun t _ ↦ t.toStringConcatenation⟩
 
-instance : ToString (ConcatenationSemiterm ξ n) := ⟨fun t ↦ t.toStringConcatenation⟩
+instance : ToString (Semiterm ℒ⌢ ξ n) := ⟨fun t ↦ t.toStringConcatenation⟩
 
 end FFL.FirstOrder

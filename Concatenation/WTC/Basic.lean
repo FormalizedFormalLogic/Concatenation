@@ -33,7 +33,7 @@ The weak theory of concatenation without the empty string.
 - [HH14, Definition 5]
 - [Mur22, §1]
 -/
-abbrev WTC : ConcatenationTheory := Set.ofPred IsWTCAxiom
+abbrev WTC : Theory ℒ⌢ := Set.ofPred IsWTCAxiom
 
 @[inherit_doc]
 notation "𝗪𝗧𝗖" => WTC
@@ -64,7 +64,7 @@ inductive IsWTCEmptyAxiom : Sentence ℒ⌢ₑ → Prop
 The weak theory of concatenation with the empty string.
 - [HH14, Definition 2]
 -/
-abbrev WTCEmpty : ConcatenationEmptyTheory := Set.ofPred IsWTCEmptyAxiom
+abbrev WTCEmpty : Theory ℒ⌢ₑ := Set.ofPred IsWTCEmptyAxiom
 
 @[inherit_doc]
 notation "𝗪𝗧𝗖ₑ" => WTCEmpty

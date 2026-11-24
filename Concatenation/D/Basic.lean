@@ -26,7 +26,7 @@ inductive IsWDAxiom : Sentence ℒ⌢⊑ → Prop
 The weakest $\Sigma_1$-complete theory $\mathsf{WD}$ of concatenation and prefixes.
 - [Mur22, §2]
 -/
-abbrev WD : ConcatenationPrefixTheory := Set.ofPred IsWDAxiom
+abbrev WD : Theory ℒ⌢⊑ := Set.ofPred IsWDAxiom
 
 @[inherit_doc]
 notation "𝗪𝗗" => WD
@@ -52,7 +52,7 @@ The theory $\mathsf{ID}$, also called $\mathsf{C}$.
 - [Mur22, §2]
 - [Mur24, §1]
 -/
-abbrev ID : ConcatenationPrefixTheory := Set.ofPred IsIDAxiom
+abbrev ID : Theory ℒ⌢⊑ := Set.ofPred IsIDAxiom
 
 @[inherit_doc]
 notation "𝗜𝗗" => ID
@@ -78,7 +78,7 @@ inductive IsDAxiom : Sentence ℒ⌢⊑ → Prop
 The theory $\mathsf{D}$, without the axiom $\forall x\,[x \sqsubseteq 1 \leftrightarrow x = 1]$.
 - [Mur22, §2]
 -/
-abbrev D : ConcatenationPrefixTheory := Set.ofPred IsDAxiom
+abbrev D : Theory ℒ⌢⊑ := Set.ofPred IsDAxiom
 
 @[inherit_doc]
 notation "𝗗" => D

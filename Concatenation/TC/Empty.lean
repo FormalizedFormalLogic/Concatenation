@@ -34,7 +34,7 @@ The theory of concatenation with the empty string.
 - [HH14, Definition 1]
 - [Vis09, §2]
 -/
-abbrev TCEmpty : ConcatenationEmptyTheory := Set.ofPred IsTCEmptyAxiom
+abbrev TCEmpty : Theory ℒ⌢ₑ := Set.ofPred IsTCEmptyAxiom
 
 @[inherit_doc]
 notation "𝗧𝗖ₑ" => TCEmpty

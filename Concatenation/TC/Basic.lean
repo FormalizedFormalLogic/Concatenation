@@ -16,7 +16,7 @@ Axioms of Grzegorczyk's theory of concatenation of nonempty strings over two let
 - [GZ08, §1]
 - [Vis09, §2]
 -/
-inductive IsTCAxiom : ConcatenationSentence → Prop
+inductive IsTCAxiom : Sentence ℒ⌢ → Prop
   | equal : ∀ φ ∈ 𝗘𝗤 ℒ⌢, IsTCAxiom φ
   | concatAssoc : IsTCAxiom “∀ x y z, x ⌢ (y ⌢ z) = (x ⌢ y) ⌢ z”
   | editor : IsTCAxiom “∀ x y z w, x ⌢ y = z ⌢ w →
@@ -29,7 +29,7 @@ inductive IsTCAxiom : ConcatenationSentence → Prop
 Grzegorczyk's theory of concatenation.
 - [GZ08, §1]
 -/
-abbrev TC : ConcatenationTheory := Set.ofPred IsTCAxiom
+abbrev TC : Theory ℒ⌢ := Set.ofPred IsTCAxiom
 
 @[inherit_doc]
 notation "𝗧𝗖" => TC

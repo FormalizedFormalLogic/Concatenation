@@ -32,7 +32,10 @@ variable {M : Type*} [ORingStructure M] {x y : M}
 `y` is regular: $0 \le y$, and $v + 1 \le y$ for every $v < y$.
 - [Sve08, §3.3]
 -/
-def IsRegular (y : M) : Prop := (0 = y ∨ 0 < y) ∧ ∀ v < y, v + 1 = y ∨ v + 1 < y
+@[mk_iff]
+structure IsRegular (y : M) : Prop where
+  zero_le : 0 = y ∨ 0 < y
+  add_one_le : ∀ v < y, v + 1 = y ∨ v + 1 < y
 
 /--
 Cobham's order: $x \le y$, or $y$ is not regular.
@@ -44,7 +47,7 @@ scoped infix:50 " ⊴ " => CobhamLE
 
 @[simp]
 lemma eval_isRegular : M ⊧/![y] isRegular ↔ IsRegular y := by
-  simp [isRegular, IsRegular, Semiformula.Operator.LE.sentence_eq, Semiformula.Operator.val,
+  simp [isRegular, isRegular_iff, Semiformula.Operator.LE.sentence_eq, Semiformula.Operator.val,
     Semiformula.Operator.Eq.sentence_eq, Semiformula.Operator.LT.sentence_eq]
 
 @[simp]
@@ -82,7 +85,7 @@ lemma cobhamLE_numeral_iff {n : ℕ} : x ⊴ numeral n ↔ x = numeral n ∨ x <
 lemma exists_eq_numeral_or_numeral_le_of_isRegular (hx : IsRegular x) (k : ℕ) :
     (∃ i < k, x = numeral i) ∨ numeral k = x ∨ numeral k < x := by
   induction k with
-  | zero => simpa using hx.1
+  | zero => simpa using hx.zero_le
   | succ k ih =>
     rcases ih with ⟨i, hi, rfl⟩ | h | h
     · left
@@ -96,7 +99,7 @@ lemma exists_eq_numeral_or_numeral_le_of_isRegular (hx : IsRegular x) (k : ℕ) 
       · omega
       · exact h.symm
     · right
-      simpa [numeral_add_one] using hx.2 _ h
+      simpa [numeral_add_one] using hx.add_one_le _ h
 
 /--
 Every element is comparable with every numeral in Cobham's order.

@@ -21,7 +21,7 @@ def IsAtom (x : M) : Prop := x = 0 ∨ x = 1
 /--
 `x` is a substring of `y`. Both associations of `u ++ x ++ v` are listed, so that the relation is
 the one `isSubstring` defines in any concatenation structure.
-- [Gan09, §2, Definition 1]
+- [Gan09, §1, Definition 1]
 -/
 def IsSubstring (x y : M) : Prop :=
   x = y ∨ (∃ u, y = u ++ x) ∨ (∃ v, y = x ++ v) ∨ (∃ u v, y = (u ++ x) ++ v) ∨
@@ -29,19 +29,19 @@ def IsSubstring (x y : M) : Prop :=
 
 /--
 `x` is an initial segment of `y`.
-- [Gan09, §2, Definition 1]
+- [Gan09, §1, Definition 1]
 -/
 def IsInitialSegment (x y : M) : Prop := x = y ∨ ∃ v, y = x ++ v
 
 /--
 `x` is an end segment of `y`.
-- [Gan09, §2, Definition 1]
+- [Gan09, §1, Definition 1]
 -/
 def IsEndSegment (x y : M) : Prop := x = y ∨ ∃ u, y = u ++ x
 
 /--
 `x` is a `c`-tally: every atom that is a substring of `x` is `c`.
-- [Gan09, §2, Definition 1]
+- [Gan09, §1, Definition 1]
 -/
 def IsTally (c x : M) : Prop := ∀ y, IsAtom y → IsSubstring y x → y = c
 
@@ -58,6 +58,12 @@ def isEndSegment : Semisentence ℒ⌢ 2 := “x y. x = y ∨ ∃ u, y = u ⌢ x
 def isTally : Semisentence ℒ⌢ 2 := “c x. ∀ y, !isAtom y → !isSubstring y x → y = c”
 
 variable {c x y : M}
+
+@[simp]
+lemma isAtom_zero : IsAtom (0 : M) := Or.inl rfl
+
+@[simp]
+lemma isAtom_one : IsAtom (1 : M) := Or.inr rfl
 
 @[refl, simp]
 lemma IsSubstring.refl (x : M) : IsSubstring x x := Or.inl rfl
@@ -97,10 +103,9 @@ lemma IsEndSegment.isSubstring (h : IsEndSegment x y) : IsSubstring x y := by
 @[simp]
 lemma eval_isAtom : M ⊧/![x] isAtom ↔ IsAtom x := by simp [isAtom, IsAtom]
 
-@[simp high]
-lemma eval_isSubstring_iff : M ⊧/![x, y] (isSubstring : ConcatenationSemisentence 2) ↔
-    IsSubstring x y := by
-  simp [IsSubstring, exists_or, eq_comm (b := y)]
+@[simp]
+lemma eval_isSubstring : M ⊧/![x, y] (isSubstring : Semisentence ℒ⌢ 2) ↔ IsSubstring x y := by
+  simp [isSubstring, IsSubstring, exists_or, eq_comm (b := y)]
 
 @[simp]
 lemma eval_isInitialSegment : M ⊧/![x, y] isInitialSegment ↔ IsInitialSegment x y := by

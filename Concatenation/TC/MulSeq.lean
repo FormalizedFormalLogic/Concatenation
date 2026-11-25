@@ -5,7 +5,7 @@ public import Concatenation.TC.Separation
 /-!
 # Extension and restriction of multiplication sequences
 
-How a multiplication sequence for $x, y$ and one for $x, y a$ determine each other in
+How a multiplication sequence for $x, y$ and one for $x, y 1$ determine each other in
 $\mathsf{TC}^+$.
 -/
 
@@ -31,14 +31,14 @@ lemma eq_zero_or_eq_zero_zero_of_isSubstring_pairOf (ht : IsTally 0 t)
   rcases ht.isSubstring_or_isSubstring h (Or.inl hp.isEndSegment) with h | h
   · exact absurd h (ht.not_isSubstring_of_isTally_one hp)
   rcases ht.isSubstring_or_isSubstring h (Or.inr hq.isInitialSegment.append_right) with h | h
-  · exact Or.inl <| IsAtom.eq_of_isSubstring (Or.inl rfl) h
+  · exact Or.inl <| isAtom_zero.eq_of_isSubstring h
   rcases ht.isSubstring_or_isSubstring h (Or.inl hq.isEndSegment) with h | h
   · exact absurd h (ht.not_isSubstring_of_isTally_one hq)
   · exact eq_zero_or_eq_zero_zero_of_isSubstring h
 
 lemma not_isSubstring_zero_zero_append_pairOf :
     ¬IsSubstring (0 ++ 0 ++ z) (pairOf p q ++ 0 ++ 0) := by
-  have h0 : IsAtom (0 : M) := Or.inl rfl
+  have h0 : IsAtom (0 : M) := isAtom_zero
   have H : ∀ {r t₁ t₂ : M}, IsTally 1 r → IsEndSegment t₁ r → 0 ++ (0 ++ z) = t₁ ++ t₂ → False := by
     intro r t₁ t₂ hr h₁ he
     have h₂ : IsInitialSegment 0 t₁ := (isInitialSegment_append t₁ t₂).isInitialSegment_of_isAtom h0
@@ -59,22 +59,21 @@ lemma not_isSubstring_zero_zero_append_pairOf :
     · obtain rfl := h0.eq_of_isSubstring h₁.isSubstring
       obtain rfl := h0.append_left_cancel he
       exact Concatenation.zero_ne_one <| ((isInitialSegment_append 0 z).trans h₂).eq_of_isAtom h0
-        (Or.inr rfl) hq.isInitialSegment.append_right
+        isAtom_one hq.isInitialSegment.append_right
   · exact H hp h₁ he
 
 lemma eq_of_isInitialSegment_pairOf (h : IsInitialSegment (k ++ 0 ++ 0) (pairOf p q ++ 0 ++ 0)) :
     k = pairOf p q := by
-  have h0 : IsAtom (0 : M) := Or.inl rfl
   rcases h with h | ⟨t, h⟩
-  · exact h0.append_right_cancel <| h0.append_right_cancel h
-  · refine absurd ?_ (not_isSubstring_zero_zero_append_pairOf (z := t) hp hq)
+  · exact isAtom_zero.append_right_cancel <| isAtom_zero.append_right_cancel h
+  · apply absurd _ (not_isSubstring_zero_zero_append_pairOf (z := t) hp hq)
     rw [h]
     simp [Concatenation.append_assoc]
 
 lemma eq_of_isEndSegment_of_isInitialSegment_pairOf (h : IsEndSegment k (z ++ 0 ++ 0))
     (h' : IsInitialSegment k (pairOf p q ++ 0 ++ 0)) : k = pairOf p q ++ 0 ++ 0 := by
   have h1 : IsInitialSegment 1 k :=
-    h'.isInitialSegment_of_isAtom (Or.inr rfl) hp.isInitialSegment_pairOf_append
+    h'.isInitialSegment_of_isAtom isAtom_one hp.isInitialSegment_pairOf_append
   have hn : ¬IsSubstring k (0 ++ 0) := fun h ↦
     (isTally_zero_zero.of_isSubstring h).not_isSubstring_one h1.isSubstring
   have h00 : IsEndSegment (0 ++ 0) (z ++ 0 ++ 0) := by
@@ -103,7 +102,7 @@ lemma isSubstring_append_pairOf_cases
       ∃ z₁, IsEndSegment z₁ x ∧ 0 ++ 0 ++ z ++ 0 ++ 0 = z₁ ++ (pairOf p q ++ 0 ++ 0) := by
   rcases h.append_cases with h | h | ⟨z₁, z₂, he, h₁, h₂⟩
   · exact Or.inl h
-  · refine absurd ?_ (not_isSubstring_zero_zero_append_pairOf (z := z ++ 0 ++ 0) hp hq)
+  · apply absurd _ (not_isSubstring_zero_zero_append_pairOf (z := z ++ 0 ++ 0) hp hq)
     simpa only [Concatenation.append_assoc] using h
   · right
     use z₁
@@ -116,20 +115,20 @@ end pairOf
 
 lemma isSubstring_zero_zero_of_isEndSegment (hx : IsEndSegment (1 ++ 0 ++ 0) x)
     (hu : IsEndSegment (0 ++ 0 ++ u) x) : IsSubstring (0 ++ 0) u := by
-  have h0 : IsAtom (0 : M) := Or.inl rfl
+  have h0 : IsAtom (0 : M) := isAtom_zero
   have h100 : IsSubstring (0 ++ 0 : M) (1 ++ 0 ++ 0) := by
     simp [Concatenation.append_assoc]
   rcases hu.total hx with h | h
   · exfalso
-    rcases eq_of_isEndSegment_isAtom_zero_zero (Or.inr rfl) h with h | h | h
+    rcases eq_of_isEndSegment_isAtom_zero_zero isAtom_one h with h | h | h
     · exact zero_ne_append _ _ h.symm
     · exact zero_zero_append_ne_zero_zero h
     · have h₁ : IsInitialSegment (0 : M) (0 ++ 0 ++ u) := by simp [Concatenation.append_assoc]
       have h₂ : IsInitialSegment (1 : M) (1 ++ 0 ++ 0) := by simp [Concatenation.append_assoc]
-      exact Concatenation.zero_ne_one <| h₁.eq_of_isAtom h0 (Or.inr rfl) (h ▸ h₂)
+      exact Concatenation.zero_ne_one <| h₁.eq_of_isAtom h0 isAtom_one (h ▸ h₂)
   · rcases h.total (isEndSegment_append (0 ++ 0) u) with h' | h'
     · exact h100.trans h'.isSubstring
-    · rcases eq_of_isEndSegment_isAtom_zero_zero (Or.inr rfl) h' with rfl | rfl | rfl
+    · rcases eq_of_isEndSegment_isAtom_zero_zero isAtom_one h' with rfl | rfl | rfl
       · exfalso
         rcases eq_of_isEndSegment_isAtom_zero_zero h0 h with h | h | h
         · exact zero_ne_append _ _ h.symm
@@ -151,7 +150,7 @@ lemma IsSeq.isEndSegment_zero_zero (h : IsSeq z) : IsEndSegment (0 ++ 0) z := by
     right; use 1; simp [Concatenation.append_assoc]
   exact h₁.trans h.2.1
 
-lemma isLast_append_pairOf (h : IsEndSegment (0 ++ 0) z) : IsLast u (z ++ u ++ 0 ++ 0) := by
+lemma isLast_append (h : IsEndSegment (0 ++ 0) z) : IsLast u (z ++ u ++ 0 ++ 0) := by
   rcases h with rfl | ⟨k, rfl⟩
   · exact IsEndSegment.refl _
   · right; use k; simp [Concatenation.append_assoc]
@@ -159,8 +158,8 @@ lemma isLast_append_pairOf (h : IsEndSegment (0 ++ 0) z) : IsLast u (z ++ u ++ 0
 lemma IsFirst.of_append_pairOf (hp : IsTally 1 p) (hq : IsTally 1 q)
     (h : IsFirst (pairOf p q) (k ++ 0 ++ 0 ++ pairOf u v ++ 0 ++ 0)) :
     IsFirst (pairOf p q) (k ++ 0 ++ 0) := by
-  have h0 : IsAtom (0 : M) := Or.inl rfl
-  have h1 : IsAtom (1 : M) := Or.inr rfl
+  have h0 : IsAtom (0 : M) := isAtom_zero
+  have h1 : IsAtom (1 : M) := isAtom_one
   obtain ⟨w, hw, hs⟩ : ∃ w, IsInitialSegment (pairOf p q ++ 0 ++ 0) w ∧
       (0 ++ 0) ++ w = k ++ ((0 ++ 0) ++ (pairOf u v ++ 0 ++ 0)) := by
     rcases h with h | ⟨t, h⟩
@@ -196,8 +195,12 @@ lemma IsTally.isInitialSegment_zero_zero_one (hx : IsTally 1 x) :
   · right; use 0 ++ y ++ 0 ++ 0; simp [pairOf, Concatenation.append_assoc]
   · right; use x' ++ 0 ++ y ++ 0 ++ 0; simp [pairOf, Concatenation.append_assoc]
 
-lemma isSeq_append_pairOf (ha : IsTally 1 a) (hb : IsTally 1 b) (hr : IsSeq r) :
-    IsSeq (r ++ pairOf a b ++ 0 ++ 0) := by
+section append
+
+variable (ha : IsTally 1 a) (hb : IsTally 1 b)
+include ha hb
+
+lemma isSeq_append_pairOf (hr : IsSeq r) : IsSeq (r ++ pairOf a b ++ 0 ++ 0) := by
   and_intros
   · exact hr.1.append_right.append_right.append_right
   · rcases hb.isEndSegment with rfl | ⟨b', rfl⟩
@@ -210,8 +213,7 @@ lemma isSeq_append_pairOf (ha : IsTally 1 a) (hb : IsTally 1 b) (hr : IsSeq r) :
     · exact hr.2.2 t ht h
     · exact eq_zero_or_eq_zero_zero_of_isSubstring_pairOf ha hb ht h
 
-lemma isSeq_zero_zero_append_pairOf (ha : IsTally 1 a) (hb : IsTally 1 b) :
-    IsSeq (0 ++ 0 ++ pairOf a b ++ 0 ++ 0) := by
+lemma isSeq_zero_zero_append_pairOf : IsSeq (0 ++ 0 ++ pairOf a b ++ 0 ++ 0) := by
   and_intros
   · exact ha.isInitialSegment_zero_zero_one
   · simpa only [pairOf, Concatenation.append_assoc] using
@@ -223,9 +225,7 @@ lemma isSeq_zero_zero_append_pairOf (ha : IsTally 1 a) (hb : IsTally 1 b) :
     · exact eq_zero_or_eq_zero_zero_of_isSubstring h
     · exact eq_zero_or_eq_zero_zero_of_isSubstring_pairOf ha hb ht h
 
-lemma isPairSeq_zero_zero_append_pairOf (ha : IsTally 1 a) (hb : IsTally 1 b) :
-    IsPairSeq (0 ++ 0 ++ pairOf a b ++ 0 ++ 0) := by
-  have h0 : IsAtom (0 : M) := Or.inl rfl
+lemma isPairSeq_zero_zero_append_pairOf : IsPairSeq (0 ++ 0 ++ pairOf a b ++ 0 ++ 0) := by
   apply And.intro <| isSeq_zero_zero_append_pairOf ha hb
   rintro v ⟨-, -, h⟩
   rw [show 0 ++ 0 ++ pairOf a b ++ 0 ++ 0 = 0 ++ 0 ++ (pairOf a b ++ 0 ++ 0) by
@@ -233,7 +233,7 @@ lemma isPairSeq_zero_zero_append_pairOf (ha : IsTally 1 a) (hb : IsTally 1 b) :
   rcases isSubstring_append_pairOf_cases ha hb h with h | ⟨z, hz, h⟩
   · rcases eq_zero_or_eq_zero_zero_of_isSubstring h with h | h
     · exact absurd h.symm (zero_ne_append _ _)
-    · refine absurd h ?_
+    · apply absurd h
       simpa only [Concatenation.append_assoc] using
         zero_zero_append_ne_zero_zero (x := v ++ (0 ++ 0))
   · use a, b
@@ -242,19 +242,17 @@ lemma isPairSeq_zero_zero_append_pairOf (ha : IsTally 1 a) (hb : IsTally 1 b) :
     rcases eq_zero_or_eq_zero_zero_of_isSubstring hz.isSubstring with rfl | rfl
     · simp only [Concatenation.append_assoc] at h
       have h₁ : IsInitialSegment 0 (pairOf a b ++ 0 ++ 0) := by
-        simp only [Concatenation.append_assoc, ← h0.append_left_cancel h]
+        simp only [Concatenation.append_assoc, ← isAtom_zero.append_left_cancel h]
         simp
-      exact absurd (h₁.eq_of_isAtom h0 (Or.inr rfl) ha.isInitialSegment_pairOf_append)
+      exact absurd (h₁.eq_of_isAtom isAtom_zero isAtom_one ha.isInitialSegment_pairOf_append)
         Concatenation.zero_ne_one
-    · apply h0.append_left_cancel
-      apply h0.append_left_cancel
-      apply h0.append_right_cancel
-      apply h0.append_right_cancel
+    · apply isAtom_zero.append_left_cancel
+      apply isAtom_zero.append_left_cancel
+      apply isAtom_zero.append_right_cancel
+      apply isAtom_zero.append_right_cancel
       simpa only [Concatenation.append_assoc] using h
 
-lemma isPairSeq_append_pairOf (ha : IsTally 1 a) (hb : IsTally 1 b) (hr : IsPairSeq r) :
-    IsPairSeq (r ++ pairOf a b ++ 0 ++ 0) := by
-  have h0 : IsAtom (0 : M) := Or.inl rfl
+lemma isPairSeq_append_pairOf (hr : IsPairSeq r) : IsPairSeq (r ++ pairOf a b ++ 0 ++ 0) := by
   apply And.intro <| isSeq_append_pairOf ha hb hr.isSeq
   rintro v ⟨-, hv, h⟩
   rw [show r ++ pairOf a b ++ 0 ++ 0 = r ++ (pairOf a b ++ 0 ++ 0) by
@@ -262,26 +260,27 @@ lemma isPairSeq_append_pairOf (ha : IsTally 1 a) (hb : IsTally 1 b) (hr : IsPair
   rcases isSubstring_append_pairOf_cases ha hb h with h | ⟨z₁, hz₁, h⟩
   · exact hr.2 v ⟨hr.isSeq, hv, h⟩
   have h' : z₁ ++ pairOf a b = 0 ++ 0 ++ v := by
-    apply h0.append_right_cancel
-    apply h0.append_right_cancel
+    apply isAtom_zero.append_right_cancel
+    apply isAtom_zero.append_right_cancel
     rw [h]
     simp [Concatenation.append_assoc]
   rcases editor h' with ⟨rfl, rfl⟩ | ⟨m, ⟨hm, hm'⟩ | ⟨rfl, rfl⟩⟩
   · use a, b
   · have h₁ : IsTally 0 m := isTally_zero_zero.of_isSubstring (hm ▸ isSubstring_append_right z₁ m)
     have h₂ : IsInitialSegment 1 m := (hm' ▸ isInitialSegment_append m v :
-      IsInitialSegment m (pairOf a b)).isInitialSegment_of_isAtom (Or.inr rfl)
+      IsInitialSegment m (pairOf a b)).isInitialSegment_of_isAtom isAtom_one
         ha.isInitialSegment.append_right.append_right
     exact absurd h₂.isSubstring h₁.not_isSubstring_one
   · exact absurd ((isSubstring_zero_zero_of_isEndSegment hr.isSeq.2.1 hz₁).trans
       (isSubstring_append_left m _)) hv
 
+end append
+
 lemma IsFirst.pairOf_inj (hq : IsTally 1 q) (ha : IsTally 1 a) (hb : IsTally 1 b)
     (h : IsFirst (pairOf p q) (0 ++ 0 ++ pairOf a b ++ 0 ++ 0)) : p = a ∧ q = b := by
-  have h0 : IsAtom (0 : M) := Or.inl rfl
   have h₁ : IsInitialSegment (pairOf p q ++ 0 ++ 0) (pairOf a b ++ 0 ++ 0) := by
-    apply IsInitialSegment.of_append_left_isAtom h0
-    apply IsInitialSegment.of_append_left_isAtom h0
+    apply IsInitialSegment.of_append_left_isAtom isAtom_zero
+    apply IsInitialSegment.of_append_left_isAtom isAtom_zero
     simpa only [IsFirst, Concatenation.append_assoc] using h
   exact (FFL.FirstOrder.Concatenation.pairOf_inj hq hb).mp <|
     eq_of_isInitialSegment_pairOf ha hb h₁
@@ -295,7 +294,7 @@ lemma IsMulSeq.exists_eq_append_pairOf (hs : IsMulSeq x (y ++ 1) s) :
     ∃ k a, IsTally 1 a ∧ s = k ++ 0 ++ 0 ++ pairOf a (y ++ 1) ++ 0 ++ 0 := by
   obtain ⟨hx, hy1, -, hfirst, ⟨a, ha, h | ⟨k, rfl⟩⟩, -⟩ := hs
   · rw [← h] at hfirst
-    exact absurd (hfirst.pairOf_inj (isTally_self (Or.inr rfl)) ha hy1).2 (one_ne_append y 1)
+    exact absurd (hfirst.pairOf_inj isTally_one_one ha hy1).2 (one_ne_append y 1)
   · use k, a
     and_intros
     · exact ha
@@ -303,7 +302,6 @@ lemma IsMulSeq.exists_eq_append_pairOf (hs : IsMulSeq x (y ++ 1) s) :
 
 lemma IsPairSeq.of_append_pairOf (hs : IsPairSeq (k ++ 0 ++ 0 ++ pairOf a b ++ 0 ++ 0))
     (hp : IsTally 1 p) (hfirst : IsFirst (pairOf p q) (k ++ 0 ++ 0)) : IsPairSeq (k ++ 0 ++ 0) := by
-  have h0 : IsAtom (0 : M) := Or.inl rfl
   have hsub : IsSubstring (k ++ 0 ++ 0) (k ++ 0 ++ 0 ++ pairOf a b ++ 0 ++ 0) :=
     ((isSubstring_append_left _ _).append_right).append_right
   have hseq : IsSeq (k ++ 0 ++ 0) := by
@@ -314,9 +312,9 @@ lemma IsPairSeq.of_append_pairOf (hs : IsPairSeq (k ++ 0 ++ 0 ++ pairOf a b ++ 0
       · exfalso
         have h₁ : IsSubstring (0 ++ 0 ++ 0) (k ++ 0 ++ 0 ++ pairOf a b ++ 0 ++ 0) :=
           hk.append_congr.append_congr.isSubstring.trans hsub
-        rcases hs.isSeq.2.2 _ (isTally_zero_zero.append (isTally_self h0)) h₁ with h | h
+        rcases hs.isSeq.2.2 _ (isTally_zero_zero.append (isTally_self isAtom_zero)) h₁ with h | h
         · exact zero_ne_append _ _ h.symm
-        · exact zero_ne_append _ _ (h0.append_right_cancel h).symm
+        · exact zero_ne_append _ _ (isAtom_zero.append_right_cancel h).symm
       · exact hk.append_congr.append_congr
     · exact fun t ht h ↦ hs.isSeq.2.2 t ht (h.trans hsub)
   exact ⟨hseq, fun v ⟨_, hv, h⟩ ↦ hs.2 v ⟨hs.isSeq, hv, h.trans hsub⟩⟩
@@ -338,9 +336,9 @@ theorem IsMulSeq.extend (hr : IsMulSeq x y r) (hw : IsTally 1 w) (hlast : IsLast
     IsMulSeq x (y ++ 1) (r ++ pairOf (w ++ x) (y ++ 1) ++ 0 ++ 0) := by
   obtain ⟨hx, hy, hps, hfirst, -, hrec⟩ := hr
   have ha := hw.append hx
-  have hb := hy.append <| isTally_self <| Or.inr rfl
+  have hb := hy.append_one
   refine ⟨hx, hb, isPairSeq_append_pairOf ha hb hps, hfirst.append_right.append_right.append_right,
-    ⟨w ++ x, ha, isLast_append_pairOf hps.isSeq.isEndSegment_zero_zero⟩, ?_⟩
+    ⟨w ++ x, ha, isLast_append hps.isSeq.isEndSegment_zero_zero⟩, ?_⟩
   intro s u' v' hu' hv' h
   rw [show r ++ pairOf (w ++ x) (y ++ 1) ++ 0 ++ 0 = r ++ (pairOf (w ++ x) (y ++ 1) ++ 0 ++ 0) by
     simp [Concatenation.append_assoc]] at h
@@ -353,7 +351,7 @@ theorem IsMulSeq.extend (hr : IsMulSeq x y r) (hw : IsTally 1 w) (hlast : IsLast
 
 lemma IsMulSeq.isLast_extend (hr : IsMulSeq x y r) :
     IsLast (pairOf (w ++ x) (y ++ 1)) (r ++ pairOf (w ++ x) (y ++ 1) ++ 0 ++ 0) :=
-  isLast_append_pairOf hr.isPairSeq.isSeq.isEndSegment_zero_zero
+  isLast_append hr.isPairSeq.isSeq.isEndSegment_zero_zero
 
 lemma IsMulSeq.isLast_unique (hr : IsMulSeq x y r) (hw : IsTally 1 w) (hw' : IsTally 1 w')
     (h : IsLast (pairOf w y) r) (h' : IsLast (pairOf w' y) r) : w = w' :=
@@ -365,27 +363,27 @@ sequence `r` for `x` and `y` with last member `(w, y)`.
 - [Gan09, §3, Theorem 4]
 - [Sve09, §3, Lemma 5]
 -/
-theorem IsMulSeq.restrict (hs : IsMulSeq x (y ++ 1) s) (hy : IsTally 1 y) :
-    ∃ r w, IsTally 1 w ∧ IsMulSeq x y r ∧ IsLast (pairOf w y) r ∧
-      s = r ++ pairOf (w ++ x) (y ++ 1) ++ 0 ++ 0 := by
+theorem IsMulSeq.restrict (hs : IsMulSeq x (y ++ 1) s) : ∃ r w, IsTally 1 w ∧ IsMulSeq x y r ∧
+    IsLast (pairOf w y) r ∧ s = r ++ pairOf (w ++ x) (y ++ 1) ++ 0 ++ 0 := by
   obtain ⟨k, a, ha, rfl⟩ := hs.exists_eq_append_pairOf
   obtain ⟨hx, hy1, hps, hfirst, -, hrec⟩ := hs
   obtain ⟨u, v, hu, hv, rfl, h, hk⟩ := hrec k a (y ++ 1) ha hy1 (IsInitialSegment.refl _)
-  obtain rfl := IsAtom.append_right_cancel (Or.inr rfl) h
-  have hfirst' := hfirst.of_append_pairOf hx (isTally_self (Or.inr rfl))
+  obtain rfl := isAtom_one.append_right_cancel h
+  have hfirst' := hfirst.of_append_pairOf hx isTally_one_one
   have hlast : IsLast (pairOf u y) (k ++ 0 ++ 0) := hk.append_congr.append_congr
   use k ++ 0 ++ 0, u
-  exact ⟨hu, ⟨hx, hy, hps.of_append_pairOf hx hfirst', hfirst', ⟨u, hu, hlast⟩,
+  exact ⟨hu, ⟨hx, hv, hps.of_append_pairOf hx hfirst', hfirst', ⟨u, hu, hlast⟩,
     fun s u' v' hu' hv' h ↦ hrec s u' v' hu' hv' h.append_right.append_right.append_right⟩,
     hlast, rfl⟩
 
 /--
 For a `1`-tally `x`, the only multiplication sequence for `x` and `1` is `0 0 x 0 1 0 0`.
+- [Gan09, §1]
 - [Sve09, §3]
 -/
 lemma isMulSeq_one_iff (hx : IsTally 1 x) :
     IsMulSeq x 1 r ↔ r = 0 ++ 0 ++ pairOf x 1 ++ 0 ++ 0 := by
-  have h1 : IsTally (1 : M) 1 := isTally_self <| Or.inr rfl
+  have h1 : IsTally (1 : M) 1 := isTally_one_one
   constructor
   · rintro ⟨-, -, -, hfirst, ⟨w, hw, rfl | ⟨k, rfl⟩⟩, hrec⟩
     · rw [(hfirst.pairOf_inj h1 hw h1).1]
@@ -412,28 +410,29 @@ lemma existsUnique_isMulSeq_one (hx : IsTally 1 x) : ∃! r, IsMulSeq x 1 r := b
   simp [isMulSeq_one_iff hx]
 
 /--
-For `1`-tallies `x` and `y`, there is exactly one multiplication sequence for `x` and `y 1` if and
-only if there is exactly one for `x` and `y`.
+For a `1`-tally `x`, there is exactly one multiplication sequence for `x` and `y 1` if and only if
+there is exactly one for `x` and `y`.
 - [Gan09, §3, Theorem 4]
+- [Sve09, §3, Lemma 5]
 -/
-theorem existsUnique_isMulSeq_succ_iff (hx : IsTally 1 x) (hy : IsTally 1 y) :
-    (∃! r, IsMulSeq x (y ++ 1) r) ↔ ∃! r, IsMulSeq x y r := by
+theorem existsUnique_isMulSeq_succ_iff (hx : IsTally 1 x) : (∃! r, IsMulSeq x (y ++ 1) r) ↔
+    ∃! r, IsMulSeq x y r := by
   constructor
   · rintro ⟨s, hs, huniq⟩
-    obtain ⟨r, w, hw, hr, hl, rfl⟩ := hs.restrict hy
+    obtain ⟨r, w, hw, hr, hl, rfl⟩ := hs.restrict
     apply ExistsUnique.intro r hr
     intro r' hr'
-    obtain ⟨w', hw', hl'⟩ := hr'.2.2.2.2.1
+    obtain ⟨w', hw', hl'⟩ := hr'.exists_isLast
     have H {r} (hr : IsMulSeq x y r) : IsEndSegment 0 r :=
       (isEndSegment_append (0 : M) 0).trans hr.isPairSeq.isSeq.isEndSegment_zero_zero
     exact (configuration_eq_of_isEndSegment (hw'.append hx) hs.isTally_right (hw.append hx)
       hs.isTally_right (H hr') (H hr) <| by
         simpa only [Concatenation.append_assoc] using huniq _ (hr'.extend hw' hl')).1
   · rintro ⟨r, hr, huniq⟩
-    obtain ⟨w, hw, hl⟩ := hr.2.2.2.2.1
+    obtain ⟨w, hw, hl⟩ := hr.exists_isLast
     apply ExistsUnique.intro _ <| hr.extend hw hl
     intro s hs
-    obtain ⟨r', w', hw', hr', hl', rfl⟩ := hs.restrict hy
+    obtain ⟨r', w', hw', hr', hl', rfl⟩ := hs.restrict
     obtain rfl := huniq _ hr'
     rw [hr.isLast_unique hw' hw hl' hl]
 
@@ -445,7 +444,7 @@ last member of a multiplication sequence for `x` and `y 1` is `(w x, y 1)`.
 lemma IsMulSeq.isLast_of_existsUnique (h : ∃! r, IsMulSeq x y r) (hr : IsMulSeq x y r)
     (hw : IsTally 1 w) (hlast : IsLast (pairOf w y) r) (hs : IsMulSeq x (y ++ 1) s) :
     IsLast (pairOf (w ++ x) (y ++ 1)) s := by
-  obtain rfl := ((existsUnique_isMulSeq_succ_iff hr.isTally_left hr.isTally_right).mpr h).unique hs
+  obtain rfl := ((existsUnique_isMulSeq_succ_iff hr.isTally_left).mpr h).unique hs
     (hr.extend hw hlast)
   exact hr.isLast_extend
 

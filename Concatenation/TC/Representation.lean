@@ -2,6 +2,7 @@ module
 
 public import Concatenation.Coding
 public import Concatenation.TC.Arithmetic
+public import Concatenation.ToFoundation.Arithmetic.R0.Representation
 
 /-!
 # Weak representability in $\mathsf{TC}$
@@ -21,7 +22,6 @@ variable {M : Type*} [ConcatenationStructure M]
 /--
 The element named by `numeralTerm n`: the letter `0` for `n = 0`, the string of `n` letters `1`
 otherwise.
-- [Gan09, §2, Definition 2]
 -/
 def tallyOf : ℕ → M
   | 0 => 0
@@ -46,7 +46,6 @@ lemma val_numeralTerm : ∀ n, (numeralTerm n).val (![] : Fin 0 → M) Empty.eli
 /--
 The transport of an arithmetic formula `γ` to the language of concatenation: `y` is a number, and
 `x` and `y` satisfy the translation of `γ`.
-- [Gan09, §2, Definition 2]
 -/
 def transportedRepresentation (γ : ArithmeticSemisentence 2) : Semisentence ℒ⌢ 2 :=
   “x y. !isNumber y ∧ !(arithmeticTranslation.translate γ) x y”
@@ -59,10 +58,7 @@ and `x` and `y` satisfy the translation of `γ`.
 def thinRepresentation (γ : Semisentence ℒ⌢ 2) : Semisentence ℒ⌢ 2 :=
   “x y. !isThin y ∧ !(thinTranslation.translate γ) x y”
 
-/--
-The transport of an arithmetic formula `γ` to the thin numbers of the language of concatenation.
-- [Gan09, §3, Theorem 5]
--/
+/-- The transport of an arithmetic formula `γ` to the thin numbers. -/
 def weakRepresentation (γ : ArithmeticSemisentence 2) : Semisentence ℒ⌢ 2 :=
   thinRepresentation (transportedRepresentation γ)
 
@@ -82,16 +78,6 @@ lemma isThin_tallyOf : ∀ n, IsThin (tallyOf n : M)
   | 0 => isThin_zero
   | 1 => isThin_one
   | n + 2 => (isThin_tallyOf (n + 1)).append isThin_one
-
-lemma tallyOf_injective : Function.Injective (tallyOf : ℕ → M)
-  | 0, 0, _ => rfl
-  | 0, n + 1, h => absurd h.symm (isTally_tallyOf_succ n).ne_zero
-  | n + 1, 0, h => absurd h (isTally_tallyOf_succ n).ne_zero
-  | 1, 1, _ => rfl
-  | 1, _ + 2, h => absurd h (one_ne_append _ _)
-  | _ + 2, 1, h => absurd h.symm (one_ne_append _ _)
-  | _ + 2, _ + 2, h =>
-    congrArg (· + 1) <| tallyOf_injective <| IsAtom.append_right_cancel (Or.inr rfl) h
 
 end TC
 
@@ -126,8 +112,7 @@ lemma val_operator_numeral (n : ℕ) :
 
 /-- The numbers of a model of $\mathsf{TC}^+$ form a model of $\mathsf{R}_0$. -/
 instance : (arithmeticTranslation.Model M)↓[ℒₒᵣ] ⊧* 𝗥₀ :=
-  models_of_subtheory <|
-    DirectInterpretation.model_models_theory (inferInstance : 𝗧𝗖⁺ ⊳ 𝗤) (M := M) inferInstance
+  models_of_subtheory (inferInstance : (arithmeticTranslation.Model M)↓[ℒₒᵣ] ⊧* 𝗤)
 
 end arithmeticTranslation
 
@@ -152,10 +137,10 @@ lemma eval_transportedRepresentation (hγ : ∀ n, 𝗥₀ ⊢ “∀ y, !γ ↑
 /--
 If `γ` weakly represents `f` in $\mathsf{R}_0$, then the transport of `γ` weakly represents `f` in
 $\mathsf{TC}^+$.
-- [Sve08, §3.3, Theorem 3]
+- [Sve08, §3.3]
 - [Gan09, §3, Theorem 4]
 -/
-theorem transportedRepresentation_spec (hγ : ∀ n, 𝗥₀ ⊢ “∀ y, !γ ↑n y ↔ y = ↑(f n)”) (n : ℕ) :
+lemma transportedRepresentation_spec (hγ : ∀ n, 𝗥₀ ⊢ “∀ y, !γ ↑n y ↔ y = ↑(f n)”) (n : ℕ) :
     𝗧𝗖⁺ ⊢ “∀ y, !(transportedRepresentation γ) !!(Rew.bShift (numeralTerm n)) y ↔
         y = !!(Rew.bShift (numeralTerm (f n)))” :=
   complete.{0} _ _ fun M _ _ ↦ by
@@ -206,7 +191,7 @@ If `γ` weakly represents `f` in $\mathsf{TC}^+$, then the transport of `γ` to 
 weakly represents `f` in $\mathsf{TC}$.
 - [Gan09, §3, Lemma 6]
 -/
-theorem thinRepresentation_spec
+lemma thinRepresentation_spec
     (hγ : ∀ n, 𝗧𝗖⁺ ⊢ “∀ y, !γ !!(Rew.bShift (numeralTerm n)) y ↔
       y = !!(Rew.bShift (numeralTerm (f n)))”) (n : ℕ) :
     𝗧𝗖 ⊢ “∀ y, !(thinRepresentation γ) !!(Rew.bShift (numeralTerm n)) y ↔
@@ -219,13 +204,24 @@ end thin
 /--
 If `γ` weakly represents `f` in $\mathsf{R}_0$, then `weakRepresentation γ` weakly represents `f` in
 $\mathsf{TC}$.
-- [Sve08, §3.3, Theorem 3]
+- [Sve08, §3.3]
 - [Gan09, §3, Theorem 5]
 -/
-theorem weakRepresentation_spec {γ : ArithmeticSemisentence 2} {f : ℕ → ℕ}
+lemma weakRepresentation_spec {γ : ArithmeticSemisentence 2} {f : ℕ → ℕ}
     (hγ : ∀ n, 𝗥₀ ⊢ “∀ y, !γ ↑n y ↔ y = ↑(f n)”) (n : ℕ) :
     𝗧𝗖 ⊢ “∀ y, !(weakRepresentation γ) !!(Rew.bShift (numeralTerm n)) y ↔
       y = !!(Rew.bShift (numeralTerm (f n)))” :=
   thinRepresentation_spec (transportedRepresentation_spec hγ) n
+
+/--
+`weakRepresentation (Arithmetic.R0.cobhamRepresentation f)` weakly represents the computable
+function `f` in $\mathsf{TC}$.
+- [Sve08, §3.3]
+- [Gan09, §3, Theorem 5]
+-/
+theorem weakRepresentation_cobhamRepresentation_spec {f : ℕ → ℕ} (hf : Computable f) (n : ℕ) :
+    𝗧𝗖 ⊢ “∀ y, !(weakRepresentation (Arithmetic.R0.cobhamRepresentation f))
+      !!(Rew.bShift (numeralTerm n)) y ↔ y = !!(Rew.bShift (numeralTerm (f n)))” :=
+  weakRepresentation_spec (Arithmetic.R0.cobhamRepresentation_spec hf) n
 
 end FFL.FirstOrder.Concatenation

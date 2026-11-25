@@ -12,6 +12,7 @@ public import Concatenation.Semantics.Sequence
 public import Concatenation.Semantics.Standard
 public import Concatenation.TC.Basic
 public import Concatenation.TC.Empty
+public import Concatenation.TC.Separation
 public import Concatenation.TC.Substring
 public import Concatenation.TC.Thin
 public import Concatenation.ToFoundation.Arithmetic.R0.Cobham

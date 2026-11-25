@@ -5,11 +5,13 @@ public import Concatenation.Biteral
 public import Concatenation.Coding
 public import Concatenation.D.Basic
 public import Concatenation.F.Basic
+public import Concatenation.F.Tame
 public import Concatenation.Language
 public import Concatenation.OpenProblem
 public import Concatenation.OpenProblem.Attribute
 public import Concatenation.Semantics.Basic
 public import Concatenation.Semantics.Empty
+public import Concatenation.Semantics.Relativization
 public import Concatenation.Semantics.Sequence
 public import Concatenation.Semantics.Standard
 public import Concatenation.TC.Arithmetic

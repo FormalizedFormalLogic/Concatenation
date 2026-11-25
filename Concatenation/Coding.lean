@@ -76,7 +76,7 @@ namespace Concatenation
 
 /--
 The closed term naming `n`: the letter $0$ for $n = 0$, the string of $n$ letters $1$ otherwise.
-- [GZ08, §1]
+- [Gan09, §1, Definition 2]
 -/
 def numeralTerm : ℕ → ClosedSemiterm ℒ⌢ 0
   | 0 => ‘!!(op(0).const)’
@@ -122,7 +122,7 @@ lemma primrec_encode_numeralTerm : Primrec fun n ↦ Encodable.encode (numeralTe
   exact (Primrec.nat_casesOn₁ (Encodable.encode (numeralTerm 0)) (Primrec.nat_rec₁ _ hstep)).of_eq
     fun | 0 => rfl | n + 1 => hrec n
 
-theorem computable_subst_numeralTerm_encode :
+lemma computable_subst_numeralTerm_encode :
     Computable fun σ : Semisentence ℒ⌢ 1 ↦
       (σ/[numeralTerm (Encodable.encode σ)] : Sentence ℒ⌢) := by
   have hc : 𝚺ᴬ₁-Function₁ fun n ↦ Encodable.encode (numeralTerm n) :=

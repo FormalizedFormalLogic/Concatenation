@@ -17,20 +17,20 @@ variable {M : Type*} [ConcatenationStructure M]
 
 /--
 The ordered pair of `x` and `y`, the string `x 0 y`.
-- [Gan09, §2, Definition 1(c)]
+- [Gan09, §1, Definition 1(c)]
 -/
 def pairOf (x y : M) : M := x ++ 0 ++ y
 
 /--
 `z` is an ordered pair of `1`-tallies.
-- [Gan09, §2, Definition 1(c)]
+- [Gan09, §1, Definition 1(c)]
 -/
 def IsPair (z : M) : Prop := ∃ x y, IsTally 1 x ∧ IsTally 1 y ∧ z = pairOf x y
 
 /--
 `z` is a sequence: it begins with `001`, ends with `100`, and its only `0`-tally substrings are
 `0` and `00`.
-- [Gan09, §2, Definition 1(d)]
+- [Gan09, §1, Definition 1(d)]
 -/
 def IsSeq (z : M) : Prop :=
   IsInitialSegment (0 ++ 0 ++ 1) z ∧ IsEndSegment (1 ++ 0 ++ 0) z ∧
@@ -38,26 +38,26 @@ def IsSeq (z : M) : Prop :=
 
 /--
 `y` is a member of the sequence `z`.
-- [Gan09, §2, Definition 1(e)]
+- [Gan09, §1, Definition 1(e)]
 -/
 def Mem (y z : M) : Prop :=
   IsSeq z ∧ ¬IsSubstring (0 ++ 0) y ∧ IsSubstring (0 ++ 0 ++ y ++ 0 ++ 0) z
 
 /--
 `z` is a sequence of ordered pairs.
-- [Gan09, §2, Definition 1(e)]
+- [Gan09, §1, Definition 1(e)]
 -/
 def IsPairSeq (z : M) : Prop := IsSeq z ∧ ∀ y, Mem y z → IsPair y
 
 /--
 `u` is the first member of `z`.
-- [Gan09, §2, Definition 1(f)]
+- [Gan09, §1, Definition 1(f)]
 -/
 def IsFirst (u z : M) : Prop := IsInitialSegment (0 ++ 0 ++ u ++ 0 ++ 0) z
 
 /--
 `u` is the last member of `z`.
-- [Gan09, §2, Definition 1(f)]
+- [Gan09, §1, Definition 1(f)]
 -/
 def IsLast (u z : M) : Prop := IsEndSegment (0 ++ 0 ++ u ++ 0 ++ 0) z
 
@@ -65,7 +65,8 @@ def IsLast (u z : M) : Prop := IsEndSegment (0 ++ 0 ++ u ++ 0 ++ 0) z
 `z` is a multiplication sequence for the `1`-tallies `x` and `y`: a sequence of pairs from
 `(x, 1)` to `(w, y)` for some `1`-tally `w`, in which each pair but the first is `(u x, v 1)` for
 the pair `(u, v)` immediately before it. Each pair `(u, v)` in it records $x \cdot v = u$.
-- [Gan09, §2, Definition 1(g)]
+The last clause is the one of Švejdar.
+- [Gan09, §1, Definition 1(g)]
 - [Sve09, §3]
 -/
 def IsMulSeq (x y z : M) : Prop :=
@@ -145,16 +146,13 @@ lemma eval_isMulSeq : M ⊧/![x, y, z] isMulSeq ↔ IsMulSeq x y z := by
 
 lemma IsPairSeq.isSeq (h : IsPairSeq z) : IsSeq z := h.1
 
-lemma IsFirst.mem (hz : IsSeq z) (hu : ¬IsSubstring (0 ++ 0) u) (h : IsFirst u z) : Mem u z :=
-  ⟨hz, hu, h.isSubstring⟩
-
-lemma IsLast.mem (hz : IsSeq z) (hu : ¬IsSubstring (0 ++ 0) u) (h : IsLast u z) : Mem u z :=
-  ⟨hz, hu, h.isSubstring⟩
-
 lemma IsMulSeq.isTally_left (h : IsMulSeq x y z) : IsTally 1 x := h.1
 
 lemma IsMulSeq.isTally_right (h : IsMulSeq x y z) : IsTally 1 y := h.2.1
 
 lemma IsMulSeq.isPairSeq (h : IsMulSeq x y z) : IsPairSeq z := h.2.2.1
+
+lemma IsMulSeq.exists_isLast (h : IsMulSeq x y z) : ∃ w, IsTally 1 w ∧ IsLast (pairOf w y) z :=
+  h.2.2.2.2.1
 
 end FFL.FirstOrder.Concatenation

@@ -34,3 +34,4 @@ public import Concatenation.WTC.Arithmetic
 public import Concatenation.WTC.Basic
 public import Concatenation.WTC.Embedding
 public import Concatenation.WTC.Standard
+public import Concatenation.WTC.Undecidability

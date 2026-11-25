@@ -30,4 +30,6 @@ public import Concatenation.ToFoundation.Interpretability.Table
 public import Concatenation.ToFoundation.Interpretability.Undecidability
 public import Concatenation.ToFoundation.Prefix
 public import Concatenation.ToMathlib.FreeSemigroup
+public import Concatenation.ToMathlib.FreeSemigroupCode
 public import Concatenation.WTC.Basic
+public import Concatenation.WTC.Embedding

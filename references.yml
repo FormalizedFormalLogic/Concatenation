@@ -104,6 +104,19 @@ KM24:
   parent:
     type: Repository
     title: arXiv
+Hor12:
+  type: Article
+  title: Weak Theories of Concatenation and Arithmetic
+  author: Horihata, Yoshihiro
+  date: 2012
+  page-range: 203-222
+  serial-number:
+    doi: "10.1215/00294527-1715698"
+  parent:
+    type: Periodical
+    title: Notre Dame Journal of Formal Logic
+    volume: 53
+    issue: 2
 
 Mur22:
   type: Article

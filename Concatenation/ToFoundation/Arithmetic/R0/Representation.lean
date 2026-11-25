@@ -22,18 +22,18 @@ The formula $\exists w\,(y \lhd w \wedge \exists v\,(v \lhd w \wedge \varphi(x, 
 Cobham's order.
 - [Sve08, §3.3, Theorem 3]
 -/
-def cobhamRepresentation (φ : ArithmeticSemisentence 3) : ArithmeticSemisentence 2 :=
+def cobhamComparison (φ : ArithmeticSemisentence 3) : ArithmeticSemisentence 2 :=
   “x y. ∃ w, !cobhamLE y w ∧ (∃ v, !cobhamLE v w ∧ !φ x y v) ∧
     ∀ z u, !cobhamLE z w → !cobhamLE u w → !φ x z u → y = z”
 
 variable {M : Type*} [ORingStructure M] {φ : ArithmeticSemisentence 3}
 
 @[simp]
-lemma eval_cobhamRepresentation {x y : M} :
-    M ⊧/![x, y] (cobhamRepresentation φ) ↔ ∃ w, y ⊴ w ∧
+lemma eval_cobhamComparison {x y : M} :
+    M ⊧/![x, y] (cobhamComparison φ) ↔ ∃ w, y ⊴ w ∧
       (∃ v, v ⊴ w ∧ M ⊧/![x, y, v] φ) ∧
       ∀ z u, z ⊴ w → u ⊴ w → M ⊧/![x, z, u] φ → y = z := by
-  simp [cobhamRepresentation]
+  simp [cobhamComparison]
 
 variable [M↓[ℒₒᵣ] ⊧* 𝗥₀]
 
@@ -60,18 +60,18 @@ include hφ₀ hφ
 
 /--
 If the $\Delta_0$ formula $\varphi(x, y, v)$ defines the graph of `f` in `ℕ` up to an existential
-quantifier on $v$, then `cobhamRepresentation φ` defines the graph of `f` on numeral arguments in
+quantifier on $v$, then `cobhamComparison φ` defines the graph of `f` on numeral arguments in
 every model of $\mathsf{R}_0$.
 - [Sve08, §3.3, Theorem 3]
 -/
-lemma eval_cobhamRepresentation_numeral_iff (n : ℕ) (y : M) :
-    M ⊧/![numeral n, y] (cobhamRepresentation φ) ↔ y = numeral (f n) := by
+lemma eval_cobhamComparison_numeral_iff (n : ℕ) (y : M) :
+    M ⊧/![numeral n, y] (cobhamComparison φ) ↔ y = numeral (f n) := by
   obtain ⟨k, hk⟩ := (hφ n (f n)).mp rfl
   have key : ∀ i j, M ⊧/![numeral n, numeral i, numeral j] φ → i = f n := fun i j h ↦
     (hφ n i).mpr ⟨j, (eval_numeral_iff_of_deltaZero hφ₀ n i j).mp h⟩
   have hkM : M ⊧/![numeral n, numeral (f n), numeral k] φ :=
     (eval_numeral_iff_of_deltaZero hφ₀ n (f n) k).mpr hk
-  rw [eval_cobhamRepresentation]
+  rw [eval_cobhamComparison]
   constructor
   · rintro ⟨w, hyw, ⟨v, hvw, hv⟩, huniq⟩
     rcases cobhamLE_numeral_or (x := w) (max (f n) k) with hw | hw
@@ -94,36 +94,44 @@ lemma eval_cobhamRepresentation_numeral_iff (n : ℕ) (y : M) :
       obtain ⟨j, -, rfl⟩ := eq_numeral_of_cobhamLE_numeral hu
       rw [key i j hzu]
 
-/--
-`cobhamRepresentation φ` weakly represents `f` in $\mathsf{R}_0$ whenever the $\Delta_0$ formula
-$\varphi(x, y, v)$ defines the graph of `f` in `ℕ` up to an existential quantifier on $v$.
-- [Sve08, §3.3, Theorem 3]
--/
-theorem cobhamRepresentation_spec (n : ℕ) :
-    𝗥₀ ⊢ “∀ y, !(cobhamRepresentation φ) ↑n y ↔ y = ↑(f n)” := by
-  apply complete.{0}
-  intro M _ _
-  simpa [models_iff] using eval_cobhamRepresentation_numeral_iff hφ₀ hφ n
-
 end
 
 /--
-Every computable function is weakly representable in $\mathsf{R}_0$.
-- [Sve08, §3.3, Theorem 3]
+The graph of a computable function is defined in `ℕ` by a $\Delta_0$ formula up to an existential
+quantifier.
 -/
-theorem exists_cobhamRepresentation (hf : Computable f) :
-    ∃ γ : ArithmeticSemisentence 2, ∀ n, 𝗥₀ ⊢ “∀ y, !γ ↑n y ↔ y = ↑(f n)” := by
+lemma exists_deltaZero_graph (hf : Computable f) : ∃ φ : ArithmeticSemisentence 3,
+    ℬ[<, ℒₒᵣ].Hierarchy 𝚺 0 φ ∧ ∀ n m, m = f n ↔ ∃ k, ℕ ⊧/![n, m, k] φ := by
   let F : List.Vector ℕ 1 →. ℕ := fun v ↦ Part.some (f (v.get 0))
   have hF : Nat.Partrec' F := Nat.Partrec'.of_part <| hf.comp (Primrec.to_comp (by primrec))
   have hσ : ℬ[<, ℒₒᵣ].Hierarchy 𝚺 1 (codeOfPartrec' F) := by simp [codeOfPartrec']
   obtain ⟨ψ, hψ⟩ := Bounding.Prenex.models_exists_prenex.{_, 0} (Γ' := 𝚺) hσ
-  let φ : ArithmeticSemisentence 3 := “x y v. !ψ.sigmaInv.val v y x”
-  have hφ₀ : ℬ[<, ℒₒᵣ].Hierarchy 𝚺 0 φ := by simp [φ]
-  use cobhamRepresentation φ
-  apply cobhamRepresentation_spec hφ₀
-  intro n m
-  have := (codeOfPartrec'_spec hF (y := m) (v := ![n])).symm.trans
-    ((hψ ℕ (m :> ![n]) Empty.elim).trans (ψ.models_sigmaInv _))
-  simpa [F, φ] using this
+  use “x y v. !ψ.sigmaInv.val v y x”
+  and_intros
+  · simp
+  · intro n m
+    have := (codeOfPartrec'_spec hF (y := m) (v := ![n])).symm.trans
+      ((hψ ℕ (m :> ![n]) Empty.elim).trans (ψ.models_sigmaInv _))
+    simpa [F] using this
+
+/--
+The formula that represents the computable function `f` through Cobham's order.
+- [Sve08, §3.3, Theorem 3]
+-/
+noncomputable def cobhamRepresentation (f : ℕ → ℕ) : ArithmeticSemisentence 2 :=
+  cobhamComparison <| Classical.epsilon fun φ ↦
+    ℬ[<, ℒₒᵣ].Hierarchy 𝚺 0 φ ∧ ∀ n m, m = f n ↔ ∃ k, ℕ ⊧/![n, m, k] φ
+
+/--
+`cobhamRepresentation f` weakly represents the computable function `f` in $\mathsf{R}_0$.
+- [Sve08, §3.3, Theorem 3]
+-/
+theorem cobhamRepresentation_spec (hf : Computable f) (n : ℕ) :
+    𝗥₀ ⊢ “∀ y, !(cobhamRepresentation f) ↑n y ↔ y = ↑(f n)” := by
+  obtain ⟨hφ₀, hφ⟩ := Classical.epsilon_spec (exists_deltaZero_graph hf)
+  apply complete.{0}
+  intro M _ _
+  simpa [models_iff, cobhamRepresentation, -eval_cobhamComparison]
+    using eval_cobhamComparison_numeral_iff (M := M) hφ₀ hφ n
 
 end FFL.FirstOrder.Arithmetic.R0

@@ -133,12 +133,6 @@ lemma eval_isOneOf {l : List (FreeSemigroup Bool)} {x : M} :
       ∃ γ ∈ l, x = ConcatenationStructure.ofFreeSemigroup γ := by
   simp [isOneOf]
 
-@[simp]
-lemma eval_isSubstring {x y : M} :
-    M ⊧/![x, y] (isSubstring : ConcatenationSemisentence 2) ↔
-      x = y ∨ ∃ k l, k ++ x = y ∨ x ++ l = y ∨ (k ++ x) ++ l = y ∨ k ++ (x ++ l) = y := by
-  simp [isSubstring]
-
 end eval
 
 section TC

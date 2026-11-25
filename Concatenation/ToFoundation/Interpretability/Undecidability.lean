@@ -62,7 +62,7 @@ include π
 
 /--
 A consistent theory directly interpreting an essentially undecidable theory is undecidable.
-- [Sve08, §2]
+- [Sve08, §1]
 -/
 theorem undecidable [U.EssentiallyUndecidable] [Entailment.Consistent T] :
     Entailment.Undecidable T :=
@@ -71,7 +71,7 @@ theorem undecidable [U.EssentiallyUndecidable] [Entailment.Consistent T] :
 
 /--
 A theory directly interpreting an essentially undecidable theory is essentially undecidable.
-- [Sve08, §2]
+- [Sve08, §1]
 -/
 theorem essentiallyUndecidable [U.EssentiallyUndecidable] : T.EssentiallyUndecidable where
   undecidable_of_consistent T' hT _ :=

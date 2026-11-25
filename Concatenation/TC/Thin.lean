@@ -15,12 +15,25 @@ namespace FFL.FirstOrder.Concatenation
 
 open DirectTranslation
 
+variable {M : Type*} [ConcatenationStructure M] {x y : M}
+
+/--
+`x` is an atom, or begins with an atom and ends with an atom.
+- [Gan09, §3]
+-/
+def IsBounded (x : M) : Prop :=
+  IsAtom x ∨ ((∃ c z, IsAtom c ∧ x = c ++ z) ∧ ∃ c z, IsAtom c ∧ x = z ++ c)
+
 /--
 `x` is an atom, or begins with an atom and ends with an atom.
 - [Gan09, §3]
 -/
 def isBounded : Semisentence ℒ⌢ 1 :=
   “x. !isAtom x ∨ ((∃ c z, !isAtom c ∧ x = c ⌢ z) ∧ (∃ c z, !isAtom c ∧ x = z ⌢ c))”
+
+@[simp]
+lemma eval_isBounded : M ⊧/![x] isBounded ↔ IsBounded x := by
+  simp [isBounded, IsBounded]
 
 /--
 Every string is an atom, or begins with an atom and ends with an atom.
@@ -47,26 +60,13 @@ instance : 𝗘𝗤 ℒ⌢ ⪯ 𝗧𝗖⁺ :=
 `x` is thin: every substring of `x` is an atom, or begins with an atom and ends with an atom.
 - [Gan09, §3]
 -/
-def isThin : Semisentence ℒ⌢ 1 := “x. ∀ y, !isSubstring y x → !isBounded y”
-
-variable {M : Type*} [ConcatenationStructure M] {x y : M}
-
-/--
-`x` is an atom, or begins with an atom and ends with an atom.
-- [Gan09, §3]
--/
-def IsBounded (x : M) : Prop :=
-  IsAtom x ∨ ((∃ c z, IsAtom c ∧ x = c ++ z) ∧ ∃ c z, IsAtom c ∧ x = z ++ c)
+def IsThin (x : M) : Prop := ∀ y, IsSubstring y x → IsBounded y
 
 /--
 `x` is thin: every substring of `x` is an atom, or begins with an atom and ends with an atom.
 - [Gan09, §3]
 -/
-def IsThin (x : M) : Prop := ∀ y, IsSubstring y x → IsBounded y
-
-@[simp]
-lemma eval_isBounded : M ⊧/![x] isBounded ↔ IsBounded x := by
-  simp [isBounded, IsBounded]
+def isThin : Semisentence ℒ⌢ 1 := “x. ∀ y, !isSubstring y x → !isBounded y”
 
 @[simp]
 lemma eval_isThin : M ⊧/![x] isThin ↔ IsThin x := by

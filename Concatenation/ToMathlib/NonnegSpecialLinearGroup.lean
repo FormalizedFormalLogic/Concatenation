@@ -42,9 +42,7 @@ lemma pos_of_mem_nonneg (hA : A ∈ nonneg R) : 0 < A 0 0 ∧ 0 < A 1 1 := by
   have h : 0 < A 0 0 * A 1 1 := by
     rw [apply_mul_apply_eq]
     exact add_pos_of_nonneg_of_pos (mul_nonneg (hA 0 1) (hA 1 0)) one_pos
-  constructor
-  · exact pos_of_mul_pos_left h (hA 1 1)
-  · exact pos_of_mul_pos_right h (hA 0 0)
+  exact ⟨pos_of_mul_pos_left h (hA 1 1), pos_of_mul_pos_right h (hA 0 0)⟩
 
 variable (hR : ∀ x : R, 0 < x → 1 ≤ x)
 

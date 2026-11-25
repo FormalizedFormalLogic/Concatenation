@@ -168,14 +168,14 @@ lemma eval_isSubstring : M ⊧/![x, y] (isSubstring : Semisentence ℒ⌢ 2) ↔
 -/
 def IsPrefix (x y : M) : Prop := x = y ∨ ∃ v, y = x ++ v
 
-@[inherit_doc]
-scoped infix:50 " ⊑ₚ " => IsPrefix
+/-- `x ◨ y`: `x` is a prefix of `y`. -/
+scoped infix:50 " ◨ " => IsPrefix
 
 /-- `x` is a prefix of `y`. -/
 def isPrefix : Semisentence ℒ⌢ 2 := “x y. x = y ∨ ∃ v, y = x ⌢ v”
 
 @[simp]
-lemma eval_isPrefix : M ⊧/![x, y] isPrefix ↔ x ⊑ₚ y := by
+lemma eval_isPrefix : M ⊧/![x, y] isPrefix ↔ x ◨ y := by
   simp [isPrefix, IsPrefix]
 
 /--
@@ -184,14 +184,14 @@ lemma eval_isPrefix : M ⊧/![x, y] isPrefix ↔ x ⊑ₚ y := by
 -/
 def IsSuffix (x y : M) : Prop := x = y ∨ ∃ u, y = u ++ x
 
-@[inherit_doc]
-scoped infix:50 " ⊑ₛ " => IsSuffix
+/-- `x ◧ y`: `y` is a suffix of `x`. -/
+scoped notation:50 x:51 " ◧ " y:51 => IsSuffix y x
 
 /-- `x` is a suffix of `y`. -/
 def isSuffix : Semisentence ℒ⌢ 2 := “x y. x = y ∨ ∃ u, y = u ⌢ x”
 
 @[simp]
-lemma eval_isSuffix : M ⊧/![x, y] isSuffix ↔ x ⊑ₛ y := by
+lemma eval_isSuffix : M ⊧/![x, y] isSuffix ↔ y ◧ x := by
   simp [isSuffix, IsSuffix]
 
 /--
@@ -229,23 +229,23 @@ lemma isSubstring_append_append (u x v : M) : IsSubstring x (u ++ x ++ v) := by
   right; right; right; left; use u, v
 
 @[refl, simp]
-lemma IsPrefix.refl (x : M) : x ⊑ₚ x := Or.inl rfl
+lemma IsPrefix.refl (x : M) : x ◨ x := Or.inl rfl
 
 @[simp]
-lemma isPrefix_append (x y : M) : x ⊑ₚ x ++ y := by
+lemma isPrefix_append (x y : M) : x ◨ x ++ y := by
   right; use y
 
 @[refl, simp]
-lemma IsSuffix.refl (x : M) : x ⊑ₛ x := Or.inl rfl
+lemma IsSuffix.refl (x : M) : x ◧ x := Or.inl rfl
 
 @[simp]
-lemma isSuffix_append (x y : M) : y ⊑ₛ x ++ y := by
+lemma isSuffix_append (x y : M) : x ++ y ◧ y := by
   right; use x
 
-lemma IsPrefix.isSubstring (h : x ⊑ₚ y) : IsSubstring x y := by
+lemma IsPrefix.isSubstring (h : x ◨ y) : IsSubstring x y := by
   rcases h with rfl | ⟨v, rfl⟩ <;> simp
 
-lemma IsSuffix.isSubstring (h : x ⊑ₛ y) : IsSubstring x y := by
+lemma IsSuffix.isSubstring (h : y ◧ x) : IsSubstring x y := by
   rcases h with rfl | ⟨u, rfl⟩ <;> simp
 
 end substring

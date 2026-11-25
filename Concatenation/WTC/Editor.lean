@@ -1,8 +1,6 @@
 module
 
-public import Concatenation.OpenProblem
 public import Concatenation.Semantics.Standard
-public import Concatenation.TC.Empty
 public import Concatenation.TC.FiniteModel
 public import Concatenation.TC.Undecidability
 public import Concatenation.WTC.Basic
@@ -19,39 +17,23 @@ strings and formal pairs.
 namespace FFL.FirstOrder.Concatenation
 
 /--
-The editor axiom for nonempty strings.
-- [GZ08, §1]
+Axioms of $\mathsf{WTC}$ without the empty string and with the unrestricted editor axiom.
+- [HH14, Definition 5, Question 1]
 -/
-def editorAxiom : Sentence ℒ⌢ := “∀ x y z w, x ⌢ y = z ⌢ w →
-  (x = z ∧ y = w) ∨ ∃ u, (x ⌢ u = z ∧ y = u ⌢ w) ∨ (x = z ⌢ u ∧ u ⌢ y = w)”
-
-/-- $\mathsf{WTC}$ with the unrestricted editor axiom, without the empty string. -/
-abbrev WTCEditor : Theory ℒ⌢ := insert editorAxiom 𝗪𝗧𝗖
-
-instance : 𝗘𝗤 ℒ⌢ ⪯ WTCEditor :=
-  Entailment.WeakerThan.ofSubset fun φ hφ ↦ .inr <| IsWTCAxiom.equal φ hφ
+inductive IsWTCEditorAxiom : Sentence ℒ⌢ → Prop
+  | wtc : ∀ φ ∈ 𝗪𝗧𝗖, IsWTCEditorAxiom φ
+  | editor : IsWTCEditorAxiom “∀ x y z w, x ⌢ y = z ⌢ w →
+      (x = z ∧ y = w) ∨ ∃ u, (x ⌢ u = z ∧ y = u ⌢ w) ∨ (x = z ⌢ u ∧ u ⌢ y = w)”
 
 /--
-The editor axiom.
-- [HH14, Definition 1]
+$\mathsf{WTC}$ without the empty string and with the unrestricted editor axiom.
+- [HH14, Definition 5, Question 1]
 -/
-def editorAxiomEmpty : Sentence ℒ⌢ₑ := “∀ x y s t, x ⌢ y = s ⌢ t →
-  ∃ w, (x ⌢ w = s ∧ y = w ⌢ t) ∨ (x = s ⌢ w ∧ w ⌢ y = t)”
+abbrev WTCEditor : Theory ℒ⌢ := Set.ofPred IsWTCEditorAxiom
 
-/--
-$\mathsf{WTC}$ with the unrestricted editor axiom.
-- [HH14, Question 1]
--/
-abbrev WTCEmptyEditor : Theory ℒ⌢ₑ := insert editorAxiomEmpty 𝗪𝗧𝗖ₑ
+instance : 𝗪𝗧𝗖 ⪯ WTCEditor := Entailment.WeakerThan.ofSubset IsWTCEditorAxiom.wtc
 
-instance : 𝗘𝗤 ℒ⌢ₑ ⪯ WTCEmptyEditor :=
-  Entailment.WeakerThan.ofSubset fun φ hφ ↦ .inr <| IsWTCEmptyAxiom.equal φ hφ
-
-/--
-Does $\mathsf{WTC}$ with the unrestricted editor axiom interpret $\mathsf{TC}$?
-- [HH14, Question 1]
--/
-open_problem WTCEmptyEditor_interprets_TCEmpty := Nonempty (WTCEmptyEditor ⊳ 𝗧𝗖ₑ)
+instance : 𝗘𝗤 ℒ⌢ ⪯ WTCEditor := Entailment.WeakerThan.trans (𝓣 := 𝗪𝗧𝗖) inferInstance inferInstance
 
 namespace WTCEditor
 
@@ -214,9 +196,10 @@ end Pairing
 /-- Every axiom holds in all but finitely many of the structures `Pairing N`. -/
 lemma eventually_models {σ : Sentence ℒ⌢} (hσ : σ ∈ WTCEditor) :
     ∀ᶠ N in Filter.atTop, (Pairing N)↓[ℒ⌢] ⊧ σ := by
-  rcases hσ with rfl | hσ
+  rcases hσ with ⟨_, hσ⟩ | _
+  swap
   · exact .of_forall fun N ↦ by
-      simpa [models_iff, editorAxiom] using fun (a b c d : Pairing N) ↦ Pairing.editor
+      simpa [models_iff] using fun (a b c d : Pairing N) ↦ Pairing.editor
   cases hσ
   case equal h =>
     have (N : ℕ) : (Pairing N)↓[ℒ⌢] ⊧* 𝗘𝗤 ℒ⌢ := inferInstance

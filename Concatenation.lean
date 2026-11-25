@@ -5,6 +5,10 @@ public import Concatenation.Biteral
 public import Concatenation.Coding
 public import Concatenation.D.Basic
 public import Concatenation.D.LeftCancellation
+public import Concatenation.F.Basic
+public import Concatenation.F.Radical
+public import Concatenation.F.Tame
+public import Concatenation.F.Undecidability
 public import Concatenation.Language
 public import Concatenation.OpenProblem
 public import Concatenation.OpenProblem.Attribute
@@ -14,12 +18,16 @@ public import Concatenation.OpenProblems.Minimality
 public import Concatenation.OpenProblems.NotationInduction
 public import Concatenation.OpenProblems.Sequence
 public import Concatenation.Semantics.Basic
+public import Concatenation.Semantics.Empty
+public import Concatenation.Semantics.Relativization
 public import Concatenation.Semantics.Sequence
 public import Concatenation.Semantics.Standard
 public import Concatenation.Sequence.Basic
 public import Concatenation.TC.Arithmetic
 public import Concatenation.TC.Basic
+public import Concatenation.TC.DefinitionalEquivalence
 public import Concatenation.TC.Empty
+public import Concatenation.TC.EmptyInterpretation
 public import Concatenation.TC.MulSeq
 public import Concatenation.TC.Representation
 public import Concatenation.TC.Separation

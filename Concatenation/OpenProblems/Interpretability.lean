@@ -5,7 +5,6 @@ public import Concatenation.TC.Basic
 public import Concatenation.TC.Empty
 public import Concatenation.ToFoundation.Arithmetic.IQ
 public import Concatenation.ToFoundation.Decidability
-public import Concatenation.ToFoundation.Interpretability.DefinitionalEquivalence
 public import Concatenation.ToFoundation.Interpretability.Relative
 public import Concatenation.WTC.Basic
 import Concatenation.OpenProblem
@@ -45,12 +44,6 @@ Does $\mathsf{WTC} + \mathrm{TC3}$, with the empty string, interpret $\mathsf{TC
 - [HH14, Question 1]
 -/
 open_problem WTCEmptyEditor_interprets_TCEmpty := Nonempty (WTCEmptyEditor ⊳ 𝗧𝗖ₑ)
-
-/--
-Are $\mathsf{TC}$ and $\mathsf{TC}_\varepsilon$ definitionally equivalent?
-- [Vis09, Appendix A]
--/
-open_problem TC_definitionallyEquivalent_TCEmpty := Nonempty (DefinitionalEquivalence 𝗧𝗖 𝗧𝗖ₑ)
 
 /--
 Is $\overline{\mathsf{ID}}$ interpretable in $\mathsf{ID}$?

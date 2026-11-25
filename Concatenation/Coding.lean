@@ -112,6 +112,36 @@ instance : unit.{0}.Primcodable where
     apply (Primrec.const 0 : Primrec fun _ : ℕ × ℕ ↦ 0).of_eq
     exact fun _ ↦ rfl
 
+lemma concatenationEmpty.mem_range_encode_func_iff {k f : ℕ} :
+    f ∈ Set.range (Encodable.encode : (ℒ⌢ₑ).Func k → ℕ) ↔ (k = 0 ∧ f = 0) ∨ (k = 0 ∧ f = 1) ∨
+    (k = 0 ∧ f = 2) ∨ (k = 2 ∧ f = 0) := by
+  constructor
+  · rintro ⟨(_ | _ | _) | ⟨⟨⟩⟩, rfl⟩
+    · exact Or.inl ⟨rfl, rfl⟩
+    · exact Or.inr <| Or.inr <| Or.inl ⟨rfl, rfl⟩
+    · exact Or.inr <| Or.inr <| Or.inr ⟨rfl, rfl⟩
+    · exact Or.inr <| Or.inl ⟨rfl, rfl⟩
+  · rintro (⟨rfl, rfl⟩ | ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩)
+    · use Sum.inl Concatenation.Func.zero; rfl
+    · use Sum.inr <| Constant.Func.const ⟨⟩; rfl
+    · use Sum.inl Concatenation.Func.one; rfl
+    · use Sum.inl Concatenation.Func.concat; rfl
+
+lemma concatenationEmpty.mem_range_encode_rel_iff {k r : ℕ} :
+    r ∈ Set.range (Encodable.encode : (ℒ⌢ₑ).Rel k → ℕ) ↔ k = 2 ∧ r = 0 := by
+  constructor
+  · rintro ⟨⟨⟨⟩⟩ | ⟨⟨⟩⟩, rfl⟩
+    exact ⟨rfl, rfl⟩
+  · rintro ⟨rfl, rfl⟩
+    use Sum.inl Concatenation.Rel.eq; rfl
+
+instance : (ℒ⌢ₑ).LORDefinable where
+  func := .mkSigma “k f. (k = 0 ∧ f = 0) ∨ (k = 0 ∧ f = 1) ∨ (k = 0 ∧ f = 2) ∨ (k = 2 ∧ f = 0)”
+  rel := .mkSigma “k r. k = 2 ∧ r = 0”
+  func_iff {k c} := by
+    simpa [models_iff] using! concatenationEmpty.mem_range_encode_func_iff
+  rel_iff {k c} := by simpa [models_iff] using! concatenationEmpty.mem_range_encode_rel_iff
+
 end Language
 
 namespace Concatenation

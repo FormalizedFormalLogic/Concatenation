@@ -30,6 +30,13 @@ def ofFreeSemigroup (x : FreeSemigroup Bool) : α :=
 
 end ConcatenationStructure
 
+/-- The letters and the concatenation transported along a bijection. -/
+abbrev ConcatenationStructure.ofEquiv {α β : Type*} [ConcatenationStructure β] (e : α ≃ β) :
+    ConcatenationStructure α where
+  zero := e.symm 0
+  one := e.symm 1
+  append x y := e.symm (e x ++ e y)
+
 namespace Concatenation
 
 open Language
@@ -68,6 +75,15 @@ lemma standardModel_unique (s : Tarski.Structure ℒ⌢ M) [Tarski.Structure.Zer
     (funext₃ fun k r _ ↦
       match k, r with
       | _, Language.Eq.eq => by simp)
+
+variable {M} in
+lemma standardModel_ofEquiv {α : Type*} (e : α ≃ M) :
+    @standardModel α (.ofEquiv e) = Tarski.Structure.ofEquiv e.symm :=
+  Tarski.Structure.ext
+    (funext₃ fun k f v ↦ by cases f <;> rfl)
+    (funext₃ fun k r v ↦ by
+      cases r
+      exact propext e.apply_eq_iff_eq.symm)
 
 end semantics
 

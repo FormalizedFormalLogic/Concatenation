@@ -28,8 +28,8 @@ lemma val_substringOperator {v : Fin 2 → M} :
   exact eval_isSubstring
 
 /--
-Quantifiers bounded by the substring relation. `ℬ[⊑, L].Hierarchy 𝚺 0` is the class of
-$\Sigma_0$ formulas, and `ℬ[⊑, L].Hierarchy 𝚺 1` the class of $\Sigma_1$ formulas.
+Quantifiers bounded by the substring relation. `ℬ[⊑, L].PrenexHierarchy 𝚺 0` is the class
+of $\Sigma_0$ formulas, and `ℬ[⊑, L].PrenexHierarchy 𝚺 1` the class of $\Sigma_1$ formulas.
 - [Hor11, §3]
 - [Hor12, §3]
 -/
@@ -124,13 +124,7 @@ lemma eval_ofFreeSemigroup_of_hierarchy (hφ : ℬ[⊑, ℒ⌢].Hierarchy 𝚺 1
 
 end WTC
 
-/--
-$\mathsf{WTC}$, and hence every extension of it, proves the $\Sigma_1$ sentences true of the
-nonempty binary strings.
-- [Hor11, §3, Theorem 3.8]
-- [Hor12, §3, Theorem 3.13]
--/
-theorem sigma1_completeness {T : ConcatenationTheory} [𝗪𝗧𝗖 ⪯ T] {σ : ConcatenationSentence}
+lemma sigma1_completeness_of_hierarchy {T : ConcatenationTheory} [𝗪𝗧𝗖 ⪯ T] {σ : ConcatenationSentence}
     (hσ : ℬ[⊑, ℒ⌢].Hierarchy 𝚺 1 σ) (h : (FreeSemigroup Bool)↓[ℒ⌢] ⊧ σ) : T ⊢ σ := by
   have : 𝗘𝗤 ℒ⌢ ⪯ T := Entailment.WeakerThan.trans (𝓣 := 𝗪𝗧𝗖) inferInstance inferInstance
   apply complete.{0}
@@ -138,5 +132,15 @@ theorem sigma1_completeness {T : ConcatenationTheory} [𝗪𝗧𝗖 ⪯ T] {σ :
   have : M↓[ℒ⌢] ⊧* 𝗪𝗧𝗖 := ModelsTheory.of_provably_subtheory M 𝗪𝗧𝗖 T inferInstance
   simpa [models_iff, Matrix.empty_eq, Empty.eq_elim] using
     WTC.eval_ofFreeSemigroup_of_hierarchy (M := M) hσ (models_iff.mp h)
+
+/--
+$\mathsf{WTC}$, and hence every extension of it, proves the $\Sigma_1$ sentences true of the
+nonempty binary strings.
+- [Hor11, §3, Theorem 3.8]
+- [Hor12, §3, Theorem 3.13]
+-/
+theorem sigma1_completeness {T : ConcatenationTheory} [𝗪𝗧𝗖 ⪯ T] {σ : ConcatenationSentence}
+    (hσ : ℬ[⊑, ℒ⌢].PrenexHierarchy 𝚺 1 σ) (h : (FreeSemigroup Bool)↓[ℒ⌢] ⊧ σ) : T ⊢ σ :=
+  sigma1_completeness_of_hierarchy hσ.hierarchy h
 
 end FFL.FirstOrder.Concatenation

@@ -224,9 +224,7 @@ lemma tally_separation_of_ne (hd : IsAtom d) (hdc : d ≠ c) (hx : IsTally c x) 
     obtain rfl := h₁.eq_of_isAtom he hd hz'
     exact hdc <| hx e he <| hxw ▸ hew.isSubstring.append_right
   rcases editor h with h | ⟨w, ⟨hw, hxw⟩ | ⟨hw, hyw⟩⟩
-  · exact h
-  · exact absurd hxw <| H hx hz' w hw
-  · exact absurd hyw.symm <| H hy hz w hw.symm
+  exacts [h, absurd hxw <| H hx hz' w hw, absurd hyw.symm <| H hy hz w hw.symm]
 
 /--
 If `x` and `y` are `1`-tallies and `z`, `z'` end with `0`, then `z ++ x = z' ++ y` implies `z = z'`

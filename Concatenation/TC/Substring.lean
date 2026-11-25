@@ -101,9 +101,7 @@ lemma IsTally.of_isSubstring (hx : IsTally c x) (h : IsSubstring y x) : IsTally 
 lemma IsTally.append (hx : IsTally c x) (hy : IsTally c y) : IsTally c (x ++ y) := by
   intro z hz h
   rcases h.append_cases with h | h | ⟨z₁, z₂, h, -, -⟩
-  · exact hx z hz h
-  · exact hy z hz h
-  · exact absurd h hz.ne_append
+  exacts [hx z hz h, hy z hz h, absurd h hz.ne_append]
 
 lemma IsTally.not_isSubstring_zero (hx : IsTally 1 x) : ¬IsSubstring 0 x := fun h ↦
   Concatenation.zero_ne_one <| hx 0 isAtom_zero h
@@ -311,9 +309,7 @@ The concatenation of thin strings is thin.
 lemma IsThin.append (hx : IsThin x) (hy : IsThin y) : IsThin (x ++ y) := by
   intro z hz
   rcases hz.append_cases with h | h | ⟨z₁, z₂, rfl, h₁, h₂⟩
-  · exact hx z h
-  · exact hy z h
-  · exact (hx z₁ h₁.isSubstring).append (hy z₂ h₂.isSubstring)
+  exacts [hx z h, hy z h, (hx z₁ h₁.isSubstring).append (hy z₂ h₂.isSubstring)]
 
 end TC
 

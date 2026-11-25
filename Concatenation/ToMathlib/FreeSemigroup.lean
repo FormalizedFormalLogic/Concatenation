@@ -102,10 +102,8 @@ lemma mem_substrings_iff :
     · exact .inr <| .inl ⟨u, toList_injective <| by simpa using e.symm⟩
     · exact .inr <| .inr <| .inr ⟨u, v, toList_injective <| by simpa using e.symm⟩
   · rintro (rfl | ⟨u, rfl⟩ | ⟨v, rfl⟩ | ⟨u, v, rfl⟩)
-    · exact List.infix_refl _
-    · exact ⟨u.toList, [], by simp⟩
-    · exact ⟨[], v.toList, by simp⟩
-    · exact ⟨u.toList, v.toList, by simp⟩
+    exacts [List.infix_refl _, ⟨u.toList, [], by simp⟩, ⟨[], v.toList, by simp⟩,
+      ⟨u.toList, v.toList, by simp⟩]
 
 lemma finite_length_le [Finite α] (n : ℕ) : {x : FreeSemigroup α | x.length ≤ n}.Finite :=
   ((List.finite_length_le α n).preimage toList_injective.injOn).subset
@@ -127,9 +125,7 @@ lemma mul_eq_mul_iff {z w : FreeSemigroup α} :
     · exact .inl ⟨toList_injective <| by simpa using hx, toList_injective hw.symm⟩
     · exact .inr ⟨u, .inr ⟨toList_injective hx, toList_injective hw.symm⟩⟩
   · rintro (⟨rfl, rfl⟩ | ⟨u, ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩⟩)
-    · exact .inl ⟨[], by simp⟩
-    · exact .inl ⟨u.toList, by simp⟩
-    · exact .inr ⟨u.toList, by simp⟩
+    exacts [.inl ⟨[], by simp⟩, .inl ⟨u.toList, by simp⟩, .inr ⟨u.toList, by simp⟩]
 
 section Encodable
 

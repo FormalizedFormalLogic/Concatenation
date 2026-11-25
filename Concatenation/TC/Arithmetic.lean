@@ -123,11 +123,8 @@ lemma exists_addGraph (hx : IsNumber x) (hy : IsNumber y) : ∃ z, AddGraph z x 
 
 lemma MulGraph.isNumber (h : MulGraph z x y) : IsNumber z := by
   rcases h with ⟨-, rfl⟩ | ⟨-, -, rfl⟩ | ⟨-, -, rfl⟩ | ⟨-, -, ⟨-, hz, -⟩ | ⟨-, rfl⟩⟩
-  · exact isNumber_zero
-  · exact isNumber_zero_append_zero
-  · exact isNumber_zero
-  · exact hz.isNumber
-  · exact isNumber_zero_append_zero
+  exacts [isNumber_zero, isNumber_zero_append_zero, isNumber_zero, hz.isNumber,
+    isNumber_zero_append_zero]
 
 lemma exists_mulGraph (hx : IsNumber x) (hy : IsNumber y) : ∃ z, MulGraph z x y := by
   by_cases hy0 : y = 0

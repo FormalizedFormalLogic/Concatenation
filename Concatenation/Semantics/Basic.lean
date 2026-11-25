@@ -138,10 +138,16 @@ end eval
 
 section substring
 
-variable {M : Type*} [ConcatenationStructure M]
+variable {M : Type*} [ConcatenationStructure M] {c x y : M}
 
 /-- `x` is one of the letters `0` and `1`. -/
 def IsAtom (x : M) : Prop := x = 0 ∨ x = 1
+
+/-- `x` is one of the letters `0` and `1`. -/
+def isAtom : Semisentence ℒ⌢ 1 := “x. x = !!(op(0).const) ∨ x = !!(op(1).const)”
+
+@[simp]
+lemma eval_isAtom : M ⊧/![x] isAtom ↔ IsAtom x := by simp [isAtom, IsAtom]
 
 /--
 `x` is a substring of `y`. Both associations of `u ++ x ++ v` are listed, so that the relation is
@@ -152,6 +158,10 @@ def IsSubstring (x y : M) : Prop :=
   x = y ∨ (∃ u, y = u ++ x) ∨ (∃ v, y = x ++ v) ∨ (∃ u v, y = (u ++ x) ++ v) ∨
     ∃ u v, y = u ++ (x ++ v)
 
+@[simp]
+lemma eval_isSubstring : M ⊧/![x, y] (isSubstring : Semisentence ℒ⌢ 2) ↔ IsSubstring x y := by
+  simp [isSubstring, IsSubstring, exists_or, eq_comm (b := y)]
+
 /--
 `x` is a prefix of `y`.
 - [Gan09, §1, Definition 1]
@@ -160,6 +170,13 @@ def IsPrefix (x y : M) : Prop := x = y ∨ ∃ v, y = x ++ v
 
 @[inherit_doc]
 scoped infix:50 " ⊑ₚ " => IsPrefix
+
+/-- `x` is a prefix of `y`. -/
+def isPrefix : Semisentence ℒ⌢ 2 := “x y. x = y ∨ ∃ v, y = x ⌢ v”
+
+@[simp]
+lemma eval_isPrefix : M ⊧/![x, y] isPrefix ↔ x ⊑ₚ y := by
+  simp [isPrefix, IsPrefix]
 
 /--
 `x` is a suffix of `y`.
@@ -170,25 +187,25 @@ def IsSuffix (x y : M) : Prop := x = y ∨ ∃ u, y = u ++ x
 @[inherit_doc]
 scoped infix:50 " ⊑ₛ " => IsSuffix
 
+/-- `x` is a suffix of `y`. -/
+def isSuffix : Semisentence ℒ⌢ 2 := “x y. x = y ∨ ∃ u, y = u ⌢ x”
+
+@[simp]
+lemma eval_isSuffix : M ⊧/![x, y] isSuffix ↔ x ⊑ₛ y := by
+  simp [isSuffix, IsSuffix]
+
 /--
 `x` is a `c`-tally: every atom that is a substring of `x` is `c`.
 - [Gan09, §1, Definition 1]
 -/
 def IsTally (c x : M) : Prop := ∀ y, IsAtom y → IsSubstring y x → y = c
 
-/-- `x` is one of the letters `0` and `1`. -/
-def isAtom : Semisentence ℒ⌢ 1 := “x. x = !!(op(0).const) ∨ x = !!(op(1).const)”
-
-/-- `x` is a prefix of `y`. -/
-def isPrefix : Semisentence ℒ⌢ 2 := “x y. x = y ∨ ∃ v, y = x ⌢ v”
-
-/-- `x` is a suffix of `y`. -/
-def isSuffix : Semisentence ℒ⌢ 2 := “x y. x = y ∨ ∃ u, y = u ⌢ x”
-
 /-- `x` is a `c`-tally. -/
 def isTally : Semisentence ℒ⌢ 2 := “c x. ∀ y, !isAtom y → !isSubstring y x → y = c”
 
-variable {c x y : M}
+@[simp]
+lemma eval_isTally : M ⊧/![c, x] isTally ↔ IsTally c x := by
+  simp [isTally, IsTally]
 
 @[simp]
 lemma isAtom_zero : IsAtom (0 : M) := Or.inl rfl
@@ -230,25 +247,6 @@ lemma IsPrefix.isSubstring (h : x ⊑ₚ y) : IsSubstring x y := by
 
 lemma IsSuffix.isSubstring (h : x ⊑ₛ y) : IsSubstring x y := by
   rcases h with rfl | ⟨u, rfl⟩ <;> simp
-
-@[simp]
-lemma eval_isAtom : M ⊧/![x] isAtom ↔ IsAtom x := by simp [isAtom, IsAtom]
-
-@[simp]
-lemma eval_isSubstring : M ⊧/![x, y] (isSubstring : Semisentence ℒ⌢ 2) ↔ IsSubstring x y := by
-  simp [isSubstring, IsSubstring, exists_or, eq_comm (b := y)]
-
-@[simp]
-lemma eval_isPrefix : M ⊧/![x, y] isPrefix ↔ x ⊑ₚ y := by
-  simp [isPrefix, IsPrefix]
-
-@[simp]
-lemma eval_isSuffix : M ⊧/![x, y] isSuffix ↔ x ⊑ₛ y := by
-  simp [isSuffix, IsSuffix]
-
-@[simp]
-lemma eval_isTally : M ⊧/![c, x] isTally ↔ IsTally c x := by
-  simp [isTally, IsTally]
 
 end substring
 

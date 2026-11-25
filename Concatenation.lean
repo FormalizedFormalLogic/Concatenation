@@ -19,6 +19,7 @@ public import Concatenation.TC.Separation
 public import Concatenation.TC.Substring
 public import Concatenation.TC.Thin
 public import Concatenation.TC.Undecidability
+public import Concatenation.ToFoundation.Arithmetic.PeanoMinus.Pairing
 public import Concatenation.ToFoundation.Arithmetic.R0.Cobham
 public import Concatenation.ToFoundation.Arithmetic.R0.Representation
 public import Concatenation.ToFoundation.Arithmetic.R0.Undecidability

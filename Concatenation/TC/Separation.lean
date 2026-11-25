@@ -17,7 +17,7 @@ namespace FFL.FirstOrder.Concatenation
 variable {M : Type*} [ConcatenationStructure M] {c d s s' t u v u' v' x x' y y' z z' : M}
   [M↓[ℒ⌢] ⊧* 𝗧𝗖⁺]
 
-lemma exists_isSuffix_isAtom (x : M) : ∃ c, IsAtom c ∧ c ⊑ₛ x := by
+lemma exists_isSuffix_isAtom (x : M) : ∃ c, IsAtom c ∧ x ⊒ c := by
   rcases TCPlus.isBounded x with hx | ⟨-, c, z, hc, rfl⟩
   · use x
   · use c
@@ -33,7 +33,7 @@ lemma exists_isPrefix_isAtom (x : M) : ∃ c, IsAtom c ∧ c ⊑ₚ x := by
     · exact hc
     · simp
 
-lemma IsTally.isSuffix (hx : IsTally c x) : c ⊑ₛ x := by
+lemma IsTally.isSuffix (hx : IsTally c x) : x ⊒ c := by
   obtain ⟨d, hd, h⟩ := exists_isSuffix_isAtom x
   rwa [← hx d hd h.isSubstring]
 
@@ -55,7 +55,7 @@ lemma IsPrefix.isPrefix_of_isAtom (ht : t ⊑ₚ z) (hc : IsAtom c) (hz : c ⊑�
   obtain ⟨e, he, het⟩ := exists_isPrefix_isAtom t
   rwa [← (het.trans ht).eq_of_isAtom he hc hz]
 
-lemma IsSuffix.isSuffix_of_isAtom (ht : t ⊑ₛ z) (hc : IsAtom c) (hz : c ⊑ₛ z) : c ⊑ₛ t := by
+lemma IsSuffix.isSuffix_of_isAtom (ht : z ⊒ t) (hc : IsAtom c) (hz : z ⊒ c) : t ⊒ c := by
   obtain ⟨e, he, het⟩ := exists_isSuffix_isAtom t
   rwa [← (het.trans ht).eq_of_isAtom he hc hz]
 
@@ -67,7 +67,7 @@ lemma IsTally.not_isSubstring_of_isTally_one (ht : IsTally 0 t) (hx : IsTally 1 
     ¬IsSubstring t x := fun h ↦ Concatenation.zero_ne_one <| ht.eq_of_isTally <| hx.of_isSubstring h
 
 lemma IsTally.isSubstring_or_isSubstring (ht : IsTally 0 t) (h : IsSubstring t (x ++ y))
-    (hxy : 1 ⊑ₛ x ∨ 1 ⊑ₚ y) : IsSubstring t x ∨ IsSubstring t y := by
+    (hxy : x ⊒ 1 ∨ 1 ⊑ₚ y) : IsSubstring t x ∨ IsSubstring t y := by
   rcases h.append_cases with h | h | ⟨t₁, t₂, rfl, h₁, h₂⟩
   · exact Or.inl h
   · exact Or.inr h
@@ -82,11 +82,11 @@ are `c`-tallies and `z`, `z'` end with `d`, then `z ++ x = z' ++ y` implies `z =
 - [Gan09, §3, Lemma 7]
 -/
 lemma tally_separation_of_ne (hd : IsAtom d) (hdc : d ≠ c) (hx : IsTally c x) (hy : IsTally c y)
-    (hz : d ⊑ₛ z) (hz' : d ⊑ₛ z') (h : z ++ x = z' ++ y) : z = z' ∧ x = y := by
-  have H : ∀ {z z' x y : M}, IsTally c x → d ⊑ₛ z' → ∀ w, z ++ w = z' → x ≠ w ++ y := by
+    (hz : z ⊒ d) (hz' : z' ⊒ d) (h : z ++ x = z' ++ y) : z = z' ∧ x = y := by
+  have H : ∀ {z z' x y : M}, IsTally c x → z' ⊒ d → ∀ w, z ++ w = z' → x ≠ w ++ y := by
     intro z z' x y hx hz' w hw hxw
     obtain ⟨e, he, hew⟩ := exists_isSuffix_isAtom w
-    have h₁ : e ⊑ₛ z' := hw ▸ hew.append_left
+    have h₁ : z' ⊒ e := hw ▸ hew.append_left
     obtain rfl := h₁.eq_of_isAtom he hd hz'
     exact hdc <| hx e he <| hxw ▸ hew.isSubstring.append_right
   rcases editor h with h | ⟨w, ⟨hw, hxw⟩ | ⟨hw, hyw⟩⟩
@@ -99,8 +99,8 @@ If `x` and `y` are `1`-tallies and `z`, `z'` end with `0`, then `z ++ x = z' ++ 
 and `x = y`.
 - [Gan09, §3, Lemma 7]
 -/
-theorem tally_separation (hx : IsTally 1 x) (hy : IsTally 1 y) (hz : 0 ⊑ₛ z)
-    (hz' : 0 ⊑ₛ z') (h : z ++ x = z' ++ y) : z = z' ∧ x = y :=
+theorem tally_separation (hx : IsTally 1 x) (hy : IsTally 1 y) (hz : z ⊒ 0)
+    (hz' : z' ⊒ 0) (h : z ++ x = z' ++ y) : z = z' ∧ x = y :=
   tally_separation_of_ne isAtom_zero Concatenation.zero_ne_one hx hy hz hz' h
 
 /--
@@ -108,8 +108,8 @@ If `x` and `y` are `0`-tallies and `z`, `z'` end with `1`, then `z ++ x = z' ++ 
 and `x = y`.
 - [Gan09, §3, Lemma 7]
 -/
-lemma tally_separation' (hx : IsTally 0 x) (hy : IsTally 0 y) (hz : 1 ⊑ₛ z)
-    (hz' : 1 ⊑ₛ z') (h : z ++ x = z' ++ y) : z = z' ∧ x = y :=
+lemma tally_separation' (hx : IsTally 0 x) (hy : IsTally 0 y) (hz : z ⊒ 1)
+    (hz' : z' ⊒ 1) (h : z ++ x = z' ++ y) : z = z' ∧ x = y :=
   tally_separation_of_ne isAtom_one Concatenation.zero_ne_one.symm hx hy hz hz' h
 
 /--
@@ -136,7 +136,7 @@ For `1`-tallies `u`, `v`, `u'`, `v'` and strings `s`, `s'` ending with `0`, the 
 `s u 0 v 0 0` determines `s`, `u` and `v`.
 - [Gan09, §3]
 -/
-lemma configuration_eq_of_isSuffix (hs : 0 ⊑ₛ s) (hs' : 0 ⊑ₛ s')
+lemma configuration_eq_of_isSuffix (hs : s ⊒ 0) (hs' : s' ⊒ 0)
     (h : s ++ (pairOf u v ++ 0 ++ 0) = s' ++ (pairOf u' v' ++ 0 ++ 0)) :
     s = s' ∧ u = u' ∧ v = v' := by
   simp only [pairOf, ← Concatenation.append_assoc] at h

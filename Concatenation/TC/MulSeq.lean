@@ -38,7 +38,7 @@ lemma eq_zero_or_eq_zero_zero_of_isSubstring_pairOf (ht : IsTally 0 t)
 lemma not_isSubstring_zero_zero_append_pairOf :
     ¬IsSubstring (0 ++ 0 ++ z) (pairOf p q ++ 0 ++ 0) := by
   have h0 : IsAtom (0 : M) := isAtom_zero
-  have H : ∀ {r t₁ t₂ : M}, IsTally 1 r → t₁ ⊑ₛ r → 0 ++ (0 ++ z) = t₁ ++ t₂ → False := by
+  have H : ∀ {r t₁ t₂ : M}, IsTally 1 r → r ⊒ t₁ → 0 ++ (0 ++ z) = t₁ ++ t₂ → False := by
     intro r t₁ t₂ hr h₁ he
     have h₂ : 0 ⊑ₚ t₁ := (isPrefix_append t₁ t₂).isPrefix_of_isAtom h0
       (he ▸ isPrefix_append 0 (0 ++ z))
@@ -68,13 +68,13 @@ lemma eq_of_isPrefix_pairOf (h : k ++ 0 ++ 0 ⊑ₚ pairOf p q ++ 0 ++ 0) : k = 
     rw [h]
     simp [Concatenation.append_assoc]
 
-lemma eq_of_isSuffix_of_isPrefix_pairOf (h : k ⊑ₛ z ++ 0 ++ 0)
+lemma eq_of_isSuffix_of_isPrefix_pairOf (h : z ++ 0 ++ 0 ⊒ k)
     (h' : k ⊑ₚ pairOf p q ++ 0 ++ 0) : k = pairOf p q ++ 0 ++ 0 := by
   have h1 : 1 ⊑ₚ k :=
     h'.isPrefix_of_isAtom isAtom_one hp.isPrefix_pairOf_append
   have hn : ¬IsSubstring k (0 ++ 0) := fun h ↦
     (isTally_zero_zero.of_isSubstring h).not_isSubstring_one h1.isSubstring
-  have h00 : 0 ++ 0 ⊑ₛ z ++ 0 ++ 0 := by
+  have h00 : z ++ 0 ++ 0 ⊒ 0 ++ 0 := by
     right; use z; simp [Concatenation.append_assoc]
   rcases h.total h00 with h | h | ⟨j, rfl⟩
   · exact absurd h.isSubstring hn
@@ -96,7 +96,7 @@ lemma isPrefix_append_pairOf_cases (h : z ++ 0 ++ 0 ⊑ₚ x ++ (pairOf p q ++ 0
 lemma isSubstring_append_pairOf_cases
     (h : IsSubstring (0 ++ 0 ++ z ++ 0 ++ 0) (x ++ (pairOf p q ++ 0 ++ 0))) :
     IsSubstring (0 ++ 0 ++ z ++ 0 ++ 0) x ∨
-      ∃ z₁, z₁ ⊑ₛ x ∧ 0 ++ 0 ++ z ++ 0 ++ 0 = z₁ ++ (pairOf p q ++ 0 ++ 0) := by
+      ∃ z₁, x ⊒ z₁ ∧ 0 ++ 0 ++ z ++ 0 ++ 0 = z₁ ++ (pairOf p q ++ 0 ++ 0) := by
   rcases h.append_cases with h | h | ⟨z₁, z₂, he, h₁, h₂⟩
   · exact Or.inl h
   · apply absurd _ (not_isSubstring_zero_zero_append_pairOf (z := z ++ 0 ++ 0) hp hq)
@@ -110,8 +110,8 @@ lemma isSubstring_append_pairOf_cases
 
 end pairOf
 
-lemma isSubstring_zero_zero_of_isSuffix (hx : 1 ++ 0 ++ 0 ⊑ₛ x)
-    (hu : 0 ++ 0 ++ u ⊑ₛ x) : IsSubstring (0 ++ 0) u := by
+lemma isSubstring_zero_zero_of_isSuffix (hx : x ⊒ 1 ++ 0 ++ 0)
+    (hu : x ⊒ 0 ++ 0 ++ u) : IsSubstring (0 ++ 0) u := by
   have h0 : IsAtom (0 : M) := isAtom_zero
   have h100 : IsSubstring (0 ++ 0 : M) (1 ++ 0 ++ 0) := by
     simp [Concatenation.append_assoc]
@@ -142,12 +142,12 @@ lemma IsLast.pairOf_inj (hu : IsTally 1 u) (hv : IsTally 1 v) (hp : IsTally 1 p)
   · exact absurd h' (configuration_ne hp hq hu hv)
   · exact (configuration_eq hu hv hp hq h').2
 
-lemma IsSeq.isSuffix_zero_zero (h : IsSeq z) : 0 ++ 0 ⊑ₛ z := by
-  have h₁ : (0 ++ 0 : M) ⊑ₛ 1 ++ 0 ++ 0 := by
+lemma IsSeq.isSuffix_zero_zero (h : IsSeq z) : z ⊒ 0 ++ 0 := by
+  have h₁ : 1 ++ 0 ++ 0 ⊒ (0 ++ 0 : M) := by
     right; use 1; simp [Concatenation.append_assoc]
   exact h₁.trans h.2.1
 
-lemma isLast_append (h : 0 ++ 0 ⊑ₛ z) : IsLast u (z ++ u ++ 0 ++ 0) := by
+lemma isLast_append (h : z ⊒ 0 ++ 0) : IsLast u (z ++ u ++ 0 ++ 0) := by
   rcases h with rfl | ⟨k, rfl⟩
   · exact IsSuffix.refl _
   · right; use k; simp [Concatenation.append_assoc]
@@ -316,7 +316,7 @@ lemma IsPairSeq.of_append_pairOf (hs : IsPairSeq (k ++ 0 ++ 0 ++ pairOf a b ++ 0
     · exact fun t ht h ↦ hs.isSeq.2.2 t ht (h.trans hsub)
   exact ⟨hseq, fun v ⟨_, hv, h⟩ ↦ hs.2 v ⟨hs.isSeq, hv, h.trans hsub⟩⟩
 
-lemma IsLast.exists_eq_append (h : IsLast u z) : ∃ k, 0 ++ 0 ++ u ⊑ₛ k ∧ z = k ++ 0 ++ 0 := by
+lemma IsLast.exists_eq_append (h : IsLast u z) : ∃ k, k ⊒ 0 ++ 0 ++ u ∧ z = k ++ 0 ++ 0 := by
   rcases h with rfl | ⟨k, rfl⟩
   · use 0 ++ 0 ++ u
   · use k ++ (0 ++ 0 ++ u)
@@ -419,7 +419,7 @@ theorem existsUnique_isMulSeq_succ_iff (hx : IsTally 1 x) : (∃! r, IsMulSeq x 
     apply ExistsUnique.intro r hr
     intro r' hr'
     obtain ⟨w', hw', hl'⟩ := hr'.exists_isLast
-    have H {r} (hr : IsMulSeq x y r) : 0 ⊑ₛ r :=
+    have H {r} (hr : IsMulSeq x y r) : r ⊒ 0 :=
       (isSuffix_append (0 : M) 0).trans hr.isPairSeq.isSeq.isSuffix_zero_zero
     exact (configuration_eq_of_isSuffix (hw'.append hx) hs.isTally_right (hw.append hx)
       hs.isTally_right (H hr') (H hr) <| by

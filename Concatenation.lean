@@ -13,6 +13,7 @@ public import Concatenation.Semantics.Standard
 public import Concatenation.TC.Arithmetic
 public import Concatenation.TC.Basic
 public import Concatenation.TC.Empty
+public import Concatenation.TC.Matrix
 public import Concatenation.TC.MulSeq
 public import Concatenation.TC.Representation
 public import Concatenation.TC.Separation

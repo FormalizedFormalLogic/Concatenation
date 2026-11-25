@@ -56,6 +56,22 @@ lemma eval_cobhamLE : M ⊧/![x, y] cobhamLE ↔ x ⊴ y := by
   simp [cobhamLE, CobhamLE, Semiformula.Operator.LE.sentence_eq, Semiformula.Operator.val,
     Semiformula.Operator.Eq.sentence_eq, Semiformula.Operator.LT.sentence_eq]
 
+/--
+The strict part of Cobham's order.
+- [Sve08, §3.3]
+-/
+def CobhamLT (x y : M) : Prop := x ⊴ y ∧ x ≠ y
+
+/--
+The strict part of Cobham's order.
+- [Sve08, §3.3]
+-/
+def cobhamLT : ArithmeticSemisentence 2 := “x y. !cobhamLE x y ∧ x ≠ y”
+
+@[simp]
+lemma eval_cobhamLT : M ⊧/![x, y] cobhamLT ↔ CobhamLT x y := by
+  simp [cobhamLT, CobhamLT]
+
 variable [M↓[ℒₒᵣ] ⊧* 𝗥₀]
 
 lemma numeral_add_one (n : ℕ) : (numeral n : M) + 1 = numeral (n + 1) := by
@@ -141,5 +157,21 @@ lemma cobhamLE_numeral_of_le {k q : ℕ} {w : M} (hkq : k ≤ q) (h : numeral q 
 lemma numeral_cobhamLE_numeral_iff {k n : ℕ} : (numeral k : M) ⊴ numeral n ↔ k ≤ n := by
   simp [cobhamLE_numeral_iff]
   omega
+
+/--
+Below a numeral, the strict part of Cobham's order is $<$.
+- [Sve08, §3.3, Lemma 2]
+-/
+lemma cobhamLT_numeral_iff {n : ℕ} : CobhamLT x (numeral n) ↔ x < numeral n := by
+  rw [CobhamLT, cobhamLE_numeral_iff]
+  constructor
+  · rintro ⟨h | h, hne⟩
+    · exact absurd h hne
+    · exact h
+  · intro h
+    and_intros
+    · exact Or.inr h
+    · rintro rfl
+      exact not_numeral_lt_self n h
 
 end FFL.FirstOrder.Arithmetic.R0

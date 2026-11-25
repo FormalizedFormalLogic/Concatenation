@@ -1,11 +1,13 @@
 module
 
 public import Foundation.FirstOrder.Syntax.Classical.BinderNotation
+public import Foundation.FirstOrder.Tarski.Operator
 
 /-!
 # Concatenation symbol
 
-Languages with a binary function symbol for concatenation, and the term notation `t ⌢ u`.
+Languages with a binary function symbol for concatenation, the term notation `t ⌢ u`, and
+structures interpreting the symbol as a given concatenation.
 -/
 
 @[expose] public section
@@ -60,5 +62,34 @@ macro_rules
   | `(⤫term(lit)[ $binders* | $fbinders* | $e₁ ⌢ $e₂ ]) =>
     `(Semiterm.Operator.Concat.concat.operator
       ![⤫term(lit)[ $binders* | $fbinders* | $e₁ ], ⤫term(lit)[ $binders* | $fbinders* | $e₂ ]])
+
+namespace Tarski.Structure
+
+variable (L) (M : Type*) [Tarski.Structure L M]
+
+/-- The operator of concatenation is interpreted as `++`. -/
+protected class Concat [Semiterm.Operator.Concat L] [Append M] : Prop where
+  concat : ∀ a b : M, (@Semiterm.Operator.Concat.concat L _).val ![a, b] = a ++ b
+
+attribute [simp] Concat.concat
+
+variable {L M}
+
+@[simp]
+lemma concat_eq_of_lang [L.Concat] [Append M] [Tarski.Structure.Concat L M] {v : Fin 2 → M} :
+    Tarski.Structure.func (L := L) Language.Concat.concat v = v 0 ++ v 1 := by
+  have h := Tarski.Structure.Concat.concat (L := L) (v 0) (v 1)
+  simp only [← Matrix.fun_eq_vec_two] at h
+  exact h
+
+end Tarski.Structure
+
+variable {M : Type*} [Tarski.Structure L M] [Append M]
+
+@[simp]
+lemma Semiterm.val_concat [Semiterm.Operator.Concat L] [Tarski.Structure.Concat L M]
+    {e : Fin n → M} {ε : ξ → M} (t u : Semiterm L ξ n) :
+    (Operator.Concat.concat.operator ![t, u]).val e ε = t.val e ε ++ u.val e ε := by
+  simp
 
 end FFL.FirstOrder

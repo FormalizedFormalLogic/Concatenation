@@ -5,9 +5,9 @@ public import Concatenation.ToFoundation.Decidability
 public import Foundation.FirstOrder.Incompleteness.Church
 
 /-!
-# Essential undecidability of $\mathsf{R}_0$
+# Essential undecidability of $\mathsf{R}_0$ and $\mathsf{Q}$
 
-No consistent extension of $\mathsf{R}_0$ has a decidable set of theorems.
+No consistent extension of $\mathsf{R}_0$ or of $\mathsf{Q}$ has a decidable set of theorems.
 -/
 
 @[expose] public section
@@ -18,7 +18,7 @@ open Bootstrapping Bootstrapping.Arithmetic
 
 /--
 The theorems of a consistent extension of $\mathsf{R}_0$ are not computable.
-- [Sve08, §3.3, Theorem 3]
+- [Sve08, §3.3]
 - [HH14, §1]
 -/
 theorem uncomputable_theory_of_consistent (T : ArithmeticTheory) [𝗥₀ ⪯ T]
@@ -62,7 +62,7 @@ theorem uncomputable_theory_of_consistent (T : ArithmeticTheory) [𝗥₀ ⪯ T]
 
 /--
 $\mathsf{R}_0$ is essentially undecidable.
-- [Sve08, §3.3, Theorem 3]
+- [Sve08, §3.3]
 - [HH14, §1]
 -/
 instance : (𝗥₀ : ArithmeticTheory).EssentiallyUndecidable where
@@ -70,8 +70,19 @@ instance : (𝗥₀ : ArithmeticTheory).EssentiallyUndecidable where
 
 /--
 The theorems of $\mathsf{R}_0$ are not computable.
-- [Sve08, §3.3, Theorem 3]
+- [Sve08, §3.3]
 -/
 theorem undecidable : Entailment.Undecidable 𝗥₀ := Theory.EssentiallyUndecidable.undecidable 𝗥₀
 
 end FFL.FirstOrder.Arithmetic.R0
+
+namespace FFL.FirstOrder.Arithmetic
+
+/--
+$\mathsf{Q}$ is essentially undecidable.
+- [Sve08, §2]
+-/
+instance : (𝗤 : ArithmeticTheory).EssentiallyUndecidable :=
+  Theory.EssentiallyUndecidable.of_weakerThan 𝗥₀ 𝗤
+
+end FFL.FirstOrder.Arithmetic

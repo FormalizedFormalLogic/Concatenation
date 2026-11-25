@@ -60,6 +60,7 @@ the functions (tag 8), the equality (tag 7) and the axioms `A` (tag 4).
 -/
 @[mk_iff]
 structure IsCertificate₁ (A : ArithmeticSemisentence 2) (E : ℕ) (c j : M) : Prop where
+  lt : j < c
   dom_zero : Fact c (numeral 2) 0 0 0
   env_zero : Fact c (numeral 3) 0 0 0
   env_succ : ∀ n < c, ∀ s < c, ∀ a < c, n ⊴ j → Fact c (numeral 3) n s 0 →
@@ -78,7 +79,7 @@ The clauses of a certificate `c` of level `j` on the domain (tag 2), the environ
 the functions (tag 8), the equality (tag 7) and the axioms `A` (tag 4).
 -/
 def isCertificate₁ (A : ArithmeticSemisentence 2) (E : ℕ) : ArithmeticSemisentence 2 := “c j.
-  !fact c 2 0 0 0 ∧ !fact c 3 0 0 0 ∧
+  j < c ∧ !fact c 2 0 0 0 ∧ !fact c 3 0 0 0 ∧
   (∀ n < c, ∀ s < c, ∀ a < c, !cobhamLE n j → !fact c 3 n s 0 → !fact c 2 a 0 0 →
     !fact c 3 (n + 1) (!mkPairTerm a s) 0) ∧
   (∀ k < c, ∀ f < c, ∀ d < c, !cobhamLE k j → !cobhamLE f j → !fact c 3 k d 0 →

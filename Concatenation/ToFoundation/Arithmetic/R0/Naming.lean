@@ -370,6 +370,7 @@ lemma exists_isCertificate (A : ArithmeticSemisentence 2) (j : ℕ)
   use c
   constructor
   · constructor
+    · omega
     · exact dom .zero
     · exact env (n := 0) (by simp) ⟨![], by simp, rfl⟩
     · intro n _ s _ a _ hn hs ha

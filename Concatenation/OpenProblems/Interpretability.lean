@@ -8,7 +8,6 @@ public import Concatenation.ToFoundation.Arithmetic.PeanoMinusSmullyan
 public import Concatenation.ToFoundation.Decidability
 public import Concatenation.ToFoundation.Interpretability.Relative
 public import Concatenation.ToFoundation.Interpretability.Unrelativized
-public import Concatenation.WTC.Basic
 import Concatenation.OpenProblem
 
 /-!
@@ -20,32 +19,6 @@ import Concatenation.OpenProblem
 namespace FFL.FirstOrder
 
 namespace Concatenation
-
-/--
-Axioms of $\mathsf{WTC}$ with the empty string and the editor axiom (TC3).
-- [HH14, Definition 1, Question 1]
--/
-inductive IsWTCEmptyEditorAxiom : Sentence ℒ⌢ₑ → Prop
-  | wtcEmpty : ∀ φ ∈ 𝗪𝗧𝗖ₑ, IsWTCEmptyEditorAxiom φ
-  | editor : IsWTCEmptyEditorAxiom “∀ x y s t, x ⌢ y = s ⌢ t →
-      ∃ w, (x ⌢ w = s ∧ y = w ⌢ t) ∨ (x = s ⌢ w ∧ w ⌢ y = t)”
-
-/--
-$\mathsf{WTC}$ with the empty string and the editor axiom (TC3).
-- [HH14, Definition 1, Question 1]
--/
-abbrev WTCEmptyEditor : Theory ℒ⌢ₑ := Set.ofPred IsWTCEmptyEditorAxiom
-
-instance : 𝗪𝗧𝗖ₑ ⪯ WTCEmptyEditor := Entailment.WeakerThan.ofSubset IsWTCEmptyEditorAxiom.wtcEmpty
-
-instance : 𝗘𝗤 ℒ⌢ₑ ⪯ WTCEmptyEditor :=
-  Entailment.WeakerThan.trans (𝓣 := 𝗪𝗧𝗖ₑ) inferInstance inferInstance
-
-/--
-Does $\mathsf{WTC} + \mathrm{TC3}$, with the empty string, interpret $\mathsf{TC}$?
-- [HH14, Question 1]
--/
-open_problem WTCEmptyEditor_interprets_TCEmpty := Nonempty (WTCEmptyEditor ⊳ 𝗧𝗖ₑ)
 
 /--
 Is $\overline{\mathsf{ID}}$ interpretable in $\mathsf{ID}$?

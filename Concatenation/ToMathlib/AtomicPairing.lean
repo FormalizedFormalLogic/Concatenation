@@ -558,7 +558,8 @@ theorem exists_similar_insert (d : ℕ) : ∃ g, ∀ ρ : Set (M × M'), ρ.Fini
       have hp : p.length < d := by simp at hp; omega
       rw [comp_append, comp_append, ih hp.le]
       exact hC p hp i
-  have hO (x : M) : ∀ j, j + K ≤ g → ∀ x₂ y₂, (x₂, y₂) ∈ F.Reach F' j ρ → H x = y₂ → x = x₂ := by
+  have hO (x : M) :
+      ∀ j, j + K ≤ g → ∀ x₂ y₂, (x₂, y₂) ∈ F.Reach F' j ρ → H x = y₂ → x = x₂ := by
     apply F.heightLE_induction (P := fun n x ↦ ∀ j, j + n ≤ g → ∀ x₂ y₂,
       (x₂, y₂) ∈ F.Reach F' j ρ → H x = y₂ → x = x₂) _ _ K x (hHt x)
     · intro n x hxT j hj x₂ y₂ h₂ hxy

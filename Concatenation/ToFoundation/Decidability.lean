@@ -1,16 +1,21 @@
 module
 
+public import Foundation.FirstOrder.Arithmetic.Bootstrapping.DerivabilityCondition.D1
+public import Foundation.FirstOrder.Arithmetic.Bootstrapping.Syntax.CraigTrick
 public import Foundation.FirstOrder.LK.Basic
 public import Foundation.FirstOrder.Syntax.Classical.PrimrecCoding
 public import Foundation.Logic.Decidability
 
 /-!
-# Essentially undecidable theories
+# Decidable and essentially undecidable theories
 
-First-order theories all of whose consistent extensions are undecidable.
+Complete recursively enumerable theories are decidable; first-order theories all of whose
+consistent extensions are undecidable.
 -/
 
 @[expose] public section
+
+open scoped FFL.FirstOrder.Arithmetic FFL.FirstOrder.Bounding
 
 namespace FFL.FirstOrder
 
@@ -40,5 +45,46 @@ instance (T : Theory L) [T.EssentiallyUndecidable] : Entailment.EssentiallyUndec
     Entailment.consistent_of_incomplete (h := hU)
 
 end Theory.EssentiallyUndecidable
+
+namespace Theory
+
+open Arithmetic Arithmetic.Bootstrapping
+
+variable [L.LORDefinable] [L.DecidableEq] (T : Theory L) [T.RE]
+
+/-- The theorems of a recursively enumerable theory are recursively enumerable. -/
+lemma rePred_provable : REPred fun σ : Sentence L ↦ T ⊢ σ := by
+  have h : 𝚺ᴬ₁-Predicate fun n : ℕ ↦ Provable T.craig n := by definability
+  apply ((rePred_iff_sigma1.mpr h).comp Computable.encode).of_eq
+  intro σ
+  rw [← Sentence.quote_eq_encode_nat, provable_iff_provable]
+  exact (Entailment.Equiv.iff.mp inferInstance σ).symm
+
+/-- The sentences refuted by a recursively enumerable theory are recursively enumerable. -/
+lemma rePred_provable_neg : REPred fun σ : Sentence L ↦ T ⊢ ∼σ := by
+  have h : 𝚺ᴬ₁-Predicate fun n : ℕ ↦ Provable T.craig (neg L n) := by definability
+  apply ((rePred_iff_sigma1.mpr h).comp Computable.encode).of_eq
+  intro σ
+  have : neg L (⌜σ⌝ : ℕ) = ⌜∼σ⌝ := by simp [Sentence.quote_def, Semiformula.quote_def]
+  rw [← Sentence.quote_eq_encode_nat, this, provable_iff_provable]
+  exact (Entailment.Equiv.iff.mp inferInstance _).symm
+
+/-- A complete recursively enumerable theory is decidable. -/
+theorem decidable_of_complete (h : Entailment.Complete T) : Entailment.Decidable T := by
+  classical
+  by_cases hT : Entailment.Consistent T
+  · constructor
+    apply ComputablePred.computable_iff_re_compl_re'.mpr
+    use T.rePred_provable
+    apply T.rePred_provable_neg.of_eq
+    intro σ
+    constructor
+    · intro hσ hσ'
+      exact Entailment.Consistent.not_bot (𝓢 := T) <| Entailment.neg_mdp hσ hσ'
+    · intro hσ
+      exact (h.con σ).resolve_left hσ
+  · exact Entailment.decidable_of_incomplete <| Entailment.not_consistent_iff_inconsistent.mp hT
+
+end Theory
 
 end FFL.FirstOrder

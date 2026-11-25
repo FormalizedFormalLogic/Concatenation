@@ -29,6 +29,13 @@ name = "Foundation"
 git = "https://github.com/FormalizedFormalLogic/Foundation"
 rev = "master"
 
+# The sibling project on first-order arithmetic, for its general results on interpretations. It
+# builds on the same Foundation, whose revision is the one this package resolves to.
+[[require]]
+name = "AlphaCentauri"
+git = "https://github.com/FormalizedFormalLogic/AlphaCentauri"
+rev = "main"
+
 # `lake exe forgive Concatenation` (`just axiom-audit`): the axiom audit against `forgive.yml`.
 # Run after `lake build`; it reads the oleans. The package imports only `Lean` and `Cli`, whose
 # internals move between toolchains, so it is pinned to the tag naming ours — a bare revision only

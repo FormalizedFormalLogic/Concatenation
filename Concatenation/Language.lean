@@ -83,6 +83,47 @@ instance : (ℒ⌢).Eq := ⟨Rel.eq⟩
 
 end Concatenation
 
+/-- The letters `α` and the symbol for concatenation. -/
+inductive ConcatenationLettersFunc (α : Type) : ℕ → Type
+  | letter (a : α) : ConcatenationLettersFunc α 0
+  | concat : ConcatenationLettersFunc α 2
+
+/--
+Language of the theory of concatenation with the letters `α`.
+- [Hor11, §3, Theorem 3.18]
+- [Hor12, §4, Theorem 4.13]
+-/
+@[reducible]
+def concatenationLetters (α : Type) : Language where
+  Func := ConcatenationLettersFunc α
+  Rel := Concatenation.Rel
+
+@[inherit_doc]
+notation "ℒ⌢[" α "]" => concatenationLetters α
+
+namespace ConcatenationLetters
+
+variable {α : Type}
+
+instance [Encodable α] (k) : Encodable (ConcatenationLettersFunc α k) where
+  encode
+    | .letter a => Encodable.encode a
+    | .concat => 0
+  decode e :=
+    match k, e with
+    | 0, e => (Encodable.decode e).map .letter
+    | 2, 0 => some .concat
+    | _, _ => none
+  encodek x := by rcases x <;> simp
+
+instance [Encodable α] : (ℒ⌢[α]).Encodable := ⟨fun _ ↦ inferInstance, fun _ ↦ inferInstance⟩
+
+instance : (ℒ⌢[α]).Concat := ⟨.concat⟩
+
+instance : (ℒ⌢[α]).Eq := ⟨Concatenation.Rel.eq⟩
+
+end ConcatenationLetters
+
 /-- The single symbol for the prefix relation. -/
 inductive PrefixRel : ℕ → Type
   | pref : PrefixRel 2

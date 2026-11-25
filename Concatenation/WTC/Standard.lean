@@ -30,7 +30,8 @@ lemma ofFreeSemigroup_one : (ofFreeSemigroup (1 : FreeSemigroup Bool) : M) = 1 :
 lemma ofFreeSemigroup_append_of_isAtom (u : FreeSemigroup Bool) (hc : IsAtom c) :
     (ofFreeSemigroup (u ++ c) : M) = ofFreeSemigroup u ++ ofFreeSemigroup c := by
   rcases hc with rfl | rfl <;>
-    simp [ofFreeSemigroup, HMul.hMul, Mul.mul, zero_eq_of_false, one_eq_of_true, FreeSemigroup.of]
+    simp [ofFreeSemigroup, stringValue, HMul.hMul, Mul.mul, zero_eq_of_false, one_eq_of_true,
+      FreeSemigroup.of]
 
 /-- Induction on a nonempty binary string by its last letter. -/
 @[elab_as_elim]

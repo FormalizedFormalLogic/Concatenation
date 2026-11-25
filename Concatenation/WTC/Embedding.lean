@@ -1,59 +1,51 @@
 module
 
-public import AlphaCentauri.Interpretability.Basic
-public import Concatenation.Semantics.Standard
 public import Concatenation.ToFoundation.Arithmetic.R0.Representation
 public import Concatenation.ToMathlib.FreeSemigroupCode
-public import Concatenation.WTC.Basic
+public import Concatenation.WTC.Letters
 
 /-!
 # $\mathsf{R}_0$ interprets $\mathsf{WTC}$
 
-The binary strings are coded by numerals, and the concatenation is restricted by Cobham's order.
+The strings are coded by numerals, and the concatenation is restricted by Cobham's order.
 -/
 
 @[expose] public section
 
 namespace FFL.FirstOrder.Concatenation
 
+open LetterStructure
+
 section initial
 
-variable {M : Type*} [ConcatenationStructure M]
+variable {α : Type} {M : Type*} [LetterStructure α M]
 
 /--
-`c` embeds the nonempty binary strings onto an initial part of `M`: if a concatenation is a
-standard string, then so are its arguments.
+`c` embeds the nonempty strings onto an initial part of `M`: if a concatenation is a standard
+string, then so are its arguments.
 -/
-structure IsInitialEmbedding (c : FreeSemigroup Bool → M) : Prop where
+structure IsInitialEmbedding (c : FreeSemigroup α → M) : Prop where
   injective : Function.Injective c
-  map_zero : c 0 = 0
-  map_one : c 1 = 1
-  map_append (u v : FreeSemigroup Bool) : c (u ++ v) = c u ++ c v
-  exists_of_append_eq {x y : M} {w : FreeSemigroup Bool} (h : x ++ y = c w) :
+  map_letter (a : α) : c (FreeSemigroup.of a) = ofLetter a
+  map_append (u v : FreeSemigroup α) : c (u ++ v) = c u ++ c v
+  exists_of_append_eq {x y : M} {w : FreeSemigroup α} (h : x ++ y = c w) :
     ∃ u v, x = c u ∧ y = c v
 
 namespace IsInitialEmbedding
 
-variable {c : FreeSemigroup Bool → M} (hc : IsInitialEmbedding c) {x y : M}
-  {w : FreeSemigroup Bool}
+variable {c : FreeSemigroup α → M} (hc : IsInitialEmbedding c) {x y : M} {w : FreeSemigroup α}
 include hc
 
-lemma ofFreeSemigroup_eq (w : FreeSemigroup Bool) :
-    ConcatenationStructure.ofFreeSemigroup w = c w := by
-  have hb (b : Bool) : c (FreeSemigroup.of b) = if b then 1 else 0 := by
-    cases b
-    · exact hc.map_zero
-    · exact hc.map_one
-  suffices ∀ (l : List Bool) (u : FreeSemigroup Bool),
-      l.foldl (fun m b ↦ m ++ if b then 1 else 0) (c u) = c ⟨u.head, u.tail ++ l⟩ by
-    simpa [ConcatenationStructure.ofFreeSemigroup, hb]
-      using this w.tail (FreeSemigroup.of w.head)
+lemma stringValue_eq (w : FreeSemigroup α) : stringValue ofLetter w = c w := by
+  suffices ∀ (l : List α) (u : FreeSemigroup α),
+      l.foldl (fun m a ↦ m ++ ofLetter a) (c u) = c ⟨u.head, u.tail ++ l⟩ by
+    simpa [stringValue, hc.map_letter] using this w.tail (FreeSemigroup.of w.head)
   intro l
   induction l with
   | nil => simp
-  | cons b l ih =>
+  | cons a l ih =>
     intro u
-    rw [List.foldl_cons, ← hb, ← hc.map_append, ih]
+    rw [List.foldl_cons, ← hc.map_letter, ← hc.map_append, ih]
     simp [FreeSemigroup.of, append_eq_mul, HMul.hMul, Mul.mul]
 
 lemma exists_of_isSubstring (h : IsSubstring x (c w)) : ∃ u, x = c u := by
@@ -102,34 +94,30 @@ lemma editor_of_isSubstring {s t : M} (h : x ++ y = s ++ t) (hw : IsSubstring (x
     use c u
     simp [← hc.map_append]
 
-lemma append_ne_of (b : Bool) : x ++ y ≠ c (FreeSemigroup.of b) := by
+lemma append_ne_letter (a : α) : x ++ y ≠ ofLetter a := by
+  rw [← hc.map_letter]
   intro h
   obtain ⟨u, v, rfl, rfl⟩ := hc.exists_of_append_eq h
   rw [← hc.map_append, hc.injective.eq_iff] at h
-  exact FreeSemigroup.of_ne_mul b u v h.symm
+  exact FreeSemigroup.of_ne_mul a u v h.symm
 
-/--
-A structure with an initial embedding of the nonempty binary strings is a model of
-$\mathsf{WTC}$.
--/
-theorem models_WTC : M↓[ℒ⌢] ⊧* 𝗪𝗧𝗖 := ⟨by
+/-- A structure with an initial embedding of the nonempty strings is a model of `𝗪𝗧𝗖[α]`. -/
+theorem models_WTCLetters [Nonempty M] : M↓[ℒ⌢[α]] ⊧* 𝗪𝗧𝗖[α] := ⟨by
   intro σ h
   cases h
   case equal hφ =>
-    have : M↓[ℒ⌢] ⊧* 𝗘𝗤 ℒ⌢ := inferInstance
+    have : M↓[ℒ⌢[α]] ⊧* 𝗘𝗤 ℒ⌢[α] := inferInstance
     exact models_theory_iff.mp this _ hφ
   case concatAssoc w =>
-    simpa [models_iff, hc.ofFreeSemigroup_eq]
+    simpa [models_iff, hc.stringValue_eq]
       using fun x y z : M ↦ hc.append_assoc_of_isSubstring (x := x) (y := y) (z := z) (w := w)
   case editor w =>
-    simpa [models_iff, hc.ofFreeSemigroup_eq]
+    simpa [models_iff, hc.stringValue_eq]
       using fun x y s t : M ↦ hc.editor_of_isSubstring (x := x) (y := y) (s := s) (t := t) (w := w)
-  case concatNeZero =>
-    simpa [models_iff] using fun x y : M ↦ hc.map_zero ▸ hc.append_ne_of (x := x) (y := y) false
-  case concatNeOne =>
-    simpa [models_iff] using fun x y : M ↦ hc.map_one ▸ hc.append_ne_of (x := x) (y := y) true
-  case zeroNeOne =>
-    simp [models_iff, ← hc.map_zero, ← hc.map_one, hc.injective.eq_iff]⟩
+  case concatNeLetter a =>
+    simpa [models_iff] using fun x y : M ↦ hc.append_ne_letter (x := x) (y := y) a
+  case letterNeLetter a b h =>
+    simpa [models_iff, ← hc.map_letter, hc.injective.eq_iff, FreeSemigroup.of] using h⟩
 
 end IsInitialEmbedding
 
@@ -137,11 +125,13 @@ end initial
 
 open DirectTranslation ORingStructure Arithmetic Arithmetic.R0
 
-variable {M : Type*} [ORingStructure M] {x y z : M}
+variable (α : Type) [Primcodable α]
 
 /-- The formula that represents the concatenation of codes on numerals. -/
 noncomputable abbrev mulCodeRepresentation : ArithmeticSemisentence 3 :=
-  cobhamRepresentation₂ (FreeSemigroup.mulCode Bool)
+  cobhamRepresentation₂ (FreeSemigroup.mulCode α)
+
+variable {M : Type*} [ORingStructure M] {x y z : M}
 
 /--
 `z` is the only value of `mulCodeRepresentation` at `x` and `y`, and `x` and `y` are below `z` in
@@ -151,37 +141,40 @@ Cobham's order.
 structure IsConcat (x y z : M) : Prop where
   left_le : x ⊴ z
   right_le : y ⊴ z
-  eval : M ⊧/![x, y, z] mulCodeRepresentation
-  unique (w : M) (hw : M ⊧/![x, y, w] mulCodeRepresentation) : w = z
+  eval : M ⊧/![x, y, z] (mulCodeRepresentation α)
+  unique (w : M) (hw : M ⊧/![x, y, w] (mulCodeRepresentation α)) : w = z
 
 /--
 `z` is the only value of `mulCodeRepresentation` at `x` and `y`, and `x` and `y` are below `z` in
 Cobham's order.
 -/
 noncomputable def isConcat : ArithmeticSemisentence 3 :=
-  “x y z. !cobhamLE x z ∧ !cobhamLE y z ∧ !mulCodeRepresentation x y z ∧
-    ∀ w, !mulCodeRepresentation x y w → w = z”
+  “x y z. !cobhamLE x z ∧ !cobhamLE y z ∧ !(mulCodeRepresentation α) x y z ∧
+    ∀ w, !(mulCodeRepresentation α) x y w → w = z”
 
 @[simp]
-lemma eval_isConcat : M ⊧/![x, y, z] isConcat ↔ IsConcat x y z := by
+lemma eval_isConcat : M ⊧/![x, y, z] (isConcat α) ↔ IsConcat α x y z := by
   simp [isConcat, isConcat_iff]
 
-/-- `z` is the concatenation of `x` and `y`: `IsConcat x y z`, or `z` is `0` if there is none. -/
-def ConcatGraph (z x y : M) : Prop := IsConcat x y z ∨ (z = 0 ∧ ∀ w, ¬IsConcat x y w)
+/-- `z` is the concatenation of `x` and `y`: `IsConcat α x y z`, or `z` is `0` if there is none. -/
+def ConcatGraph (z x y : M) : Prop := IsConcat α x y z ∨ (z = 0 ∧ ∀ w, ¬IsConcat α x y w)
 
-/-- `z` is the concatenation of `x` and `y`: `IsConcat x y z`, or `z` is `0` if there is none. -/
+/-- `z` is the concatenation of `x` and `y`: `IsConcat α x y z`, or `z` is `0` if there is none. -/
 noncomputable def concatGraph : ArithmeticSemisentence 3 :=
-  “z x y. !isConcat x y z ∨ (z = 0 ∧ ∀ w, ¬!isConcat x y w)”
+  “z x y. !(isConcat α) x y z ∨ (z = 0 ∧ ∀ w, ¬!(isConcat α) x y w)”
 
 @[simp]
-lemma eval_concatGraph : M ⊧/![z, x, y] concatGraph ↔ ConcatGraph z x y := by
+lemma eval_concatGraph : M ⊧/![z, x, y] (concatGraph α) ↔ ConcatGraph α z x y := by
   simp [concatGraph, ConcatGraph]
 
-lemma IsConcat.eq {w : M} (hz : IsConcat x y z) (hw : IsConcat x y w) : z = w :=
+variable {α}
+
+lemma IsConcat.eq {w : M} (hz : IsConcat α x y z) (hw : IsConcat α x y w) : z = w :=
   hw.unique z hz.eval
 
-lemma existsUnique_concatGraph (x y : M) : ∃! z, ConcatGraph z x y := by
-  by_cases h : ∃ z, IsConcat x y z
+variable (α) in
+lemma existsUnique_concatGraph (x y : M) : ∃! z, ConcatGraph α z x y := by
+  by_cases h : ∃ z, IsConcat α x y z
   · obtain ⟨z, hz⟩ := h
     use z
     and_intros
@@ -201,15 +194,15 @@ section R0
 
 variable [M↓[ℒₒᵣ] ⊧* 𝗥₀]
 
-lemma isConcat_numeral (u v : FreeSemigroup Bool) :
-    IsConcat (numeral u.code : M) (numeral v.code) (numeral (u * v).code) where
+lemma isConcat_numeral (u v : FreeSemigroup α) :
+    IsConcat α (numeral u.code : M) (numeral v.code) (numeral (u * v).code) where
   left_le := by simpa using u.code_le_code_mul_left v
   right_le := by simpa using u.code_le_code_mul_right v
   eval := by simp [FreeSemigroup.primrec₂_mulCode.to_comp]
   unique := by simp [FreeSemigroup.primrec₂_mulCode.to_comp]
 
-lemma IsConcat.exists_of_numeral {w : FreeSemigroup Bool} (h : IsConcat x y (numeral w.code)) :
-    ∃ u v : FreeSemigroup Bool, x = numeral u.code ∧ y = numeral v.code := by
+lemma IsConcat.exists_of_numeral {w : FreeSemigroup α} (h : IsConcat α x y (numeral w.code)) :
+    ∃ u v : FreeSemigroup α, x = numeral u.code ∧ y = numeral v.code := by
   obtain ⟨m, -, rfl⟩ := eq_numeral_of_cobhamLE_numeral h.left_le
   obtain ⟨n, -, rfl⟩ := eq_numeral_of_cobhamLE_numeral h.right_le
   have := (eval_cobhamRepresentation₂_numeral_iff FreeSemigroup.primrec₂_mulCode.to_comp m n).mp
@@ -218,9 +211,9 @@ lemma IsConcat.exists_of_numeral {w : FreeSemigroup Bool} (h : IsConcat x y (num
   obtain ⟨u, v, rfl, rfl⟩ := FreeSemigroup.eq_code_of_mulCode_ne_zero (this ▸ w.code_ne_zero)
   use u, v
 
-lemma ConcatGraph.exists_of_numeral {w : FreeSemigroup Bool}
-    (h : ConcatGraph (numeral w.code) x y) :
-    ∃ u v : FreeSemigroup Bool, x = numeral u.code ∧ y = numeral v.code := by
+lemma ConcatGraph.exists_of_numeral {w : FreeSemigroup α}
+    (h : ConcatGraph α (numeral w.code) x y) :
+    ∃ u v : FreeSemigroup α, x = numeral u.code ∧ y = numeral v.code := by
   rcases h with h | ⟨h, -⟩
   · exact h.exists_of_numeral
   · have : w.code = 0 := numeral_inj_iff (M := M).mp <| by simpa using h
@@ -228,56 +221,50 @@ lemma ConcatGraph.exists_of_numeral {w : FreeSemigroup Bool}
 
 end R0
 
+variable (α) in
 /--
-The translation of the language of concatenation into $\mathsf{R}_0$: a nonempty binary string is
-the numeral of its code.
+The translation of the language of concatenation with the letters `α` into $\mathsf{R}_0$: a
+nonempty string is the numeral of its code.
 -/
-noncomputable def codeTranslation : DirectTranslation 𝗥₀ ℒ⌢ where
+noncomputable def codeTranslation : DirectTranslation 𝗥₀ ℒ⌢[α] where
   domain := ⟨⊤⟩
   rel
     | .eq => ⟨“x y. x = y”⟩
   func
-    | .zero => ⟨“z. z = ↑(FreeSemigroup.code (0 : FreeSemigroup Bool))”⟩
-    | .one => ⟨“z. z = ↑(FreeSemigroup.code (1 : FreeSemigroup Bool))”⟩
-    | .concat => ⟨concatGraph⟩
+    | .letter a => ⟨“z. z = ↑(FreeSemigroup.code (FreeSemigroup.of a))”⟩
+    | .concat => ⟨concatGraph α⟩
   domain_nonempty := Arithmetic.complete.{0} _ _ fun M _ _ ↦ (models_domainNonempty_iff _).mpr <| by
     simp [Semiformula.Operator.val]
   func_defined f := Arithmetic.complete.{0} _ _ fun M _ _ ↦ (models_funcDefined_iff _ _).mpr <| by
     intro e _
     cases f
     · simp [Semiformula.Operator.val, Semiformula.Operator.Eq.sentence_eq]
-    · simp [Semiformula.Operator.val, Semiformula.Operator.Eq.sentence_eq]
     · rw [Matrix.fun_eq_vec_two e]
-      simpa [Semiformula.Operator.val] using existsUnique_concatGraph (e 0) (e 1)
+      simpa [Semiformula.Operator.val] using existsUnique_concatGraph α (e 0) (e 1)
   preserve_eq := Arithmetic.complete.{0} _ _ fun M _ _ ↦ (models_preserveEq_iff _ _).mpr <| by
     simp [Semiformula.Operator.val, Semiformula.Operator.Eq.sentence_eq]
 
 @[simp]
-lemma codeTranslation_dom (x : M) : codeTranslation.Dom x := by
+lemma codeTranslation_dom (x : M) : (codeTranslation α).Dom x := by
   simp [dom_iff, codeTranslation, Semiformula.Operator.val]
 
 namespace codeTranslation
 
 variable [M↓[ℒₒᵣ] ⊧* 𝗥₀]
 
-/-- The numeral of the code of a nonempty binary string. -/
-def ofString (u : FreeSemigroup Bool) : codeTranslation.Model M := ⟨numeral u.code, by simp⟩
+/-- The numeral of the code of a nonempty string. -/
+def ofString (u : FreeSemigroup α) : (codeTranslation α).Model M := ⟨numeral u.code, by simp⟩
 
 /-- The letters and the concatenation of the codes in `M`. -/
-noncomputable abbrev concatenationStructure : ConcatenationStructure (codeTranslation.Model M) where
-  zero := ofString 0
-  one := ofString 1
-  append x y := Tarski.Structure.func (L := ℒ⌢) Language.Concatenation.Func.concat ![x, y]
+noncomputable abbrev letterStructure : LetterStructure α ((codeTranslation α).Model M) where
+  ofLetter a := ofString (FreeSemigroup.of a)
+  append x y := Tarski.Structure.func (L := ℒ⌢[α]) .concat ![x, y]
 
-/-- The structure of the model of `codeTranslation` is the one of `concatenationStructure`. -/
-lemma struc_eq : Model.struc codeTranslation M = @standardModel _ concatenationStructure :=
+/-- The structure of the model of `codeTranslation` is the one of `letterStructure`. -/
+lemma struc_eq : Model.struc (codeTranslation α) M = @lettersModel α _ letterStructure :=
   Tarski.Structure.ext
     (funext₃ fun k f v ↦ by
       cases f
-      · symm
-        apply Model.func_iff.mpr
-        simp [codeTranslation, Semiformula.Operator.val]
-        rfl
       · symm
         apply Model.func_iff.mpr
         simp [codeTranslation, Semiformula.Operator.val]
@@ -290,22 +277,20 @@ lemma struc_eq : Model.struc codeTranslation M = @standardModel _ concatenationS
 
 section
 
-attribute [local instance] concatenationStructure
+attribute [local instance] letterStructure
 
-lemma append_eq_iff {x y z : codeTranslation.Model M} :
-    x ++ y = z ↔ ConcatGraph (z : M) x y := by
-  have := Model.func_iff (π := codeTranslation) (M := M) (f := Language.Concatenation.Func.concat)
-    (y := z) (v := ![x, y])
-  rw [Matrix.fun_eq_vec_two fun i ↦ ((![x, y] : Fin 2 → codeTranslation.Model M) i : M)] at this
+lemma append_eq_iff {x y z : (codeTranslation α).Model M} :
+    x ++ y = z ↔ ConcatGraph α (z : M) x y := by
+  have := Model.func_iff (π := codeTranslation α) (M := M) (f := .concat) (y := z) (v := ![x, y])
+  rw [Matrix.fun_eq_vec_two fun i ↦ ((![x, y] : Fin 2 → (codeTranslation α).Model M) i : M)] at this
   simp only [codeTranslation, Semiformula.Operator.val, Matrix.cons_val, eval_concatGraph] at this
   exact eq_comm.trans this
 
 /-- The strings are embedded onto an initial part of the model of `codeTranslation`. -/
 lemma isInitialEmbedding_ofString :
-    IsInitialEmbedding (ofString : FreeSemigroup Bool → codeTranslation.Model M) where
+    IsInitialEmbedding (ofString : FreeSemigroup α → (codeTranslation α).Model M) where
   injective u v h := by simpa [ofString] using h
-  map_zero := rfl
-  map_one := rfl
+  map_letter _ := rfl
   map_append u v := (append_eq_iff.mpr <| Or.inl <| isConcat_numeral u v).symm
   exists_of_append_eq h := by
     obtain ⟨u, v, hu, hv⟩ := (append_eq_iff.mp h).exists_of_numeral
@@ -314,21 +299,29 @@ lemma isInitialEmbedding_ofString :
 
 end
 
-/-- The model of `codeTranslation` satisfies $\mathsf{WTC}$. -/
-instance : (codeTranslation.Model M)↓[ℒ⌢] ⊧* 𝗪𝗧𝗖 := by
+/-- The model of `codeTranslation` satisfies `𝗪𝗧𝗖[α]`. -/
+instance : ((codeTranslation α).Model M)↓[ℒ⌢[α]] ⊧* 𝗪𝗧𝗖[α] := by
   rw [struc_eq]
-  let := concatenationStructure (M := M)
-  exact isInitialEmbedding_ofString.models_WTC
+  let := letterStructure (α := α) (M := M)
+  exact isInitialEmbedding_ofString.models_WTCLetters
 
 end codeTranslation
+
+/--
+$\mathsf{R}_0$ interprets the weak theory of concatenation with the letters `α`.
+- [Hor11, §3, Theorem 3.18]
+- [Hor12, §4, Theorem 4.13]
+-/
+noncomputable instance : 𝗥₀ ⊳ 𝗪𝗧𝗖[α] where
+  trln := codeTranslation α
+  interpret_theory φ hφ := Arithmetic.complete.{0} _ _ fun _ _ _ ↦
+    Model.translate_iff.mpr <| models_theory_iff.mp inferInstance φ hφ
 
 /--
 $\mathsf{R}_0$ interprets $\mathsf{WTC}$.
 - [Hor11, §3, Theorem 3.9]
 -/
-noncomputable instance : 𝗥₀ ⊳ 𝗪𝗧𝗖 where
-  trln := codeTranslation
-  interpret_theory φ hφ := Arithmetic.complete.{0} _ _ fun _ _ _ ↦
-    Model.translate_iff.mpr <| models_theory_iff.mp inferInstance φ hφ
+noncomputable instance : 𝗥₀ ⊳ 𝗪𝗧𝗖 :=
+  DirectInterpretation.comp (inferInstance : 𝗪𝗧𝗖[Bool] ⊳ 𝗪𝗧𝗖) inferInstance
 
 end FFL.FirstOrder.Concatenation

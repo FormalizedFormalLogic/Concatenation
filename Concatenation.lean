@@ -8,6 +8,7 @@ public import Concatenation.Language
 public import Concatenation.OpenProblem
 public import Concatenation.OpenProblem.Attribute
 public import Concatenation.Semantics.Basic
+public import Concatenation.Semantics.Letters
 public import Concatenation.Semantics.Sequence
 public import Concatenation.Semantics.Standard
 public import Concatenation.TC.Arithmetic
@@ -33,5 +34,6 @@ public import Concatenation.ToMathlib.FreeSemigroupCode
 public import Concatenation.WTC.Arithmetic
 public import Concatenation.WTC.Basic
 public import Concatenation.WTC.Embedding
+public import Concatenation.WTC.Letters
 public import Concatenation.WTC.Standard
 public import Concatenation.WTC.Undecidability

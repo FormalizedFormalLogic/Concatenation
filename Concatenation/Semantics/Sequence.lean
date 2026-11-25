@@ -41,7 +41,7 @@ lemma eval_isPair : M ⊧/![z] isPair ↔ IsPair z := by simp [isPair, IsPair, p
 - [Gan09, §1, Definition 1(d)]
 -/
 def IsSeq (z : M) : Prop :=
-  0 ++ 0 ++ 1 ⊑ₚ z ∧ z ⊒ 1 ++ 0 ++ 0 ∧
+  0 ++ 0 ++ 1 ⊑ z ∧ z ⊒ 1 ++ 0 ++ 0 ∧
     ∀ y, IsTally 0 y → IsSubstring y z → y = 0 ∨ y = 0 ++ 0
 
 /-- `z` is a sequence. -/
@@ -86,7 +86,7 @@ lemma eval_isPairSeq : M ⊧/![z] isPairSeq ↔ IsPairSeq z := by simp [isPairSe
 `u` is the first member of `z`.
 - [Gan09, §1, Definition 1(f)]
 -/
-def IsFirst (u z : M) : Prop := 0 ++ 0 ++ u ++ 0 ++ 0 ⊑ₚ z
+def IsFirst (u z : M) : Prop := 0 ++ 0 ++ u ++ 0 ++ 0 ⊑ z
 
 /-- `u` is the first member of `z`. -/
 def isFirst : Semisentence ℒ⌢ 2 :=
@@ -126,7 +126,7 @@ structure IsMulSeq (x y z : M) : Prop where
   isFirst : IsFirst (pairOf x 1) z
   exists_isLast : ∃ w, IsTally 1 w ∧ IsLast (pairOf w y) z
   exists_pred : ∀ s u' v', IsTally 1 u' → IsTally 1 v' →
-    s ++ 0 ++ 0 ++ pairOf u' v' ++ 0 ++ 0 ⊑ₚ z →
+    s ++ 0 ++ 0 ++ pairOf u' v' ++ 0 ++ 0 ⊑ z →
     ∃ u v, IsTally 1 u ∧ IsTally 1 v ∧ u' = u ++ x ∧ v' = v ++ 1 ∧ s ⊒ 0 ++ 0 ++ pairOf u v
 
 /-- `z` is a multiplication sequence for the `1`-tallies `x` and `y`. -/

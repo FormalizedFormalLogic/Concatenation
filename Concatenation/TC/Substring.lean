@@ -70,7 +70,7 @@ followed by a prefix of `y`.
 -/
 lemma IsSubstring.append_cases (h : IsSubstring z (x ++ y)) :
     IsSubstring z x ∨ IsSubstring z y ∨
-      ∃ z₁ z₂, z = z₁ ++ z₂ ∧ x ⊒ z₁ ∧ z₂ ⊑ₚ y := by
+      ∃ z₁ z₂, z = z₁ ++ z₂ ∧ x ⊒ z₁ ∧ z₂ ⊑ y := by
   rcases isSubstring_iff.mp h with rfl | ⟨u, h⟩ | ⟨v, h⟩ | ⟨u, v, h⟩
   · right; right; use x, y
   · rcases editor h with ⟨rfl, rfl⟩ | ⟨w, ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩⟩
@@ -140,7 +140,7 @@ lemma IsSuffix.append_left (h : y ⊒ x) : u ++ y ⊒ x := by
   · simp
   · right; use u ++ u'; simp [Concatenation.append_assoc]
 
-lemma IsPrefix.append_right (h : x ⊑ₚ y) : x ⊑ₚ y ++ v := by
+lemma IsPrefix.append_right (h : x ⊑ y) : x ⊑ y ++ v := by
   rcases h with rfl | ⟨v', rfl⟩
   · simp
   · right; use v' ++ v; simp [Concatenation.append_assoc]
@@ -153,8 +153,8 @@ lemma IsSuffix.eq_of_isAtom (hc : IsAtom c) (hc' : IsAtom c') (h : x ⊒ c)
   · exact absurd h' hc'.ne_append
   · exact (hc.eq_of_append_eq_append hc' h').1
 
-lemma IsPrefix.eq_of_isAtom (hc : IsAtom c) (hc' : IsAtom c') (h : c ⊑ₚ x)
-    (h' : c' ⊑ₚ x) : c = c' := by
+lemma IsPrefix.eq_of_isAtom (hc : IsAtom c) (hc' : IsAtom c') (h : c ⊑ x)
+    (h' : c' ⊑ x) : c = c' := by
   rcases h with rfl | ⟨v, rfl⟩ <;> rcases h' with h' | ⟨v', h'⟩
   · exact h'.symm
   · exact absurd h' hc.ne_append
@@ -162,7 +162,7 @@ lemma IsPrefix.eq_of_isAtom (hc : IsAtom c) (hc' : IsAtom c') (h : c ⊑ₚ x)
   · exact (hc.eq_of_append_eq_append_left hc' h').1
 
 @[trans]
-lemma IsPrefix.trans (hxy : x ⊑ₚ y) (hyz : y ⊑ₚ z) : x ⊑ₚ z := by
+lemma IsPrefix.trans (hxy : x ⊑ y) (hyz : y ⊑ z) : x ⊑ z := by
   rcases hyz with rfl | ⟨v, rfl⟩
   · exact hxy
   · exact hxy.append_right
@@ -173,7 +173,7 @@ lemma IsSuffix.trans (hxy : y ⊒ x) (hyz : z ⊒ y) : z ⊒ x := by
   · exact hxy
   · exact hxy.append_left
 
-lemma IsPrefix.total (hx : x ⊑ₚ z) (hy : y ⊑ₚ z) : x ⊑ₚ y ∨ y ⊑ₚ x := by
+lemma IsPrefix.total (hx : x ⊑ z) (hy : y ⊑ z) : x ⊑ y ∨ y ⊑ x := by
   rcases hx with rfl | ⟨v, rfl⟩ <;> rcases hy with h | ⟨v', h⟩
   · simp [h]
   · right; right; use v'
@@ -229,7 +229,7 @@ lemma IsSuffix.append_congr (h : y ⊒ x) : y ++ z ⊒ x ++ z := by
   · simp
   · right; use u; simp [Concatenation.append_assoc]
 
-lemma IsPrefix.of_append_left_isAtom (hc : IsAtom c) (h : c ++ x ⊑ₚ c ++ y) : x ⊑ₚ y := by
+lemma IsPrefix.of_append_left_isAtom (hc : IsAtom c) (h : c ++ x ⊑ c ++ y) : x ⊑ y := by
   rcases h with h | ⟨t, h⟩
   · rw [hc.append_left_cancel h]
   · right; use t; exact hc.append_left_cancel <| by simpa [Concatenation.append_assoc] using h

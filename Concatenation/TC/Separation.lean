@@ -25,7 +25,7 @@ lemma exists_isSuffix_isAtom (x : M) : ∃ c, IsAtom c ∧ x ⊒ c := by
     · exact hc
     · simp
 
-lemma exists_isPrefix_isAtom (x : M) : ∃ c, IsAtom c ∧ c ⊑ₚ x := by
+lemma exists_isPrefix_isAtom (x : M) : ∃ c, IsAtom c ∧ c ⊑ x := by
   rcases TCPlus.isBounded x with hx | ⟨⟨c, z, hc, rfl⟩, -⟩
   · use x
   · use c
@@ -37,7 +37,7 @@ lemma IsTally.isSuffix (hx : IsTally c x) : x ⊒ c := by
   obtain ⟨d, hd, h⟩ := exists_isSuffix_isAtom x
   rwa [← hx d hd h.isSubstring]
 
-lemma IsTally.isPrefix (hx : IsTally c x) : c ⊑ₚ x := by
+lemma IsTally.isPrefix (hx : IsTally c x) : c ⊑ x := by
   obtain ⟨d, hd, h⟩ := exists_isPrefix_isAtom x
   rwa [← hx d hd h.isSubstring]
 
@@ -51,7 +51,7 @@ lemma IsTally.eq_or_exists_append (hx : IsTally c x) :
     · exact hx.of_isSubstring <| isSubstring_append_left x' c
     · rfl
 
-lemma IsPrefix.isPrefix_of_isAtom (ht : t ⊑ₚ z) (hc : IsAtom c) (hz : c ⊑ₚ z) : c ⊑ₚ t := by
+lemma IsPrefix.isPrefix_of_isAtom (ht : t ⊑ z) (hc : IsAtom c) (hz : c ⊑ z) : c ⊑ t := by
   obtain ⟨e, he, het⟩ := exists_isPrefix_isAtom t
   rwa [← (het.trans ht).eq_of_isAtom he hc hz]
 
@@ -67,7 +67,7 @@ lemma IsTally.not_isSubstring_of_isTally_one (ht : IsTally 0 t) (hx : IsTally 1 
     ¬IsSubstring t x := fun h ↦ Concatenation.zero_ne_one <| ht.eq_of_isTally <| hx.of_isSubstring h
 
 lemma IsTally.isSubstring_or_isSubstring (ht : IsTally 0 t) (h : IsSubstring t (x ++ y))
-    (hxy : x ⊒ 1 ∨ 1 ⊑ₚ y) : IsSubstring t x ∨ IsSubstring t y := by
+    (hxy : x ⊒ 1 ∨ 1 ⊑ y) : IsSubstring t x ∨ IsSubstring t y := by
   rcases h.append_cases with h | h | ⟨t₁, t₂, rfl, h₁, h₂⟩
   · exact Or.inl h
   · exact Or.inr h

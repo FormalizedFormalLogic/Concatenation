@@ -148,8 +148,8 @@ A locally finitely satisfiable theory interprets no finitely axiomatizable theor
 models.
 - [Hor11, §3, Proposition 3.2]
 -/
-theorem notInterprets_of_not_hasFiniteModel [L₁.Finite] [L₂.Finite] (hT : T.LocallyFinitelySatisfiable)
-    (hU : FiniteAxiomatizable U) (h : ¬U.HasFiniteModel) : T ⋫ U :=
+theorem notInterprets_of_not_hasFiniteModel [L₁.Finite] [L₂.Finite]
+    (hT : T.LocallyFinitelySatisfiable) (hU : FiniteAxiomatizable U) (h : ¬U.HasFiniteModel) : T ⋫ U :=
   ⟨fun π ↦ h <| π.hasFiniteModel hT hU⟩
 
 end DirectInterpretation

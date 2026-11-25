@@ -39,4 +39,5 @@ public import Concatenation.ToMathlib.Encodable
 public import Concatenation.ToMathlib.FreeSemigroup
 public import Concatenation.WTC.Arithmetic
 public import Concatenation.WTC.Basic
+public import Concatenation.WTC.EmptyUnit
 public import Concatenation.WTC.Standard

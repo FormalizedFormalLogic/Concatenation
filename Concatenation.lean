@@ -18,6 +18,7 @@ public import Concatenation.Semantics.Standard
 public import Concatenation.TC.Arithmetic
 public import Concatenation.TC.Basic
 public import Concatenation.TC.Empty
+public import Concatenation.TC.EmptyInterpretation
 public import Concatenation.TC.MulSeq
 public import Concatenation.TC.Representation
 public import Concatenation.TC.Separation
@@ -33,5 +34,6 @@ public import Concatenation.ToFoundation.Decidability
 public import Concatenation.ToFoundation.Interpretability.Table
 public import Concatenation.ToFoundation.Interpretability.Undecidability
 public import Concatenation.ToFoundation.Prefix
+public import Concatenation.ToMathlib.Encodable
 public import Concatenation.ToMathlib.FreeSemigroup
 public import Concatenation.WTC.Basic

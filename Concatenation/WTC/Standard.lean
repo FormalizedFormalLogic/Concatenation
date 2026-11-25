@@ -33,21 +33,25 @@ lemma editor (u : FreeSemigroup Bool) (h : x ++ y = s ++ t)
   have := by simpa [models_iff] using Theory.models M _ (IsWTCAxiom.editor u)
   exact this x y s t h hu
 
+@[simp]
 lemma append_ne_zero (x y : M) : x ++ y ≠ 0 := by
   have := by simpa [models_iff] using Theory.models M _ IsWTCAxiom.concatNeZero
   exact this x y
 
+@[simp]
 lemma append_ne_one (x y : M) : x ++ y ≠ 1 := by
   have := by simpa [models_iff] using Theory.models M _ IsWTCAxiom.concatNeOne
   exact this x y
 
+@[simp]
 protected lemma zero_ne_one : (0 : M) ≠ 1 := by
   simpa [models_iff] using Theory.models M _ IsWTCAxiom.zeroNeOne
 
+@[simp]
+protected lemma one_ne_zero : (1 : M) ≠ 0 := WTC.zero_ne_one.symm
+
 lemma append_ne_ofFreeSemigroup (hc : IsAtom c) : x ++ y ≠ ofFreeSemigroup c := by
-  rcases hc with rfl | rfl
-  · exact append_ne_zero x y
-  · exact append_ne_one x y
+  rcases hc with rfl | rfl <;> simp
 
 @[simp]
 lemma ofFreeSemigroup_mul (u v : FreeSemigroup Bool) :
@@ -69,12 +73,7 @@ lemma ofFreeSemigroup_injective :
   | atom c hc =>
     intro v h
     induction v using atom_append_induction with
-    | atom d hd =>
-      rcases hc with rfl | rfl <;> rcases hd with rfl | rfl
-      · rfl
-      · exact absurd h WTC.zero_ne_one
-      · exact absurd h.symm WTC.zero_ne_one
-      · rfl
+    | atom d hd => rcases hc with rfl | rfl <;> rcases hd with rfl | rfl <;> simp_all
     | append v d hd => exact absurd (by simpa using h.symm) (append_ne_ofFreeSemigroup (M := M) hc)
   | append u c hc ih =>
     intro v h
@@ -84,11 +83,7 @@ lemma ofFreeSemigroup_injective :
       simp only [append_eq_mul, ofFreeSemigroup_mul] at h
       rcases editor (u * c) h (by simp) with ⟨h₁, h₂⟩ | ⟨w, ⟨-, h⟩ | ⟨-, h⟩⟩
       · rw [ih h₁]
-        rcases hc with rfl | rfl <;> rcases hd with rfl | rfl
-        · rfl
-        · exact absurd h₂ WTC.zero_ne_one
-        · exact absurd h₂.symm WTC.zero_ne_one
-        · rfl
+        rcases hc with rfl | rfl <;> rcases hd with rfl | rfl <;> simp_all
       · exact absurd h.symm (append_ne_ofFreeSemigroup hc)
       · exact absurd h (append_ne_ofFreeSemigroup hd)
 

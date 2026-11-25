@@ -53,11 +53,8 @@ lemma exists_similar_val (t : ClosedSemiterm ℒ⌢ n) :
         hk₁ (d + 1 + k₂) ρ hρ (h.mono (by omega) subset_rfl) v w hvw
       obtain ⟨ρ₂, hρ₁ρ₂, hρ₂, h'', hm₂⟩ := hk₂ (d + 1) ρ₁ hρ₁ h' v w fun i ↦ hρρ₁ (hvw i)
       use insert ((t 0).valb v ++ (t 1).valb v, (t 0).valb w ++ (t 1).valb w) ρ₂
-      and_intros
-      · exact (hρρ₁.trans hρ₁ρ₂).trans (Set.subset_insert _ _)
-      · exact hρ₂.insert _
-      · exact h''.insert_append (hρ₁ρ₂ hm₁) hm₂
-      · exact Set.mem_insert _ _
+      exact ⟨(hρρ₁.trans hρ₁ρ₂).trans (Set.subset_insert _ _), hρ₂.insert _,
+        h''.insert_append (hρ₁ρ₂ hm₁) hm₂, Set.mem_insert _ _⟩
 
 lemma exists_similar_val_eq (t₁ t₂ : ClosedSemiterm ℒ⌢ n) :
     ∃ k, ∀ ρ : Set (M × M'), ρ.Finite → F.Similar F' k ρ →
@@ -223,11 +220,8 @@ lemma append_assoc_of_eq_string (hu : u.length ≤ N + 1)
 lemma append_assoc_of_isSubstring (hu : u.length ≤ N + 1)
     (h : IsSubstring (a ++ b ++ c) (string u hu) ∨ IsSubstring (a ++ (b ++ c)) (string u hu)) :
     a ++ b ++ c = a ++ (b ++ c) := by
-  rcases h with h | h
-  · obtain ⟨v, hv, h⟩ := exists_of_isSubstring hu h
-    exact append_assoc_of_eq_string hv <| .inl h
-  · obtain ⟨v, hv, h⟩ := exists_of_isSubstring hu h
-    exact append_assoc_of_eq_string hv <| .inr h
+  rcases h with h | h <;> obtain ⟨v, hv, h⟩ := exists_of_isSubstring hu h
+  exacts [append_assoc_of_eq_string hv <| .inl h, append_assoc_of_eq_string hv <| .inr h]
 
 lemma editor (h : a ++ b = c ++ d) :
     (a = c ∧ b = d) ∨ ∃ w, (a ++ w = c ∧ b = w ++ d) ∨ (a = c ++ w ∧ w ++ b = d) := by
@@ -295,11 +289,8 @@ def Good : PrePairing N → Prop
   | pair a b => Good a ∧ Good b ∧ a ++ b = pair a b
 
 lemma good_append (ha : a.Good) (hb : b.Good) : (a ++ b).Good := by
-  rcases append_eq a b with ⟨x, y, hx, hy, h, rfl, rfl, h'⟩ | h'
-  · rw [h']
-    trivial
-  · rw [h']
-    exact ⟨ha, hb, h'⟩
+  rcases append_eq a b with ⟨x, y, hx, hy, h, rfl, rfl, h'⟩ | h' <;> rw [h']
+  exacts [trivial, ⟨ha, hb, h'⟩]
 
 lemma good_of_append (h : (a ++ b).Good) : a.Good ∧ b.Good := by
   rcases append_eq a b with ⟨x, y, hx, hy, _, rfl, rfl, _⟩ | h'
@@ -313,11 +304,8 @@ def size : PrePairing N → ℕ
   | pair a b => a.size + b.size
 
 lemma size_append (a b : PrePairing N) : (a ++ b).size = a.size + b.size := by
-  rcases append_eq a b with ⟨x, y, hx, hy, h, rfl, rfl, h'⟩ | h'
-  · rw [h']
-    exact FreeSemigroup.length_mul x y
-  · rw [h']
-    rfl
+  rcases append_eq a b with ⟨x, y, hx, hy, h, rfl, rfl, h'⟩ | h' <;> rw [h']
+  exacts [FreeSemigroup.length_mul x y, rfl]
 
 lemma size_pos (a : PrePairing N) : 0 < a.size := by
   induction a with
@@ -508,32 +496,14 @@ lemma eval_notFactorAt (k : ℕ) (x y : M) : M ⊧/![x, y] (notFactorAt k) ↔ �
     suffices (∀ a b : M, (¬IsFactor b x ∨ ¬a = y) ∨ ¬IsFactorAt k b a) ↔
         ∀ z, IsFactor z x → ¬IsFactorAt k z y by
       simpa [hv, ih, IsFactorAt] using this
-    constructor
-    · intro h z hz hk
-      rcases h y z with (h | h) | h
-      · exact h hz
-      · exact h rfl
-      · exact h hk
-    · intro h a b
-      by_cases hb : IsFactor b x
-      · by_cases ha : a = y
-        · exact .inr (ha ▸ h b hb)
-        · exact .inl (.inr ha)
-      · exact .inl (.inl hb)
+    grind
 
 /-- Nothing is reached from itself by passing `k + 1` times to a factor. -/
 def acyclic (k : ℕ) : Sentence ℒ⌢ := ∀¹ ∀¹ (“x y. x ≠ y” ⋎ notFactorAt (k + 1))
 
 lemma models_acyclic_iff (k : ℕ) : M↓[ℒ⌢] ⊧ acyclic k ↔ ∀ x : M, ¬IsFactorAt (k + 1) x x := by
-  suffices (∀ a b : M, ¬b = a ∨ ¬IsFactorAt (k + 1) b a) ↔ ∀ x : M, ¬IsFactorAt (k + 1) x x by
-    simpa [models_iff, acyclic, eval_notFactorAt] using this
-  constructor
-  · intro h x
-    exact (h x x).resolve_left (not_not.mpr rfl)
-  · intro h a b
-    by_cases e : b = a
-    · exact .inr (e ▸ h b)
-    · exact .inl e
+  simp [models_iff, acyclic, eval_notFactorAt]
+  grind
 lemma primrec_acyclic : Primrec acyclic :=
   have hstep : Primrec notFactorStep :=
     Semiformula.primrec_all.comp <| Semiformula.primrec_all.comp <|
@@ -683,8 +653,7 @@ noncomputable def atomicPairing (N : ℕ) (M : Type*) [ConcatenationStructure M]
         simpa [models_iff] using ax .existsAppend
       exact (this x).resolve_left fun ⟨s, hs⟩ ↦ h s hs
     exists_ne_atom := by
-      have : ∃ x : M, ¬IsShort N x := by simpa [models_iff] using ax .existsNotShort
-      obtain ⟨x, hx⟩ := this
+      obtain ⟨x, hx⟩ : ∃ x : M, ¬IsShort N x := by simpa [models_iff] using ax .existsNotShort
       exact ⟨x, fun s hs ↦ hx ⟨s, hs⟩⟩
     acyclic x h := by
       obtain ⟨k, hk⟩ := exists_isFactorAt_of_transGen h

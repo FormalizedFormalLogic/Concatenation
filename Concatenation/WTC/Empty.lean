@@ -88,10 +88,7 @@ variable {c : List Bool → M} (hc : IsInitialEmptyEmbedding c)
 include hc
 
 lemma ofList_eq (u : List Bool) : ofList u = c u := by
-  have hb (b : Bool) : ofList [b] = c [b] := by
-    cases b
-    · exact hc.map_false.symm
-    · exact hc.map_true.symm
+  have hb (b : Bool) : ofList [b] = c [b] := by cases b <;> simp [hc.map_false, hc.map_true]
   induction u using List.reverseRecOn with
   | nil => exact hc.map_nil.symm
   | append_singleton u b ih =>
@@ -129,11 +126,8 @@ lemma editor_of_isSubstring (h : x ++ y = s ++ t) (hu : IsSubstring (x ++ y) (c 
   obtain ⟨p, q, rfl, rfl⟩ := hc.exists_of_isSubstring_append hu
   obtain ⟨p', q', rfl, rfl⟩ := hc.exists_of_append_eq (h.symm.trans (hc.map_append p q).symm)
   rw [← hc.map_append, ← hc.map_append, hc.injective.eq_iff] at h
-  rcases List.append_eq_append_iff.mp h with ⟨w, rfl, rfl⟩ | ⟨w, rfl, rfl⟩
-  · use c w
-    simp [← hc.map_append]
-  · use c w
-    simp [← hc.map_append]
+  rcases List.append_eq_append_iff.mp h with ⟨w, rfl, rfl⟩ | ⟨w, rfl, rfl⟩ <;>
+    use c w <;> simp [← hc.map_append]
 
 lemma eq_empty_of_append_eq_singleton {b : Bool} (h : x ++ y = c [b]) : x = ∅ ∨ y = ∅ := by
   obtain ⟨u, v, rfl, rfl⟩ := hc.exists_of_append_eq h
@@ -273,12 +267,11 @@ lemma eq_empty_of_append_eq_empty (h : x ++ y = ∅) : x = ∅ ∧ y = ∅ := by
       exact eq_of_append_empty_isAtom hc <| by rw [e.trans (congrArg _ hy)]
     exact WTCEmpty.zero_ne_one <| (key isAtom_zero).symm.trans (key isAtom_one)
   subst hx
-  and_intros
-  · rfl
-  · have e : (0 : M) ++ ∅ ++ y = 0 ++ (∅ ++ y) := append_assoc [false] <| Or.inr <| by
-      rw [h, isAtom_append_empty isAtom_zero, ofList_false]
-    rw [h, isAtom_append_empty isAtom_zero] at e
-    exact eq_empty_of_append_eq_left isAtom_zero e
+  refine ⟨rfl, ?_⟩
+  have e : (0 : M) ++ ∅ ++ y = 0 ++ (∅ ++ y) := append_assoc [false] <| Or.inr <| by
+    rw [h, isAtom_append_empty isAtom_zero, ofList_false]
+  rw [h, isAtom_append_empty isAtom_zero] at e
+  exact eq_empty_of_append_eq_left isAtom_zero e
 
 @[simp]
 lemma ofList_append_singleton (u : List Bool) (b : Bool) :
@@ -513,13 +506,8 @@ instance [M↓[ℒ⌢ₑ] ⊧* 𝗪𝗧𝗖ₑ] : ((nonemptyTranslation 𝗪𝗧
     rcases Classical.em (w = ∅) with rfl | hw'
     · left
       simp only [hx, hy, hs, ht, hc.append_empty, hc.empty_append] at hw
-      and_intros
-      · apply Model.ext
-        rw [hx, hs]
-        exact hw.elim And.left And.left
-      · apply Model.ext
-        rw [hy, ht]
-        exact hw.elim And.right And.right
+      simp only [Model.ext_iff, hx, hy, hs, ht]
+      tauto
     · right
       use ⟨w, by simpa using hw'⟩
       exact hw.imp (And.imp Model.ext Model.ext) (And.imp Model.ext Model.ext)
@@ -612,15 +600,14 @@ lemma emptyCode_cons (b : Bool) (l : List Bool) :
 
 lemma isDecode_emptyCode (b : Bool) (l : List Bool) :
     IsDecode (ofFreeSemigroup ⟨b, l⟩ : M) (emptyCode (b :: l)) := by
-  and_intros
-  · exact emptyCode_cons b l
-  · intro v h
-    obtain ⟨p, q, hp, rfl, e⟩ := exists_of_append_eq_ofFreeSemigroup h.symm
-    obtain rfl : 1 = p := ofFreeSemigroup_injective hp
-    have e := congrArg FreeSemigroup.toList e
-    congr 1
-    apply FreeSemigroup.toList_injective
-    simpa [FreeSemigroup.toList, one_eq_of_true, FreeSemigroup.of] using e.symm
+  refine ⟨emptyCode_cons b l, ?_⟩
+  intro v h
+  obtain ⟨p, q, hp, rfl, e⟩ := exists_of_append_eq_ofFreeSemigroup h.symm
+  obtain rfl : 1 = p := ofFreeSemigroup_injective hp
+  have e := congrArg FreeSemigroup.toList e
+  congr 1
+  apply FreeSemigroup.toList_injective
+  simpa [FreeSemigroup.toList, one_eq_of_true, FreeSemigroup.of] using e.symm
 
 lemma isCodeAppend_emptyCode (u v : List Bool) :
     IsCodeAppend (emptyCode (u ++ v) : M) (emptyCode u) (emptyCode v) := by
@@ -628,8 +615,7 @@ lemma isCodeAppend_emptyCode (u v : List Bool) :
   · left
     simp
   · right; left
-    use ofFreeSemigroup ⟨b, l⟩
-    exact ⟨isDecode_emptyCode b l, ofFreeSemigroup_mul ⟨true, u⟩ ⟨b, l⟩⟩
+    use ofFreeSemigroup ⟨b, l⟩, isDecode_emptyCode b l, ofFreeSemigroup_mul ⟨true, u⟩ ⟨b, l⟩
 
 lemma exists_of_isCodeAppend_emptyCode {u : List Bool} (h : IsCodeAppend (emptyCode u) x y) :
     ∃ p q, x = emptyCode p ∧ y = emptyCode q := by
@@ -638,8 +624,7 @@ lemma exists_of_isCodeAppend_emptyCode {u : List Bool} (h : IsCodeAppend (emptyC
     simp
   · obtain ⟨⟨a, p⟩, ⟨b, q⟩, rfl, rfl, e⟩ := exists_of_append_eq_ofFreeSemigroup h.symm
     obtain rfl : true = a := congrArg FreeSemigroup.head e
-    use p, b :: q
-    exact ⟨rfl, (emptyCode_cons b q).symm⟩
+    use p, b :: q, rfl, (emptyCode_cons b q).symm
   · have e : (⟨true, u⟩ : FreeSemigroup Bool) = 0 := ofFreeSemigroup_injective (M := M) h
     exact absurd (congrArg FreeSemigroup.head e) (by simp [zero_eq_of_false, FreeSemigroup.of])
 
@@ -738,8 +723,7 @@ instance [M↓[ℒ⌢] ⊧* 𝗪𝗧𝗖] : (emptyTranslation.Model M)↓[ℒ⌢
     intro x y u h
     obtain ⟨p, q, hp, hq⟩ : ∃ p q, (x : M) = emptyCode p ∧ (y : M) = emptyCode q :=
       exists_of_isCodeAppend_emptyCode <| (congrArg Model.val h) ▸ isCodeAppend x y
-    use p, q
-    exact ⟨Model.ext hp, Model.ext hq⟩
+    use p, q, Model.ext hp, Model.ext hq
 
 end WTC
 

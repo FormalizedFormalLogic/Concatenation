@@ -13,7 +13,7 @@ namespace FFL.FirstOrder.Concatenation
 /--
 Axioms of Tarski's theory of concatenation, with the empty string.
 - [Hor11, §2, Definition 2.11]
-- [Gan09, §2]
+- [Gan09, §3]
 - [Vis09, Appendix D]
 -/
 inductive IsFAxiom : Sentence ℒ⌢ₑ → Prop
@@ -30,7 +30,7 @@ inductive IsFAxiom : Sentence ℒ⌢ₑ → Prop
 /--
 Tarski's theory of concatenation, with the empty string.
 - [Hor11, §2, Definition 2.11]
-- [Gan09, §2]
+- [Gan09, §3]
 - [Vis09, Appendix D]
 -/
 abbrev F : Theory ℒ⌢ₑ := Set.ofPred IsFAxiom

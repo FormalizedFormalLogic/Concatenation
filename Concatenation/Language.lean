@@ -73,6 +73,14 @@ instance : (ℒ⌢).DecidableEq := ⟨fun _ ↦ inferInstance, fun _ ↦ inferIn
 
 instance : (ℒ⌢).Encodable := ⟨fun _ ↦ inferInstance, fun _ ↦ inferInstance⟩
 
+instance : (ℒ⌢).Finite where
+  func :=
+    { elems := {⟨0, Func.zero⟩, ⟨0, Func.one⟩, ⟨2, Func.concat⟩}
+      complete := by rintro ⟨_, _ | _ | _⟩ <;> simp }
+  rel :=
+    { elems := {⟨2, Rel.eq⟩}
+      complete := by rintro ⟨_, _ | _⟩; simp }
+
 instance : (ℒ⌢).Zero := ⟨Func.zero⟩
 
 instance : (ℒ⌢).One := ⟨Func.one⟩
@@ -154,6 +162,18 @@ instance : Encodable ((ℒ⌢ₑ).Func k) :=
   inferInstanceAs (Encodable (Concatenation.Func k ⊕ Constant.Func PUnit k))
 
 instance : Encodable ((ℒ⌢ₑ).Rel k) := inferInstanceAs (Encodable (Concatenation.Rel k ⊕ PEmpty))
+
+instance : (ℒ⌢ₑ).Encodable := ⟨fun _ ↦ inferInstance, fun _ ↦ inferInstance⟩
+
+instance : (ℒ⌢ₑ).Finite where
+  func :=
+    have : DecidableEq ((k : ℕ) × (ℒ⌢ₑ).Func k) := inferInstance
+    { elems := {⟨0, Sum.inl Concatenation.Func.zero⟩, ⟨0, Sum.inl Concatenation.Func.one⟩,
+        ⟨2, Sum.inl Concatenation.Func.concat⟩, ⟨0, Sum.inr <| Constant.Func.const ⟨⟩⟩}
+      complete := by rintro ⟨_, (_ | _ | _) | ⟨⟨⟩⟩⟩ <;> simp }
+  rel :=
+    { elems := {⟨2, Sum.inl Concatenation.Rel.eq⟩}
+      complete := by rintro ⟨_, (_ | _) | ⟨⟨⟩⟩⟩; simp }
 
 instance : DecidableEq ((ℒ⌢⊑).Func k) :=
   inferInstanceAs (DecidableEq (Concatenation.Func k ⊕ Empty))

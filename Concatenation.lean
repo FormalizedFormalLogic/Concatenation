@@ -7,6 +7,7 @@ public import Concatenation.D.Basic
 public import Concatenation.F.Basic
 public import Concatenation.F.Radical
 public import Concatenation.F.Tame
+public import Concatenation.F.Undecidability
 public import Concatenation.Language
 public import Concatenation.OpenProblem
 public import Concatenation.OpenProblem.Attribute

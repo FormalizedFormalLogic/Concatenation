@@ -13,6 +13,7 @@ public import Concatenation.Semantics.Standard
 public import Concatenation.TC.Arithmetic
 public import Concatenation.TC.Basic
 public import Concatenation.TC.Empty
+public import Concatenation.TC.FiniteModel
 public import Concatenation.TC.Interpretability
 public import Concatenation.TC.Matrix
 public import Concatenation.TC.MulSeq
@@ -25,11 +26,13 @@ public import Concatenation.ToFoundation.Arithmetic.PeanoMinus.Pairing
 public import Concatenation.ToFoundation.Arithmetic.PeanoMinusInterpretation
 public import Concatenation.ToFoundation.Arithmetic.R
 public import Concatenation.ToFoundation.Arithmetic.R0.Cobham
+public import Concatenation.ToFoundation.Arithmetic.R0.LocallyFinitelySatisfiable
 public import Concatenation.ToFoundation.Arithmetic.R0.Representation
 public import Concatenation.ToFoundation.Arithmetic.R0.Undecidability
 public import Concatenation.ToFoundation.Bootstrapping
 public import Concatenation.ToFoundation.Concat
 public import Concatenation.ToFoundation.Decidability
+public import Concatenation.ToFoundation.Interpretability.LocallyFinitelySatisfiable
 public import Concatenation.ToFoundation.Interpretability.Table
 public import Concatenation.ToFoundation.Interpretability.Undecidability
 public import Concatenation.ToFoundation.Prefix
@@ -39,5 +42,6 @@ public import Concatenation.ToMathlib.NonnegSpecialLinearGroup
 public import Concatenation.WTC.Arithmetic
 public import Concatenation.WTC.Basic
 public import Concatenation.WTC.Embedding
+public import Concatenation.WTC.LocallyFinitelySatisfiable
 public import Concatenation.WTC.Standard
 public import Concatenation.WTC.Undecidability

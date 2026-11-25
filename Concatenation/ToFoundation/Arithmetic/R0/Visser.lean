@@ -2,6 +2,7 @@ module
 
 public import Concatenation.ToFoundation.Arithmetic.R0.LocallyFinitelySatisfiable
 public import Concatenation.ToFoundation.Arithmetic.R0.Naming
+public import Foundation.FirstOrder.Incompleteness.Church
 
 /-!
 # Interpretability in $\mathsf{R}_0$
@@ -14,7 +15,7 @@ if it is locally finitely satisfiable.
 
 namespace FFL.FirstOrder.Arithmetic.R0
 
-open ORingStructure Encodable
+open ORingStructure Encodable DirectTranslation
 
 variable {M : Type*} [ORingStructure M] {A : ArithmeticSemisentence 2} {E : ℕ}
   {c j k x y z : M}
@@ -519,7 +520,7 @@ end clauses
 section structures
 
 variable {L : Language} [L.Encodable] {W : M → Prop} {F : ℕ → M → M → M → Prop}
-  {N : Type*} [Nonempty N] [Tarski.Structure L N]
+  {N : Type*} [Tarski.Structure L N]
 
 variable (L W F) in
 /-- The structure `N` is the one that the facts `F` about the elements of `W` describe. -/
@@ -623,8 +624,6 @@ end structures
 
 section translation
 
-variable (A : ArithmeticSemisentence 2) (L : Language) [L.Encodable] [L.Eq]
-
 /-- The code of the environment `t`. -/
 def envCodeTerm {m : ℕ} : {n : ℕ} → (Fin n → ClosedSemiterm ℒₒᵣ m) → ClosedSemiterm ℒₒᵣ m
   | 0, _ => ‘0’
@@ -673,6 +672,123 @@ lemma eval_describedFunc {n f : ℕ} {a : M} {v : Fin n → M} :
       Holds φ ψ σ (numeral 8) (mkPair (numeral n) (numeral f)) (envCode v) a := by
   simp [describedFunc]
 
+variable {L : Language} [L.Encodable] [L.Eq]
+
+/-- The translation that describes the models coded by the certificates. -/
+def certificateTranslation (hA : ℬ[<, ℒₒᵣ].Hierarchy 𝚺 0 A)
+    (h : ∀ j : ℕ, ∃ c : ℕ, IsCertificate A (encode (Language.Eq.eq : L.Rel 2)) c j) :
+    DirectTranslation 𝗥₀ L :=
+  let E := encode (Language.Eq.eq : L.Rel 2)
+  { domain := ⟨inDomain (hasStage A E) (memStage A E) (isStage A E)⟩
+    rel := fun {n} R ↦ ⟨describedRel (hasStage A E) (memStage A E) (isStage A E) n (encode R)⟩
+    func := fun {n} f ↦ ⟨describedFunc (hasStage A E) (memStage A E) (isStage A E) n (encode f)⟩
+    domain_nonempty := complete.{0} _ _ fun M _ _ ↦ (models_domainNonempty_iff _).mpr <| by
+      have := isApproximable_holds (M := M) hA h
+      use 0
+      simpa only [Semiformula.Operator.val, Semiformula.eval_substs] using
+        eval_inDomain.mpr ⟨this.zero, this.dom_zero⟩
+    func_defined := fun {n} f ↦ complete.{0} _ _ fun M _ _ ↦ (models_funcDefined_iff _ _).mpr <| by
+      have := isApproximable_holds (M := M) hA h
+      intro e he
+      have he (i) := eval_inDomain.mp (he i)
+      have env := this.env he
+      obtain ⟨a, ha, hda, hfa⟩ := this.fn_total (f := encode f) env.1 env.2
+      exact (existsUnique_congr fun a ↦ and_congr eval_inDomain eval_describedFunc).mpr
+        ⟨a, ⟨⟨ha, hda⟩, hfa⟩, fun b ⟨hb, hfb⟩ ↦
+          this.fn_unique (this.pair _ _ (this.num _) (this.num _)) env.1 hb.1 ha hfb hfa⟩
+    preserve_eq := complete.{0} _ _ fun M _ _ ↦ (models_preserveEq_iff _ _).mpr <| by
+      have := isApproximable_holds (M := M) hA h
+      intro x y hx hy
+      have hx := eval_inDomain.mp hx
+      have hy := eval_inDomain.mp hy
+      exact eval_describedRel.trans <| this.eq_iff hx.1 hy.1 hx.2 hy.2 }
+
+lemma isDescribedBy_model [M↓[ℒₒᵣ] ⊧* 𝗥₀] (hA : ℬ[<, ℒₒᵣ].Hierarchy 𝚺 0 A)
+    (h : ∀ j : ℕ, ∃ c : ℕ, IsCertificate A (encode (Language.Eq.eq : L.Rel 2)) c j) :
+    IsDescribedBy L
+      (IsSmall (hasStage A (encode (Language.Eq.eq : L.Rel 2))) (memStage A (encode (Language.Eq.eq : L.Rel 2))))
+      (fun k ↦ Holds (hasStage A (encode (Language.Eq.eq : L.Rel 2))) (memStage A (encode (Language.Eq.eq : L.Rel 2))) (isStage A (encode (Language.Eq.eq : L.Rel 2))) (numeral k))
+      (DirectTranslation.Model.val : (certificateTranslation hA h).Model M → M) where
+  mem a := eval_inDomain.mp a.dom
+  exists_eq x hx hdx := ⟨⟨x, eval_inDomain.mpr ⟨hx, hdx⟩⟩, rfl⟩
+  rel _ _ := eval_describedRel
+  func f v := eval_describedFunc.mp <| DirectTranslation.Model.eval_func f v
+
+variable {T : Theory L}
+
+lemma nonempty_interpretation (hA : ℬ[<, ℒₒᵣ].Hierarchy 𝚺 0 A)
+    (h : ∀ j : ℕ, ∃ c : ℕ, IsCertificate A (encode (Language.Eq.eq : L.Rel 2)) c j)
+    (hT : ∀ σ ∈ T, ∃ w : ℕ, ℕ ⊧/![encode σ, w] A) : Nonempty (𝗥₀ ⊳ T) := by
+  refine ⟨⟨certificateTranslation hA h, fun σ hσ ↦ complete.{0} _ _ fun M _ _ ↦
+    DirectTranslation.Model.translate_iff.mpr ?_⟩⟩
+  obtain ⟨w, hw⟩ := hT σ hσ
+  have := isApproximable_holds (M := M) hA h
+  exact (isDescribedBy_model hA h).evalb this ![] σ <| this.ax hA hw
+
 end translation
+
+section theorems
+
+open Theory
+
+variable {L : Language} [L.Eq] [L.Finite] {T : Theory L}
+
+/-- A theory that $\mathsf{R}_0$ interprets is locally finitely satisfiable. -/
+lemma locallyFinitelySatisfiable_of_interpretation (π : 𝗥₀ ⊳ T) :
+    T.LocallyFinitelySatisfiable := fun F hF hfin ↦
+  let ρ : 𝗥₀ ⊳ F := ⟨π.trln, fun σ hσ ↦ π.interpret_theory σ (hF hσ)⟩
+  ρ.hasFiniteModel locallyFinitelySatisfiable <| .of_finite hfin
+
+variable [L.Encodable] [L.Primcodable] [𝗘𝗤 L ⪯ T]
+
+/--
+A recursively enumerable locally finitely satisfiable theory is interpretable in $\mathsf{R}_0$.
+-/
+lemma nonempty_interpretation_of_locallyFinitelySatisfiable (hT : REPred (· ∈ T))
+    (h : T.LocallyFinitelySatisfiable) : Nonempty (𝗥₀ ⊳ T) := by
+  obtain ⟨A, hA₀, hA⟩ : ∃ A : ArithmeticSemisentence 2, ℬ[<, ℒₒᵣ].Hierarchy 𝚺 0 A ∧
+      ∀ p, (∃ σ ∈ T, encode σ = p) ↔ ∃ w, ℕ ⊧/![p, w] A := by
+    have hP : REPred fun p ↦ ∃ σ ∈ T, encode σ = p := by
+      have heq : PrimrecPred fun x : ℕ × Sentence L ↦ encode x.2 = x.1 :=
+        Primrec.eq.comp (Primrec.encode.comp Primrec.snd) Primrec.fst
+      exact REPred.projection (p := fun x : ℕ × Sentence L ↦ x.2 ∈ T ∧ encode x.2 = x.1) <|
+        (hT.comp Computable.snd).and heq.computablePred.to_re
+    have hσ : ℬ[<, ℒₒᵣ].Hierarchy 𝚺 1 (codeOfREPred fun p ↦ ∃ σ ∈ T, encode σ = p) := by
+      simp [codeOfREPred, codeOfPartrec']
+    obtain ⟨ψ, hψ⟩ := Bounding.Prenex.models_exists_prenex.{_, 0} (Γ' := 𝚺) hσ
+    use “p w. !ψ.sigmaInv.val w p”
+    and_intros
+    · simp
+    · intro p
+      simpa using (codeOfREPred_spec hP (x := p)).symm.trans
+        ((hψ ℕ ![p] Empty.elim).trans (ψ.models_sigmaInv _))
+  obtain ⟨F, hF, hfin, hEQ⟩ := exists_finite_subset_weakerThan (Theory.Eq.finite (L := L))
+    (inferInstance : 𝗘𝗤 L ⪯ T)
+  apply nonempty_interpretation hA₀ _ fun σ hσ ↦ (hA _).mp ⟨σ, hσ, rfl⟩
+  intro j
+  let G : Theory L := F ∪ {σ | σ ∈ T ∧ encode σ ≤ j}
+  have hG : G.Finite := hfin.union <|
+    Set.Finite.of_finite_image ((Set.finite_Iic j).subset <| by rintro _ ⟨σ, ⟨-, h⟩, rfl⟩; exact h)
+      encode_injective.injOn
+  have : 𝗘𝗤 L ⪯ G := hEQ.trans <| Entailment.WeakerThan.ofSubset Set.subset_union_left
+  obtain ⟨S, _, _, _, _, hS⟩ :=
+    (h G (Set.union_subset hF fun _ h ↦ h.1) hG).exists_eq
+  apply exists_isCertificate (S := S)
+  intro p hp w _ hw
+  obtain ⟨σ, hσ, rfl⟩ := (hA p).mpr ⟨w, hw⟩
+  exact ⟨σ, rfl, models_theory_iff.mp hS σ <| .inr ⟨hσ, hp⟩⟩
+
+/--
+A recursively enumerable theory of a finite language is interpretable in $\mathsf{R}_0$ if and only
+if it is locally finitely satisfiable.
+- [Hor11, §3, Theorem 3.3]
+- [Hor12, §4, Theorem 4.9]
+-/
+theorem nonempty_interpretation_iff_locallyFinitelySatisfiable (hT : REPred (· ∈ T)) :
+    Nonempty (𝗥₀ ⊳ T) ↔ T.LocallyFinitelySatisfiable :=
+  ⟨fun ⟨π⟩ ↦ locallyFinitelySatisfiable_of_interpretation π,
+    nonempty_interpretation_of_locallyFinitelySatisfiable hT⟩
+
+end theorems
 
 end FFL.FirstOrder.Arithmetic.R0

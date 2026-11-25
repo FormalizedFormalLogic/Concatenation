@@ -25,6 +25,14 @@ variable {M : Type*} [ConcatenationStructure M] {x y z z' : M}
 -/
 def IsNumber (x : M) : Prop := IsTally 1 x ∨ x = 0 ∨ x = 0 ++ 0
 
+/-- `x` is a number. -/
+def isNumber : Semisentence ℒ⌢ 1 :=
+  “x. !isTally !!(op(1).const) x ∨ x = !!(op(0).const) ∨
+    x = !!(op(0).const) ⌢ !!(op(0).const)”
+
+@[simp]
+lemma eval_isNumber : M ⊧/![x] isNumber ↔ IsNumber x := by simp [isNumber, IsNumber]
+
 /--
 `z` is the sum of `x` and `y`: the concatenation of `1`-tallies, with `0` neutral and `0 0`
 absorbing.
@@ -34,6 +42,17 @@ absorbing.
 def AddGraph (z x y : M) : Prop :=
   ((x = 0 ++ 0 ∨ y = 0 ++ 0) ∧ z = 0 ++ 0) ∨ (x = 0 ∧ y ≠ 0 ++ 0 ∧ z = y) ∨
     (y = 0 ∧ x ≠ 0 ++ 0 ∧ z = x) ∨ (IsTally 1 x ∧ IsTally 1 y ∧ z = x ++ y)
+
+/-- `z` is the sum of `x` and `y`. -/
+def addGraph : Semisentence ℒ⌢ 3 :=
+  “z x y. ((x = !!(op(0).const) ⌢ !!(op(0).const) ∨ y = !!(op(0).const) ⌢ !!(op(0).const)) ∧
+      z = !!(op(0).const) ⌢ !!(op(0).const)) ∨
+    (x = !!(op(0).const) ∧ y ≠ !!(op(0).const) ⌢ !!(op(0).const) ∧ z = y) ∨
+    (y = !!(op(0).const) ∧ x ≠ !!(op(0).const) ⌢ !!(op(0).const) ∧ z = x) ∨
+    (!isTally !!(op(1).const) x ∧ !isTally !!(op(1).const) y ∧ z = x ⌢ y)”
+
+@[simp]
+lemma eval_addGraph : M ⊧/![z, x, y] addGraph ↔ AddGraph z x y := by simp [addGraph, AddGraph]
 
 /--
 `z` is the product of `x` and `y`: `0` if `y` is `0`; `0 0` if `y` is not `0` and one of `x` and `y`
@@ -50,22 +69,6 @@ def MulGraph (z x y : M) : Prop :=
       (((∃! r, IsMulSeq x y r) ∧ IsTally 1 z ∧ ∃ r, IsMulSeq x y r ∧ IsLast (pairOf z y) r) ∨
         (¬(∃! r, IsMulSeq x y r) ∧ z = 0 ++ 0)))
 
-/-- `x` is less than `y`: the translation of `∃ c, x + (c + 1) = y`. -/
-def LtGraph (x y : M) : Prop := ∃ c, IsNumber c ∧ ∃ d, AddGraph d c 1 ∧ AddGraph y x d
-
-/-- `x` is a number. -/
-def isNumber : Semisentence ℒ⌢ 1 :=
-  “x. !isTally !!(op(1).const) x ∨ x = !!(op(0).const) ∨
-    x = !!(op(0).const) ⌢ !!(op(0).const)”
-
-/-- `z` is the sum of `x` and `y`. -/
-def addGraph : Semisentence ℒ⌢ 3 :=
-  “z x y. ((x = !!(op(0).const) ⌢ !!(op(0).const) ∨ y = !!(op(0).const) ⌢ !!(op(0).const)) ∧
-      z = !!(op(0).const) ⌢ !!(op(0).const)) ∨
-    (x = !!(op(0).const) ∧ y ≠ !!(op(0).const) ⌢ !!(op(0).const) ∧ z = y) ∨
-    (y = !!(op(0).const) ∧ x ≠ !!(op(0).const) ⌢ !!(op(0).const) ∧ z = x) ∨
-    (!isTally !!(op(1).const) x ∧ !isTally !!(op(1).const) y ∧ z = x ⌢ y)”
-
 /-- `z` is the product of `x` and `y`. -/
 def mulGraph : Semisentence ℒ⌢ 3 :=
   “z x y. (y = !!(op(0).const) ∧ z = !!(op(0).const)) ∨
@@ -78,19 +81,16 @@ def mulGraph : Semisentence ℒ⌢ 3 :=
           ∃ r, !isMulSeq x y r ∧ !isLast (z ⌢ !!(op(0).const) ⌢ y) r) ∨
         (¬(∃! r, !isMulSeq x y r) ∧ z = !!(op(0).const) ⌢ !!(op(0).const))))”
 
-/-- `x` is less than `y`. -/
-def ltGraph : Semisentence ℒ⌢ 2 :=
-  “x y. ∃ c, !isNumber c ∧ ∃ d, !addGraph d c !!(op(1).const) ∧ !addGraph y x d”
-
-@[simp]
-lemma eval_isNumber : M ⊧/![x] isNumber ↔ IsNumber x := by simp [isNumber, IsNumber]
-
-@[simp]
-lemma eval_addGraph : M ⊧/![z, x, y] addGraph ↔ AddGraph z x y := by simp [addGraph, AddGraph]
-
 @[simp]
 lemma eval_mulGraph : M ⊧/![z, x, y] mulGraph ↔ MulGraph z x y := by
   simp [mulGraph, MulGraph, pairOf]
+
+/-- `x` is less than `y`: the translation of `∃ c, x + (c + 1) = y`. -/
+def LtGraph (x y : M) : Prop := ∃ c, IsNumber c ∧ ∃ d, AddGraph d c 1 ∧ AddGraph y x d
+
+/-- `x` is less than `y`. -/
+def ltGraph : Semisentence ℒ⌢ 2 :=
+  “x y. ∃ c, !isNumber c ∧ ∃ d, !addGraph d c !!(op(1).const) ∧ !addGraph y x d”
 
 @[simp]
 lemma eval_ltGraph : M ⊧/![x, y] ltGraph ↔ LtGraph x y := by simp [ltGraph, LtGraph]

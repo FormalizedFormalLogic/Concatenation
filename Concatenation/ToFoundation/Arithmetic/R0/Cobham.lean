@@ -14,18 +14,6 @@ namespace FFL.FirstOrder.Arithmetic.R0
 
 open ORingStructure
 
-/--
-`y` is regular: $0 \le y$, and $v + 1 \le y$ for every $v < y$.
-- [Sve08, §3.3]
--/
-def isRegular : ArithmeticSemisentence 1 := “y. 0 ≤ y ∧ ∀ v < y, v + 1 ≤ y”
-
-/--
-Cobham's order: $x \le y$, or $y$ is not regular.
-- [Sve08, §3.3]
--/
-def cobhamLE : ArithmeticSemisentence 2 := “x y. x ≤ y ∨ ¬!isRegular y”
-
 variable {M : Type*} [ORingStructure M] {x y : M}
 
 /--
@@ -38,17 +26,30 @@ structure IsRegular (y : M) : Prop where
   add_one_le : ∀ v < y, v + 1 = y ∨ v + 1 < y
 
 /--
-Cobham's order: $x \le y$, or $y$ is not regular.
+`y` is regular: $0 \le y$, and $v + 1 \le y$ for every $v < y$.
 - [Sve08, §3.3]
 -/
-def CobhamLE (x y : M) : Prop := (x = y ∨ x < y) ∨ ¬IsRegular y
-@[inherit_doc]
-scoped infix:50 " ⊴ " => CobhamLE
+def isRegular : ArithmeticSemisentence 1 := “y. 0 ≤ y ∧ ∀ v < y, v + 1 ≤ y”
 
 @[simp]
 lemma eval_isRegular : M ⊧/![y] isRegular ↔ IsRegular y := by
   simp [isRegular, isRegular_iff, Semiformula.Operator.LE.sentence_eq, Semiformula.Operator.val,
     Semiformula.Operator.Eq.sentence_eq, Semiformula.Operator.LT.sentence_eq]
+
+/--
+Cobham's order: $x \le y$, or $y$ is not regular.
+- [Sve08, §3.3]
+-/
+def CobhamLE (x y : M) : Prop := (x = y ∨ x < y) ∨ ¬IsRegular y
+
+@[inherit_doc]
+scoped infix:50 " ⊴ " => CobhamLE
+
+/--
+Cobham's order: $x \le y$, or $y$ is not regular.
+- [Sve08, §3.3]
+-/
+def cobhamLE : ArithmeticSemisentence 2 := “x y. x ≤ y ∨ ¬!isRegular y”
 
 @[simp]
 lemma eval_cobhamLE : M ⊧/![x, y] cobhamLE ↔ x ⊴ y := by

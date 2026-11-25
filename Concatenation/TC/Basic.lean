@@ -77,6 +77,15 @@ lemma one_ne_append (a b : M) : 1 ≠ a ++ b := by
 protected lemma zero_ne_one : (0 : M) ≠ 1 := by
   simpa [models_iff] using Theory.models M _ IsTCAxiom.zeroNeOne
 
+@[simp]
+protected lemma append_ne_zero (a b : M) : a ++ b ≠ 0 := (zero_ne_append a b).symm
+
+@[simp]
+protected lemma append_ne_one (a b : M) : a ++ b ≠ 1 := (one_ne_append a b).symm
+
+@[simp]
+protected lemma one_ne_zero : (1 : M) ≠ 0 := Concatenation.zero_ne_one.symm
+
 end TC
 
 instance : (FreeSemigroup Bool)↓[ℒ⌢] ⊧* 𝗧𝗖 := ⟨by
@@ -160,6 +169,15 @@ lemma one_ne_empty : (1 : M) ≠ ∅ := by
 protected lemma zero_ne_one : (0 : M) ≠ 1 := by
   simpa [models_iff] using Theory.models M _ IsTCEmptyAxiom.zeroNeOne
 
+@[simp]
+lemma empty_ne_zero : (∅ : M) ≠ 0 := zero_ne_empty.symm
+
+@[simp]
+lemma empty_ne_one : (∅ : M) ≠ 1 := one_ne_empty.symm
+
+@[simp]
+protected lemma one_ne_zero : (1 : M) ≠ 0 := TCEmpty.zero_ne_one.symm
+
 lemma isAtom_ne_empty (h : IsAtom x) : x ≠ ∅ := by
   rcases h with rfl | rfl <;> simp
 
@@ -178,7 +196,7 @@ lemma eq_empty_of_append_eq_empty (h : x ++ y = ∅) : x = ∅ ∧ y = ∅ := by
   · have h₂ : (1 : M) = ∅ ∨ x ++ 0 = ∅ := eq_empty_of_append_isAtom <| by
       simp [← TCEmpty.append_assoc, h₁]
     have h₃ : (1 : M) ++ (x ++ 0) = 0 := by simp [← TCEmpty.append_assoc, h₁]
-    simp [h₂.resolve_left one_ne_empty, TCEmpty.zero_ne_one.symm] at h₃
+    simp [h₂.resolve_left one_ne_empty] at h₃
   · simpa using h
 
 end TCEmpty

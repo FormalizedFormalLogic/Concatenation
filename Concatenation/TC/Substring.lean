@@ -33,36 +33,22 @@ lemma IsSubstring.append_left (h : IsSubstring x y) : IsSubstring x (u ++ y) := 
   · simpa [Concatenation.append_assoc] using isSubstring_append_append (u ++ u') x v
 
 lemma IsSubstring.append_right (h : IsSubstring x y) : IsSubstring x (y ++ v) := by
-  rcases isSubstring_iff.mp h with rfl | ⟨u, rfl⟩ | ⟨v', rfl⟩ | ⟨u, v', rfl⟩
-  · simp
-  · simp
-  · simp [Concatenation.append_assoc]
-  · simpa [Concatenation.append_assoc] using isSubstring_append_append u x (v' ++ v)
+  grind [isSubstring_iff, Concatenation.append_assoc]
 
 @[trans]
 lemma IsSubstring.trans (hxy : IsSubstring x y) (hyz : IsSubstring y z) : IsSubstring x z := by
-  rcases isSubstring_iff.mp hyz with rfl | ⟨u, rfl⟩ | ⟨v, rfl⟩ | ⟨u, v, rfl⟩
-  · exact hxy
-  · exact hxy.append_left
-  · exact hxy.append_right
-  · exact hxy.append_left.append_right
+  grind [isSubstring_iff, IsSubstring.append_left, IsSubstring.append_right]
 
 lemma IsAtom.ne_append (hc : IsAtom c) : c ≠ x ++ y := by
   rcases hc with rfl | rfl <;> simp
 
 lemma IsAtom.eq_of_append_eq_append (hc : IsAtom c) (hc' : IsAtom c') (h : y ++ c = y' ++ c') :
     c = c' ∧ y = y' := by
-  rcases editor h with ⟨rfl, rfl⟩ | ⟨u, ⟨-, rfl⟩ | ⟨-, rfl⟩⟩
-  · simp
-  · exact absurd rfl hc.ne_append
-  · exact absurd rfl hc'.ne_append
+  rcases editor h with ⟨rfl, rfl⟩ | ⟨u, ⟨-, rfl⟩ | ⟨-, rfl⟩⟩ <;> grind [IsAtom.ne_append]
 
 lemma IsAtom.eq_of_append_eq_append_left (hc : IsAtom c) (hc' : IsAtom c') (h : c ++ y = c' ++ y') :
     c = c' ∧ y = y' := by
-  rcases editor h with ⟨rfl, rfl⟩ | ⟨u, ⟨rfl, -⟩ | ⟨rfl, -⟩⟩
-  · simp
-  · exact absurd rfl hc'.ne_append
-  · exact absurd rfl hc.ne_append
+  rcases editor h with ⟨rfl, rfl⟩ | ⟨u, ⟨rfl, -⟩ | ⟨rfl, -⟩⟩ <;> grind [IsAtom.ne_append]
 
 lemma IsAtom.append_right_cancel (hc : IsAtom c) (h : x ++ c = y ++ c) : x = y :=
   (hc.eq_of_append_eq_append hc h).2
@@ -97,11 +83,7 @@ lemma IsSubstring.append_cases (h : IsSubstring z (x ++ y)) :
     · simp
 
 lemma IsAtom.eq_of_isSubstring (hc : IsAtom c) (h : IsSubstring x c) : x = c := by
-  rcases isSubstring_iff.mp h with h | ⟨u, h⟩ | ⟨v, h⟩ | ⟨u, v, h⟩
-  · exact h
-  · exact absurd h hc.ne_append
-  · exact absurd h hc.ne_append
-  · exact absurd h hc.ne_append
+  grind [isSubstring_iff, IsAtom.ne_append]
 
 lemma isTally_self (hc : IsAtom c) : IsTally c c := fun _ _ h ↦ hc.eq_of_isSubstring h
 
@@ -148,25 +130,15 @@ lemma IsSuffix.append_left (h : y ◧ x) : u ++ y ◧ x := by
   · right; use u ++ u'; simp [Concatenation.append_assoc]
 
 lemma IsPrefix.append_right (h : x ◨ y) : x ◨ y ++ v := by
-  rcases h with rfl | ⟨v', rfl⟩
-  · simp
-  · right; use v' ++ v; simp [Concatenation.append_assoc]
+  grind [IsPrefix, Concatenation.append_assoc]
 
 lemma IsSuffix.eq_of_isAtom (hc : IsAtom c) (hc' : IsAtom c') (h : x ◧ c)
     (h' : x ◧ c') : c = c' := by
-  rcases h with rfl | ⟨u, rfl⟩ <;> rcases h' with h' | ⟨u', h'⟩
-  · exact h'.symm
-  · exact absurd h' hc.ne_append
-  · exact absurd h' hc'.ne_append
-  · exact (hc.eq_of_append_eq_append hc' h').1
+  grind [IsSuffix, IsAtom.ne_append, IsAtom.eq_of_append_eq_append]
 
 lemma IsPrefix.eq_of_isAtom (hc : IsAtom c) (hc' : IsAtom c') (h : c ◨ x)
     (h' : c' ◨ x) : c = c' := by
-  rcases h with rfl | ⟨v, rfl⟩ <;> rcases h' with h' | ⟨v', h'⟩
-  · exact h'.symm
-  · exact absurd h' hc.ne_append
-  · exact absurd h' hc'.ne_append
-  · exact (hc.eq_of_append_eq_append_left hc' h').1
+  grind [IsPrefix, IsAtom.ne_append, IsAtom.eq_of_append_eq_append_left]
 
 @[trans]
 lemma IsPrefix.trans (hxy : x ◨ y) (hyz : y ◨ z) : x ◨ z := by
@@ -181,25 +153,14 @@ lemma IsSuffix.trans (hxy : y ◧ x) (hyz : z ◧ y) : z ◧ x := by
   · exact hxy.append_left
 
 lemma IsPrefix.total (hx : x ◨ z) (hy : y ◨ z) : x ◨ y ∨ y ◨ x := by
-  rcases hx with rfl | ⟨v, rfl⟩ <;> rcases hy with h | ⟨v', h⟩
-  · simp [h]
-  · right; right; use v'
-  · left; right; use v
-  · rcases editor h with ⟨rfl, -⟩ | ⟨u, ⟨rfl, -⟩ | ⟨rfl, -⟩⟩ <;> simp
+  grind [IsPrefix, editor]
 
 lemma IsSuffix.total (hx : z ◧ x) (hy : z ◧ y) : y ◧ x ∨ x ◧ y := by
-  rcases hx with rfl | ⟨u, rfl⟩ <;> rcases hy with h | ⟨u', h⟩
-  · simp [h]
-  · right; right; use u'
-  · left; right; use u
-  · rcases editor h with ⟨-, rfl⟩ | ⟨w, ⟨-, rfl⟩ | ⟨-, rfl⟩⟩ <;> simp
+  grind [IsSuffix, editor]
 
 lemma eq_and_eq_of_append_eq_append_isAtom (hc : IsAtom c) (hd : IsAtom d) (h : x ++ y = c ++ d) :
     x = c ∧ y = d := by
-  rcases editor h with h | ⟨u, ⟨h, -⟩ | ⟨-, h⟩⟩
-  · exact h
-  · exact absurd h.symm hc.ne_append
-  · exact absurd h.symm hd.ne_append
+  rcases editor h with h | ⟨u, ⟨h, -⟩ | ⟨-, h⟩⟩ <;> grind [IsAtom.ne_append]
 
 lemma eq_zero_or_eq_zero_zero_of_isSubstring (h : IsSubstring t (0 ++ 0 : M)) :
     t = 0 ∨ t = 0 ++ 0 := by
@@ -226,20 +187,13 @@ lemma isTally_zero_zero : IsTally (0 : M) (0 ++ 0) :=
 
 lemma zero_zero_append_ne_zero_zero : (0 ++ 0 ++ x : M) ≠ 0 ++ 0 := by
   intro h
-  rcases editor h with ⟨h, -⟩ | ⟨u, ⟨h, -⟩ | ⟨-, h⟩⟩
-  · exact zero_ne_append _ _ h.symm
-  · exact zero_ne_append _ _ h.symm
-  · exact zero_ne_append _ _ h.symm
+  rcases editor h with ⟨h, -⟩ | ⟨u, ⟨h, -⟩ | ⟨-, h⟩⟩ <;> simp at h
 
 lemma IsSuffix.append_congr (h : y ◧ x) : y ++ z ◧ x ++ z := by
-  rcases h with rfl | ⟨u, rfl⟩
-  · simp
-  · right; use u; simp [Concatenation.append_assoc]
+  grind [IsSuffix, Concatenation.append_assoc]
 
 lemma IsPrefix.of_append_left_isAtom (hc : IsAtom c) (h : c ++ x ◨ c ++ y) : x ◨ y := by
-  rcases h with h | ⟨t, h⟩
-  · rw [hc.append_left_cancel h]
-  · right; use t; exact hc.append_left_cancel <| by simpa [Concatenation.append_assoc] using h
+  grind [IsPrefix, IsAtom.append_left_cancel, Concatenation.append_assoc]
 
 end substring
 
@@ -366,11 +320,7 @@ end TC
 instance : (FreeSemigroup Bool)↓[ℒ⌢] ⊧* 𝗧𝗖⁺ := by
   have h (x : FreeSemigroup Bool) : IsBounded x := by
     induction x using FreeSemigroup.recOnMul with
-    | ih1 b =>
-      apply IsAtom.isBounded
-      cases b
-      · exact isAtom_zero
-      · exact isAtom_one
+    | ih1 b => exact (isAtom_of b).isBounded
     | ih2 b x hb hx => exact hb.append hx
   have hT : (FreeSemigroup Bool)↓[ℒ⌢] ⊧* 𝗧𝗖 := inferInstance
   simpa [models_iff, tc6] using ⟨h, fun φ hφ ↦ models_theory_iff.mp hT φ hφ⟩

@@ -214,22 +214,12 @@ def IsSubstring (x y : M) : Prop :=
 
 lemma IsSubstring.map {N : Type*} [Append N] (g : M → N) (hg : ∀ x y, g (x ++ y) = g x ++ g y)
     (h : IsSubstring x y) : IsSubstring (g x) (g y) := by
-  rcases h with rfl | ⟨u, rfl⟩ | ⟨v, rfl⟩ | ⟨u, v, rfl⟩ | ⟨u, v, rfl⟩
-  · exact .inl rfl
-  · exact .inr <| .inl ⟨g u, hg _ _⟩
-  · exact .inr <| .inr <| .inl ⟨g v, hg _ _⟩
-  · exact .inr <| .inr <| .inr <| .inl ⟨g u, g v, by rw [hg, hg]⟩
-  · exact .inr <| .inr <| .inr <| .inr ⟨g u, g v, by rw [hg, hg]⟩
+  grind [IsSubstring]
 
 /-- A property that passes from a concatenation to its parts passes to substrings. -/
 lemma IsSubstring.of_forall_append {P : M → Prop} (hP : ∀ x y, P (x ++ y) → P x ∧ P y)
     (h : IsSubstring x y) (hy : P y) : P x := by
-  rcases h with rfl | ⟨u, rfl⟩ | ⟨v, rfl⟩ | ⟨u, v, rfl⟩ | ⟨u, v, rfl⟩
-  · exact hy
-  · exact (hP _ _ hy).2
-  · exact (hP _ _ hy).1
-  · exact (hP _ _ (hP _ _ hy).1).2
-  · exact (hP _ _ (hP _ _ hy).2).1
+  grind [IsSubstring]
 
 @[simp]
 lemma eval_isSubstring {L : Language} [L.Concat] [L.Eq] [Tarski.Structure L M]
@@ -384,6 +374,10 @@ lemma zero_eq_of_false : (0 : FreeSemigroup Bool) = FreeSemigroup.of false := rf
 
 lemma one_eq_of_true : (1 : FreeSemigroup Bool) = FreeSemigroup.of true := rfl
 
+@[simp]
+lemma isAtom_of (b : Bool) : IsAtom (FreeSemigroup.of b) := by
+  cases b <;> simp [IsAtom, zero_eq_of_false, one_eq_of_true]
+
 section ofFreeSemigroup
 
 open ConcatenationStructure
@@ -407,14 +401,10 @@ lemma ofFreeSemigroup_append_of_isAtom (u : FreeSemigroup Bool) (hc : IsAtom c) 
 lemma atom_append_induction {motive : FreeSemigroup Bool → Prop} (u : FreeSemigroup Bool)
     (atom : ∀ c, IsAtom c → motive c)
     (append : ∀ u c, IsAtom c → motive u → motive (u ++ c)) : motive u := by
-  have h (b : Bool) : IsAtom (FreeSemigroup.of b) := by
-    cases b
-    · exact isAtom_zero
-    · exact isAtom_one
   rcases u with ⟨b, l⟩
   induction l using List.reverseRecOn with
-  | nil => exact atom _ <| h b
-  | append_singleton l d ih => exact append _ _ (h d) ih
+  | nil => exact atom _ <| isAtom_of b
+  | append_singleton l d ih => exact append _ _ (isAtom_of d) ih
 
 end ofFreeSemigroup
 
@@ -508,10 +498,9 @@ lemma ofList_true : (ofList [true] : M) = 1 := rfl
 
 lemma ofList_append_singleton (hu : u ≠ []) (b : Bool) :
     (ofList (u ++ [b]) : M) = ofList u ++ ofList [b] := by
-  rcases u with _ | ⟨d, l⟩
-  · exact absurd rfl hu
-  · simp [ofList, ofFreeSemigroup, stringValue]
+  cases u <;> simp_all [ofList, ofFreeSemigroup, stringValue]
 
+@[simp]
 lemma isAtom_ofList_singleton (b : Bool) : IsAtom (ofList [b] : M) := by
   cases b <;> simp
 

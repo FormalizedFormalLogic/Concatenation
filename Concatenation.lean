@@ -39,9 +39,12 @@ public import Concatenation.ToFoundation.Interpretability.Undecidability
 public import Concatenation.ToFoundation.Prefix
 public import Concatenation.ToMathlib.FreeSemigroup
 public import Concatenation.ToMathlib.FreeSemigroupCode
+public import Concatenation.ToMathlib.NonnegSpecialLinearGroup
 public import Concatenation.WTC.Arithmetic
 public import Concatenation.WTC.Basic
 public import Concatenation.WTC.Embedding
 public import Concatenation.WTC.Letters
+public import Concatenation.WTC.LocallyFinitelySatisfiable
+public import Concatenation.WTC.Sigma1
 public import Concatenation.WTC.Standard
 public import Concatenation.WTC.Undecidability

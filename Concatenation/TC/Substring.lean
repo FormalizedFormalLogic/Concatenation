@@ -1,6 +1,6 @@
 module
 
-public import Concatenation.Semantics.Substring
+public import Concatenation.Semantics.Basic
 
 /-!
 # Atoms, substrings and tallies in models of $\mathsf{TC}$

@@ -1,6 +1,6 @@
 module
 
-public import Concatenation.Semantics.Substring
+public import Concatenation.Semantics.Basic
 
 /-!
 # Pairs, sequences and multiplication sequences

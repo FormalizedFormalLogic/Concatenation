@@ -10,6 +10,7 @@ public import Concatenation.OpenProblem.Attribute
 public import Concatenation.QT.Basic
 public import Concatenation.QT.Irreflexivity
 public import Concatenation.Semantics.Basic
+public import Concatenation.Semantics.Letters
 public import Concatenation.Semantics.Sequence
 public import Concatenation.Semantics.Standard
 public import Concatenation.Seq.Arithmetic
@@ -48,6 +49,7 @@ public import Concatenation.ToMathlib.NonnegSpecialLinearGroup
 public import Concatenation.WTC.Arithmetic
 public import Concatenation.WTC.Basic
 public import Concatenation.WTC.Embedding
+public import Concatenation.WTC.Letters
 public import Concatenation.WTC.LocallyFinitelySatisfiable
 public import Concatenation.WTC.Sigma1
 public import Concatenation.WTC.Standard

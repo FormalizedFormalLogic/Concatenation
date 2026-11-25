@@ -673,7 +673,8 @@ theorem exists_similar_insert (d : ℕ) : ∃ g, ∀ ρ : Set (M × M'), ρ.Fini
   have hOld {x₂ x : M} {y₂ : M'} (h₂ : (x₂, y₂) ∈ F.Reach F' d ρ) : x₂ = x ↔ y₂ = H x := by
     constructor
     · rintro rfl
-      exact (IsPartialIso.eq_iff hE (hdg h₂) (hmono (by omega) (hold (reach_mono hdθ le_rfl h₂)))).mp rfl
+      have h := hmono (by omega) (hold (reach_mono hdθ le_rfl h₂))
+      exact (IsPartialIso.eq_iff hE (hdg h₂) h).mp rfl
     · intro h
       exact (hO x d (by omega) x₂ y₂ h₂ h.symm).symm
   apply IsPartialIso.mono _ hsub

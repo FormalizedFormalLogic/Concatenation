@@ -7,6 +7,7 @@ public import Concatenation.D.Basic
 public import Concatenation.Language
 public import Concatenation.OpenProblem
 public import Concatenation.OpenProblem.Attribute
+public import Concatenation.Semantics.AtomicPairing
 public import Concatenation.Semantics.Basic
 public import Concatenation.Semantics.Sequence
 public import Concatenation.Semantics.Standard
@@ -31,7 +32,10 @@ public import Concatenation.ToFoundation.Interpretability.LocallyFinitelySatisfi
 public import Concatenation.ToFoundation.Interpretability.Table
 public import Concatenation.ToFoundation.Interpretability.Undecidability
 public import Concatenation.ToFoundation.Prefix
+public import Concatenation.ToFoundation.PrimrecCoding
+public import Concatenation.ToMathlib.AtomicPairing
 public import Concatenation.ToMathlib.FreeSemigroup
 public import Concatenation.WTC.Basic
 public import Concatenation.WTC.Editor
 public import Concatenation.WTC.LocallyFinitelySatisfiable
+public import Concatenation.WTC.Pairing

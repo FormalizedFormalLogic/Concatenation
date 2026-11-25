@@ -73,6 +73,10 @@ instance : (ℒ⌢).DecidableEq := ⟨fun _ ↦ inferInstance, fun _ ↦ inferIn
 
 instance : (ℒ⌢).Encodable := ⟨fun _ ↦ inferInstance, fun _ ↦ inferInstance⟩
 
+instance : (ℒ⌢).Finite where
+  func := ⟨{⟨0, .zero⟩, ⟨0, .one⟩, ⟨2, .concat⟩}, by rintro ⟨_, _ | _ | _⟩ <;> simp⟩
+  rel := ⟨{⟨2, .eq⟩}, by rintro ⟨_, _ | _⟩; simp⟩
+
 instance : (ℒ⌢).Zero := ⟨Func.zero⟩
 
 instance : (ℒ⌢).One := ⟨Func.one⟩

@@ -87,6 +87,47 @@ instance : (ℒ⌢).Eq := ⟨Rel.eq⟩
 
 end Concatenation
 
+/-- The letters `α` and the symbol for concatenation. -/
+inductive ConcatenationLettersFunc (α : Type) : ℕ → Type
+  | letter (a : α) : ConcatenationLettersFunc α 0
+  | concat : ConcatenationLettersFunc α 2
+
+/--
+Language of the theory of concatenation with the letters `α`.
+- [Hor11, §3, Theorem 3.18]
+- [Hor12, §4, Theorem 4.13]
+-/
+@[reducible]
+def concatenationLetters (α : Type) : Language where
+  Func := ConcatenationLettersFunc α
+  Rel := Concatenation.Rel
+
+@[inherit_doc]
+notation "ℒ⌢[" α "]" => concatenationLetters α
+
+namespace ConcatenationLetters
+
+variable {α : Type}
+
+instance [Encodable α] (k) : Encodable (ConcatenationLettersFunc α k) where
+  encode
+    | .letter a => Encodable.encode a
+    | .concat => 0
+  decode e :=
+    match k, e with
+    | 0, e => (Encodable.decode e).map .letter
+    | 2, 0 => some .concat
+    | _, _ => none
+  encodek x := by rcases x <;> simp
+
+instance [Encodable α] : (ℒ⌢[α]).Encodable := ⟨fun _ ↦ inferInstance, fun _ ↦ inferInstance⟩
+
+instance : (ℒ⌢[α]).Concat := ⟨.concat⟩
+
+instance : (ℒ⌢[α]).Eq := ⟨Concatenation.Rel.eq⟩
+
+end ConcatenationLetters
+
 /-- The single symbol for the prefix relation. -/
 inductive PrefixRel : ℕ → Type
   | pref : PrefixRel 2
@@ -112,6 +153,20 @@ instance (k) : Encodable (PrefixRel k) where
   encodek x := by rcases x; simp
 
 end PrefixRel
+
+/-- The single symbol for the successor of strings. -/
+inductive SuccessorFunc : ℕ → Type
+  | succ : SuccessorFunc 1
+
+/--
+Language of the theory of concatenation with the successor of strings.
+- [Dam17, §1]
+- [Dam17a, §1]
+-/
+abbrev concatenationSuccessor : Language := ℒ⌢.add <| Language.ofFunc SuccessorFunc
+
+@[inherit_doc]
+notation "ℒ⌢ₛ" => concatenationSuccessor
 
 /--
 Language of the theory of concatenation with the empty string, written `⋆` in formulas.
@@ -158,6 +213,18 @@ instance : Encodable ((ℒ⌢ₑ).Func k) :=
   inferInstanceAs (Encodable (Concatenation.Func k ⊕ Constant.Func PUnit k))
 
 instance : Encodable ((ℒ⌢ₑ).Rel k) := inferInstanceAs (Encodable (Concatenation.Rel k ⊕ PEmpty))
+
+instance : (ℒ⌢ₑ).Encodable := ⟨fun _ ↦ inferInstance, fun _ ↦ inferInstance⟩
+
+instance : (ℒ⌢ₑ).Finite where
+  func :=
+    have : DecidableEq ((k : ℕ) × (ℒ⌢ₑ).Func k) := inferInstance
+    { elems := {⟨0, Sum.inl Concatenation.Func.zero⟩, ⟨0, Sum.inl Concatenation.Func.one⟩,
+        ⟨2, Sum.inl Concatenation.Func.concat⟩, ⟨0, Sum.inr <| Constant.Func.const ⟨⟩⟩}
+      complete := by rintro ⟨_, (_ | _ | _) | ⟨⟨⟩⟩⟩ <;> simp }
+  rel :=
+    { elems := {⟨2, Sum.inl Concatenation.Rel.eq⟩}
+      complete := by rintro ⟨_, (_ | _) | ⟨⟨⟩⟩⟩; simp }
 
 instance : DecidableEq ((ℒ⌢⊑).Func k) :=
   inferInstanceAs (DecidableEq (Concatenation.Func k ⊕ Empty))

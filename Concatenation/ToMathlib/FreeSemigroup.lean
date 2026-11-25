@@ -24,6 +24,9 @@ def ofList? : List α → Option (FreeSemigroup α)
 @[simp]
 lemma toList_mul : (x * y).toList = x.toList ++ y.toList := rfl
 
+@[simp]
+lemma toList_of (a : α) : (of a).toList = [a] := rfl
+
 lemma toList_injective : Function.Injective (toList : FreeSemigroup α → List α) := fun x y h ↦ by
   cases x; cases y; simpa [toList] using h
 

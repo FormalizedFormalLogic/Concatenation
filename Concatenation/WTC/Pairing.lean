@@ -168,7 +168,8 @@ lemma ofFreeSemigroup_eq (hu : u.length ≤ N + 1) :
         ih _ hxb (by simpa [FreeSemigroup.of] using hxl)]
       congr 2
       simp [FreeSemigroup.of]
-  rw [ConcatenationStructure.ofFreeSemigroup, h₀, h _ _ (by simp) (by simpa [FreeSemigroup.of])]
+  rw [ConcatenationStructure.ofFreeSemigroup, stringValue, h₀,
+    h _ _ (by simp) (by simpa [FreeSemigroup.of])]
   simp [FreeSemigroup.of]
 
 
@@ -299,7 +300,8 @@ lemma ofFreeSemigroup_eq (hu : u.length ≤ N + 1) :
       rw [List.foldl_cons, List.foldl_cons, ih]
       cases b <;> rfl
   apply Pairing.ext
-  rw [ConcatenationStructure.ofFreeSemigroup, h, val_string, ← PrePairing.ofFreeSemigroup_eq hu]
+  rw [ConcatenationStructure.ofFreeSemigroup, stringValue, h, val_string,
+    ← PrePairing.ofFreeSemigroup_eq hu]
   rcases u with ⟨b, l⟩
   cases b <;> rfl
 

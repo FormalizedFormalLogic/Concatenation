@@ -101,7 +101,7 @@ lemma ofFreeSemigroup_eq (u : FreeSemigroup Bool) :
       rw [List.foldl_cons, h₀, of_append_of, ih]
       congr 2
       simp [FreeSemigroup.of]
-  rw [ConcatenationStructure.ofFreeSemigroup, h₀, h]
+  rw [ConcatenationStructure.ofFreeSemigroup, Concatenation.stringValue, h₀, h]
   simp [FreeSemigroup.of]
 
 protected lemma append_assoc (a b c : Truncation N) : a ++ b ++ c = a ++ (b ++ c) := by

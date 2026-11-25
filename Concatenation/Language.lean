@@ -154,6 +154,20 @@ instance (k) : Encodable (PrefixRel k) where
 
 end PrefixRel
 
+/-- The single symbol for the successor of strings. -/
+inductive SuccessorFunc : ℕ → Type
+  | succ : SuccessorFunc 1
+
+/--
+Language of the theory of concatenation with the successor of strings.
+- [Dam17, §1]
+- [Dam17a, §1]
+-/
+abbrev concatenationSuccessor : Language := ℒ⌢.add <| Language.ofFunc SuccessorFunc
+
+@[inherit_doc]
+notation "ℒ⌢ₛ" => concatenationSuccessor
+
 /--
 Language of the theory of concatenation with the empty string, written `⋆` in formulas.
 - [HH14, §2]

@@ -384,7 +384,7 @@ protected lemma mul_one (a : arithmeticTranslation.Model M) : a * 1 = a := by
   · apply Model.ext
     apply val_mul_eq_iff.mpr
     exact Or.inr <| Or.inr <| Or.inr ⟨ha, isTally_one_one, Or.inl
-      ⟨existsUnique_isMulSeq_one ha, ha, _, (isMulSeq_one_iff ha).mpr rfl, IsEndSegment.refl _⟩⟩
+      ⟨existsUnique_isMulSeq_one ha, ha, _, (isMulSeq_one_iff ha).mpr rfl, IsSuffix.refl _⟩⟩
   · obtain rfl : a = 0 := Model.ext ha
     exact zero_mul_of_isTally isTally_one_one
   · exact mul_eq_left_of_val_eq_zero_append_zero ha isTally_one_one.ne_zero

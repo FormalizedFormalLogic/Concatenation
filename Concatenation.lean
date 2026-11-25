@@ -7,6 +7,8 @@ public import Concatenation.D.Basic
 public import Concatenation.Language
 public import Concatenation.OpenProblem
 public import Concatenation.OpenProblem.Attribute
+public import Concatenation.QT.Basic
+public import Concatenation.QT.Irreflexivity
 public import Concatenation.Semantics.Basic
 public import Concatenation.Semantics.Sequence
 public import Concatenation.Semantics.Standard

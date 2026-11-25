@@ -86,10 +86,7 @@ lemma eval_cobhamComparison_numeral_iff (n : ℕ) (y : M) :
     use numeral (max (f n) k)
     and_intros
     · simp
-    · use numeral k
-      and_intros
-      · simp
-      · exact hkM
+    · use numeral k, by simp
     · intro z u hz hu hzu
       obtain ⟨i, -, rfl⟩ := eq_numeral_of_cobhamLE_numeral hz
       obtain ⟨j, -, rfl⟩ := eq_numeral_of_cobhamLE_numeral hu
@@ -137,16 +134,10 @@ theorem cobhamRepresentation_spec (hf : Computable f) (n : ℕ) :
 
 lemma eval_pairDef_numeral_iff {p : M} (m n : ℕ) :
     M ⊧/![p, numeral m, numeral n] pairDef.val ↔ p = numeral (Nat.pair m n) := by
-  rcases lt_trichotomy m n with h | rfl | h
-  · simp [pairDef, Nat.pair, Semiformula.Operator.LE.sentence_eq, Semiformula.Operator.val,
-      Semiformula.Operator.Eq.sentence_eq, Semiformula.Operator.LT.sentence_eq,
-      numeral_mul_numeral, numeral_add_numeral, h, h.ne', h.not_gt]
-  · simp [pairDef, Nat.pair, Semiformula.Operator.LE.sentence_eq, Semiformula.Operator.val,
-      Semiformula.Operator.Eq.sentence_eq, Semiformula.Operator.LT.sentence_eq,
-      numeral_mul_numeral, numeral_add_numeral]
-  · simp [pairDef, Nat.pair, Semiformula.Operator.LE.sentence_eq, Semiformula.Operator.val,
-      Semiformula.Operator.Eq.sentence_eq, Semiformula.Operator.LT.sentence_eq,
-      numeral_mul_numeral, numeral_add_numeral, h, h.not_gt]
+  simp [pairDef, Nat.pair, Semiformula.Operator.LE.sentence_eq, Semiformula.Operator.val,
+    Semiformula.Operator.Eq.sentence_eq, Semiformula.Operator.LT.sentence_eq,
+    numeral_mul_numeral, numeral_add_numeral]
+  grind
 
 /-- The formula that represents the computable binary function `f` through the pairing. -/
 noncomputable def cobhamRepresentation₂ (f : ℕ → ℕ → ℕ) : ArithmeticSemisentence 3 :=
@@ -219,8 +210,8 @@ lemma IsValue₂.exists_of_numeral (hf : Computable₂ f) {k : ℕ} (h : IsValue
     ∃ m n, x = numeral m ∧ y = numeral n ∧ f m n = k := by
   obtain ⟨m, -, rfl⟩ := eq_numeral_of_cobhamLE_numeral h.left_le
   obtain ⟨n, -, rfl⟩ := eq_numeral_of_cobhamLE_numeral h.right_le
-  exact ⟨m, n, rfl, rfl,
-    (numeral_inj_iff.mp <| (eval_cobhamRepresentation₂_numeral_iff hf m n).mp h.eval).symm⟩
+  use m, n
+  simpa [hf, eq_comm] using h.eval
 
 end value
 

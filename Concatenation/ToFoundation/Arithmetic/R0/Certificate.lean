@@ -361,7 +361,7 @@ lemma exists_isNaming : ∃ val : ℕ → S, IsNaming L val := by
           obtain rfl := envCode_injective hv
           exact hb
         · intro k f v' h
-          simp [witnessName, funcName, mkPair_inj] at h
+          simp [witnessName, funcName] at h
       by_cases hb : ∃ a, S ⊧/(a :> u ∘ v) φ
       · obtain ⟨b, hb⟩ := hb
         exact h b fun _ ↦ hb
@@ -413,10 +413,7 @@ lemma IsCanonical.zero : IsCanonical val 0 := by
 omit [Nonempty S] in
 lemma IsCanonical.eq (ha : IsCanonical val a) (hb : IsCanonical val b) (h : val a = val b) :
     a = b := by
-  rcases lt_trichotomy a b with h' | h' | h'
-  · exact absurd h <| hb a h'
-  · exact h'
-  · exact absurd h.symm <| ha b h'
+  grind [IsCanonical]
 
 omit [Nonempty S] in
 variable (val) in
@@ -468,13 +465,14 @@ section inversion
 
 variable {L : Language} [L.Encodable] {n : ℕ} {p q r k f v : ℕ} {φ : Semisentence L n}
 
+attribute [local simp] Semiformula.encode_rel Semiformula.encode_nrel Semiformula.encode_verum
+  Semiformula.encode_falsum Semiformula.encode_and Semiformula.encode_or Semiformula.encode_all
+  Semiformula.encode_ex Semiterm.encode_eq_toNat Semiterm.toNat Nat.pair_eq_pair
+
 lemma exists_eq_and (h : encode φ = Nat.pair 4 (Nat.pair q r) + 1) :
     ∃ φ₁ φ₂, φ = φ₁ ⋏ φ₂ ∧ encode φ₁ = q ∧ encode φ₂ = r := by
   match φ with
-  | .rel _ _ | .nrel _ _ | ⊤ | ⊥ | _ ⋎ _ | ∀¹ _ | ∃¹ _ =>
-    simp [Semiformula.encode_rel, Semiformula.encode_nrel, Semiformula.encode_verum,
-      Semiformula.encode_falsum, Semiformula.encode_or, Semiformula.encode_all,
-      Semiformula.encode_ex, Nat.pair_eq_pair] at h
+  | .rel _ _ | .nrel _ _ | ⊤ | ⊥ | _ ⋎ _ | ∀¹ _ | ∃¹ _ => simp at h
   | φ₁ ⋏ φ₂ =>
     simp only [Semiformula.encode_and, Nat.add_right_cancel_iff, Nat.pair_eq_pair] at h
     exact ⟨φ₁, φ₂, rfl, h.2⟩
@@ -482,50 +480,35 @@ lemma exists_eq_and (h : encode φ = Nat.pair 4 (Nat.pair q r) + 1) :
 lemma exists_eq_or (h : encode φ = Nat.pair 5 (Nat.pair q r) + 1) :
     ∃ φ₁ φ₂, φ = φ₁ ⋎ φ₂ ∧ encode φ₁ = q ∧ encode φ₂ = r := by
   match φ with
-  | .rel _ _ | .nrel _ _ | ⊤ | ⊥ | _ ⋏ _ | ∀¹ _ | ∃¹ _ =>
-    simp [Semiformula.encode_rel, Semiformula.encode_nrel, Semiformula.encode_verum,
-      Semiformula.encode_falsum, Semiformula.encode_and, Semiformula.encode_all,
-      Semiformula.encode_ex, Nat.pair_eq_pair] at h
+  | .rel _ _ | .nrel _ _ | ⊤ | ⊥ | _ ⋏ _ | ∀¹ _ | ∃¹ _ => simp at h
   | φ₁ ⋎ φ₂ =>
     simp only [Semiformula.encode_or, Nat.add_right_cancel_iff, Nat.pair_eq_pair] at h
     exact ⟨φ₁, φ₂, rfl, h.2⟩
 
 lemma exists_eq_all (h : encode φ = Nat.pair 6 q + 1) : ∃ φ₁, φ = ∀¹ φ₁ ∧ encode φ₁ = q := by
   match φ with
-  | .rel _ _ | .nrel _ _ | ⊤ | ⊥ | _ ⋏ _ | _ ⋎ _ | ∃¹ _ =>
-    simp [Semiformula.encode_rel, Semiformula.encode_nrel, Semiformula.encode_verum,
-      Semiformula.encode_falsum, Semiformula.encode_and, Semiformula.encode_or,
-      Semiformula.encode_ex, Nat.pair_eq_pair] at h
+  | .rel _ _ | .nrel _ _ | ⊤ | ⊥ | _ ⋏ _ | _ ⋎ _ | ∃¹ _ => simp at h
   | ∀¹ φ₁ =>
     simp only [Semiformula.encode_all, Nat.add_right_cancel_iff, Nat.pair_eq_pair] at h
     exact ⟨φ₁, rfl, h.2⟩
 
 lemma exists_eq_exs (h : encode φ = Nat.pair 7 q + 1) : ∃ φ₁, φ = ∃¹ φ₁ ∧ encode φ₁ = q := by
   match φ with
-  | .rel _ _ | .nrel _ _ | ⊤ | ⊥ | _ ⋏ _ | _ ⋎ _ | ∀¹ _ =>
-    simp [Semiformula.encode_rel, Semiformula.encode_nrel, Semiformula.encode_verum,
-      Semiformula.encode_falsum, Semiformula.encode_and, Semiformula.encode_or,
-      Semiformula.encode_all, Nat.pair_eq_pair] at h
+  | .rel _ _ | .nrel _ _ | ⊤ | ⊥ | _ ⋏ _ | _ ⋎ _ | ∀¹ _ => simp at h
   | ∃¹ φ₁ =>
     simp only [Semiformula.encode_ex, Nat.add_right_cancel_iff, Nat.pair_eq_pair] at h
     exact ⟨φ₁, rfl, h.2⟩
 
 lemma eq_falsum (h : encode φ = Nat.pair 3 0 + 1) : φ = ⊥ := by
   match φ with
-  | .rel _ _ | .nrel _ _ | ⊤ | _ ⋏ _ | _ ⋎ _ | ∀¹ _ | ∃¹ _ =>
-    simp [Semiformula.encode_rel, Semiformula.encode_nrel, Semiformula.encode_verum,
-      Semiformula.encode_ex, Semiformula.encode_and, Semiformula.encode_or,
-      Semiformula.encode_all, Nat.pair_eq_pair] at h
+  | .rel _ _ | .nrel _ _ | ⊤ | _ ⋏ _ | _ ⋎ _ | ∀¹ _ | ∃¹ _ => simp at h
   | ⊥ => rfl
 
 lemma exists_eq_rel (h : encode φ = Nat.pair 0 (Nat.pair k (Nat.pair f v)) + 1) :
     ∃ (R : L.Rel k) (t : Fin k → ClosedSemiterm L n), φ = .rel R t ∧ encode R = f ∧
       Matrix.vecToNat (fun i ↦ encode (t i)) = v := by
   match φ with
-  | .nrel _ _ | ⊤ | ⊥ | _ ⋏ _ | _ ⋎ _ | ∀¹ _ | ∃¹ _ =>
-    simp [Semiformula.encode_nrel, Semiformula.encode_verum, Semiformula.encode_falsum,
-      Semiformula.encode_ex, Semiformula.encode_and, Semiformula.encode_or,
-      Semiformula.encode_all, Nat.pair_eq_pair] at h
+  | .nrel _ _ | ⊤ | ⊥ | _ ⋏ _ | _ ⋎ _ | ∀¹ _ | ∃¹ _ => simp at h
   | .rel R t =>
     simp only [Semiformula.encode_rel, Nat.add_right_cancel_iff, Nat.pair_eq_pair] at h
     obtain ⟨-, rfl, h⟩ := h
@@ -535,10 +518,7 @@ lemma exists_eq_nrel (h : encode φ = Nat.pair 1 (Nat.pair k (Nat.pair f v)) + 1
     ∃ (R : L.Rel k) (t : Fin k → ClosedSemiterm L n), φ = .nrel R t ∧ encode R = f ∧
       Matrix.vecToNat (fun i ↦ encode (t i)) = v := by
   match φ with
-  | .rel _ _ | ⊤ | ⊥ | _ ⋏ _ | _ ⋎ _ | ∀¹ _ | ∃¹ _ =>
-    simp [Semiformula.encode_rel, Semiformula.encode_verum, Semiformula.encode_falsum,
-      Semiformula.encode_ex, Semiformula.encode_and, Semiformula.encode_or,
-      Semiformula.encode_all, Nat.pair_eq_pair] at h
+  | .rel _ _ | ⊤ | ⊥ | _ ⋏ _ | _ ⋎ _ | ∀¹ _ | ∃¹ _ => simp at h
   | .nrel R t =>
     simp only [Semiformula.encode_nrel, Nat.add_right_cancel_iff, Nat.pair_eq_pair] at h
     obtain ⟨-, rfl, h⟩ := h
@@ -548,17 +528,14 @@ variable {t : ClosedSemiterm L n}
 
 lemma exists_eq_bvar {i : ℕ} (h : encode t = Nat.pair 0 i + 1) : ∃ x : Fin n, t = #x ∧ x = i := by
   match t with
-  | #x =>
-    simp only [Semiterm.encode_eq_toNat, Semiterm.toNat, Nat.add_right_cancel_iff,
-      Nat.pair_eq_pair] at h
-    exact ⟨x, rfl, h.2⟩
-  | .func _ _ => simp [Semiterm.encode_eq_toNat, Semiterm.toNat, Nat.pair_eq_pair] at h
+  | #x => exact ⟨x, rfl, by simpa using h⟩
+  | .func _ _ => simp at h
 
 lemma exists_eq_func (h : encode t = Nat.pair 2 (Nat.pair k (Nat.pair f v)) + 1) :
     ∃ (F : L.Func k) (u : Fin k → ClosedSemiterm L n), t = .func F u ∧ encode F = f ∧
       Matrix.vecToNat (fun i ↦ encode (u i)) = v := by
   match t with
-  | #x => simp [Semiterm.encode_eq_toNat, Semiterm.toNat, Nat.pair_eq_pair] at h
+  | #x => simp at h
   | .func F u =>
     simp only [Semiterm.encode_eq_toNat, Semiterm.toNat, Nat.add_right_cancel_iff,
       Nat.pair_eq_pair] at h

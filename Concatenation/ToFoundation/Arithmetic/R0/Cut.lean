@@ -33,6 +33,7 @@ lemma val_subst_mkPairTerm {n : ℕ} {e : Fin n → M} {f : Empty → M}
     (Rew.subst ![t, u] mkPairTerm).val e f = mkPair (t.val e f) (u.val e f) := by
   simp [mkPairTerm, mkPair]
 
+@[simp]
 lemma mkPair_inj {a b a' b' : ℕ} : mkPair a b = mkPair a' b' ↔ a = a' ∧ b = b' := by
   constructor
   · intro h
@@ -47,12 +48,15 @@ lemma mkPair_inj {a b a' b' : ℕ} : mkPair a b = mkPair a' b' ↔ a = a' ∧ b 
   · rintro ⟨rfl, rfl⟩
     rfl
 
+@[simp]
 lemma mkPair_pos (a b : ℕ) : 0 < mkPair a b := by
   simp [mkPair]
 
+@[simp]
 lemma left_lt_mkPair (a b : ℕ) : a < mkPair a b := by
   simp [mkPair]
 
+@[simp]
 lemma right_lt_mkPair (a b : ℕ) : b < mkPair a b := by
   simp only [mkPair]
   nlinarith
@@ -62,6 +66,7 @@ lemma mkPair_le_mkPair {a b a' b' : ℕ} (ha : a ≤ a') (hb : b ≤ b') :
   simp only [mkPair]
   gcongr
 
+@[simp]
 lemma mkPair_numeral [M↓[ℒₒᵣ] ⊧* 𝗥₀] (a b : ℕ) :
     mkPair (numeral a : M) (numeral b) = numeral (mkPair a b) := by
   have h : (1 : M) = numeral 1 := by simp
@@ -139,46 +144,25 @@ lemma isTame_numeral (n : ℕ) : IsTame (numeral n : M) where
     simpa using le_antisymm (numeral_cobhamLE_numeral_iff.mp hxy) hi
   zero_le := by simpa using numeral_cobhamLE_numeral_iff (M := M) (k := 0) (n := n)
   add_one_le y hy := by
-    rw [numeral_add_one]
     rcases cobhamLE_numeral_or (x := y) (n + 1) with h | h
     · obtain ⟨i, hi, rfl⟩ := eq_numeral_of_cobhamLE_numeral h
       simp at hy ⊢
       omega
-    · exact .inr h
+    · simp [h]
   le_add_one_iff y := by
-    rw [numeral_add_one]
-    constructor
-    · intro h
-      obtain ⟨i, hi, rfl⟩ := eq_numeral_of_cobhamLE_numeral h
-      simp
-      omega
-    · rintro (h | rfl)
-      · obtain ⟨i, hi, rfl⟩ := eq_numeral_of_cobhamLE_numeral h
-        simp
-        omega
-      · simp
-  not_add_one_le := by simp [numeral_add_one]
+    simp only [numeral_add_one, cobhamLE_numeral_iff, lt_numeral_iff, Fin.exists_fin_succ']
+    simp
+    tauto
+  not_add_one_le := by simp
   add_zero := by simpa using numeral_add_numeral (M := M) n 0
   zero_add := by simpa using numeral_add_numeral (M := M) 0 n
   mul_zero := by simpa using numeral_mul_numeral (M := M) n 0
   mul_one := by simpa using numeral_mul_numeral (M := M) n 1
   one_mul := by simpa using numeral_mul_numeral (M := M) 1 n
 
-lemma isTame₃_numeral (k n m : ℕ) : IsTame₃ (numeral k : M) (numeral n) (numeral m) where
-  add_assoc := by simp [numeral_add_numeral, Nat.add_assoc]
-  mul_assoc := by simp [numeral_mul_numeral, Nat.mul_assoc]
-  mul_add := by simp [numeral_mul_numeral, numeral_add_numeral, Nat.mul_add]
-  add_le_add_left := by simp [numeral_add_numeral]
-  mul_le_mul_left := by
-    simp only [numeral_cobhamLE_numeral_iff, numeral_mul_numeral]
-    exact Nat.mul_le_mul_left k
-  le_add_right := by simp [numeral_add_numeral]
-  mkPair_le_left := by
-    simp only [numeral_cobhamLE_numeral_iff, mkPair_numeral]
-    exact fun h ↦ mkPair_le_mkPair h le_rfl
-  mkPair_le_right := by
-    simp only [numeral_cobhamLE_numeral_iff, mkPair_numeral]
-    exact mkPair_le_mkPair le_rfl
+lemma isTame₃_numeral (k n m : ℕ) : IsTame₃ (numeral k : M) (numeral n) (numeral m) := by
+  constructor <;> simp +contextual [numeral_add_numeral, numeral_mul_numeral, Nat.add_assoc,
+    Nat.mul_assoc, Nat.mul_add, Nat.mul_le_mul_left, mkPair_le_mkPair]
 
 end isTame
 
@@ -263,17 +247,7 @@ lemma eval_isGood : M ⊧/![x] (isGood φ ψ) ↔ IsGood φ ψ x := by
 variable [M↓[ℒₒᵣ] ⊧* 𝗥₀]
 
 lemma cobhamLT_numeral_iff_exists {n : ℕ} : x ◃ numeral n ↔ ∃ i < n, x = numeral i := by
-  constructor
-  · rintro ⟨h, hne⟩
-    obtain ⟨i, hi, rfl⟩ := eq_numeral_of_cobhamLE_numeral h
-    use i
-    and_intros
-    · exact hi.lt_of_ne fun h ↦ hne <| congrArg _ h
-    · rfl
-  · rintro ⟨i, hi, rfl⟩
-    constructor
-    · simp [hi.le]
-    · simp [hi.ne]
+  simp [cobhamLT_numeral_iff, lt_numeral_iff, Fin.exists_iff]
 
 lemma agree_numeral_or (n : ℕ) (i j : M) : Agree ψ (numeral n) i j ∨
     ∃ e, e ◃ numeral n ∧ (LeftAt ψ e i j ∨ LeftAt ψ e j i) := by
@@ -436,6 +410,7 @@ def isMulCut (φ : ArithmeticSemisentence 1) (ψ : ArithmeticSemisentence 2) :
 lemma eval_isMulCut : M ⊧/![x] (isMulCut φ ψ) ↔ IsMulCut φ ψ x := by
   simp [isMulCut, IsMulCut]
 
+@[simp]
 lemma cobhamLE_refl (x : M) : x ⊴ x := Or.inl <| Or.inl rfl
 
 namespace IsGood
@@ -565,9 +540,7 @@ lemma HasPath.exists_memLimit_iff (hn : HasPath φ ψ n) (hk : IsGood φ ψ k) :
 
 lemma hasPath_zero [M↓[ℒₒᵣ] ⊧* 𝗥₀] (hφ : ∀ n : ℕ, M ⊧/![numeral n] φ) : HasPath φ ψ (0 : M) := by
   have h₀ : IsGood φ ψ (0 : M) := by simpa using isGood_numeral (M := M) (ψ := ψ) hφ 0
-  have hlt (e : M) : ¬e ◃ 0 := by
-    rintro ⟨h, hne⟩
-    exact hne <| by simpa using eq_numeral_of_cobhamLE_numeral (n := 0) (x := e) (by simpa using h)
+  have hlt (e : M) : ¬e ◃ 0 := by simpa using cobhamLT_numeral_iff_exists (x := e) (n := 0)
   apply And.intro h₀
   use 0
   intro m hm
@@ -652,7 +625,7 @@ lemma isMulCut_numeral (n : ℕ) : IsMulCut φ ψ (numeral n : M) := by
     rwa [hy.1.1.tame.mul_one]⟩
   induction n with
   | zero => simpa using h₁.of_le h₁.isGood.tame.zero_le
-  | succ n ih => simpa [numeral_add_one] using ih.add h₁
+  | succ n ih => simpa using ih.add h₁
 
 lemma IsMulCut.mkPair (hx : IsMulCut φ ψ x) (hy : IsMulCut φ ψ y) : IsMulCut φ ψ (mkPair x y) :=
   have h₁ : IsMulCut φ ψ (1 : M) := by simpa using isMulCut_numeral hno hφ 1

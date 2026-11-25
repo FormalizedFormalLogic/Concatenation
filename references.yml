@@ -92,6 +92,19 @@ Hor11:
     title: RIMS Kôkyûroku
     volume: 1729
 
+KM24:
+  type: Article
+  title: "Notes on Interpretability between Weak First-order Theories: Theories of Sequences"
+  author:
+  - Kristiansen, Lars
+  - Murwanashyaka, Juvenal
+  date: 2024
+  serial-number:
+    arxiv: "2402.14286"
+  parent:
+    type: Repository
+    title: arXiv
+
 Mur22:
   type: Article
   title: Weak essentially undecidable theories of concatenation

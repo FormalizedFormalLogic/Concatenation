@@ -133,6 +133,20 @@ Sve08:
       name: Philosophia
       location: Prague
 
+Sve09:
+  type: Article
+  title: On Interpretability in the Theory of Concatenation
+  author: Švejdar, Vítězslav
+  date: 2009
+  page-range: 87-95
+  serial-number:
+    doi: "10.1215/00294527-2008-029"
+  parent:
+    type: Periodical
+    title: Notre Dame Journal of Formal Logic
+    volume: 50
+    issue: 1
+
 Vis09:
   type: Article
   title: Growing Commas. A Study of Sequentiality and Concatenation

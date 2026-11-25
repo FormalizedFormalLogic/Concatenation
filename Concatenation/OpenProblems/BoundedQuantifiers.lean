@@ -8,7 +8,8 @@ import Concatenation.OpenProblem
 # Open problems on concatenation with bounded quantifiers
 
 The structures $\mathfrak{B}$ and $\mathfrak{F}$ of the binary strings, with the empty one, whose
-bounding relation is that of substrings and the comparison of lengths.
+bounding relation is that of substrings and the comparison of lengths, and the one with the equality
+of lengths.
 -/
 
 @[expose] public section
@@ -91,6 +92,23 @@ decidable?
 -/
 open_problem existential_length_decidable :=
   ComputablePred fun σ : Sentence ℒ⌢ₑ⊑ ↦ σ.Existential ∧ bitStructureLength ⊧ σ
+
+/--
+The structure of the binary strings whose bounding relation is the equality of lengths.
+- [Mur21, §5.2]
+-/
+abbrev bitStructureEqLength : Tarski.Struc ℒ⌢ₑ⊑ := bitStructure fun x y ↦ x.length = y.length
+
+/--
+Is the truth of the existential sentences on the binary strings with concatenation and the equality
+of lengths, that is, the satisfiability of word equations with length constraints, decidable?
+- [Mur21, §5.2]
+- [DGHMN18, §1]
+- [Cio24, §2]
+- [Mur23, §1.1]
+-/
+open_problem existential_eqLength_decidable :=
+  ComputablePred fun σ : Sentence ℒ⌢ₑ⊑ ↦ σ.Existential ∧ bitStructureEqLength ⊧ σ
 
 /--
 The $\Sigma$ formulas: universal quantifiers are bounded.

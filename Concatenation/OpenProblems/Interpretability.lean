@@ -6,6 +6,7 @@ public import Concatenation.TC.GrowingComma
 public import Concatenation.ToFoundation.Arithmetic.IQ
 public import Concatenation.ToFoundation.Arithmetic.PeanoMinusSmullyan
 public import Concatenation.ToFoundation.Decidability
+public import Concatenation.ToFoundation.Interpretability.LocallyFinitelySatisfiable
 public import Concatenation.ToFoundation.Interpretability.Relative
 public import Concatenation.ToFoundation.Interpretability.Unrelativized
 public import Concatenation.WTC.Basic
@@ -59,6 +60,22 @@ Is $\mathsf{IQ}$ interpretable in $\overline{\mathsf{ID}}$?
 -/
 open_problem IDLeft_interprets_IQ := RelativelyInterprets 𝗜𝗗ₗ 𝗜𝗤
 
+/--
+Does $\mathsf{WTC} + \mathrm{TC3}$, with the empty string, interpret $\mathsf{ID}$? The two
+theories are those of the cited places.
+- [HH14, Definition 1, Question 1]
+- [Mur24, §1]
+-/
+open_problem WTCEmptyEditor_interprets_ID := RelativelyInterprets WTCEmptyEditor 𝗜𝗗
+
+/--
+Does $\mathsf{ID}$ interpret $\mathsf{WTC} + \mathrm{TC3}$ with the empty string? The two
+theories are those of the cited places.
+- [HH14, Definition 1, Question 1]
+- [Mur24, §1]
+-/
+open_problem ID_interprets_WTCEmptyEditor := RelativelyInterprets 𝗜𝗗 WTCEmptyEditor
+
 end Concatenation
 
 /--
@@ -94,5 +111,30 @@ open_problem essentiallyUndecidable_degrees_dense :=
       V.IsREEssentiallyUndecidable ∧
       ComputablyInterprets V T ∧ ¬ComputablyInterprets T V ∧
       ComputablyInterprets U V ∧ ¬ComputablyInterprets V U
+
+/--
+A computably enumerable theory with equality that has no finite models.
+- [KV23, Problem 8.14]
+-/
+structure Theory.IsREWithoutFiniteModels {L : Language.{0}} [L.Encodable] [L.Primcodable] [L.Eq]
+    (T : Theory L) : Prop where
+  equal : 𝗘𝗤 L ⪯ T
+  re : REPred fun σ : Sentence L ↦ σ ∈ T
+  not_hasFiniteModel : ¬T.HasFiniteModel
+
+/--
+Are the degrees of interpretability of the computably enumerable theories without finite models
+densely ordered?
+- [KV23, Problem 8.14]
+-/
+open_problem noFiniteModel_degrees_dense :=
+  ∀ (L₁ L₂ : Language.{0}) [L₁.Finite] [L₁.Encodable] [L₁.Primcodable] [L₁.Eq]
+    [L₂.Finite] [L₂.Encodable] [L₂.Primcodable] [L₂.Eq] (T : Theory L₁) (U : Theory L₂),
+    T.IsREWithoutFiniteModels → U.IsREWithoutFiniteModels →
+    RelativelyInterprets U T → ¬RelativelyInterprets T U →
+    ∃ (L : Language.{0}) (_ : L.Finite) (_ : L.Encodable) (_ : L.Primcodable) (_ : L.Eq)
+      (V : Theory L), V.IsREWithoutFiniteModels ∧
+      RelativelyInterprets V T ∧ ¬RelativelyInterprets T V ∧
+      RelativelyInterprets U V ∧ ¬RelativelyInterprets V U
 
 end FFL.FirstOrder

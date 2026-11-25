@@ -4,6 +4,24 @@
 # The keys are the citation keys used in docstrings, e.g. `- [Grz05, §3]`;
 # see docs/conventions.md. Entries are sorted by key.
 
+BGTZ23:
+  type: Article
+  title: Existential Definability over the Subword Ordering
+  author:
+  - Baumann, Pascal
+  - Ganardi, Moses
+  - Thinniyam, Ramanathan S.
+  - Zetzsche, Georg
+  date: 2023
+  serial-number:
+    arxiv: "2210.15642"
+    doi: "10.46298/lmcs-19(4:35)2023"
+  parent:
+    type: Periodical
+    title: Logical Methods in Computer Science
+    volume: 19
+    issue: 4
+
 CPRUV10:
   type: Article
   title: Decorated Linear Order Types and the Theory of Concatenation
@@ -18,6 +36,58 @@ CPRUV10:
     type: Anthology
     title: Logic Colloquium 2007
     publisher: Cambridge University Press
+
+Che24:
+  type: Article
+  title: On Rosser theories
+  author: Cheng, Yong
+  date: 2024
+  serial-number:
+    arxiv: "2401.11749"
+  parent:
+    type: Repository
+    title: arXiv
+
+Cio24:
+  type: Article
+  title: Word equations, constraints, and formal languages
+  author: Ciobanu, Laura
+  date: 2024
+  serial-number:
+    arxiv: "2406.02160"
+  parent:
+    type: Repository
+    title: arXiv
+
+DGHMN18:
+  type: Article
+  title: "The Satisfiability of Extended Word Equations: The Boundary Between Decidability and Undecidability"
+  author:
+  - Day, Joel
+  - Ganesh, Vijay
+  - He, Paul
+  - Manea, Florin
+  - Nowotka, Dirk
+  date: 2018
+  serial-number:
+    arxiv: "1802.00523"
+  parent:
+    type: Repository
+    title: arXiv
+
+ELV25:
+  type: Article
+  title: "Completions of Restricted Complexity I: Weak Arithmetical Theories"
+  author:
+  - Enayat, Ali
+  - Łełyk, Mateusz
+  - Visser, Albert
+  date: 2025
+  serial-number:
+    arxiv: "2508.14758"
+  parent:
+    type: Repository
+    title: arXiv
 
 GZ08:
   type: Chapter
@@ -82,6 +152,20 @@ HH14:
     title: Archive for Mathematical Logic
     volume: 53
 
+HSZ17:
+  type: Article
+  title: Decidability, Complexity, and Expressiveness of First-Order Logic Over the Subword Ordering
+  author:
+  - Halfon, Simon
+  - Schnoebelen, Philippe
+  - Zetzsche, Georg
+  date: 2017
+  serial-number:
+    arxiv: "1701.07470"
+  parent:
+    type: Repository
+    title: arXiv
+
 Hec15:
   type: Article
   title: Consistency and the Theory of Truth
@@ -145,6 +229,30 @@ KM24:
   date: 2024
   serial-number:
     arxiv: "2402.14286"
+  parent:
+    type: Repository
+    title: arXiv
+
+KV23:
+  type: Article
+  title: Certified Σ₁-sentences
+  author:
+  - Kurahashi, Taishi
+  - Visser, Albert
+  date: 2023
+  serial-number:
+    arxiv: "2306.13049"
+  parent:
+    type: Repository
+    title: arXiv
+
+Mur21:
+  type: Article
+  title: Undecidability in First-Order Theories of Term Algebras Extended with a Substitution Operator
+  author: Murwanashyaka, Juvenal
+  date: 2021
+  serial-number:
+    arxiv: "2111.00573"
   parent:
     type: Repository
     title: arXiv
@@ -237,6 +345,19 @@ Sve09:
     title: Notre Dame Journal of Formal Logic
     volume: 50
     issue: 1
+
+Vis08:
+  type: Article
+  title: Pairs, sets and sequences in first-order theories
+  author: Visser, Albert
+  date: 2008
+  page-range: 299-326
+  serial-number:
+    doi: "10.1007/s00153-008-0087-1"
+  parent:
+    type: Periodical
+    title: Archive for Mathematical Logic
+    volume: 47
 
 Vis09:
   type: Article

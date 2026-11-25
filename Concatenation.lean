@@ -22,7 +22,13 @@ public import Concatenation.OpenProblems.Interpretability
 public import Concatenation.OpenProblems.Minimality
 public import Concatenation.OpenProblems.NotationInduction
 public import Concatenation.OpenProblems.Persistence
+public import Concatenation.OpenProblems.RestrictedComplexity
+public import Concatenation.OpenProblems.RestrictedSchemata
+public import Concatenation.OpenProblems.Rosser
 public import Concatenation.OpenProblems.Sequence
+public import Concatenation.OpenProblems.Sequentiality
+public import Concatenation.OpenProblems.Subword
+public import Concatenation.OpenProblems.Synonymy
 public import Concatenation.Semantics.Basic
 public import Concatenation.Semantics.Empty
 public import Concatenation.Semantics.Relativization

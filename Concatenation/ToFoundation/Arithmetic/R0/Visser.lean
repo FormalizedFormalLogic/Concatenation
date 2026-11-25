@@ -101,8 +101,7 @@ lemma hasStage_numeral {j : ℕ} (h : ∃ c : ℕ, IsCertificate A E c j) :
     · exact (hc.eq_of_le _ h' cert).symm
   constructor
   · exact ⟨_, stage⟩
-  · intro c hc d hd
-    rw [eq c hc, eq d hd]
+  · grind
   · intro c hc x hx
     rw [eq c hc]
     obtain ⟨i, hi, rfl⟩ := eq_numeral_of_cobhamLE_numeral hx

@@ -107,13 +107,8 @@ lemma exists_eq_numeral_or_numeral_le_of_isRegular (hx : IsRegular x) (k : ℕ) 
   induction k with
   | zero => simpa using hx.zero_le
   | succ k ih =>
-    rcases ih with ⟨i, hi, rfl⟩ | h | h
-    · left
-      use i, by omega
-    · left
-      use k, by omega, h.symm
-    · right
-      simpa using hx.add_one_le _ h
+    have := hx.add_one_le (numeral k)
+    grind
 
 /--
 Every element is comparable with every numeral in Cobham's order.
@@ -126,7 +121,6 @@ lemma cobhamLE_numeral_or (n : ℕ) : x ⊴ numeral n ∨ numeral n ⊴ x := by
     · exact .inr <| .inl h
   · exact .inr <| .inr hx
 
-@[grind →]
 lemma eq_numeral_of_cobhamLE_numeral {n : ℕ} (h : x ⊴ numeral n) :
     ∃ i ≤ n, x = numeral i := by
   rcases cobhamLE_numeral_iff.mp h with rfl | h

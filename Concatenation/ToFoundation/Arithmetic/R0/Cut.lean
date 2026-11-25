@@ -137,24 +137,13 @@ variable [M↓[ℒₒᵣ] ⊧* 𝗥₀]
 @[grind .]
 lemma isTame_numeral (n : ℕ) : IsTame (numeral n : M) where
   total y := (cobhamLE_numeral_or n).symm
-  trans y z hz hy := by
-    obtain ⟨i, hi, rfl⟩ := eq_numeral_of_cobhamLE_numeral hy
-    obtain ⟨j, hj, rfl⟩ := eq_numeral_of_cobhamLE_numeral hz
-    simpa using hj.trans hi
-  antisymm y hxy hyx := by
-    obtain ⟨i, hi, rfl⟩ := eq_numeral_of_cobhamLE_numeral hyx
-    simpa using le_antisymm (numeral_cobhamLE_numeral_iff.mp hxy) hi
+  trans y z hz hy := by grind [eq_numeral_of_cobhamLE_numeral]
+  antisymm y hxy hyx := by grind [eq_numeral_of_cobhamLE_numeral]
   zero_le := by simpa using numeral_cobhamLE_numeral_iff (M := M) (k := 0) (n := n)
   add_one_le y hy := by
-    rcases cobhamLE_numeral_or (x := y) (n + 1) with h | h
-    · obtain ⟨i, hi, rfl⟩ := eq_numeral_of_cobhamLE_numeral h
-      simp at hy ⊢
-      omega
-    · simp [h]
-  le_add_one_iff y := by
-    simp only [numeral_add_one, cobhamLE_numeral_iff, lt_numeral_iff, Fin.exists_fin_succ']
-    simp
-    tauto
+    have := cobhamLE_numeral_or (x := y) (n + 1)
+    grind [eq_numeral_of_cobhamLE_numeral]
+  le_add_one_iff y := by grind [eq_numeral_of_cobhamLE_numeral]
   not_add_one_le := by simp
   add_zero := by simpa using numeral_add_numeral (M := M) n 0
   zero_add := by simpa using numeral_add_numeral (M := M) 0 n
@@ -279,21 +268,10 @@ lemma agree_numeral_or (n : ℕ) (i j : M) : Agree ψ (numeral n) i j ∨
     exact h ⟨k, hk, H⟩
 
 lemma isGood_numeral (h : ∀ n : ℕ, M ⊧/![numeral n] φ) (n : ℕ) : IsGood φ ψ (numeral n : M) where
-  isTame y hy := by
-    obtain ⟨i, -, rfl⟩ := eq_numeral_of_cobhamLE_numeral hy
-    exact isTame_numeral i
-  isTame₃ w hw y z u hy hz hu := by
-    obtain ⟨i, -, rfl⟩ := eq_numeral_of_cobhamLE_numeral hw
-    obtain ⟨j, -, rfl⟩ := eq_numeral_of_cobhamLE_numeral hy
-    obtain ⟨k, -, rfl⟩ := eq_numeral_of_cobhamLE_numeral hz
-    obtain ⟨l, -, rfl⟩ := eq_numeral_of_cobhamLE_numeral hu
-    exact isTame₃_numeral j k l
-  eval y hy := by
-    obtain ⟨i, -, rfl⟩ := eq_numeral_of_cobhamLE_numeral hy
-    exact h i
-  agree_or m hm i j := by
-    obtain ⟨k, -, rfl⟩ := eq_numeral_of_cobhamLE_numeral hm
-    exact agree_numeral_or k i j
+  isTame y hy := by grind [eq_numeral_of_cobhamLE_numeral]
+  isTame₃ w hw y z u hy hz hu := by grind [eq_numeral_of_cobhamLE_numeral]
+  eval y hy := by grind [eq_numeral_of_cobhamLE_numeral]
+  agree_or m hm i j := by grind [eq_numeral_of_cobhamLE_numeral, agree_numeral_or]
 
 end good
 
@@ -430,9 +408,7 @@ lemma of_le (hx : IsGood φ ψ x) (h : y ⊴ x) : IsGood φ ψ y where
   agree_or m hm := hx.agree_or m <| hx.tame.trans y m hm h
 
 lemma exists_le (hx : IsGood φ ψ x) (hy : IsGood φ ψ y) : ∃ z, IsGood φ ψ z ∧ x ⊴ z ∧ y ⊴ z := by
-  rcases hx.tame.total y with h | h
-  · exact ⟨y, hy, h, cobhamLE_refl y⟩
-  · exact ⟨x, hx, cobhamLE_refl x, h⟩
+  rcases hx.tame.total y with h | h <;> grind
 
 lemma tame₃ (hx : IsGood φ ψ x) (hy : IsGood φ ψ y) (hz : IsGood φ ψ z) : IsTame₃ x y z := by
   obtain ⟨u, hu, hxu, hyu⟩ := hx.exists_le hy
@@ -441,22 +417,15 @@ lemma tame₃ (hx : IsGood φ ψ x) (hy : IsGood φ ψ y) (hz : IsGood φ ψ z) 
     (hv.tame.trans u y hyu huv) hzv
 
 lemma lt_of_lt_of_le (hm : IsGood φ ψ m) (he : e ◃ n) (h : n ⊴ m) : e ◃ m := by
-  apply And.intro <| hm.tame.trans n e he.1 h
-  rintro rfl
-  exact he.2 <| hm.tame.antisymm n he.1 h
+  have := hm.tame.trans n e he.1 h
+  have := hm.tame.antisymm n
+  grind [CobhamLT]
 
 lemma lt_add_one_iff (hm : IsGood φ ψ m) : e ◃ m + 1 ↔ e ◃ m ∨ e = m := by
-  constructor
-  · rintro ⟨h, hne⟩
-    by_cases hem : e = m
-    · exact .inr hem
-    · exact .inl ⟨((hm.tame.le_add_one_iff e).mp h).resolve_right hne, hem⟩
-  · have hne : m ≠ m + 1 := fun h ↦ hm.tame.not_add_one_le <| .inl <| .inl h.symm
-    rintro (h | rfl)
-    · apply And.intro <| (hm.tame.le_add_one_iff e).mpr <| .inl h.1
-      rintro rfl
-      exact hm.tame.not_add_one_le h.1
-    · exact ⟨(hm.tame.le_add_one_iff e).mpr <| .inl <| cobhamLE_refl e, hne⟩
+  have := hm.tame.le_add_one_iff e
+  have := hm.tame.le_add_one_iff m
+  have := hm.tame.not_add_one_le
+  grind [CobhamLT]
 
 lemma add_one_le (hm : IsGood φ ψ m) (h : e ◃ m) : e + 1 ⊴ m :=
   ((hm.of_le h.1).tame.add_one_le m h.1).resolve_left h.2
@@ -488,10 +457,9 @@ lemma IsLeftmost.congr (hn : IsGood φ ψ n) (hl : IsLeftmost φ ψ n i) (h : Ag
 
 lemma IsLeftmost.agree (hn : IsGood φ ψ n) (hi : IsLeftmost φ ψ n i) (hj : IsLeftmost φ ψ n j) :
     Agree ψ n i j := by
-  rcases hn.agree_or n (cobhamLE_refl n) i j with h | ⟨e, he, h | h⟩
-  · exact h
-  · exact absurd h <| hj.not_leftAt i hi.isCofinal e he
-  · exact absurd h <| hi.not_leftAt j hj.isCofinal e he
+  have := hj.not_leftAt i hi.isCofinal
+  have := hi.not_leftAt j hj.isCofinal
+  grind [hn.agree_or n (cobhamLE_refl n) i j]
 
 lemma IsPath.mono (hm : IsGood φ ψ m) (h : n ⊴ m) (hp : IsPath φ ψ m j) : IsPath φ ψ n j :=
   fun k hk ↦ hp k <| hm.tame.trans n k hk h
@@ -573,11 +541,9 @@ lemma IsGood.add_one (hx : IsGood φ ψ x) : IsGood φ ψ (x + 1) := by
   use x
   apply And.intro hx
   intro y hy
-  rcases hx.tame.total y with h | h
-  · rcases hx.tame.add_one_le y h with rfl | h
-    · exact cobhamLE_refl x
-    · exact absurd (hy.of_le h) hx'
-  · exact h
+  have := hx.tame.total y
+  have := hx.tame.add_one_le y
+  grind
 
 lemma HasPath.add_one (hn : HasPath φ ψ n) : HasPath φ ψ (n + 1) := by
   obtain ⟨hn, j, hj⟩ := hn

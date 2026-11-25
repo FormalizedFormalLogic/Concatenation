@@ -71,11 +71,9 @@ lemma numeral_eq : (n : ℕ) → (ORingStructure.numeral n : Truncation N) = of 
 
 lemma lt_of_iff {n : ℕ} (h : n ≤ N) {x : Truncation N} : x < of N n ↔ ∃ i < n, x = of N i := by
   simp only [lt_iff, ext_iff, val_of]
-  constructor
-  · intro hx
-    exact ⟨x.val, by omega, by omega⟩
-  · rintro ⟨i, hi, hx⟩
-    omega
+  refine ⟨fun hx ↦ ?_, by grind⟩
+  use x.val
+  grind
 
 end Truncation
 

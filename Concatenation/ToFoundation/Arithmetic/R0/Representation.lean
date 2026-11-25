@@ -76,10 +76,7 @@ lemma eval_cobhamComparison_numeral_iff (n : ℕ) (y : M) :
   constructor
   · rintro ⟨w, hyw, ⟨v, hvw, hv⟩, huniq⟩
     rcases cobhamLE_numeral_or (x := w) (max (f n) k) with hw | hw
-    · obtain ⟨l, -, rfl⟩ := eq_numeral_of_cobhamLE_numeral hw
-      obtain ⟨i, -, rfl⟩ := eq_numeral_of_cobhamLE_numeral hyw
-      obtain ⟨j, -, rfl⟩ := eq_numeral_of_cobhamLE_numeral hvw
-      rw [key i j hv]
+    · grind [eq_numeral_of_cobhamLE_numeral]
     · exact huniq _ _ (cobhamLE_numeral_of_le (le_max_left _ _) hw)
         (cobhamLE_numeral_of_le (le_max_right _ _) hw) hkM
   · rintro rfl
@@ -87,10 +84,7 @@ lemma eval_cobhamComparison_numeral_iff (n : ℕ) (y : M) :
     and_intros
     · simp
     · use numeral k, by simp
-    · intro z u hz hu hzu
-      obtain ⟨i, -, rfl⟩ := eq_numeral_of_cobhamLE_numeral hz
-      obtain ⟨j, -, rfl⟩ := eq_numeral_of_cobhamLE_numeral hu
-      rw [key i j hzu]
+    · grind [eq_numeral_of_cobhamLE_numeral]
 
 end
 

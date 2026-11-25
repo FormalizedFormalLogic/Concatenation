@@ -384,8 +384,7 @@ lemma insert_atom (h : F.Similar F' d ρ) (s : S) :
   rw [reach_insert]
   rintro z (hz | ⟨p, -, rfl⟩)
   · exact .inr hz
-  · rw [F.comp_of_isAtom ⟨s, rfl⟩, F'.comp_of_isAtom ⟨s, rfl⟩]
-    exact .inl rfl
+  · grind [IsAtom]
 
 lemma append_eq_atom (h : F.Similar F' d ρ) (hab : (a, b) ∈ ρ) (hab' : (a', b') ∈ ρ) {s : S}
     (hs : a ++ a' = F.atom s) : b ++ b' = F'.atom s := by

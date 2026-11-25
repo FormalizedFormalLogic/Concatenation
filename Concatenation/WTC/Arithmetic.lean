@@ -170,20 +170,15 @@ lemma isMulTable_of_isMulSeq (h : IsMulSeq x y z) : IsMulTable x z := by
     have hs : s ++ 0 ++ 0 ++ pairOf u' v' ++ 0 ++ 0 ◨ z := by
       simpa only [Concatenation.append_assoc] using hs
     obtain ⟨u, v, hu, hv, hu'', hv'', hsuf⟩ := h.exists_pred s u' v' hu' hv' hs
-    use u, v
-    and_intros
-    · exact hu
-    · exact hv
-    · exact hu''
-    · exact hv''
-    · have h₁ : 0 ++ 0 ++ pairOf u v ++ (0 ++ 0) = 0 ++ 0 ++ pairOf u v ++ 0 ++ 0 := by
-        simp only [Concatenation.append_assoc]
-      have h₂ : s ++ (0 ++ 0) ◨ s ++ 0 ++ 0 ++ pairOf u' v' ++ 0 ++ 0 := by
-        simp only [Concatenation.append_assoc]
-        exact .inr ⟨pairOf u' v' ++ (0 ++ 0), by simp only [Concatenation.append_assoc]⟩
-      rw [IsEntry, ← h₁]
-      apply (hsuf.append_congr (z := 0 ++ 0)).isSubstring.trans
-      exact (h₂.trans hs).isSubstring
+    use u, v, hu, hv, hu'', hv''
+    have h₁ : 0 ++ 0 ++ pairOf u v ++ (0 ++ 0) = 0 ++ 0 ++ pairOf u v ++ 0 ++ 0 := by
+      simp only [Concatenation.append_assoc]
+    have h₂ : s ++ (0 ++ 0) ◨ s ++ 0 ++ 0 ++ pairOf u' v' ++ 0 ++ 0 := by
+      simp only [Concatenation.append_assoc]
+      exact .inr ⟨pairOf u' v' ++ (0 ++ 0), by simp only [Concatenation.append_assoc]⟩
+    rw [IsEntry, ← h₁]
+    apply (hsuf.append_congr (z := 0 ++ 0)).isSubstring.trans
+    exact (h₂.trans hs).isSubstring
   rcases isSubstring_iff.mp he with he | ⟨s, he⟩ | ⟨t, he⟩ | ⟨s, t, he⟩
   · exact .inl <| hfirst <| .inl he
   · exact .inr <| hstep s <| .inl he.symm
@@ -206,9 +201,7 @@ lemma isTally_tallyOf_add_one (n : ℕ) : IsTally 1 (tallyOf (n + 1) : M) := by
   simpa using isTally_ofFreeSemigroup_iff (M := M) (c := 1) |>.mpr <| isTally_tallyOf_succ n
 
 lemma tallyOf_add_one_ne_zero (n : ℕ) : (tallyOf (n + 1) : M) ≠ 0 := by
-  rcases n with _ | n
-  · exact WTC.zero_ne_one.symm
-  · exact append_ne_zero _ _
+  rcases n with _ | n <;> simp [tallyOf]
 
 lemma tallyOf_add_one_append (m : ℕ) :
     ∀ n, (tallyOf (m + 1) ++ tallyOf (n + 1) : M) = tallyOf (m + 1 + (n + 1)) := by
@@ -313,12 +306,10 @@ lemma isProduct_tallyOf_iff :
   · rwa [← ofFreeSemigroup_one, isTally_ofFreeSemigroup_iff]
   · exact isTally_tallyOf_add_one m
   · exact isTally_tallyOf_add_one n
-  · use ofFreeSemigroup w
-    rw [← ofFreeSemigroup_tallyOf (m + 1), ← ofFreeSemigroup_tallyOf (n + 1),
-      isEntry_ofFreeSemigroup_iff]
-    and_intros
-    · exact (isMulTable_of_isMulSeq hw).ofFreeSemigroup
-    · exact hl.isSubstring
+  use ofFreeSemigroup w
+  rw [← ofFreeSemigroup_tallyOf (m + 1), ← ofFreeSemigroup_tallyOf (n + 1),
+    isEntry_ofFreeSemigroup_iff]
+  exact ⟨(isMulTable_of_isMulSeq hw).ofFreeSemigroup, hl.isSubstring⟩
 
 end IsProduct
 
@@ -342,9 +333,7 @@ lemma ltGraph_tallyOf_iff : LtGraph x (tallyOf n) ↔ ∃ i < n, x = tallyOf i :
   constructor
   · rintro (⟨rfl, hn⟩ | ⟨v, h⟩)
     · use 0
-      rcases n with _ | n
-      · exact absurd rfl hn
-      · simp
+      rcases n with _ | n <;> simp_all
     · exact exists_eq_tallyOf_of_tallyOf_eq_append h
   · rintro ⟨i, hi, rfl⟩
     match i, n, hi with
@@ -374,17 +363,13 @@ lemma struc_eq : Model.struc arithmeticTranslation M = @Arithmetic.standardModel
   Tarski.Structure.ext
     (funext₃ fun k f v ↦ by
       cases f
-      · symm
+      case zero | one =>
+        symm
         apply Model.func_iff.mpr
         simp [arithmeticTranslation, Semiformula.Operator.val, Semiformula.Operator.Eq.sentence_eq]
         rfl
-      · symm
-        apply Model.func_iff.mpr
-        simp [arithmeticTranslation, Semiformula.Operator.val, Semiformula.Operator.Eq.sentence_eq]
-        rfl
-      · conv_lhs => rw [Matrix.fun_eq_vec_two v]
-        rfl
-      · conv_lhs => rw [Matrix.fun_eq_vec_two v]
+      case add | mul =>
+        conv_lhs => rw [Matrix.fun_eq_vec_two v]
         rfl)
     (funext₃ fun k r v ↦ by
       cases r
@@ -523,10 +508,8 @@ lemma editor_of_isSubstring {s t : M} (h : x ++ y = s ++ t) (hw : IsSubstring (x
   rw [← hc.map_append, ← hc.map_append, hc.injective.eq_iff] at h
   rcases FreeSemigroup.mul_eq_mul_iff.mp h with ⟨rfl, rfl⟩ | ⟨u, ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩⟩
   · simp
-  · right
-    use c u
-    simp [← hc.map_append]
-  · right
+  all_goals
+    right
     use c u
     simp [← hc.map_append]
 
@@ -681,8 +664,7 @@ lemma isInitialEmbedding_ofString :
   map_append u v := (append_eq_iff.mpr <| concatGraph_numeral u v).symm
   exists_of_append_eq h := by
     obtain ⟨u, v, hu, hv⟩ := (append_eq_iff.mp h).exists_of_numeral
-    use u, v
-    exact ⟨Model.ext hu, Model.ext hv⟩
+    use u, v, Model.ext hu, Model.ext hv
 
 end
 

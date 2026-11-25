@@ -1,6 +1,7 @@
 module
 
 public import Concatenation.ToFoundation.Arithmetic.R0.Cobham
+public import Foundation.FirstOrder.Arithmetic.IOpen.Basic
 public import Foundation.FirstOrder.Arithmetic.Prenex
 public import Foundation.FirstOrder.Arithmetic.R0.Representation
 
@@ -133,5 +134,33 @@ theorem cobhamRepresentation_spec (hf : Computable f) (n : ℕ) :
   intro M _ _
   simpa [models_iff, cobhamRepresentation, -eval_cobhamComparison]
     using eval_cobhamComparison_numeral_iff (M := M) hφ₀ hφ n
+
+lemma eval_pairDef_numeral_iff {p : M} (m n : ℕ) :
+    M ⊧/![p, numeral m, numeral n] pairDef.val ↔ p = numeral (Nat.pair m n) := by
+  rcases lt_trichotomy m n with h | rfl | h
+  · simp [pairDef, Nat.pair, Semiformula.Operator.LE.sentence_eq, Semiformula.Operator.val,
+      Semiformula.Operator.Eq.sentence_eq, Semiformula.Operator.LT.sentence_eq,
+      numeral_mul_numeral, numeral_add_numeral, h, h.ne', h.not_gt]
+  · simp [pairDef, Nat.pair, Semiformula.Operator.LE.sentence_eq, Semiformula.Operator.val,
+      Semiformula.Operator.Eq.sentence_eq, Semiformula.Operator.LT.sentence_eq,
+      numeral_mul_numeral, numeral_add_numeral]
+  · simp [pairDef, Nat.pair, Semiformula.Operator.LE.sentence_eq, Semiformula.Operator.val,
+      Semiformula.Operator.Eq.sentence_eq, Semiformula.Operator.LT.sentence_eq,
+      numeral_mul_numeral, numeral_add_numeral, h, h.not_gt]
+
+/-- The formula that represents the computable binary function `f` through the pairing. -/
+noncomputable def cobhamRepresentation₂ (f : ℕ → ℕ → ℕ) : ArithmeticSemisentence 3 :=
+  “x y z. ∃ p, !pairDef p x y ∧ !(cobhamRepresentation fun p ↦ f p.unpair.1 p.unpair.2) p z”
+
+@[simp]
+lemma eval_cobhamRepresentation₂_numeral_iff {f : ℕ → ℕ → ℕ} (hf : Computable₂ f) {z : M}
+    (m n : ℕ) :
+    M ⊧/![numeral m, numeral n, z] (cobhamRepresentation₂ f) ↔ z = numeral (f m n) := by
+  have hf' : Computable fun p : ℕ ↦ f p.unpair.1 p.unpair.2 :=
+    hf.comp (Computable.fst.comp Computable.unpair) (Computable.snd.comp Computable.unpair)
+  have := models_of_provable (M := M) inferInstance <|
+    cobhamRepresentation_spec hf' (Nat.pair m n)
+  simp [models_iff] at this
+  simp [cobhamRepresentation₂, eval_pairDef_numeral_iff, this]
 
 end FFL.FirstOrder.Arithmetic.R0

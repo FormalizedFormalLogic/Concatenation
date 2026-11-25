@@ -1,10 +1,9 @@
 module
 
 public import AlphaCentauri.Interpretability.Basic
-public import Concatenation.Biteral
 public import Concatenation.TC.Empty
+public import Concatenation.WTC.Sigma1
 public import Foundation.FirstOrder.Arithmetic.Schemata
-public import Foundation.FirstOrder.Syntax.Classical.BoundingHierarchy
 import Concatenation.OpenProblem
 
 /-!
@@ -37,12 +36,6 @@ inductive Bounding.BlockHierarchy {L : Language} {ξ : Type*} (ℬ : Bounding L)
 namespace Concatenation
 
 /--
-Quantifiers are bounded by the relation of being a substring.
-- [HH14, Question 3]
--/
-def substringBounding : Bounding ℒ⌢ₑ := ⟨{⟨isSubstring⟩}⟩
-
-/--
 Notation induction for `φ`.
 - [HH14, Question 3]
 -/
@@ -55,7 +48,7 @@ Axioms of the theory $\Sigma_n\text{-}\mathsf{TCI}$.
 -/
 inductive IsTCISigmaAxiom (n : ℕ) : Sentence ℒ⌢ₑ → Prop
   | tcEmpty : ∀ φ ∈ 𝗧𝗖ₑ, IsTCISigmaAxiom n φ
-  | notationInduction (φ : Semiformula ℒ⌢ₑ ℕ 1) : substringBounding.BlockHierarchy 𝚺 n φ →
+  | notationInduction (φ : Semiformula ℒ⌢ₑ ℕ 1) : ℬ[⊑, ℒ⌢ₑ].BlockHierarchy 𝚺 n φ →
       IsTCISigmaAxiom n (notationInduction φ).univCl
 
 /--

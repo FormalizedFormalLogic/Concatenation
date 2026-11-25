@@ -19,6 +19,28 @@ CPRUV10:
     title: Logic Colloquium 2007
     publisher: Cambridge University Press
 
+Dam17:
+  type: Article
+  title: From Strings to Sets
+  author: Damnjanovic, Zlatan
+  date: 2017
+  parent:
+    type: Repository
+    title: arXiv
+  serial-number:
+    arxiv: "1701.07548"
+
+Dam17a:
+  type: Article
+  title: Mutual Interpretability of Robinson Arithmetic and Adjunctive Set Theory with Extensionality
+  author: Damnjanovic, Zlatan
+  date: 2017
+  parent:
+    type: Repository
+    title: arXiv
+  serial-number:
+    arxiv: "1707.03531"
+
 GZ08:
   type: Chapter
   title: Undecidability and Concatenation

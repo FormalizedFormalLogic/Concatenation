@@ -144,6 +144,15 @@ theorem hasFiniteModel [L₁.Finite] [L₂.Finite] (π : T ⊳ U) (hT : T.Locall
       models_of_provable inferInstance <| ρ.interpret_theory σ hσ⟩
 
 /--
+A theory interpreted in a locally finitely satisfiable theory is locally finitely satisfiable.
+- [Hor11, §3, Theorem 3.3]
+-/
+theorem locallyFinitelySatisfiable [L₁.Finite] [L₂.Finite] (π : T ⊳ U)
+    (hT : T.LocallyFinitelySatisfiable) : U.LocallyFinitelySatisfiable := fun F hF hfin ↦
+  let ρ : T ⊳ F := ⟨π.trln, fun σ hσ ↦ π.interpret_theory σ (hF hσ)⟩
+  ρ.hasFiniteModel hT <| .of_finite hfin
+
+/--
 A locally finitely satisfiable theory interprets no finitely axiomatizable theory without finite
 models.
 - [Hor11, §3, Proposition 3.2]

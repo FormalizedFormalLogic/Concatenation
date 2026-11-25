@@ -62,17 +62,22 @@ open Classical in
 noncomputable def right (x : M) : M :=
   if h : F.IsAtom x then x else (F.exists_append (not_exists.mp h)).choose_spec.choose
 
+@[grind =]
 lemma left_of_isAtom (h : F.IsAtom x) : F.left x = x := by simp [left, h]
 
+@[grind =]
 lemma right_of_isAtom (h : F.IsAtom x) : F.right x = x := by simp [right, h]
 
+@[grind =]
 lemma left_append_right (h : ¬F.IsAtom x) : F.left x ++ F.right x = x := by
   simp only [left, right, h, ↓reduceDIte]
   exact (F.exists_append (not_exists.mp h)).choose_spec.choose_spec.symm
 
+@[grind =]
 lemma left_append (h : ¬F.IsAtom (y ++ z)) : F.left (y ++ z) = y :=
   (F.append_injective (not_exists.mp h) (F.left_append_right h).symm).1.symm
 
+@[grind =]
 lemma right_append (h : ¬F.IsAtom (y ++ z)) : F.right (y ++ z) = z :=
   (F.append_injective (not_exists.mp h) (F.left_append_right h).symm).2.symm
 
@@ -91,6 +96,7 @@ lemma child_false : F.child false x = F.left x := rfl
 @[simp]
 lemma child_true : F.child true x = F.right x := rfl
 
+@[grind =]
 lemma child_of_isAtom (h : F.IsAtom x) : F.child i x = x := by
   cases i <;> simp [F.left_of_isAtom h, F.right_of_isAtom h]
 
@@ -106,6 +112,7 @@ lemma comp_cons : F.comp (i :: p) x = F.comp p (F.child i x) := rfl
 @[simp]
 lemma comp_append : F.comp (p ++ q) x = F.comp q (F.comp p x) := List.foldl_append ..
 
+@[grind =]
 lemma comp_of_isAtom (h : F.IsAtom x) : F.comp p x = x := by
   induction p with
   | nil => rfl
@@ -119,6 +126,7 @@ noncomputable def tower : ℕ → M
 @[simp]
 lemma tower_succ : F.tower (n + 1) = F.tower n ++ F.tower n := rfl
 
+@[grind .]
 lemma not_isAtom_tower (n : ℕ) : ¬F.IsAtom (F.tower n) := by
   induction n with
   | zero => exact not_exists.mpr F.exists_ne_atom.choose_spec
@@ -257,6 +265,7 @@ def Reach (d : ℕ) (ρ : Set (M × M')) : Set (M × M') :=
 
 variable {F F'}
 
+@[grind ←]
 lemma mem_reach (h : (a, b) ∈ ρ) (hp : p.length ≤ d) :
     (F.comp p a, F'.comp p b) ∈ F.Reach F' d ρ := ⟨a, b, p, h, hp, rfl⟩
 

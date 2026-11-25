@@ -43,7 +43,7 @@ private lemma squarePair_lt (h : x + y < x' + y') : squarePair x y < squarePair 
     _ ≤ (x' + y') * (x' + y') := by gcongr
     _ ≤ squarePair x' y' := by simp [squarePair]
 
-@[simp]
+@[simp, grind =]
 lemma squarePair_inj : squarePair x y = squarePair x' y' ↔ x = x' ∧ y = y' := by
   constructor
   · intro h

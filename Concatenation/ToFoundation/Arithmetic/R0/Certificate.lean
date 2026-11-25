@@ -216,15 +216,15 @@ lemma hierarchy_isCertificate (hA : ℬ[<, ℒₒᵣ].Hierarchy 𝚺 0 A) :
 
 section nat
 
-@[simp]
+@[simp, grind =]
 lemma nat_cobhamLE_iff {m n : ℕ} : m ⊴ n ↔ m ≤ n := by
   simpa using numeral_cobhamLE_numeral_iff (M := ℕ) (k := m) (n := n)
 
-@[simp]
+@[simp, grind =]
 lemma nat_eval_pairDef {q m n : ℕ} : ℕ ⊧/![q, m, n] pairDef.val ↔ q = Nat.pair m n := by
   simpa using eval_pairDef_numeral_iff (M := ℕ) (p := q) m n
 
-@[simp]
+@[simp, grind =]
 lemma nat_isNode_iff {p k x : ℕ} : IsNode p k x ↔ p = Nat.pair k x + 1 := by
   constructor
   · rintro ⟨q, -, hq, rfl⟩
@@ -255,7 +255,7 @@ def envCode : {n : ℕ} → (Fin n → M) → M
 @[simp]
 lemma envCode_zero {v : Fin 0 → M} : envCode v = 0 := rfl
 
-@[simp]
+@[simp, grind =]
 lemma envCode_cons {n : ℕ} {a : M} {v : Fin n → M} :
     envCode (a :> v) = mkPair a (envCode v) := by
   simp [envCode]
@@ -291,7 +291,7 @@ lemma envCode_injective {n : ℕ} : Function.Injective (envCode : (Fin n → ℕ
     | zero => exact h₀
     | succ i => exact congrFun (ih h₁) i
 
-@[simp]
+@[simp, grind =]
 lemma envCode_inj {n : ℕ} {v w : Fin n → ℕ} : envCode v = envCode w ↔ v = w :=
   envCode_injective.eq_iff
 
@@ -407,6 +407,7 @@ def IsEnv (val : ℕ → S) (n s : ℕ) : Prop :=
 variable {val : ℕ → S} {a b n s : ℕ}
 
 omit [Nonempty S] in
+@[grind .]
 lemma IsCanonical.zero : IsCanonical val 0 := by
   simp [IsCanonical]
 

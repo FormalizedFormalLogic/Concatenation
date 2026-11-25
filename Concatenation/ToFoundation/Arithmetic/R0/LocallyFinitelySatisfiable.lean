@@ -35,9 +35,10 @@ instance : ORingStructure (Truncation N) where
 
 lemma ext_iff {x y : Truncation N} : x = y ↔ x.val = y.val := Fin.ext_iff
 
+@[grind =]
 lemma lt_iff {x y : Truncation N} : x < y ↔ x.val < y.val := Iff.rfl
 
-@[simp]
+@[simp, grind =]
 lemma val_of (n : ℕ) : (of N n).val = min n N := rfl
 
 lemma of_add_of (n m : ℕ) : of N n + of N m = of N (n + m) := by

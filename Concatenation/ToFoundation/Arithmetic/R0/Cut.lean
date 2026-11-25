@@ -33,7 +33,7 @@ lemma val_subst_mkPairTerm {n : ℕ} {e : Fin n → M} {f : Empty → M}
     (Rew.subst ![t, u] mkPairTerm).val e f = mkPair (t.val e f) (u.val e f) := by
   simp [mkPairTerm, mkPair]
 
-@[simp]
+@[simp, grind =]
 lemma mkPair_inj {a b a' b' : ℕ} : mkPair a b = mkPair a' b' ↔ a = a' ∧ b = b' := by
   constructor
   · intro h
@@ -48,25 +48,26 @@ lemma mkPair_inj {a b a' b' : ℕ} : mkPair a b = mkPair a' b' ↔ a = a' ∧ b 
   · rintro ⟨rfl, rfl⟩
     rfl
 
-@[simp]
+@[simp, grind .]
 lemma mkPair_pos (a b : ℕ) : 0 < mkPair a b := by
   simp [mkPair]
 
-@[simp]
+@[simp, grind .]
 lemma left_lt_mkPair (a b : ℕ) : a < mkPair a b := by
   simp [mkPair]
 
-@[simp]
+@[simp, grind .]
 lemma right_lt_mkPair (a b : ℕ) : b < mkPair a b := by
   simp only [mkPair]
   nlinarith
 
+@[grind ←]
 lemma mkPair_le_mkPair {a b a' b' : ℕ} (ha : a ≤ a') (hb : b ≤ b') :
     mkPair a b ≤ mkPair a' b' := by
   simp only [mkPair]
   gcongr
 
-@[simp]
+@[simp, grind =]
 lemma mkPair_numeral [M↓[ℒₒᵣ] ⊧* 𝗥₀] (a b : ℕ) :
     mkPair (numeral a : M) (numeral b) = numeral (mkPair a b) := by
   have h : (1 : M) = numeral 1 := by simp
@@ -133,6 +134,7 @@ lemma eval_isTame₃ : M ⊧/![x, y, z] isTame₃ ↔ IsTame₃ x y z := by
 
 variable [M↓[ℒₒᵣ] ⊧* 𝗥₀]
 
+@[grind .]
 lemma isTame_numeral (n : ℕ) : IsTame (numeral n : M) where
   total y := (cobhamLE_numeral_or n).symm
   trans y z hz hy := by
@@ -160,6 +162,7 @@ lemma isTame_numeral (n : ℕ) : IsTame (numeral n : M) where
   mul_one := by simpa using numeral_mul_numeral (M := M) n 1
   one_mul := by simpa using numeral_mul_numeral (M := M) 1 n
 
+@[grind .]
 lemma isTame₃_numeral (k n m : ℕ) : IsTame₃ (numeral k : M) (numeral n) (numeral m) := by
   constructor <;> simp +contextual [numeral_add_numeral, numeral_mul_numeral, Nat.add_assoc,
     Nat.mul_assoc, Nat.mul_add, Nat.mul_le_mul_left, mkPair_le_mkPair]
@@ -206,6 +209,7 @@ def leftAt (ψ : ArithmeticSemisentence 2) : ArithmeticSemisentence 3 :=
 lemma eval_leftAt : M ⊧/![e, i, j] (leftAt ψ) ↔ LeftAt ψ e i j := by
   simp [leftAt, leftAt_iff]
 
+@[grind →]
 lemma Agree.symm (h : Agree ψ m i j) : Agree ψ m j i := fun e he ↦ (h e he).symm
 
 lemma Agree.trans (h : Agree ψ m i j) (h' : Agree ψ m j k) : Agree ψ m i k :=
@@ -410,13 +414,15 @@ def isMulCut (φ : ArithmeticSemisentence 1) (ψ : ArithmeticSemisentence 2) :
 lemma eval_isMulCut : M ⊧/![x] (isMulCut φ ψ) ↔ IsMulCut φ ψ x := by
   simp [isMulCut, IsMulCut]
 
-@[simp]
+@[simp, grind .]
 lemma cobhamLE_refl (x : M) : x ⊴ x := Or.inl <| Or.inl rfl
 
 namespace IsGood
 
+@[grind →]
 lemma tame (hx : IsGood φ ψ x) : IsTame x := hx.isTame x <| cobhamLE_refl x
 
+@[grind →]
 lemma of_le (hx : IsGood φ ψ x) (h : y ⊴ x) : IsGood φ ψ y where
   isTame z hz := hx.isTame z <| hx.tame.trans y z hz h
   isTame₃ w hw := hx.isTame₃ w <| hx.tame.trans y w hw h
@@ -490,33 +496,40 @@ lemma IsLeftmost.agree (hn : IsGood φ ψ n) (hi : IsLeftmost φ ψ n i) (hj : I
 lemma IsPath.mono (hm : IsGood φ ψ m) (h : n ⊴ m) (hp : IsPath φ ψ m j) : IsPath φ ψ n j :=
   fun k hk ↦ hp k <| hm.tame.trans n k hk h
 
+@[grind →]
 lemma HasPath.of_le (hm : HasPath φ ψ m) (h : n ⊴ m) : HasPath φ ψ n :=
   let ⟨hm, j, hj⟩ := hm
   ⟨hm.of_le h, j, hj.mono hm h⟩
 
+@[grind →]
 lemma IsAddCut.of_le (hx : IsAddCut φ ψ x) (h : y ⊴ x) : IsAddCut φ ψ y :=
   have hy := hx.1.of_le h
   ⟨hy, fun z hz ↦ (hx.2 z hz).of_le <| (hz.1.tame₃ hy.1 hx.1.1).add_le_add_left h⟩
 
+@[grind →]
 lemma IsMulCut.of_le (hx : IsMulCut φ ψ x) (h : y ⊴ x) : IsMulCut φ ψ y :=
   have hy := hx.1.of_le h
   ⟨hy, fun z hz ↦ (hx.2 z hz).of_le <| (hz.1.1.tame₃ hy.1.1 hx.1.1.1).mul_le_mul_left h⟩
 
+@[grind ←]
 lemma IsAddCut.add (hx : IsAddCut φ ψ x) (hy : IsAddCut φ ψ y) : IsAddCut φ ψ (x + y) :=
   ⟨hy.2 x hx.1, fun z hz ↦ by
     rw [← (hz.1.tame₃ hx.1.1 hy.1.1).add_assoc]
     exact hy.2 _ <| hx.2 z hz⟩
 
+@[grind ←]
 lemma IsMulCut.mul (hx : IsMulCut φ ψ x) (hy : IsMulCut φ ψ y) : IsMulCut φ ψ (x * y) :=
   ⟨hy.2 x hx.1, fun z hz ↦ by
     rw [← (hz.1.1.tame₃ hx.1.1.1 hy.1.1.1).mul_assoc]
     exact hy.2 _ <| hx.2 z hz⟩
 
+@[grind ←]
 lemma IsMulCut.add (hx : IsMulCut φ ψ x) (hy : IsMulCut φ ψ y) : IsMulCut φ ψ (x + y) :=
   ⟨hx.1.add hy.1, fun z hz ↦ by
     rw [(hz.1.1.tame₃ hx.1.1.1 hy.1.1.1).mul_add]
     exact (hx.2 z hz).add <| hy.2 z hz⟩
 
+@[grind →]
 lemma IsMulCut.isGood (hx : IsMulCut φ ψ x) : IsGood φ ψ x := hx.1.1.1
 
 /--

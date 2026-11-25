@@ -32,12 +32,15 @@ def nonneg : Submonoid (SpecialLinearGroup (Fin 2) R) where
 
 variable {A B C D : SpecialLinearGroup (Fin 2) R}
 
+@[grind =]
 lemma mem_nonneg_iff : A ∈ nonneg R ↔ ∀ i j, 0 ≤ A i j := Iff.rfl
 
+@[grind =]
 lemma apply_mul_apply_eq (A : SpecialLinearGroup (Fin 2) R) :
     A 0 0 * A 1 1 = A 0 1 * A 1 0 + 1 := by
   linear_combination (Matrix.det_fin_two (A : Matrix (Fin 2) (Fin 2) R)).symm.trans A.det_coe
 
+@[grind →]
 lemma pos_of_mem_nonneg (hA : A ∈ nonneg R) : 0 < A 0 0 ∧ 0 < A 1 1 := by
   have h : 0 < A 0 0 * A 1 1 := by
     rw [apply_mul_apply_eq]
@@ -96,12 +99,15 @@ The matrix $\begin{pmatrix} 1 & 1 \\ 0 & 1 \end{pmatrix}$.
 def upper : SpecialLinearGroup (Fin 2) R := ⟨!![1, 1; 0, 1], by simp⟩
 
 variable (R) in
+@[grind .]
 lemma lower_ne_one : lower R ≠ 1 := fun h ↦ by simpa [lower] using congr($h 1 0)
 
 variable (R) in
+@[grind .]
 lemma upper_ne_one : upper R ≠ 1 := fun h ↦ by simpa [upper] using congr($h 0 1)
 
 variable (R) in
+@[grind .]
 lemma lower_ne_upper : lower R ≠ upper R := fun h ↦ by simpa [lower, upper] using congr($h 0 1)
 
 include hR in

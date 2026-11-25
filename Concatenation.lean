@@ -33,4 +33,5 @@ public import Concatenation.ToFoundation.Interpretability.Undecidability
 public import Concatenation.ToFoundation.Prefix
 public import Concatenation.ToMathlib.FreeSemigroup
 public import Concatenation.WTC.Basic
+public import Concatenation.WTC.Editor
 public import Concatenation.WTC.LocallyFinitelySatisfiable

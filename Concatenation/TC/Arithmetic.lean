@@ -166,19 +166,13 @@ lemma AddGraph.unique (h : AddGraph z x y) (h' : AddGraph z' x y) : z = z' := by
 
 lemma AddGraph.isNumber (hx : IsNumber x) (hy : IsNumber y) (h : AddGraph z x y) : IsNumber z := by
   rcases h with ⟨-, rfl⟩ | ⟨-, -, rfl⟩ | ⟨-, -, rfl⟩ | ⟨hx, hy, rfl⟩
-  · exact isNumber_zero_append_zero
-  · exact hy
-  · exact hx
-  · exact (hx.append hy).isNumber
+  exacts [isNumber_zero_append_zero, hy, hx, (hx.append hy).isNumber]
 
 lemma existsUnique_addGraph (hx : IsNumber x) (hy : IsNumber y) :
     ∃! z, IsNumber z ∧ AddGraph z x y := by
   obtain ⟨z, hz⟩ := exists_addGraph hx hy
   use z
-  and_intros
-  · exact hz.isNumber hx hy
-  · exact hz
-  · exact fun z' hz' ↦ hz'.2.unique hz
+  exact ⟨⟨hz.isNumber hx hy, hz⟩, fun z' hz' ↦ hz'.2.unique hz⟩
 
 end TC
 
@@ -201,10 +195,7 @@ lemma existsUnique_mulGraph (hx : IsNumber x) (hy : IsNumber y) :
     ∃! z, IsNumber z ∧ MulGraph z x y := by
   obtain ⟨z, hz⟩ := exists_mulGraph hx hy
   use z
-  and_intros
-  · exact hz.isNumber
-  · exact hz
-  · exact fun z' hz' ↦ hz'.2.unique hz
+  exact ⟨⟨hz.isNumber, hz⟩, fun z' hz' ↦ hz'.2.unique hz⟩
 
 end TCPlus
 
@@ -496,13 +487,8 @@ lemma lt_iff : a < b ↔ ∃ c, a + (c + 1) = b := by
     rw [val_add_eq_iff, (val_add_eq_iff (a := ⟨c, hc'⟩) (b := 1)).mpr hd]
     exact h
   · rintro ⟨c, rfl⟩
-    use c
-    and_intros
-    · exact isNumber_val c
-    · use (c + 1 : arithmeticTranslation.Model M)
-      and_intros
-      · exact addGraph_val_add c 1
-      · exact addGraph_val_add a (c + 1)
+    use c, isNumber_val c, (c + 1 : arithmeticTranslation.Model M), addGraph_val_add c 1,
+      addGraph_val_add a (c + 1)
 
 end
 

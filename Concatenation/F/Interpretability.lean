@@ -47,10 +47,7 @@ def relativization : DirectTranslation T ℒ⌢ₑ where
     use Tarski.Structure.func f e
     simp only [and_true, and_imp, imp_self, implies_true]
     rcases f with (_ | _ | _) | ⟨⟨⟩⟩
-    · exact (H M).zero
-    · exact (H M).one
-    · exact (H M).append (he 0) (he 1)
-    · exact (H M).empty
+    exacts [(H M).zero, (H M).one, (H M).append (he 0) (he 1), (H M).empty]
   preserve_eq := completeEmpty.{0} _ _ fun M _ _ ↦ (models_preserveEq_iff _ _).mpr <| by
     simp [Semiformula.Operator.val]
 
@@ -218,13 +215,10 @@ Editor axiom for tame strings.
 -/
 lemma exists_of_append_eq_append (hy : IsTame y) (h : x ++ y = z ++ w) :
     ∃ u, (x ++ u = z ∧ y = u ++ w) ∨ (x = z ++ u ∧ u ++ y = w) := by
-  rcases hy x w <| isSuffix_iff.mpr ⟨z, h⟩ with h' | h'
-  · obtain ⟨u, rfl⟩ := isSuffix_iff.mp h'
-    use u
-    exact Or.inl ⟨F.append_right_cancel <| by rw [F.append_assoc, h], rfl⟩
-  · obtain ⟨u, rfl⟩ := isSuffix_iff.mp h'
-    use u
-    exact Or.inr ⟨F.append_right_cancel <| by rw [F.append_assoc, h], rfl⟩
+  rcases hy x w <| isSuffix_iff.mpr ⟨z, h⟩ with h' | h' <;>
+    obtain ⟨u, rfl⟩ := isSuffix_iff.mp h' <;> use u
+  · exact Or.inl ⟨F.append_right_cancel <| by rw [F.append_assoc, h], rfl⟩
+  · exact Or.inr ⟨F.append_right_cancel <| by rw [F.append_assoc, h], rfl⟩
 
 end F
 
@@ -393,8 +387,7 @@ lemma isEmptyOrAppendAtom_append (hx : IsEmptyOrAppendAtom x) (hy : IsEmptyOrApp
     IsEmptyOrAppendAtom (x ++ y) := by
   rcases hy with rfl | ⟨u, rfl | rfl⟩
   · simpa using hx
-  · exact Or.inr ⟨x ++ u, by simp [TCEmpty.append_assoc]⟩
-  · exact Or.inr ⟨x ++ u, by simp [TCEmpty.append_assoc]⟩
+  all_goals exact Or.inr ⟨x ++ u, by simp [TCEmpty.append_assoc]⟩
 
 lemma isHereditarilyRadical_left (h : IsHereditarilyRadical (x ++ y)) : IsHereditarilyRadical x :=
   fun z w hw ↦ h z (w ++ y) <| by rw [hw, TCEmpty.append_assoc]

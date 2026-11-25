@@ -536,16 +536,8 @@ lemma ConcatGraph.exists_of_numeral {s : FiniteSequence}
   · obtain ⟨m, n, rfl, rfl, h'⟩ := h.exists_of_numeral primrec₂_appendCode.to_comp
     obtain ⟨u, rfl⟩ := code_surjective m
     obtain ⟨v, rfl⟩ := code_surjective n
-    use u
-    and_intros
-    · use v
-      simpa using h'
-    · rfl
-  · use s
-    and_intros
-    · use nil
-      rfl
-    · rfl
+    use u, ⟨v, by simpa using h'⟩
+  · use s, ⟨nil, rfl⟩
 
 namespace codeTranslation
 

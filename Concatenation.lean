@@ -22,7 +22,11 @@ public import Concatenation.Semantics.Empty
 public import Concatenation.Semantics.Relativization
 public import Concatenation.Semantics.Sequence
 public import Concatenation.Semantics.Standard
-public import Concatenation.Sequence.Basic
+public import Concatenation.Seq.Arithmetic
+public import Concatenation.Seq.Basic
+public import Concatenation.Seq.Editor
+public import Concatenation.Seq.Embedding
+public import Concatenation.Seq.Language
 public import Concatenation.TC.Arithmetic
 public import Concatenation.TC.Basic
 public import Concatenation.TC.DefinitionalEquivalence
@@ -36,6 +40,7 @@ public import Concatenation.TC.Thin
 public import Concatenation.TC.Undecidability
 public import Concatenation.ToFoundation.AddCoding
 public import Concatenation.ToFoundation.Arithmetic.IQ
+public import Concatenation.ToFoundation.Arithmetic.R
 public import Concatenation.ToFoundation.Arithmetic.R0.Cobham
 public import Concatenation.ToFoundation.Arithmetic.R0.Representation
 public import Concatenation.ToFoundation.Arithmetic.R0.Undecidability

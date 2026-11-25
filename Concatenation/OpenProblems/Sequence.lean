@@ -1,12 +1,10 @@
 module
 
-public import AlphaCentauri.Interpretability.Basic
-public import Concatenation.Sequence.Basic
-public import Foundation.FirstOrder.Arithmetic.R0.Basic
+public import Concatenation.Seq.Editor
 import Concatenation.OpenProblem
 
 /-!
-# Open problems on theories of sequences
+# An open problem on theories of sequences
 -/
 
 @[expose] public section
@@ -23,12 +21,6 @@ def Theory.Sequential {L : Language} [L.Eq] (T : Theory L) : Prop :=
     T ⊢ “∃ y, ∀ x, ¬!φ x y” ∧ T ⊢ “∀ x y, ∃ z, ∀ u, !φ u z ↔ !φ u x ∨ u = y”
 
 namespace Sequence
-
-/--
-Is $\mathsf{WSeq}$ mutually interpretable with $\mathsf{R}_0$?
-- [KM24, §2]
--/
-open_problem WSeq_mutuallyInterpretable_R0 := Nonempty (𝗪𝗦𝗲𝗾 ⋈ 𝗥₀)
 
 /--
 Is $\mathsf{Seq}^*$ sequential?

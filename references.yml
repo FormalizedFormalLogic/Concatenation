@@ -130,6 +130,9 @@ KM24:
   date: 2024
   serial-number:
     arxiv: "2402.14286"
+  parent:
+    type: Repository
+    title: arXiv
 
 Mur22:
   type: Article

@@ -137,7 +137,7 @@ lemma exists_mulGraph (hx : IsNumber x) (hy : IsNumber y) : ∃ z, MulGraph z x 
   rcases hx with hx | rfl | hx
   · by_cases hr : ∃! r, IsMulSeq x y r
     · obtain ⟨r, hr'⟩ := hr.exists
-      obtain ⟨w, hw, hwr⟩ := hr'.2.2.2.2.1
+      obtain ⟨w, hw, hwr⟩ := hr'.exists_isLast
       use w
       exact Or.inr <| Or.inr <| Or.inr ⟨hx, hy, Or.inl ⟨hr, hw, r, hr', hwr⟩⟩
     · use 0 ++ 0

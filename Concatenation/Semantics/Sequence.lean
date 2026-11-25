@@ -118,13 +118,16 @@ The last clause is the one of Švejdar.
 - [Gan09, §1, Definition 1(g)]
 - [Sve09, §3]
 -/
-def IsMulSeq (x y z : M) : Prop :=
-  IsTally 1 x ∧ IsTally 1 y ∧ IsPairSeq z ∧ IsFirst (pairOf x 1) z ∧
-    (∃ w, IsTally 1 w ∧ IsLast (pairOf w y) z) ∧
-    ∀ s u' v', IsTally 1 u' → IsTally 1 v' →
-      s ++ 0 ++ 0 ++ pairOf u' v' ++ 0 ++ 0 ⊑ₚ z →
-      ∃ u v, IsTally 1 u ∧ IsTally 1 v ∧ u' = u ++ x ∧ v' = v ++ 1 ∧
-        0 ++ 0 ++ pairOf u v ⊑ₛ s
+@[mk_iff]
+structure IsMulSeq (x y z : M) : Prop where
+  isTally_left : IsTally 1 x
+  isTally_right : IsTally 1 y
+  isPairSeq : IsPairSeq z
+  isFirst : IsFirst (pairOf x 1) z
+  exists_isLast : ∃ w, IsTally 1 w ∧ IsLast (pairOf w y) z
+  exists_pred : ∀ s u' v', IsTally 1 u' → IsTally 1 v' →
+    s ++ 0 ++ 0 ++ pairOf u' v' ++ 0 ++ 0 ⊑ₚ z →
+    ∃ u v, IsTally 1 u ∧ IsTally 1 v ∧ u' = u ++ x ∧ v' = v ++ 1 ∧ 0 ++ 0 ++ pairOf u v ⊑ₛ s
 
 /-- `z` is a multiplication sequence for the `1`-tallies `x` and `y`. -/
 def isMulSeq : Semisentence ℒ⌢ 3 :=
@@ -140,17 +143,8 @@ def isMulSeq : Semisentence ℒ⌢ 3 :=
 
 @[simp]
 lemma eval_isMulSeq : M ⊧/![x, y, z] isMulSeq ↔ IsMulSeq x y z := by
-  simp [isMulSeq, IsMulSeq, pairOf]
+  simp [isMulSeq, isMulSeq_iff, pairOf]
 
 lemma IsPairSeq.isSeq (h : IsPairSeq z) : IsSeq z := h.1
-
-lemma IsMulSeq.isTally_left (h : IsMulSeq x y z) : IsTally 1 x := h.1
-
-lemma IsMulSeq.isTally_right (h : IsMulSeq x y z) : IsTally 1 y := h.2.1
-
-lemma IsMulSeq.isPairSeq (h : IsMulSeq x y z) : IsPairSeq z := h.2.2.1
-
-lemma IsMulSeq.exists_isLast (h : IsMulSeq x y z) : ∃ w, IsTally 1 w ∧ IsLast (pairOf w y) z :=
-  h.2.2.2.2.1
 
 end FFL.FirstOrder.Concatenation

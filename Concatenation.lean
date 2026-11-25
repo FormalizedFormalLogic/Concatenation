@@ -20,10 +20,14 @@ public import Concatenation.TC.Separation
 public import Concatenation.TC.Substring
 public import Concatenation.TC.Thin
 public import Concatenation.TC.Undecidability
+public import Concatenation.ToFoundation.Arithmetic.R0.Certificate
 public import Concatenation.ToFoundation.Arithmetic.R0.Cobham
+public import Concatenation.ToFoundation.Arithmetic.R0.Cut
 public import Concatenation.ToFoundation.Arithmetic.R0.LocallyFinitelySatisfiable
+public import Concatenation.ToFoundation.Arithmetic.R0.Naming
 public import Concatenation.ToFoundation.Arithmetic.R0.Representation
 public import Concatenation.ToFoundation.Arithmetic.R0.Undecidability
+public import Concatenation.ToFoundation.Arithmetic.R0.Visser
 public import Concatenation.ToFoundation.Bootstrapping
 public import Concatenation.ToFoundation.Concat
 public import Concatenation.ToFoundation.Decidability
@@ -36,6 +40,7 @@ public import Concatenation.ToMathlib.FreeSemigroupCode
 public import Concatenation.WTC.Arithmetic
 public import Concatenation.WTC.Basic
 public import Concatenation.WTC.Embedding
+public import Concatenation.WTC.Interpretability
 public import Concatenation.WTC.LocallyFinitelySatisfiable
 public import Concatenation.WTC.Standard
 public import Concatenation.WTC.Undecidability

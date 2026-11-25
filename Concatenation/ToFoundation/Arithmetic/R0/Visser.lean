@@ -187,27 +187,36 @@ lemma isApproximable_holds (hA : ℬ[<, ℒₒᵣ].Hierarchy 𝚺 0 A)
   have hφ (n : ℕ) : M ⊧/![numeral n] (hasStage A E) :=
     eval_hasStage.mpr <| hasStage_numeral hA (h n)
   by_cases hm : ∃ m : M, IsGreatestGood (hasStage A E) (memStage A E) m
-  · refine ⟨fun _ ↦ .inl hm, fun _ _ _ _ ↦ .inl hm, fun s _ ↦ ?_⟩
+  · constructor
+    · exact fun _ ↦ .inl hm
+    · exact fun _ _ _ _ ↦ .inl hm
+    intro s _
     obtain ⟨m, hm⟩ := hm
     have stage : HasStage A E m := eval_hasStage.mp <| hm.1.eval m <| cobhamLE_refl m
     obtain ⟨c, hc⟩ := stage.exists_isStage
     have hle (n : ℕ) : numeral n ⊴ m := hm.2 _ <| isGood_numeral hφ n
-    refine ⟨c, m, fun _ ↦ True, hc.isCertificate, fun _ _ ↦ trivial, fun _ _ _ _ ↦ trivial,
-      fun _ _ ↦ .inl ⟨m, hm⟩, fun _ _ _ _ _ _ _ ↦ trivial, fun n _ ↦ ⟨stage.lt c hc _ <| hle n, hle n⟩,
-      fun k _ x y z _ _ _ ↦ ⟨?_, ?_⟩⟩
-    · rintro (⟨m', hm', c', hc', h⟩ | ⟨h, -⟩)
-      · obtain rfl := hm.1.tame.antisymm m' (hm'.2 m hm.1) (hm.2 m' hm'.1)
-        rwa [stage.unique c hc c' (eval_isStage.mp hc')]
-      · exact absurd ⟨m, hm⟩ h
-    · exact fun h ↦ .inl ⟨m, hm, c, eval_isStage.mpr hc, h⟩
+    use c, m, fun _ ↦ True
+    have holds (k x y z : M) :
+        Holds (hasStage A E) (memStage A E) (isStage A E) k x y z ↔ Fact c k x y z := by
+      constructor
+      · rintro (⟨m', hm', c', hc', h⟩ | ⟨h, -⟩)
+        · obtain rfl := hm.1.tame.antisymm m' (hm'.2 m hm.1) (hm.2 m' hm'.1)
+          rwa [stage.unique c hc c' (eval_isStage.mp hc')]
+        · exact absurd ⟨m, hm⟩ h
+      · exact fun h ↦ .inl ⟨m, hm, c, eval_isStage.mpr hc, h⟩
+    exact ⟨hc.isCertificate, fun _ _ ↦ trivial, fun _ _ _ _ ↦ trivial, fun _ _ ↦ .inl ⟨m, hm⟩,
+      fun _ _ _ _ _ _ _ ↦ trivial, fun n _ ↦ ⟨stage.lt c hc _ <| hle n, hle n⟩,
+      fun k _ x y z _ _ _ ↦ holds _ x y z⟩
   · have small {x : M} : IsSmall (hasStage A E) (memStage A E) x ↔
       IsMulCut (hasStage A E) (memStage A E) x := or_iff_right hm
     have holds {k x y z : M} : Holds (hasStage A E) (memStage A E) (isStage A E) k x y z ↔
         MemLimit (hasStage A E) (memStage A E) (mkPair k (mkPair x (mkPair y z))) :=
       (or_iff_right fun ⟨m, h, _⟩ ↦ hm ⟨m, h⟩).trans <| and_iff_right hm
     have num (n : ℕ) := isMulCut_numeral (ψ := memStage A E) hm hφ n
-    refine ⟨fun n ↦ small.mpr <| num n,
-      fun x y hx hy ↦ small.mpr <| (small.mp hx).mkPair hm hφ (small.mp hy), fun s hs ↦ ?_⟩
+    constructor
+    · exact fun n ↦ small.mpr <| num n
+    · exact fun x y hx hy ↦ small.mpr <| (small.mp hx).mkPair hm hφ (small.mp hy)
+    intro s hs
     obtain ⟨b, hb, hsb⟩ : ∃ b : M, IsMulCut (hasStage A E) (memStage A E) b ∧ ∀ x ∈ s, x ⊴ b := by
       clear holds
       induction s with
@@ -215,15 +224,11 @@ lemma isApproximable_holds (hA : ℬ[<, ℒₒᵣ].Hierarchy 𝚺 0 A)
       | cons x s ih =>
         obtain ⟨b, hb, hsb⟩ := ih fun x hx ↦ hs x <| List.mem_cons_of_mem _ hx
         have hx := small.mp <| hs x List.mem_cons_self
+        simp only [List.forall_mem_cons]
         rcases hx.isGood.tame.total b with h | h
-        · refine ⟨b, hb, fun y hy ↦ ?_⟩
-          rcases List.mem_cons.mp hy with rfl | hy
-          · exact h
-          · exact hsb y hy
-        · refine ⟨x, hx, fun y hy ↦ ?_⟩
-          rcases List.mem_cons.mp hy with rfl | hy
-          · exact cobhamLE_refl y
-          · exact hx.isGood.tame.trans b y (hsb y hy) h
+        · exact ⟨b, hb, h, hsb⟩
+        · exact ⟨x, hx, cobhamLE_refl x, fun y hy ↦ hx.isGood.tame.trans b y (hsb y hy) h⟩
+    have le {x y a b : M} := mkPair_le_mkPair_of_isMulCut (x := x) (y := y) (a := a) (b := b) hm hφ
     have hB₁ := hb.mkPair hm hφ hb
     have hB₂ := hb.mkPair hm hφ hB₁
     have hB := (num 9).mkPair hm hφ hB₂
@@ -231,27 +236,29 @@ lemma isApproximable_holds (hA : ℬ[<, ℒₒᵣ].Hierarchy 𝚺 0 A)
     have stage : HasStage A E j := eval_hasStage.mp <| hj.eval j <| cobhamLE_refl j
     obtain ⟨c, hc⟩ := stage.exists_isStage
     have lt {x : M} (hx : x ⊴ b) : x < c := stage.lt c hc x <| hj.tame.trans b x hx hbj
-    refine ⟨c, j, (· ⊴ b), hc.isCertificate, hsb, fun x a hx ha ↦ hb.isGood.tame.trans x a ha hx,
-      fun a ha ↦ small.mpr <| hb.of_le ha, fun x a y hx hy hxy ha ↦
-        hb.isGood.tame.trans _ _ (mkPair_le_mkPair_of_isMulCut hm hφ (small.mp hx) (small.mp hy) ha
-          <| cobhamLE_refl y) hxy,
-      fun n hn ↦ ⟨lt hn, hj.tame.trans b _ hn hbj⟩,
-      fun k hk x y z hx hy hz ↦ ?_⟩
-    have hk : (numeral k : M) ⊴ numeral 9 := numeral_cobhamLE_numeral_iff.mpr hk
-    have hle := mkPair_le_mkPair_of_isMulCut hm hφ (num 9) hB₂ hk <|
-      mkPair_le_mkPair_of_isMulCut hm hφ hb hB₁ hx <|
-        mkPair_le_mkPair_of_isMulCut hm hφ hb hb hy hz
-    rw [holds, hjB _ <| hB.isGood.lt_add_one_iff.mpr <| by
-      by_cases e : mkPair (numeral k) (mkPair x (mkPair y z)) =
-          mkPair (numeral 9) (mkPair b (mkPair b b))
-      · exact .inr e
-      · exact .inl ⟨hle, e⟩]
-    constructor
-    · intro h
-      obtain ⟨d, hd, h⟩ := eval_memStage.mp h
-      obtain rfl := stage.unique c hc d hd
-      exact ⟨lt hx, lt hy, lt hz, h⟩
-    · exact fun h ↦ eval_memStage.mpr ⟨c, hc, h.mem⟩
+    use c, j, (· ⊴ b)
+    and_intros
+    · exact hc.isCertificate
+    · exact hsb
+    · exact fun x a hx ha ↦ hb.isGood.tame.trans x a ha hx
+    · exact fun a ha ↦ small.mpr <| hb.of_le ha
+    · exact fun x a y hx hy hxy ha ↦ hb.isGood.tame.trans _ _
+        (le (small.mp hx) (small.mp hy) ha <| cobhamLE_refl y) hxy
+    · exact fun n hn ↦ ⟨lt hn, hj.tame.trans b _ hn hbj⟩
+    · intro k hk x y z hx hy hz
+      have hk : (numeral k : M) ⊴ numeral 9 := numeral_cobhamLE_numeral_iff.mpr hk
+      have hle := le (num 9) hB₂ hk <| le hb hB₁ hx <| le hb hb hy hz
+      rw [holds, hjB _ <| hB.isGood.lt_add_one_iff.mpr <| by
+        by_cases e : mkPair (numeral k) (mkPair x (mkPair y z)) =
+            mkPair (numeral 9) (mkPair b (mkPair b b))
+        · exact .inr e
+        · exact .inl ⟨hle, e⟩]
+      constructor
+      · intro h
+        obtain ⟨d, hd, h⟩ := eval_memStage.mp h
+        obtain rfl := stage.unique c hc d hd
+        exact ⟨lt hx, lt hy, lt hz, h⟩
+      · exact fun h ↦ eval_memStage.mpr ⟨c, hc, h.mem⟩
 
 end approximation
 
@@ -674,11 +681,15 @@ lemma eval_describedFunc {n f : ℕ} {a : M} {v : Fin n → M} :
 
 variable {L : Language} [L.Encodable] [L.Eq]
 
+variable (L) in
+/-- The code of the equality symbol of `L`. -/
+abbrev eqCode : ℕ := encode (Language.Eq.eq : L.Rel 2)
+
 /-- The translation that describes the models coded by the certificates. -/
 def certificateTranslation (hA : ℬ[<, ℒₒᵣ].Hierarchy 𝚺 0 A)
-    (h : ∀ j : ℕ, ∃ c : ℕ, IsCertificate A (encode (Language.Eq.eq : L.Rel 2)) c j) :
+    (h : ∀ j : ℕ, ∃ c : ℕ, IsCertificate A (eqCode L) c j) :
     DirectTranslation 𝗥₀ L :=
-  let E := encode (Language.Eq.eq : L.Rel 2)
+  let E := eqCode L
   { domain := ⟨inDomain (hasStage A E) (memStage A E) (isStage A E)⟩
     rel := fun {n} R ↦ ⟨describedRel (hasStage A E) (memStage A E) (isStage A E) n (encode R)⟩
     func := fun {n} f ↦ ⟨describedFunc (hasStage A E) (memStage A E) (isStage A E) n (encode f)⟩
@@ -704,26 +715,25 @@ def certificateTranslation (hA : ℬ[<, ℒₒᵣ].Hierarchy 𝚺 0 A)
       exact eval_describedRel.trans <| this.eq_iff hx.1 hy.1 hx.2 hy.2 }
 
 lemma isDescribedBy_model [M↓[ℒₒᵣ] ⊧* 𝗥₀] (hA : ℬ[<, ℒₒᵣ].Hierarchy 𝚺 0 A)
-    (h : ∀ j : ℕ, ∃ c : ℕ, IsCertificate A (encode (Language.Eq.eq : L.Rel 2)) c j) :
-    IsDescribedBy L
-      (IsSmall (hasStage A (encode (Language.Eq.eq : L.Rel 2))) (memStage A (encode (Language.Eq.eq : L.Rel 2))))
-      (fun k ↦ Holds (hasStage A (encode (Language.Eq.eq : L.Rel 2))) (memStage A (encode (Language.Eq.eq : L.Rel 2))) (isStage A (encode (Language.Eq.eq : L.Rel 2))) (numeral k))
-      (DirectTranslation.Model.val : (certificateTranslation hA h).Model M → M) where
+    (h : ∀ j : ℕ, ∃ c : ℕ, IsCertificate A (eqCode L) c j) :
+    IsDescribedBy L (IsSmall (hasStage A (eqCode L)) (memStage A (eqCode L)))
+      (fun k ↦ Holds (hasStage A (eqCode L)) (memStage A (eqCode L)) (isStage A (eqCode L))
+        (numeral k))
+      (Model.val : (certificateTranslation hA h).Model M → M) where
   mem a := eval_inDomain.mp a.dom
   exists_eq x hx hdx := ⟨⟨x, eval_inDomain.mpr ⟨hx, hdx⟩⟩, rfl⟩
   rel _ _ := eval_describedRel
-  func f v := eval_describedFunc.mp <| DirectTranslation.Model.eval_func f v
+  func f v := eval_describedFunc.mp <| Model.eval_func f v
 
 variable {T : Theory L}
 
 lemma nonempty_interpretation (hA : ℬ[<, ℒₒᵣ].Hierarchy 𝚺 0 A)
-    (h : ∀ j : ℕ, ∃ c : ℕ, IsCertificate A (encode (Language.Eq.eq : L.Rel 2)) c j)
-    (hT : ∀ σ ∈ T, ∃ w : ℕ, ℕ ⊧/![encode σ, w] A) : Nonempty (𝗥₀ ⊳ T) := by
-  refine ⟨⟨certificateTranslation hA h, fun σ hσ ↦ complete.{0} _ _ fun M _ _ ↦
-    DirectTranslation.Model.translate_iff.mpr ?_⟩⟩
-  obtain ⟨w, hw⟩ := hT σ hσ
-  have := isApproximable_holds (M := M) hA h
-  exact (isDescribedBy_model hA h).evalb this ![] σ <| this.ax hA hw
+    (h : ∀ j : ℕ, ∃ c : ℕ, IsCertificate A (eqCode L) c j)
+    (hT : ∀ σ ∈ T, ∃ w : ℕ, ℕ ⊧/![encode σ, w] A) : Nonempty (𝗥₀ ⊳ T) :=
+  ⟨⟨certificateTranslation hA h, fun σ hσ ↦ complete.{0} _ _ fun M _ _ ↦
+    let ⟨_, hw⟩ := hT σ hσ
+    have := isApproximable_holds (M := M) hA h
+    Model.translate_iff.mpr <| (isDescribedBy_model hA h).evalb this ![] σ <| this.ax hA hw⟩⟩
 
 end translation
 
@@ -732,12 +742,6 @@ section theorems
 open Theory
 
 variable {L : Language} [L.Eq] [L.Finite] {T : Theory L}
-
-/-- A theory that $\mathsf{R}_0$ interprets is locally finitely satisfiable. -/
-lemma locallyFinitelySatisfiable_of_interpretation (π : 𝗥₀ ⊳ T) :
-    T.LocallyFinitelySatisfiable := fun F hF hfin ↦
-  let ρ : 𝗥₀ ⊳ F := ⟨π.trln, fun σ hσ ↦ π.interpret_theory σ (hF hσ)⟩
-  ρ.hasFiniteModel locallyFinitelySatisfiable <| .of_finite hfin
 
 variable [L.Encodable] [L.Primcodable] [𝗘𝗤 L ⪯ T]
 
@@ -782,11 +786,11 @@ lemma nonempty_interpretation_of_locallyFinitelySatisfiable (hT : REPred (· ∈
 A recursively enumerable theory of a finite language is interpretable in $\mathsf{R}_0$ if and only
 if it is locally finitely satisfiable.
 - [Hor11, §3, Theorem 3.3]
-- [Hor12, §4, Theorem 4.9]
+- [Hor12, §4]
 -/
 theorem nonempty_interpretation_iff_locallyFinitelySatisfiable (hT : REPred (· ∈ T)) :
     Nonempty (𝗥₀ ⊳ T) ↔ T.LocallyFinitelySatisfiable :=
-  ⟨fun ⟨π⟩ ↦ locallyFinitelySatisfiable_of_interpretation π,
+  ⟨fun ⟨π⟩ ↦ π.locallyFinitelySatisfiable locallyFinitelySatisfiable,
     nonempty_interpretation_of_locallyFinitelySatisfiable hT⟩
 
 end theorems

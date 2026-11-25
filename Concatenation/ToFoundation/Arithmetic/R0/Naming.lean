@@ -149,7 +149,8 @@ lemma exists_isCanonical_le [Finite S] : ∃ D, ∀ a, IsCanonical val a → a �
   exact ⟨D, fun a ha ↦ hD ha⟩
 
 omit [Nonempty S] in
-lemma IsEnv.cons (ha : IsCanonical val a) (hs : IsEnv val n s) : IsEnv val (n + 1) (mkPair a s) := by
+lemma IsEnv.cons (ha : IsCanonical val a) (hs : IsEnv val n s) :
+    IsEnv val (n + 1) (mkPair a s) := by
   obtain ⟨v, hv, rfl⟩ := hs
   use a :> v
   simpa [Fin.forall_fin_succ] using ⟨ha, hv⟩
@@ -333,10 +334,11 @@ lemma exists_isCertificate (A : ArithmeticSemisentence 2) (j : ℕ)
         Set.finite_Iic _
     apply (this.image fun x ↦ mkPair x.1 (mkPair x.2.1 (mkPair x.2.2.1 x.2.2.2))).subset
     rintro e ⟨k, x, y, z, hx, hy, hz, h, rfl⟩
-    refine ⟨(k, x, y, z), ⟨?_, hx, hy, hz⟩, rfl⟩
-    by_contra hk
-    obtain ⟨k, rfl⟩ : ∃ l, k = l + 10 := ⟨k - 10, by simp at hk; omega⟩
-    exact h
+    have hk : k ≤ 9 := by
+      by_contra hk
+      obtain ⟨k, rfl⟩ : ∃ l, k = l + 10 := ⟨k - 10, by omega⟩
+      exact h
+    exact ⟨(k, x, y, z), ⟨hk, hx, hy, hz⟩, rfl⟩
   have hBc : B < c := by
     apply (left_lt_mkPair B (mkPair 0 0)).trans
     apply (right_lt_mkPair 9 _).trans
@@ -362,6 +364,17 @@ lemma exists_isCertificate (A : ArithmeticSemisentence 2) (j : ℕ)
       Fact c (ORingStructure.numeral 4) (encode φ) (envCode v) 0 :=
     fact.mpr ⟨by omega, hCB (n := n) (by omega) ⟨v, hv, rfl⟩, Nat.zero_le _, n, φ, v, h, rfl, hv,
       rfl, hφ, rfl⟩
+  have value {t n s a : ℕ} (ht : t ≤ j) (hn : n ≤ j + 3) (hs : IsEnv val n s)
+      (ha : IsCanonical val a) (H : ∀ (n : ℕ) (t' : ClosedSemiterm L n) (v : Fin n → ℕ),
+        t = encode t' → s = envCode v → val a = t'.val (val ∘ v) Empty.elim) :
+      Fact c (ORingStructure.numeral 5) t s a :=
+    fact.mpr ⟨by omega, hCB hn hs, hDB ha, ht, ⟨n, hn, hs⟩, ha, H⟩
+  have values {v n s d k : ℕ} (hv : v ≤ j) (hn : n ≤ j + 3) (hs : IsEnv val n s) (hk : k ≤ v)
+      (hd : IsEnv val k d) (H : ∀ (n k : ℕ) (t : Fin k → ClosedSemiterm L n) (w : Fin n → ℕ),
+        v = Matrix.vecToNat (fun i ↦ encode (t i)) → s = envCode w →
+          ∃ u : Fin k → ℕ, d = envCode u ∧ ∀ i, val (u i) = (t i).val (val ∘ w) Empty.elim) :
+      Fact c (ORingStructure.numeral 6) v s d :=
+    fact.mpr ⟨by omega, hCB hn hs, hCB (by omega) hd, hv, ⟨n, hn, hs⟩, ⟨k, hk, hd⟩, H⟩
   have le_pair {k q r : ℕ} : q ≤ Nat.pair k (Nat.pair q r) ∧ r ≤ Nat.pair k (Nat.pair q r) :=
     ⟨(Nat.left_le_pair _ _).trans <| Nat.right_le_pair _ _,
       (Nat.right_le_pair _ _).trans <| Nat.right_le_pair _ _⟩
@@ -378,8 +391,9 @@ lemma exists_isCertificate (A : ArithmeticSemisentence 2) (j : ℕ)
       exact env (by omega) <| (fact.mp hs).2.2.2.2.1.cons (fact.mp ha).2.2.2.1
     · intro k _ f _ d _ hk hf hd
       obtain ⟨a, ha, hac, hae⟩ := exists_isCanonical val (funcName k f d)
-      exact ⟨a, (hDB hac).trans_lt hBc, nat_cobhamLE_iff.mpr ha, dom hac, fact.mpr
-        ⟨hpB (nat_cobhamLE_iff.mp hk) (nat_cobhamLE_iff.mp hf), (fact.mp hd).2.1, hDB hac, hac, hae⟩⟩
+      have hkf := hpB (nat_cobhamLE_iff.mp hk) (nat_cobhamLE_iff.mp hf)
+      exact ⟨a, (hDB hac).trans_lt hBc, nat_cobhamLE_iff.mpr ha, dom hac,
+        fact.mpr ⟨hkf, (fact.mp hd).2.1, hDB hac, hac, hae⟩⟩
     · intro x _ d _ a _ b _ ha hb
       obtain ⟨-, -, -, ha, ha'⟩ := fact.mp ha
       obtain ⟨-, -, -, hb, hb'⟩ := fact.mp hb
@@ -397,12 +411,10 @@ lemma exists_isCertificate (A : ArithmeticSemisentence 2) (j : ℕ)
         obtain rfl : ![a, b] = v := envCode_injective <| hv.symm.trans hd
         exact ha.eq hb <| by simpa using h
       · rintro rfl
-        refine fact.mpr ⟨?_, ?_, Nat.zero_le _, 2, Language.Eq.eq, ![a, a], ?_, hv, ?_, rfl⟩
-        · rw [hnum, hnum]
-          exact Nat.le_add_left _ _
-        · exact hCB (n := 2) (by omega) ⟨![a, a], by simp [Fin.forall_fin_two, ha], hv⟩
-        · rw [hnum, hnum]
-        · simp
+        rw [hnum 2, hnum E]
+        exact fact.mpr ⟨Nat.le_add_left _ _,
+          hCB (n := 2) (by omega) ⟨![a, a], by simp [Fin.forall_fin_two, ha], hv⟩,
+          Nat.zero_le _, 2, Language.Eq.eq, ![a, a], rfl, hv, by simp, rfl⟩
     · intro p _ w _ hp hw h
       obtain ⟨σ, rfl, hσ⟩ := hA p (nat_cobhamLE_iff.mp hp) w (nat_cobhamLE_iff.mp hw) h
       exact sat (n := 0) (v := ![]) (nat_cobhamLE_iff.mp hp) (by simp)
@@ -410,51 +422,43 @@ lemma exists_isCertificate (A : ArithmeticSemisentence 2) (j : ℕ)
   · constructor
     · intro t _ n _ s _ a _ ht htj hs ha has
       obtain ⟨-, -, -, ha, -⟩ := fact.mp ha
-      obtain ⟨-, hB, -, hn, has, -⟩ := fact.mp has
-      refine fact.mpr ⟨?_, hB, hDB ha, nat_cobhamLE_iff.mp htj, ⟨_, hn, has⟩, ha, ?_⟩
-      · have := nat_cobhamLE_iff.mp htj
-        omega
-      · rintro n' t' v' rfl hv
-        obtain ⟨x, rfl, hx⟩ := exists_eq_bvar <| nat_isNode_iff.mp ht
-        match n' with
-        | 0 => exact x.elim0
-        | n' + 1 =>
-          obtain rfl : x = 0 := Fin.ext hx
-          simp [(mkPair_inj.mp hv).1]
+      obtain ⟨-, -, -, hn, has, -⟩ := fact.mp has
+      apply value (nat_cobhamLE_iff.mp htj) hn has ha
+      rintro n' t' v' rfl hv
+      obtain ⟨x, rfl, hx⟩ := exists_eq_bvar <| nat_isNode_iff.mp ht
+      match n' with
+      | 0 => exact x.elim0
+      | n' + 1 =>
+        obtain rfl : x = 0 := Fin.ext hx
+        simp [(mkPair_inj.mp hv).1]
     · intro t _ u _ i _ n _ s _ a _ b _ ht hu huj hbs hb ha
-      obtain ⟨-, hB, -, hn, hbs, -⟩ := fact.mp hbs
+      obtain ⟨-, -, -, hn, hbs, -⟩ := fact.mp hbs
       obtain ⟨-, -, -, -, -, hac, ha⟩ := fact.mp ha
-      refine fact.mpr ⟨?_, hB, hDB hac, nat_cobhamLE_iff.mp huj, ⟨_, hn, hbs⟩, hac, ?_⟩
-      · have := nat_cobhamLE_iff.mp huj
-        omega
-      · rintro n' t' v' rfl hv
-        obtain ⟨x, rfl, hx⟩ := exists_eq_bvar <| nat_isNode_iff.mp hu
-        match n' with
-        | 0 => exact x.elim0
-        | n' + 1 =>
-          obtain ⟨y, rfl⟩ : ∃ y : Fin n', x = y.succ :=
-            ⟨⟨i, by have := x.isLt; omega⟩, Fin.ext hx⟩
-          rw [ha n' #y (fun i ↦ v' i.succ) _ (mkPair_inj.mp hv).2]
-          · simp
-          · rw [nat_isNode_iff.mp ht, Semiterm.encode_eq_toNat, Semiterm.toNat,
-              ← Nat.succ.inj hx]
+      apply value (nat_cobhamLE_iff.mp huj) hn hbs hac
+      rintro n' t' v' rfl hv
+      obtain ⟨x, rfl, hx⟩ := exists_eq_bvar <| nat_isNode_iff.mp hu
+      match n' with
+      | 0 => exact x.elim0
+      | n' + 1 =>
+        obtain ⟨y, rfl⟩ : ∃ y : Fin n', x = y.succ :=
+          ⟨⟨i, by have := x.isLt; omega⟩, Fin.ext hx⟩
+        rw [ha n' #y (fun i ↦ v' i.succ) _ (mkPair_inj.mp hv).2]
+        · simp
+        · rw [nat_isNode_iff.mp ht, Semiterm.encode_eq_toNat, Semiterm.toNat, ← Nat.succ.inj hx]
     · intro t _ x _ k _ y _ f _ v _ s _ d _ a _ ht hx hy htj hd ha
       obtain rfl := nat_eval_pairDef.mp hx
       obtain rfl := nat_eval_pairDef.mp hy
-      obtain ⟨-, hB, -, -, hs, -, hd⟩ := fact.mp hd
+      obtain ⟨-, -, -, -, ⟨n, hn, hs⟩, -, hd⟩ := fact.mp hd
       obtain ⟨-, -, -, hac, ha⟩ := fact.mp ha
-      refine fact.mpr ⟨?_, hB, hDB hac, nat_cobhamLE_iff.mp htj, hs, hac, ?_⟩
-      · have := nat_cobhamLE_iff.mp htj
-        omega
-      · rintro n' t' v' rfl hv
-        obtain ⟨F, u, rfl, rfl, hu⟩ := exists_eq_func <| nat_isNode_iff.mp ht
-        obtain ⟨w, rfl, hw⟩ := hd n' k u v' hu.symm hv
-        rw [ha]
-        exact (hval.func F w).trans <| congrArg _ <| funext hw
+      apply value (nat_cobhamLE_iff.mp htj) hn hs hac
+      rintro n' t' v' rfl hv
+      obtain ⟨F, u, rfl, rfl, hu⟩ := exists_eq_func <| nat_isNode_iff.mp ht
+      obtain ⟨w, rfl, hw⟩ := hd n' k u v' hu.symm hv
+      rw [ha]
+      exact (hval.func F w).trans <| congrArg _ <| funext hw
     · intro n _ s _ hs
-      obtain ⟨-, hB, -, hn, hs, -⟩ := fact.mp hs
-      refine fact.mpr ⟨Nat.zero_le _, hB, Nat.zero_le _, Nat.zero_le _, ⟨n, hn, hs⟩,
-        ⟨0, le_rfl, ![], by simp, rfl⟩, ?_⟩
+      obtain ⟨-, -, -, hn, hs, -⟩ := fact.mp hs
+      apply values (Nat.zero_le _) hn hs le_rfl ⟨![], by simp, rfl⟩
       intro n' k t v h _
       match k with
       | 0 => exact ⟨![], rfl, by simp⟩
@@ -462,11 +466,10 @@ lemma exists_isCertificate (A : ArithmeticSemisentence 2) (j : ℕ)
     · intro w _ t _ v _ s _ a _ d _ hw hwj ha hd
       obtain rfl := nat_isNode_iff.mp hw
       have hwj := nat_cobhamLE_iff.mp hwj
-      obtain ⟨-, hB, -, -, hs, hac, ha⟩ := fact.mp ha
+      obtain ⟨-, -, -, -, ⟨n, hn, hs⟩, hac, ha⟩ := fact.mp ha
       obtain ⟨-, -, -, -, -, ⟨k, hk, hdk⟩, hd⟩ := fact.mp hd
       have hk' := hk.trans <| Nat.right_le_pair t v
-      refine fact.mpr ⟨by omega, hB, hCB (n := k + 1) (by omega) <| hdk.cons hac, hwj, hs,
-        ⟨k + 1, by omega, hdk.cons hac⟩, ?_⟩
+      apply values hwj hn hs (by omega) (hdk.cons hac)
       intro n' k' t' v' h hv
       match k' with
       | 0 => simp at h
@@ -513,11 +516,9 @@ lemma exists_isCertificate (A : ArithmeticSemisentence 2) (j : ℕ)
       have := Nat.right_le_pair (ORingStructure.numeral 7) (encode φ)
       have hφ := hval.witness φ v <| by simpa using hφ
       obtain ⟨a, ha, hac, hae⟩ := exists_isCanonical val (witnessName (encode φ) (envCode v))
-      refine ⟨a, (hDB hac).trans_lt hBc, nat_cobhamLE_iff.mpr ha, dom hac, ?_⟩
-      rw [← envCode_cons]
-      apply sat (by omega)
-      · simpa [Fin.forall_fin_succ] using ⟨hac, hv⟩
-      · simpa [comp, hae] using hφ
+      have := sat (φ := φ) (v := a :> v) (by omega) (by simpa [Fin.forall_fin_succ] using ⟨hac, hv⟩)
+        (by simpa [comp, hae] using hφ)
+      exact ⟨a, (hDB hac).trans_lt hBc, nat_cobhamLE_iff.mpr ha, dom hac, by simpa using this⟩
     · intro p _ s _ hp h
       obtain ⟨-, -, -, n, φ, v, hj, rfl, hv, rfl, hφ, -⟩ := fact.mp h
       obtain rfl := eq_falsum <| nat_isNode_iff.mp hp
@@ -530,12 +531,14 @@ lemma exists_isCertificate (A : ArithmeticSemisentence 2) (j : ℕ)
       obtain ⟨R, t, rfl, rfl, rfl⟩ := exists_eq_rel hp
       obtain ⟨-, -, hdB, -, -, -, hd⟩ := fact.mp hd
       obtain ⟨u, rfl, hu⟩ := hd n k t v rfl rfl
-      have := (Nat.left_le_pair k (Nat.pair (encode R) (Matrix.vecToNat fun i ↦ encode (t i)))).trans
-        <| Nat.right_le_pair 0 _
-      have := (le_pair (k := k) (q := encode R)
-        (r := Matrix.vecToNat fun i ↦ encode (t i))).1.trans <| Nat.right_le_pair 0 _
-      refine fact.mpr ⟨hpB (by omega) (by omega), hdB, Nat.zero_le _, k, R, u, rfl, rfl, ?_, rfl⟩
-      simpa [Semiformula.eval_rel, Function.comp_def, hu] using hφ
+      have le {r w : ℕ} : k ≤ Nat.pair 0 (Nat.pair k (Nat.pair r w)) ∧
+          r ≤ Nat.pair 0 (Nat.pair k (Nat.pair r w)) :=
+        ⟨le_pair.1, (le_pair.1.trans <| Nat.right_le_pair 0 _)⟩
+      have := le (r := encode R) (w := Matrix.vecToNat fun i ↦ encode (t i))
+      have hφ : Tarski.Structure.rel R (val ∘ u) := by
+        simpa [Semiformula.eval_rel, Function.comp_def, hu] using hφ
+      exact fact.mpr
+        ⟨hpB (by omega) (by omega), hdB, Nat.zero_le _, k, R, u, rfl, rfl, hφ, rfl⟩
     · intro p _ x _ k _ y _ R _ v _ s _ d _ hp hx hy h hd h'
       obtain rfl := nat_eval_pairDef.mp hx
       obtain rfl := nat_eval_pairDef.mp hy

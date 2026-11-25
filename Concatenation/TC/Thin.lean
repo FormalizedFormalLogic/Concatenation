@@ -15,7 +15,10 @@ namespace FFL.FirstOrder.Concatenation
 
 open DirectTranslation
 
-/-- `x` is an atom, or begins with an atom and ends with an atom. -/
+/--
+`x` is an atom, or begins with an atom and ends with an atom.
+- [Gan09, §3]
+-/
 def isBounded : Semisentence ℒ⌢ 1 :=
   “x. !isAtom x ∨ ((∃ c z, !isAtom c ∧ x = c ⌢ z) ∧ (∃ c z, !isAtom c ∧ x = z ⌢ c))”
 
@@ -48,7 +51,10 @@ def isThin : Semisentence ℒ⌢ 1 := “x. ∀ y, !isSubstring y x → !isBound
 
 variable {M : Type*} [ConcatenationStructure M] {x y : M}
 
-/-- `x` is an atom, or begins with an atom and ends with an atom. -/
+/--
+`x` is an atom, or begins with an atom and ends with an atom.
+- [Gan09, §3]
+-/
 def IsBounded (x : M) : Prop :=
   IsAtom x ∨ ((∃ c z, IsAtom c ∧ x = c ++ z) ∧ ∃ c z, IsAtom c ∧ x = z ++ c)
 
@@ -98,9 +104,9 @@ lemma IsThin.of_isSubstring (hx : IsThin x) (h : IsSubstring y x) : IsThin y :=
 
 lemma IsAtom.isThin (h : IsAtom x) : IsThin x := fun _ hy ↦ (h.eq_of_isSubstring hy ▸ h).isBounded
 
-lemma isThin_zero : IsThin (0 : M) := IsAtom.isThin <| Or.inl rfl
+lemma isThin_zero : IsThin (0 : M) := isAtom_zero.isThin
 
-lemma isThin_one : IsThin (1 : M) := IsAtom.isThin <| Or.inr rfl
+lemma isThin_one : IsThin (1 : M) := isAtom_one.isThin
 
 /--
 The concatenation of thin strings is thin.

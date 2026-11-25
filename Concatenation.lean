@@ -10,7 +10,6 @@ public import Concatenation.OpenProblem.Attribute
 public import Concatenation.Semantics.Basic
 public import Concatenation.Semantics.Sequence
 public import Concatenation.Semantics.Standard
-public import Concatenation.Semantics.Substring
 public import Concatenation.TC.Arithmetic
 public import Concatenation.TC.Basic
 public import Concatenation.TC.Empty

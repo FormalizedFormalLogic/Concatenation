@@ -15,7 +15,6 @@ public import Concatenation.TC.Arithmetic
 public import Concatenation.TC.Basic
 public import Concatenation.TC.Empty
 public import Concatenation.TC.MulSeq
-public import Concatenation.TC.Representation
 public import Concatenation.TC.Separation
 public import Concatenation.TC.Substring
 public import Concatenation.TC.Thin
@@ -26,6 +25,8 @@ public import Concatenation.ToFoundation.Arithmetic.R0.Undecidability
 public import Concatenation.ToFoundation.Bootstrapping
 public import Concatenation.ToFoundation.Concat
 public import Concatenation.ToFoundation.Decidability
+public import Concatenation.ToFoundation.Interpretability.Table
+public import Concatenation.ToFoundation.Interpretability.Undecidability
 public import Concatenation.ToFoundation.Prefix
 public import Concatenation.ToMathlib.FreeSemigroup
 public import Concatenation.WTC.Basic

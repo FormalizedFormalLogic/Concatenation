@@ -5,9 +5,15 @@ public import Concatenation.Biteral
 public import Concatenation.Coding
 public import Concatenation.D.Basic
 public import Concatenation.Language
+public import Concatenation.Minimality.Alternating
+public import Concatenation.Minimality.Basic
+public import Concatenation.Minimality.Contraction
+public import Concatenation.Minimality.NonAssociative
+public import Concatenation.Minimality.Trivial
 public import Concatenation.OpenProblem
 public import Concatenation.OpenProblem.Attribute
 public import Concatenation.Semantics.Basic
+public import Concatenation.Semantics.Prefix
 public import Concatenation.Semantics.Sequence
 public import Concatenation.Semantics.Standard
 public import Concatenation.TC.Arithmetic
@@ -19,6 +25,7 @@ public import Concatenation.TC.Separation
 public import Concatenation.TC.Substring
 public import Concatenation.TC.Thin
 public import Concatenation.TC.Undecidability
+public import Concatenation.ToFoundation.AddCoding
 public import Concatenation.ToFoundation.Arithmetic.R0.Cobham
 public import Concatenation.ToFoundation.Arithmetic.R0.Representation
 public import Concatenation.ToFoundation.Arithmetic.R0.Undecidability

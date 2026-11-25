@@ -134,7 +134,6 @@ is decidable.
 theorem not_essentiallyUndecidable_BT_diff_concatAssoc_of_decidable
     (h : Entailment.Decidable (Tarski.Structure.theory ℒ⌢ TernaryCode)) :
     ¬(𝗕𝗧 \ {concatAssoc} : Theory ℒ⌢).EssentiallyUndecidable :=
-  have : Nonempty TernaryCode := ⟨0⟩
   Theory.not_essentiallyUndecidable_of_models _ TernaryCode h
 
 end FFL.FirstOrder.Concatenation

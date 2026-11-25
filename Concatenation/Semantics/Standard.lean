@@ -12,6 +12,12 @@ The free semigroup on two letters, the nonempty binary strings, is a model of $\
 
 namespace FFL.FirstOrder.Concatenation
 
+/-- The concatenation of nonempty strings. -/
+instance {α : Type*} : Append (FreeSemigroup α) := ⟨(· * ·)⟩
+
+@[simp]
+lemma append_eq_mul {α : Type*} (x y : FreeSemigroup α) : x ++ y = x * y := rfl
+
 /--
 The nonempty binary strings under concatenation.
 - [GZ08, §1]
@@ -20,14 +26,10 @@ The nonempty binary strings under concatenation.
 instance : ConcatenationStructure (FreeSemigroup Bool) where
   zero := FreeSemigroup.of false
   one := FreeSemigroup.of true
-  append := (· * ·)
 
 lemma zero_eq_of_false : (0 : FreeSemigroup Bool) = FreeSemigroup.of false := rfl
 
 lemma one_eq_of_true : (1 : FreeSemigroup Bool) = FreeSemigroup.of true := rfl
-
-@[simp]
-lemma append_eq_mul (x y : FreeSemigroup Bool) : x ++ y = x * y := rfl
 
 instance : (FreeSemigroup Bool)↓[ℒ⌢] ⊧* 𝗧𝗖 := ⟨by
   intro σ h

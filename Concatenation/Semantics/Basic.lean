@@ -15,6 +15,10 @@ substrings, prefixes, suffixes and tallies in them.
 
 namespace FFL.FirstOrder
 
+/-- The value of a nonempty string whose letters have the values `f`, associated to the left. -/
+def Concatenation.stringValue {α M : Type*} [Append M] (f : α → M) (x : FreeSemigroup α) : M :=
+  x.tail.foldl (fun m a ↦ m ++ f a) (f x.head)
+
 /-- A type with two letters `0`, `1` and a concatenation `++`. -/
 class ConcatenationStructure (α : Type*) extends Zero α, One α, Append α
 
@@ -26,7 +30,7 @@ variable {α : Type*} [ConcatenationStructure α]
 
 /-- The value of a nonempty binary string, associated to the left. -/
 def ofFreeSemigroup (x : FreeSemigroup Bool) : α :=
-  x.tail.foldl (fun m b ↦ m ++ if b then 1 else 0) (if x.head then 1 else 0)
+  Concatenation.stringValue (fun b ↦ if b then 1 else 0) x
 
 end ConcatenationStructure
 
@@ -108,6 +112,18 @@ lemma weakerThan_of_models (T S : ConcatenationTheory) [𝗘𝗤 ℒ⌢ ⪯ S]
     (H : ∀ (M : Type*) [ConcatenationStructure M] [M↓[ℒ⌢] ⊧* S], M↓[ℒ⌢] ⊧* T) : T ⪯ S :=
   Entailment.weakerThan_iff.mpr fun h ↦ complete _ _ fun M _ _ ↦ Theory.Proof.sound h (H M)
 
+@[simp]
+lemma val_stringTerm {L : Language} [L.Concat] {α ξ M : Type*} {n : ℕ} [Tarski.Structure L M]
+    [Append M] [Tarski.Structure.Concat L M] {e : Fin n → M} {ε : ξ → M}
+    (f : α → Semiterm L ξ n) (x : FreeSemigroup α) :
+    (stringTerm f x).val e ε = stringValue (fun a ↦ (f a).val e ε) x := by
+  suffices ∀ (l : List α) (t : Semiterm L ξ n), (l.foldl (fun t a ↦ ‘!!t ⌢ !!(f a)’) t).val e ε =
+      l.foldl (fun m a ↦ m ++ (f a).val e ε) (t.val e ε) from this x.tail (f x.head)
+  intro l
+  induction l with
+  | nil => simp
+  | cons a l ih => simp [ih]
+
 section eval
 
 variable {M : Type*} [ConcatenationStructure M] {ξ : Type*} {n : ℕ} {e : Fin n → M} {ε : ξ → M}
@@ -119,14 +135,7 @@ lemma val_letter (b : Bool) : (letter b : Semiterm ℒ⌢ ξ n).val e ε = if b 
 @[simp]
 lemma val_biteral (x : FreeSemigroup Bool) :
     (biteral x : Semiterm ℒ⌢ ξ n).val e ε = ConcatenationStructure.ofFreeSemigroup x := by
-  suffices ∀ (l : List Bool) (t : Semiterm ℒ⌢ ξ n),
-      (l.foldl (fun t b ↦ ‘!!t ⌢ !!(letter b)’) t).val e ε =
-        l.foldl (fun m b ↦ m ++ if b then 1 else 0) (t.val e ε) by
-    simp [biteral, ConcatenationStructure.ofFreeSemigroup, this]
-  intro l
-  induction l with
-  | nil => simp
-  | cons b l ih => simp [ih]
+  simp [biteral, ConcatenationStructure.ofFreeSemigroup]
 
 @[simp]
 lemma eval_isOneOf {l : List (FreeSemigroup Bool)} {x : M} :
@@ -135,6 +144,28 @@ lemma eval_isOneOf {l : List (FreeSemigroup Bool)} {x : M} :
   simp [isOneOf]
 
 end eval
+
+section isSubstring
+
+variable {M : Type*} [Append M] {x y : M}
+
+/--
+`x` is a substring of `y`. Both associations of `u ++ x ++ v` are listed, so that the relation is
+the one `isSubstring` defines in any structure with a concatenation.
+- [Gan09, §1, Definition 1]
+-/
+def IsSubstring (x y : M) : Prop :=
+  x = y ∨ (∃ u, y = u ++ x) ∨ (∃ v, y = x ++ v) ∨ (∃ u v, y = (u ++ x) ++ v) ∨
+    ∃ u v, y = u ++ (x ++ v)
+
+@[simp]
+lemma eval_isSubstring {L : Language} [L.Concat] [L.Eq] [Tarski.Structure L M]
+    [Tarski.Structure.Concat L M] [Tarski.Structure.Eq L M] :
+    M ⊧/![x, y] (isSubstring : Semisentence L 2) ↔ IsSubstring x y := by
+  have : Nonempty M := ⟨x⟩
+  simp [isSubstring, IsSubstring, exists_or, eq_comm (b := y)]
+
+end isSubstring
 
 section substring
 
@@ -148,19 +179,6 @@ def isAtom : Semisentence ℒ⌢ 1 := “x. x = !!(op(0).const) ∨ x = !!(op(1)
 
 @[simp]
 lemma eval_isAtom : M ⊧/![x] isAtom ↔ IsAtom x := by simp [isAtom, IsAtom]
-
-/--
-`x` is a substring of `y`. Both associations of `u ++ x ++ v` are listed, so that the relation is
-the one `isSubstring` defines in any concatenation structure.
-- [Gan09, §1, Definition 1]
--/
-def IsSubstring (x y : M) : Prop :=
-  x = y ∨ (∃ u, y = u ++ x) ∨ (∃ v, y = x ++ v) ∨ (∃ u v, y = (u ++ x) ++ v) ∨
-    ∃ u v, y = u ++ (x ++ v)
-
-@[simp]
-lemma eval_isSubstring : M ⊧/![x, y] (isSubstring : Semisentence ℒ⌢ 2) ↔ IsSubstring x y := by
-  simp [isSubstring, IsSubstring, exists_or, eq_comm (b := y)]
 
 /--
 `x` is a prefix of `y`.

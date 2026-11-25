@@ -73,6 +73,47 @@ instance : (ℒ⌢).LORDefinable where
 
 end Language.Concatenation
 
+namespace Language.ConcatenationLetters
+
+instance {α : Type} [Primcodable α] : (ℒ⌢[α]).Primcodable where
+  func := by
+    have h : Primrec fun p : ℕ × ℕ ↦
+        if p.1 = 0 then Encodable.encode (Encodable.decode p.2 : Option α)
+        else if p.1 = 2 ∧ p.2 = 0 then 1 else 0 :=
+      Primrec.ite (by primrec) (Primrec.encode.comp <| Primrec.decode.comp Primrec.snd)
+        (by primrec)
+    apply h.of_eq
+    rintro ⟨k, e⟩
+    match k, e with
+    |     0,     e =>
+      rcases h : (Encodable.decode e : Option α) with _ | a <;> simp [Encodable.decode, h]
+      rfl
+    |     1,     _ => simp [Encodable.decode]
+    |     2,     0 => rfl
+    |     2, _ + 1 => simp [Encodable.decode]
+    | _ + 3,     _ => simp [Encodable.decode]
+  rel := Language.Primcodable.rel (L := ℒ⌢)
+
+lemma mem_range_encode_func_iff {n k f : ℕ} :
+    f ∈ Set.range (Encodable.encode : (ℒ⌢[Fin n]).Func k → ℕ) ↔
+      (k = 0 ∧ f < n) ∨ (k = 2 ∧ f = 0) := by
+  constructor
+  · rintro ⟨f, rfl⟩
+    rcases f with a | _
+    · exact .inl ⟨rfl, a.isLt⟩
+    · exact .inr ⟨rfl, rfl⟩
+  · rintro (⟨rfl, h⟩ | ⟨rfl, rfl⟩)
+    · use .letter ⟨f, h⟩; rfl
+    · use .concat; rfl
+
+instance {n : ℕ} : (ℒ⌢[Fin n]).LORDefinable where
+  func := .mkSigma “k f. (k = 0 ∧ f < ↑n) ∨ (k = 2 ∧ f = 0)”
+  rel := .mkSigma “k r. k = 2 ∧ r = 0”
+  func_iff {k c} := by simpa [models_iff] using! mem_range_encode_func_iff
+  rel_iff {k c} := by simpa [models_iff] using! Concatenation.mem_range_encode_rel_iff
+
+end Language.ConcatenationLetters
+
 namespace Language
 
 lemma concatenationEmpty.decode_func_two_mul (k m : ℕ) :
@@ -189,7 +230,7 @@ lemma numeralTerm_add_one_eq_biteral (n : ℕ) :
   induction n with
   | zero => rfl
   | succ n ih =>
-    simp only [biteral, List.replicate_succ', List.foldl_append] at ih ⊢
+    simp only [biteral, stringTerm, List.replicate_succ', List.foldl_append] at ih ⊢
     rw [← ih]
     rfl
 

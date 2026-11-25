@@ -33,7 +33,7 @@ def IsPair (z : M) : Prop := ∃ x y, IsTally 1 x ∧ IsTally 1 y ∧ z = pairOf
 - [Gan09, §1, Definition 1(d)]
 -/
 def IsSeq (z : M) : Prop :=
-  IsPrefix (0 ++ 0 ++ 1) z ∧ IsSuffix (1 ++ 0 ++ 0) z ∧
+  0 ++ 0 ++ 1 ⊑ₚ z ∧ 1 ++ 0 ++ 0 ⊑ₛ z ∧
     ∀ y, IsTally 0 y → IsSubstring y z → y = 0 ∨ y = 0 ++ 0
 
 /--
@@ -53,13 +53,13 @@ def IsPairSeq (z : M) : Prop := IsSeq z ∧ ∀ y, Mem y z → IsPair y
 `u` is the first member of `z`.
 - [Gan09, §1, Definition 1(f)]
 -/
-def IsFirst (u z : M) : Prop := IsPrefix (0 ++ 0 ++ u ++ 0 ++ 0) z
+def IsFirst (u z : M) : Prop := 0 ++ 0 ++ u ++ 0 ++ 0 ⊑ₚ z
 
 /--
 `u` is the last member of `z`.
 - [Gan09, §1, Definition 1(f)]
 -/
-def IsLast (u z : M) : Prop := IsSuffix (0 ++ 0 ++ u ++ 0 ++ 0) z
+def IsLast (u z : M) : Prop := 0 ++ 0 ++ u ++ 0 ++ 0 ⊑ₛ z
 
 /--
 `z` is a multiplication sequence for the `1`-tallies `x` and `y`: a sequence of pairs from
@@ -73,9 +73,9 @@ def IsMulSeq (x y z : M) : Prop :=
   IsTally 1 x ∧ IsTally 1 y ∧ IsPairSeq z ∧ IsFirst (pairOf x 1) z ∧
     (∃ w, IsTally 1 w ∧ IsLast (pairOf w y) z) ∧
     ∀ s u' v', IsTally 1 u' → IsTally 1 v' →
-      IsPrefix (s ++ 0 ++ 0 ++ pairOf u' v' ++ 0 ++ 0) z →
+      s ++ 0 ++ 0 ++ pairOf u' v' ++ 0 ++ 0 ⊑ₚ z →
       ∃ u v, IsTally 1 u ∧ IsTally 1 v ∧ u' = u ++ x ∧ v' = v ++ 1 ∧
-        IsSuffix (0 ++ 0 ++ pairOf u v) s
+        0 ++ 0 ++ pairOf u v ⊑ₛ s
 
 /-- `z` is an ordered pair of `1`-tallies. -/
 def isPair : Semisentence ℒ⌢ 1 :=

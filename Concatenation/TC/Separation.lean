@@ -17,7 +17,7 @@ namespace FFL.FirstOrder.Concatenation
 variable {M : Type*} [ConcatenationStructure M] {c d s s' t u v u' v' x x' y y' z z' : M}
   [M↓[ℒ⌢] ⊧* 𝗧𝗖⁺]
 
-lemma exists_isEndSegment_isAtom (x : M) : ∃ c, IsAtom c ∧ IsEndSegment c x := by
+lemma exists_isSuffix_isAtom (x : M) : ∃ c, IsAtom c ∧ IsSuffix c x := by
   rcases TCPlus.isBounded x with hx | ⟨-, c, z, hc, rfl⟩
   · use x
   · use c
@@ -25,7 +25,7 @@ lemma exists_isEndSegment_isAtom (x : M) : ∃ c, IsAtom c ∧ IsEndSegment c x 
     · exact hc
     · simp
 
-lemma exists_isInitialSegment_isAtom (x : M) : ∃ c, IsAtom c ∧ IsInitialSegment c x := by
+lemma exists_isPrefix_isAtom (x : M) : ∃ c, IsAtom c ∧ IsPrefix c x := by
   rcases TCPlus.isBounded x with hx | ⟨⟨c, z, hc, rfl⟩, -⟩
   · use x
   · use c
@@ -33,17 +33,17 @@ lemma exists_isInitialSegment_isAtom (x : M) : ∃ c, IsAtom c ∧ IsInitialSegm
     · exact hc
     · simp
 
-lemma IsTally.isEndSegment (hx : IsTally c x) : IsEndSegment c x := by
-  obtain ⟨d, hd, h⟩ := exists_isEndSegment_isAtom x
+lemma IsTally.isSuffix (hx : IsTally c x) : IsSuffix c x := by
+  obtain ⟨d, hd, h⟩ := exists_isSuffix_isAtom x
   rwa [← hx d hd h.isSubstring]
 
-lemma IsTally.isInitialSegment (hx : IsTally c x) : IsInitialSegment c x := by
-  obtain ⟨d, hd, h⟩ := exists_isInitialSegment_isAtom x
+lemma IsTally.isPrefix (hx : IsTally c x) : IsPrefix c x := by
+  obtain ⟨d, hd, h⟩ := exists_isPrefix_isAtom x
   rwa [← hx d hd h.isSubstring]
 
 lemma IsTally.eq_or_exists_append (hx : IsTally c x) :
     x = c ∨ ∃ x', IsTally c x' ∧ x = x' ++ c := by
-  rcases hx.isEndSegment with rfl | ⟨x', rfl⟩
+  rcases hx.isSuffix with rfl | ⟨x', rfl⟩
   · simp
   · right
     use x'
@@ -51,32 +51,32 @@ lemma IsTally.eq_or_exists_append (hx : IsTally c x) :
     · exact hx.of_isSubstring <| isSubstring_append_left x' c
     · rfl
 
-lemma IsInitialSegment.isInitialSegment_of_isAtom (ht : IsInitialSegment t z) (hc : IsAtom c)
-    (hz : IsInitialSegment c z) : IsInitialSegment c t := by
-  obtain ⟨e, he, het⟩ := exists_isInitialSegment_isAtom t
+lemma IsPrefix.isPrefix_of_isAtom (ht : IsPrefix t z) (hc : IsAtom c)
+    (hz : IsPrefix c z) : IsPrefix c t := by
+  obtain ⟨e, he, het⟩ := exists_isPrefix_isAtom t
   rwa [← (het.trans ht).eq_of_isAtom he hc hz]
 
-lemma IsEndSegment.isEndSegment_of_isAtom (ht : IsEndSegment t z) (hc : IsAtom c)
-    (hz : IsEndSegment c z) : IsEndSegment c t := by
-  obtain ⟨e, he, het⟩ := exists_isEndSegment_isAtom t
+lemma IsSuffix.isSuffix_of_isAtom (ht : IsSuffix t z) (hc : IsAtom c)
+    (hz : IsSuffix c z) : IsSuffix c t := by
+  obtain ⟨e, he, het⟩ := exists_isSuffix_isAtom t
   rwa [← (het.trans ht).eq_of_isAtom he hc hz]
 
 lemma IsTally.eq_of_isTally (hc : IsTally c x) (hd : IsTally d x) : c = d := by
-  obtain ⟨e, he, h⟩ := exists_isEndSegment_isAtom x
+  obtain ⟨e, he, h⟩ := exists_isSuffix_isAtom x
   rw [← hc e he h.isSubstring, ← hd e he h.isSubstring]
 
 lemma IsTally.not_isSubstring_of_isTally_one (ht : IsTally 0 t) (hx : IsTally 1 x) :
     ¬IsSubstring t x := fun h ↦ Concatenation.zero_ne_one <| ht.eq_of_isTally <| hx.of_isSubstring h
 
 lemma IsTally.isSubstring_or_isSubstring (ht : IsTally 0 t) (h : IsSubstring t (x ++ y))
-    (hxy : IsEndSegment 1 x ∨ IsInitialSegment 1 y) : IsSubstring t x ∨ IsSubstring t y := by
+    (hxy : IsSuffix 1 x ∨ IsPrefix 1 y) : IsSubstring t x ∨ IsSubstring t y := by
   rcases h.append_cases with h | h | ⟨t₁, t₂, rfl, h₁, h₂⟩
   · exact Or.inl h
   · exact Or.inr h
   · apply absurd _ ht.not_isSubstring_one
     rcases hxy with hx | hy
-    · exact (h₁.isEndSegment_of_isAtom isAtom_one hx).isSubstring.append_right
-    · exact (h₂.isInitialSegment_of_isAtom isAtom_one hy).isSubstring.append_left
+    · exact (h₁.isSuffix_of_isAtom isAtom_one hx).isSubstring.append_right
+    · exact (h₂.isPrefix_of_isAtom isAtom_one hy).isSubstring.append_left
 
 /--
 A `c`-tally is separated from a preceding string ending with an atom `d ≠ c`: if `x` and `y`
@@ -84,11 +84,11 @@ are `c`-tallies and `z`, `z'` end with `d`, then `z ++ x = z' ++ y` implies `z =
 - [Gan09, §3, Lemma 7]
 -/
 lemma tally_separation_of_ne (hd : IsAtom d) (hdc : d ≠ c) (hx : IsTally c x) (hy : IsTally c y)
-    (hz : IsEndSegment d z) (hz' : IsEndSegment d z') (h : z ++ x = z' ++ y) : z = z' ∧ x = y := by
-  have H : ∀ {z z' x y : M}, IsTally c x → IsEndSegment d z' → ∀ w, z ++ w = z' → x ≠ w ++ y := by
+    (hz : IsSuffix d z) (hz' : IsSuffix d z') (h : z ++ x = z' ++ y) : z = z' ∧ x = y := by
+  have H : ∀ {z z' x y : M}, IsTally c x → IsSuffix d z' → ∀ w, z ++ w = z' → x ≠ w ++ y := by
     intro z z' x y hx hz' w hw hxw
-    obtain ⟨e, he, hew⟩ := exists_isEndSegment_isAtom w
-    have h₁ : IsEndSegment e z' := hw ▸ hew.append_left
+    obtain ⟨e, he, hew⟩ := exists_isSuffix_isAtom w
+    have h₁ : IsSuffix e z' := hw ▸ hew.append_left
     obtain rfl := h₁.eq_of_isAtom he hd hz'
     exact hdc <| hx e he <| hxw ▸ hew.isSubstring.append_right
   rcases editor h with h | ⟨w, ⟨hw, hxw⟩ | ⟨hw, hyw⟩⟩
@@ -101,8 +101,8 @@ If `x` and `y` are `1`-tallies and `z`, `z'` end with `0`, then `z ++ x = z' ++ 
 and `x = y`.
 - [Gan09, §3, Lemma 7]
 -/
-theorem tally_separation (hx : IsTally 1 x) (hy : IsTally 1 y) (hz : IsEndSegment 0 z)
-    (hz' : IsEndSegment 0 z') (h : z ++ x = z' ++ y) : z = z' ∧ x = y :=
+theorem tally_separation (hx : IsTally 1 x) (hy : IsTally 1 y) (hz : IsSuffix 0 z)
+    (hz' : IsSuffix 0 z') (h : z ++ x = z' ++ y) : z = z' ∧ x = y :=
   tally_separation_of_ne isAtom_zero Concatenation.zero_ne_one hx hy hz hz' h
 
 /--
@@ -110,8 +110,8 @@ If `x` and `y` are `0`-tallies and `z`, `z'` end with `1`, then `z ++ x = z' ++ 
 and `x = y`.
 - [Gan09, §3, Lemma 7]
 -/
-lemma tally_separation' (hx : IsTally 0 x) (hy : IsTally 0 y) (hz : IsEndSegment 1 z)
-    (hz' : IsEndSegment 1 z') (h : z ++ x = z' ++ y) : z = z' ∧ x = y :=
+lemma tally_separation' (hx : IsTally 0 x) (hy : IsTally 0 y) (hz : IsSuffix 1 z)
+    (hz' : IsSuffix 1 z') (h : z ++ x = z' ++ y) : z = z' ∧ x = y :=
   tally_separation_of_ne isAtom_one Concatenation.zero_ne_one.symm hx hy hz hz' h
 
 /--
@@ -123,7 +123,7 @@ lemma pairOf_inj (hy : IsTally 1 y) (hy' : IsTally 1 y') :
   constructor
   · intro h
     obtain ⟨h₁, rfl⟩ :=
-      tally_separation hy hy' (isEndSegment_append x 0) (isEndSegment_append x' 0) h
+      tally_separation hy hy' (isSuffix_append x 0) (isSuffix_append x' 0) h
     exact ⟨isAtom_zero.append_right_cancel h₁, rfl⟩
   · rintro ⟨rfl, rfl⟩
     rfl
@@ -138,11 +138,11 @@ For `1`-tallies `u`, `v`, `u'`, `v'` and strings `s`, `s'` ending with `0`, the 
 `s u 0 v 0 0` determines `s`, `u` and `v`.
 - [Gan09, §3]
 -/
-lemma configuration_eq_of_isEndSegment (hs : IsEndSegment 0 s) (hs' : IsEndSegment 0 s')
+lemma configuration_eq_of_isSuffix (hs : IsSuffix 0 s) (hs' : IsSuffix 0 s')
     (h : s ++ (pairOf u v ++ 0 ++ 0) = s' ++ (pairOf u' v' ++ 0 ++ 0)) :
     s = s' ∧ u = u' ∧ v = v' := by
   simp only [pairOf, ← Concatenation.append_assoc] at h
-  obtain ⟨h₁, rfl⟩ := tally_separation hv hv' (isEndSegment_append _ _) (isEndSegment_append _ _)
+  obtain ⟨h₁, rfl⟩ := tally_separation hv hv' (isSuffix_append _ _) (isSuffix_append _ _)
     (isAtom_zero.append_right_cancel <| isAtom_zero.append_right_cancel h)
   obtain ⟨h₂, rfl⟩ := tally_separation hu hu' hs hs' (isAtom_zero.append_right_cancel h₁)
   exact ⟨h₂, rfl, rfl⟩
@@ -154,8 +154,8 @@ For `1`-tallies `u`, `v`, `u'`, `v'`, the string `s 0 0 u 0 v 0 0` determines `s
 lemma configuration_eq
     (h : s ++ (0 ++ 0 ++ pairOf u v ++ 0 ++ 0) = s' ++ (0 ++ 0 ++ pairOf u' v' ++ 0 ++ 0)) :
     s = s' ∧ u = u' ∧ v = v' := by
-  obtain ⟨h₁, h₂⟩ := configuration_eq_of_isEndSegment hu hv hu' hv'
-    (isEndSegment_append (s ++ 0) 0) (isEndSegment_append (s' ++ 0) 0) <| by
+  obtain ⟨h₁, h₂⟩ := configuration_eq_of_isSuffix hu hv hu' hv'
+    (isSuffix_append (s ++ 0) 0) (isSuffix_append (s' ++ 0) 0) <| by
       simpa only [Concatenation.append_assoc] using h
   exact ⟨isAtom_zero.append_right_cancel <| isAtom_zero.append_right_cancel h₁, h₂⟩
 

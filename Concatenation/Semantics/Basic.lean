@@ -28,6 +28,15 @@ variable {α : Type*} [ConcatenationStructure α]
 def ofFreeSemigroup (x : FreeSemigroup Bool) : α :=
   x.tail.foldl (fun m b ↦ m ++ if b then 1 else 0) (if x.head then 1 else 0)
 
+lemma ofFreeSemigroup_of (b : Bool) :
+    (ofFreeSemigroup (FreeSemigroup.of b) : α) = if b then 1 else 0 := rfl
+
+lemma ofFreeSemigroup_mul_of (x : FreeSemigroup Bool) (b : Bool) :
+    (ofFreeSemigroup (x * FreeSemigroup.of b) : α) = ofFreeSemigroup x ++ if b then 1 else 0 := by
+  rcases x with ⟨a, l⟩
+  change (l ++ [b]).foldl _ _ = _
+  simp [ofFreeSemigroup]
+
 end ConcatenationStructure
 
 namespace Concatenation

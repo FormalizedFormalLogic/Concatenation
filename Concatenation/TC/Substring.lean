@@ -12,7 +12,7 @@ The facts about atoms, substrings and tallies that hold in every model of $\math
 
 namespace FFL.FirstOrder.Concatenation
 
-variable {M : Type*} [ConcatenationStructure M] [M↓[ℒ⌢] ⊧* 𝗧𝗖] {c c' u v x y y' z : M}
+variable {M : Type*} [ConcatenationStructure M] [M↓[ℒ⌢] ⊧* 𝗧𝗖] {c c' d t u v x y y' z : M}
 
 lemma isSubstring_iff : IsSubstring x y ↔ x = y ∨ (∃ u, y = u ++ x) ∨ (∃ v, y = x ++ v) ∨
     ∃ u v, y = u ++ x ++ v := by
@@ -68,7 +68,7 @@ A substring of `x ++ y` is a substring of `x` or of `y`, or splits into an end s
 followed by an initial segment of `y`.
 - [Gan09, §3, Lemma 5]
 -/
-theorem IsSubstring.append_cases (h : IsSubstring z (x ++ y)) :
+lemma IsSubstring.append_cases (h : IsSubstring z (x ++ y)) :
     IsSubstring z x ∨ IsSubstring z y ∨
       ∃ z₁ z₂, z = z₁ ++ z₂ ∧ IsEndSegment z₁ x ∧ IsInitialSegment z₂ y := by
   rcases isSubstring_iff.mp h with rfl | ⟨u, h⟩ | ⟨v, h⟩ | ⟨u, v, h⟩
@@ -99,10 +99,12 @@ lemma IsAtom.eq_of_isSubstring (hc : IsAtom c) (h : IsSubstring x c) : x = c := 
 lemma isTally_self (hc : IsAtom c) : IsTally c c := fun _ _ h ↦ hc.eq_of_isSubstring h
 
 lemma not_isTally_one_zero : ¬IsTally (1 : M) 0 := fun h ↦
-  Concatenation.zero_ne_one <| h 0 (Or.inl rfl) (IsSubstring.refl _)
+  Concatenation.zero_ne_one <| h 0 isAtom_zero (IsSubstring.refl _)
 
 lemma not_isTally_zero_one : ¬IsTally (0 : M) 1 := fun h ↦
-  Concatenation.zero_ne_one (h 1 (Or.inr rfl) (IsSubstring.refl _)).symm
+  Concatenation.zero_ne_one (h 1 isAtom_one (IsSubstring.refl _)).symm
+
+lemma isTally_one_one : IsTally (1 : M) 1 := isTally_self isAtom_one
 
 lemma IsTally.of_isSubstring (hx : IsTally c x) (h : IsSubstring y x) : IsTally c y :=
   fun z hz hzy ↦ hx z hz (hzy.trans h)
@@ -115,9 +117,125 @@ lemma IsTally.append (hx : IsTally c x) (hy : IsTally c y) : IsTally c (x ++ y) 
   · exact absurd h hz.ne_append
 
 lemma IsTally.not_isSubstring_zero (hx : IsTally 1 x) : ¬IsSubstring 0 x := fun h ↦
-  Concatenation.zero_ne_one <| hx 0 (Or.inl rfl) h
+  Concatenation.zero_ne_one <| hx 0 isAtom_zero h
 
 lemma IsTally.not_isSubstring_one (hx : IsTally 0 x) : ¬IsSubstring 1 x := fun h ↦
-  Concatenation.zero_ne_one (hx 1 (Or.inr rfl) h).symm
+  Concatenation.zero_ne_one (hx 1 isAtom_one h).symm
+
+lemma IsTally.append_one (hx : IsTally 1 x) : IsTally 1 (x ++ 1) := hx.append isTally_one_one
+
+lemma IsTally.ne_zero (hx : IsTally 1 x) : x ≠ 0 := by
+  rintro rfl
+  exact not_isTally_one_zero hx
+
+lemma IsTally.ne_zero_append_zero (hx : IsTally 1 x) : x ≠ 0 ++ 0 := by
+  rintro rfl
+  exact hx.not_isSubstring_zero <| isSubstring_append_left 0 0
+
+lemma append_one_ne_zero_append_zero (x : M) : x ++ 1 ≠ 0 ++ 0 := fun h ↦
+  Concatenation.zero_ne_one (isAtom_one.eq_of_append_eq_append isAtom_zero h).1.symm
+
+lemma IsEndSegment.append_left (h : IsEndSegment x y) : IsEndSegment x (u ++ y) := by
+  rcases h with rfl | ⟨u', rfl⟩
+  · simp
+  · right; use u ++ u'; simp [Concatenation.append_assoc]
+
+lemma IsInitialSegment.append_right (h : IsInitialSegment x y) : IsInitialSegment x (y ++ v) := by
+  rcases h with rfl | ⟨v', rfl⟩
+  · simp
+  · right; use v' ++ v; simp [Concatenation.append_assoc]
+
+lemma IsEndSegment.eq_of_isAtom (hc : IsAtom c) (hc' : IsAtom c') (h : IsEndSegment c x)
+    (h' : IsEndSegment c' x) : c = c' := by
+  rcases h with rfl | ⟨u, rfl⟩ <;> rcases h' with h' | ⟨u', h'⟩
+  · exact h'.symm
+  · exact absurd h' hc.ne_append
+  · exact absurd h' hc'.ne_append
+  · exact (hc.eq_of_append_eq_append hc' h').1
+
+lemma IsInitialSegment.eq_of_isAtom (hc : IsAtom c) (hc' : IsAtom c') (h : IsInitialSegment c x)
+    (h' : IsInitialSegment c' x) : c = c' := by
+  rcases h with rfl | ⟨v, rfl⟩ <;> rcases h' with h' | ⟨v', h'⟩
+  · exact h'.symm
+  · exact absurd h' hc.ne_append
+  · exact absurd h' hc'.ne_append
+  · exact (hc.eq_of_append_eq_append_left hc' h').1
+
+@[trans]
+lemma IsInitialSegment.trans (hxy : IsInitialSegment x y) (hyz : IsInitialSegment y z) :
+    IsInitialSegment x z := by
+  rcases hyz with rfl | ⟨v, rfl⟩
+  · exact hxy
+  · exact hxy.append_right
+
+@[trans]
+lemma IsEndSegment.trans (hxy : IsEndSegment x y) (hyz : IsEndSegment y z) : IsEndSegment x z := by
+  rcases hyz with rfl | ⟨u, rfl⟩
+  · exact hxy
+  · exact hxy.append_left
+
+lemma IsInitialSegment.total (hx : IsInitialSegment x z) (hy : IsInitialSegment y z) :
+    IsInitialSegment x y ∨ IsInitialSegment y x := by
+  rcases hx with rfl | ⟨v, rfl⟩ <;> rcases hy with h | ⟨v', h⟩
+  · simp [h]
+  · right; right; use v'
+  · left; right; use v
+  · rcases editor h with ⟨rfl, -⟩ | ⟨u, ⟨rfl, -⟩ | ⟨rfl, -⟩⟩ <;> simp
+
+lemma IsEndSegment.total (hx : IsEndSegment x z) (hy : IsEndSegment y z) :
+    IsEndSegment x y ∨ IsEndSegment y x := by
+  rcases hx with rfl | ⟨u, rfl⟩ <;> rcases hy with h | ⟨u', h⟩
+  · simp [h]
+  · right; right; use u'
+  · left; right; use u
+  · rcases editor h with ⟨-, rfl⟩ | ⟨w, ⟨-, rfl⟩ | ⟨-, rfl⟩⟩ <;> simp
+
+lemma eq_and_eq_of_append_eq_append_isAtom (hc : IsAtom c) (hd : IsAtom d) (h : x ++ y = c ++ d) :
+    x = c ∧ y = d := by
+  rcases editor h with h | ⟨u, ⟨h, -⟩ | ⟨-, h⟩⟩
+  · exact h
+  · exact absurd h.symm hc.ne_append
+  · exact absurd h.symm hd.ne_append
+
+lemma eq_zero_or_eq_zero_zero_of_isSubstring (h : IsSubstring t (0 ++ 0 : M)) :
+    t = 0 ∨ t = 0 ++ 0 := by
+  rcases h.append_cases with h | h | ⟨t₁, t₂, rfl, h₁, h₂⟩
+  · exact Or.inl <| isAtom_zero.eq_of_isSubstring h
+  · exact Or.inl <| isAtom_zero.eq_of_isSubstring h
+  · rw [isAtom_zero.eq_of_isSubstring h₁.isSubstring, isAtom_zero.eq_of_isSubstring h₂.isSubstring]
+    exact Or.inr rfl
+
+lemma eq_of_isEndSegment_isAtom_zero_zero (hc : IsAtom c) (h : IsEndSegment t (c ++ 0 ++ 0)) :
+    t = 0 ∨ t = 0 ++ 0 ∨ t = c ++ 0 ++ 0 := by
+  rcases h with rfl | ⟨k, h⟩
+  · simp
+  · rcases editor h with ⟨-, rfl⟩ | ⟨u, ⟨-, h₁⟩ | ⟨h₁, rfl⟩⟩
+    · simp
+    · exact absurd h₁ isAtom_zero.ne_append
+    · rcases editor h₁ with ⟨-, rfl⟩ | ⟨u', ⟨-, h'⟩ | ⟨h', -⟩⟩
+      · simp
+      · exact absurd h' isAtom_zero.ne_append
+      · exact absurd h' hc.ne_append
+
+lemma isTally_zero_zero : IsTally (0 : M) (0 ++ 0) :=
+  (isTally_self isAtom_zero).append (isTally_self isAtom_zero)
+
+lemma zero_zero_append_ne_zero_zero : (0 ++ 0 ++ x : M) ≠ 0 ++ 0 := by
+  intro h
+  rcases editor h with ⟨h, -⟩ | ⟨u, ⟨h, -⟩ | ⟨-, h⟩⟩
+  · exact zero_ne_append _ _ h.symm
+  · exact zero_ne_append _ _ h.symm
+  · exact zero_ne_append _ _ h.symm
+
+lemma IsEndSegment.append_congr (h : IsEndSegment x y) : IsEndSegment (x ++ z) (y ++ z) := by
+  rcases h with rfl | ⟨u, rfl⟩
+  · simp
+  · right; use u; simp [Concatenation.append_assoc]
+
+lemma IsInitialSegment.of_append_left_isAtom (hc : IsAtom c)
+    (h : IsInitialSegment (c ++ x) (c ++ y)) : IsInitialSegment x y := by
+  rcases h with h | ⟨t, h⟩
+  · rw [hc.append_left_cancel h]
+  · right; use t; exact hc.append_left_cancel <| by simpa [Concatenation.append_assoc] using h
 
 end FFL.FirstOrder.Concatenation

@@ -22,6 +22,17 @@ abbrev ConcatenationEmptyStructure.ofEquiv {α β : Type*} [ConcatenationEmptySt
   toConcatenationStructure := .ofEquiv e
   emptyCollection := e.symm ∅
 
+namespace ConcatenationEmptyStructure
+
+variable {α : Type*} [ConcatenationEmptyStructure α]
+
+/-- The value of a possibly empty binary string, associated to the left. -/
+def ofList : List Bool → α
+  | [] => ∅
+  | b :: l => ConcatenationStructure.ofFreeSemigroup ⟨b, l⟩
+
+end ConcatenationEmptyStructure
+
 namespace Concatenation
 
 open Language
@@ -64,6 +75,33 @@ lemma standardModelEmpty_ofEquiv {α : Type*} (e : α ≃ M) :
 
 end semantics
 
+section eval
+
+open ConcatenationStructure ConcatenationEmptyStructure
+
+variable {M : Type*} [ConcatenationEmptyStructure M] {ξ : Type*} {n : ℕ} {e : Fin n → M} {ε : ξ → M}
+  {x y : M}
+
+lemma val_biteral_empty (u : FreeSemigroup Bool) :
+    (biteral u : Semiterm ℒ⌢ₑ ξ n).val e ε = ofFreeSemigroup u := by
+  have hb (b : Bool) : (letter b : Semiterm ℒ⌢ₑ ξ n).val e ε = if b then 1 else 0 := by
+    cases b <;> simp [letter]
+  simp [biteral, ofFreeSemigroup, hb]
+
+@[simp]
+lemma val_biteralEmpty (l : List Bool) :
+    (biteralEmpty l : Semiterm ℒ⌢ₑ ξ n).val e ε = ofList l := by
+  cases l
+  · simp [biteralEmpty, ofList]
+  · simp [biteralEmpty, ofList, val_biteral_empty]
+
+@[simp]
+lemma eval_isSubstring_empty :
+    M ⊧/![x, y] (isSubstring : Semisentence ℒ⌢ₑ 2) ↔ IsSubstring x y := by
+  simp [isSubstring, IsSubstring, exists_or, eq_comm (b := y)]
+
+end eval
+
 lemma completeEmpty (T : Theory ℒ⌢ₑ) [𝗘𝗤 ℒ⌢ₑ ⪯ T] (φ : Sentence ℒ⌢ₑ)
     (H : ∀ (M : Type*) [ConcatenationEmptyStructure M] [M↓[ℒ⌢ₑ] ⊧* T], M↓[ℒ⌢ₑ] ⊧ φ) : T ⊢ φ :=
   Theory.Proof.complete_on_eq_models φ fun M _ s _ hT ↦ by
@@ -86,6 +124,10 @@ lemma completeEmpty (T : Theory ℒ⌢ₑ) [𝗘𝗤 ℒ⌢ₑ ⪯ T] (φ : Sent
             (Tarski.Structure.eq_lang (L := ℒ⌢ₑ) (M := M) (v := v)).eq)
     rw [e] at hT ⊢
     exact H M
+
+lemma weakerThan_of_models_empty (T S : Theory ℒ⌢ₑ) [𝗘𝗤 ℒ⌢ₑ ⪯ S]
+    (H : ∀ (M : Type*) [ConcatenationEmptyStructure M] [M↓[ℒ⌢ₑ] ⊧* S], M↓[ℒ⌢ₑ] ⊧* T) : T ⪯ S :=
+  Entailment.weakerThan_iff.mpr fun h ↦ completeEmpty _ _ fun M _ _ ↦ Theory.Proof.sound h (H M)
 
 section TCEmpty
 

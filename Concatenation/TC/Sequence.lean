@@ -162,17 +162,13 @@ lemma exists_isSuffix_isAtom (x : M) : ∃ c, IsAtom c ∧ x ◧ c := by
   rcases TCPlus.isBounded x with hx | ⟨-, c, z, hc, rfl⟩
   · use x
   · use c
-    and_intros
-    · exact hc
-    · simp
+    simp [hc]
 
 lemma exists_isPrefix_isAtom (x : M) : ∃ c, IsAtom c ∧ c ◨ x := by
   rcases TCPlus.isBounded x with hx | ⟨⟨c, z, hc, rfl⟩, -⟩
   · use x
   · use c
-    and_intros
-    · exact hc
-    · simp
+    simp [hc]
 
 lemma IsTally.isSuffix (hx : IsTally c x) : x ◧ c := by
   obtain ⟨d, hd, h⟩ := exists_isSuffix_isAtom x
@@ -187,10 +183,7 @@ lemma IsTally.eq_or_exists_append (hx : IsTally c x) :
   rcases hx.isSuffix with rfl | ⟨x', rfl⟩
   · simp
   · right
-    use x'
-    and_intros
-    · exact hx.of_isSubstring <| isSubstring_append_left x' c
-    · rfl
+    use x', hx.of_isSubstring <| isSubstring_append_left x' c
 
 lemma IsPrefix.isPrefix_of_isAtom (ht : t ◨ z) (hc : IsAtom c) (hz : c ◨ z) : c ◨ t := by
   obtain ⟨e, he, het⟩ := exists_isPrefix_isAtom t
@@ -413,9 +406,7 @@ lemma isSubstring_append_pairOf_cases
   · apply absurd _ (not_isSubstring_zero_zero_append_pairOf (z := z ++ 0 ++ 0) hp hq)
     simpa only [Concatenation.append_assoc] using h
   · right
-    use z₁
-    and_intros
-    · exact h₁
+    use z₁, h₁
     rwa [← eq_of_isSuffix_of_isPrefix_pairOf hp hq
       (he ▸ isSuffix_append z₁ z₂) h₂]
 
@@ -459,9 +450,7 @@ lemma IsSeq.isSuffix_zero_zero (h : IsSeq z) : z ◧ 0 ++ 0 := by
   exact h₁.trans h.isSuffix
 
 lemma isLast_append (h : z ◧ 0 ++ 0) : IsLast u (z ++ u ++ 0 ++ 0) := by
-  rcases h with rfl | ⟨k, rfl⟩
-  · exact IsSuffix.refl _
-  · right; use k; simp [Concatenation.append_assoc]
+  grind [IsLast, IsSuffix, Concatenation.append_assoc]
 
 lemma IsFirst.of_append_pairOf (hp : IsTally 1 p) (hq : IsTally 1 q)
     (h : IsFirst (pairOf p q) (k ++ 0 ++ 0 ++ pairOf u v ++ 0 ++ 0)) :
@@ -472,13 +461,9 @@ lemma IsFirst.of_append_pairOf (hp : IsTally 1 p) (hq : IsTally 1 q)
       (0 ++ 0) ++ w = k ++ ((0 ++ 0) ++ (pairOf u v ++ 0 ++ 0)) := by
     rcases h with h | ⟨t, h⟩
     · use pairOf p q ++ 0 ++ 0
-      and_intros
-      · rfl
-      · simp only [Concatenation.append_assoc] at h ⊢; exact h
+      simpa [Concatenation.append_assoc] using h
     · use pairOf p q ++ 0 ++ 0 ++ t
-      and_intros
-      · simp
-      · simp only [Concatenation.append_assoc] at h ⊢; exact h.symm
+      exact ⟨by simp, by simpa only [Concatenation.append_assoc] using h.symm⟩
   have hw1 : 1 ◨ w := hp.isPrefix_pairOf_append.trans hw
   have H : ¬0 ◨ w := fun h ↦ Concatenation.zero_ne_one <| h.eq_of_isAtom h0 h1 hw1
   rcases editor hs with ⟨rfl, rfl⟩ | ⟨m, ⟨rfl, hm⟩ | ⟨hm, hm'⟩⟩
@@ -515,8 +500,7 @@ lemma isSeq_append_pairOf (hr : IsSeq r) : IsSeq (r ++ pairOf a b ++ 0 ++ 0) := 
     · right; use r ++ a ++ 0; simp [pairOf, Concatenation.append_assoc]
     · right; use r ++ a ++ 0 ++ b'; simp [pairOf, Concatenation.append_assoc]
   · intro t ht h
-    rw [show r ++ pairOf a b ++ 0 ++ 0 = r ++ (pairOf a b ++ 0 ++ 0) by
-      simp [Concatenation.append_assoc]] at h
+    simp only [Concatenation.append_assoc r] at h
     rcases ht.isSubstring_or_isSubstring h (Or.inr ha.isPrefix_pairOf_append) with h | h
     · exact hr.eq_of_isTally t ht h
     · exact eq_zero_or_eq_zero_zero_of_isSubstring_pairOf ha hb ht h
@@ -527,8 +511,7 @@ lemma isSeq_zero_zero_append_pairOf : IsSeq (0 ++ 0 ++ pairOf a b ++ 0 ++ 0) := 
   · simpa only [pairOf, Concatenation.append_assoc] using
       (hb.isSuffix.append_left (u := 0 ++ 0 ++ a ++ 0)).append_congr (z := 0 ++ 0)
   · intro t ht h
-    rw [show 0 ++ 0 ++ pairOf a b ++ 0 ++ 0 = 0 ++ 0 ++ (pairOf a b ++ 0 ++ 0) by
-      simp [Concatenation.append_assoc]] at h
+    simp only [Concatenation.append_assoc (0 ++ 0 : M)] at h
     rcases ht.isSubstring_or_isSubstring h (Or.inr ha.isPrefix_pairOf_append) with h | h
     · exact eq_zero_or_eq_zero_zero_of_isSubstring h
     · exact eq_zero_or_eq_zero_zero_of_isSubstring_pairOf ha hb ht h
@@ -540,13 +523,11 @@ lemma isPairSeq_zero_zero_append_pairOf : IsPairSeq (0 ++ 0 ++ pairOf a b ++ 0 +
     simp [Concatenation.append_assoc]] at h
   rcases isSubstring_append_pairOf_cases ha hb h with h | ⟨z, hz, h⟩
   · rcases eq_zero_or_eq_zero_zero_of_isSubstring h with h | h
-    · exact absurd h.symm (zero_ne_append _ _)
+    · simp at h
     · apply absurd h
       simpa only [Concatenation.append_assoc] using
         zero_zero_append_ne_zero_zero (x := v ++ (0 ++ 0))
-  · use a, b
-    apply And.intro ha
-    apply And.intro hb
+  · use a, b, ha, hb
     rcases eq_zero_or_eq_zero_zero_of_isSubstring hz.isSubstring with rfl | rfl
     · simp only [Concatenation.append_assoc] at h
       have h₁ : 0 ◨ pairOf a b ++ 0 ++ 0 := by
@@ -563,8 +544,7 @@ lemma isPairSeq_zero_zero_append_pairOf : IsPairSeq (0 ++ 0 ++ pairOf a b ++ 0 +
 lemma isPairSeq_append_pairOf (hr : IsPairSeq r) : IsPairSeq (r ++ pairOf a b ++ 0 ++ 0) := by
   apply And.intro <| isSeq_append_pairOf ha hb hr.isSeq
   rintro v ⟨-, hv, h⟩
-  rw [show r ++ pairOf a b ++ 0 ++ 0 = r ++ (pairOf a b ++ 0 ++ 0) by
-    simp [Concatenation.append_assoc]] at h
+  simp only [Concatenation.append_assoc r] at h
   rcases isSubstring_append_pairOf_cases ha hb h with h | ⟨z₁, hz₁, h⟩
   · exact hr.2 v ⟨hr.isSeq, hv, h⟩
   have h' : z₁ ++ pairOf a b = 0 ++ 0 ++ v := by
@@ -603,10 +583,8 @@ lemma IsMulSeq.exists_eq_append_pairOf (hs : IsMulSeq x (y ++ 1) s) :
   obtain ⟨hx, hy1, -, hfirst, ⟨a, ha, h | ⟨k, rfl⟩⟩, -⟩ := hs
   · rw [← h] at hfirst
     exact absurd (hfirst.pairOf_inj isTally_one_one ha hy1).2 (one_ne_append y 1)
-  · use k, a
-    and_intros
-    · exact ha
-    · simp [Concatenation.append_assoc]
+  · use k, a, ha
+    simp [Concatenation.append_assoc]
 
 lemma IsPairSeq.of_append_pairOf (hs : IsPairSeq (k ++ 0 ++ 0 ++ pairOf a b ++ 0 ++ 0))
     (hp : IsTally 1 p) (hfirst : IsFirst (pairOf p q) (k ++ 0 ++ 0)) : IsPairSeq (k ++ 0 ++ 0) := by
@@ -648,8 +626,7 @@ lemma IsMulSeq.extend (hr : IsMulSeq x y r) (hw : IsTally 1 w) (hlast : IsLast (
   refine ⟨hx, hb, isPairSeq_append_pairOf ha hb hps, hfirst.append_right.append_right.append_right,
     ⟨w ++ x, ha, isLast_append hps.isSeq.isSuffix_zero_zero⟩, ?_⟩
   intro s u' v' hu' hv' h
-  rw [show r ++ pairOf (w ++ x) (y ++ 1) ++ 0 ++ 0 = r ++ (pairOf (w ++ x) (y ++ 1) ++ 0 ++ 0) by
-    simp [Concatenation.append_assoc]] at h
+  simp only [Concatenation.append_assoc r] at h
   rcases isPrefix_append_pairOf_cases ha hb h with h | h
   · exact hrec s u' v' hu' hv' h
   · obtain ⟨k, hk, rfl⟩ := hlast.exists_eq_append
@@ -703,8 +680,7 @@ lemma isMulSeq_one_iff (hx : IsTally 1 x) :
       ⟨x, hx, IsSuffix.refl _⟩, ?_⟩
     intro s u' v' hu' hv' h
     exfalso
-    rw [show 0 ++ 0 ++ pairOf x 1 ++ 0 ++ 0 = 0 ++ 0 ++ (pairOf x 1 ++ 0 ++ 0) by
-      simp [Concatenation.append_assoc]] at h
+    simp only [Concatenation.append_assoc (0 ++ 0 : M)] at h
     rcases isPrefix_append_pairOf_cases hx h1 h with h | h
     · have h₁ : IsSubstring (pairOf u' v') (0 ++ 0 : M) :=
         (isSubstring_append_append _ _ _).trans <| (isSubstring_append_left _ 0).trans h.isSubstring

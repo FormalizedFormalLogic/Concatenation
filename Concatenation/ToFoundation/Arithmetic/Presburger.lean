@@ -44,8 +44,8 @@ instance : ℤ↓[ℒₒᵣ] ⊧* DiscreteEuclideanRing := ⟨by
 
 open Classical in
 /-- A sentence true in the Presburger rings that are models of a theory is provable in it. -/
-lemma DiscreteEuclideanRing.provable_of_presburgerRing {T : ArithmeticTheory} (hT : DiscreteEuclideanRing ⊆ T)
-    (σ : ArithmeticSentence)
+lemma DiscreteEuclideanRing.provable_of_presburgerRing {T : ArithmeticTheory}
+    (hT : DiscreteEuclideanRing ⊆ T) (σ : ArithmeticSentence)
     (H : ∀ (R : Type) [CommRing R] [LinearOrder R] [IsStrictOrderedRing R] [PresburgerRing R],
       R↓[ℒₒᵣ] ⊧* T → R↓[ℒₒᵣ] ⊧ σ) : T ⊢ σ := by
   have : 𝗘𝗤 ℒₒᵣ ⪯ T :=

@@ -54,10 +54,17 @@ lemma PresburgerRing.of_forall_exists {R : Type*} [CommRing R] [LinearOrder R]
         rcases h0.lt_or_eq with hpos | rfl
         · have := h₁ r hpos
           obtain ⟨k, hk, e⟩ := ih (r - 1) (by linarith) (by push_cast at hr; linarith)
-          exact ⟨k + 1, by omega, by push_cast; linarith⟩
-        · exact ⟨0, by omega, by simp⟩
+          use k + 1
+          and_intros
+          · omega
+          · push_cast
+            linarith
+        · use 0
+          and_intros
+          · omega
+          · simp
     obtain ⟨k, hk, rfl⟩ := key n r h0 hr
-    exact ⟨q, k, hk, e⟩
+    use q, k
 
 namespace Presburger
 
@@ -227,7 +234,7 @@ section
 
 variable [IsStrictOrderedRing R] [PresburgerRing R]
 
-lemma lt_add_one_iff {x y : R} : x < y + 1 ↔ x ≤ y := by
+lemma _root_.PresburgerRing.lt_add_one_iff {x y : R} : x < y + 1 ↔ x ≤ y := by
   constructor
   · intro h
     have := PresburgerRing.one_le_of_pos (sub_pos.mpr h)
@@ -241,7 +248,7 @@ lemma eval_neg (φ : Formula n) : φ.neg.eval v ↔ ¬φ.eval v := by
   | verum => simp [neg]
   | falsum => simp [neg]
   | pos t =>
-    have := lt_add_one_iff (x := t.eval v) (y := 0)
+    have := PresburgerRing.lt_add_one_iff (x := t.eval v) (y := 0)
     simp only [neg, eval, eval_sub, eval_ofInt, Int.cast_one, sub_pos, not_lt]
     simpa using this
   | dvd b m t => cases b <;> simp [neg]
@@ -250,7 +257,7 @@ lemma eval_neg (φ : Formula n) : φ.neg.eval v ↔ ¬φ.eval v := by
 
 @[simp]
 lemma eval_le (s t : LinearTerm n) : (le s t).eval v ↔ s.eval v ≤ t.eval v := by
-  have := lt_add_one_iff (x := s.eval v) (y := t.eval v)
+  have := PresburgerRing.lt_add_one_iff (x := s.eval v) (y := t.eval v)
   simp only [le, eval, eval_add, eval_sub, eval_ofInt, Int.cast_one]
   constructor <;> intro h <;> [apply this.mp; have := this.mpr h] <;> linarith
 
@@ -315,7 +322,7 @@ section
 variable [IsStrictOrderedRing R] {x x' : R} {a : ℕ+} {u : LinearTerm n} {d : ℕ}
 
 omit [LinearOrder R] [IsStrictOrderedRing R] in
-lemma cast_toNat {c : ℤ} (hc : 0 < c) : ((c.toNat : ℕ) : R) = (c : R) := by
+private lemma cast_toNat {c : ℤ} (hc : 0 < c) : ((c.toNat : ℕ) : R) = (c : R) := by
   rw [← Int.cast_natCast, Int.toNat_of_nonneg hc.le]
 
 lemma eval_substDiv (h : (a : ℕ) * x = u.eval v) (φ : Formula (n + 1)) :
@@ -340,7 +347,7 @@ lemma eval_substDiv (h : (a : ℕ) * x = u.eval v) (φ : Formula (n + 1)) :
   | or φ ψ ihφ ihψ => simp [substDiv, ihφ, ihψ]
 
 omit [LinearOrder R] [IsStrictOrderedRing R] in
-lemma dvd_add_mul_iff {m : ℕ} (h : m ∣ d) (c y k : R) :
+private lemma dvd_add_mul_iff {m : ℕ} (h : m ∣ d) (c y k : R) :
     (m : R) ∣ c * (x + d * k) + y ↔ (m : R) ∣ c * x + y := by
   have : (m : R) ∣ c * (d * k) :=
     Dvd.dvd.mul_left (Dvd.dvd.mul_right (Nat.cast_dvd_cast h) k) c
@@ -483,6 +490,7 @@ lemma exists_le_of_lower (hd : 0 < d) (c : ℕ+) (y : R) (h : 0 < ((c : ℕ) : R
 /--
 A formula without its first variable is true exactly when the formula is true for some value of
 that variable.
+- [Coo72]
 -/
 theorem eval_elim (φ : Formula (n + 1)) : φ.elim.eval v ↔ ∃ x : R, φ.eval (Matrix.vecCons x v) := by
   classical
@@ -567,7 +575,8 @@ lemma eval_exsN {k : ℕ} (φ : Formula (k + n)) :
     simp only [Fin.append_cons]
     rfl
 
-lemma natCast_dvd_intCast {m : ℕ} (hm : 0 < m) {k : ℤ} : (m : R) ∣ (k : R) ↔ (m : ℤ) ∣ k := by
+lemma _root_.PresburgerRing.natCast_dvd_intCast {m : ℕ} (hm : 0 < m) {k : ℤ} :
+    (m : R) ∣ (k : R) ↔ (m : ℤ) ∣ k := by
   constructor
   · rintro ⟨q, hq⟩
     have hm' : (0 : R) < (m : R) := by exact_mod_cast hm
@@ -592,7 +601,7 @@ theorem eval_iff_eval_int (φ : Formula 0) (v : Fin 0 → R) (w : Fin 0 → ℤ)
   | verum => rfl
   | falsum => rfl
   | pos t => simp [LinearTerm.eval_zero]
-  | dvd b m t => simp [LinearTerm.eval_zero, natCast_dvd_intCast m.pos]
+  | dvd b m t => simp [LinearTerm.eval_zero, PresburgerRing.natCast_dvd_intCast m.pos]
   | and φ ψ ihφ ihψ => simp [ihφ, ihψ]
   | or φ ψ ihφ ihψ => simp [ihφ, ihψ]
 

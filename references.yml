@@ -4,6 +4,23 @@
 # The keys are the citation keys used in docstrings, e.g. `- [Grz05, §3]`;
 # see docs/conventions.md. Entries are sorted by key.
 
+Coo72:
+  type: Chapter
+  title: Theorem Proving in Arithmetic without Multiplication
+  author: Cooper, David C.
+  page-range: 91-99
+  date: 1972
+  parent:
+    type: Anthology
+    title: Machine Intelligence 7
+    editor:
+    - Meltzer, Bernard
+    - Michie, Donald
+    date: 1972
+    publisher:
+      name: Edinburgh University Press
+      location: Edinburgh
+
 GZ08:
   type: Chapter
   title: Undecidability and Concatenation
@@ -117,6 +134,18 @@ Mur24:
     type: Periodical
     title: Archive for Mathematical Logic
     volume: 63
+
+Pre29:
+  type: Chapter
+  title: Über die Vollständigkeit eines gewissen Systems der Arithmetik ganzer Zahlen, in welchem die Addition als einzige Operation hervortritt
+  author: Presburger, Mojżesz
+  page-range: 92-101
+  date: 1930
+  parent:
+    type: Proceedings
+    title: Comptes Rendus du I congrès de Mathématiciens des Pays Slaves, Warszawa 1929
+    date: 1930
+    location: Warszawa
 
 Sve08:
   type: Chapter

@@ -26,6 +26,8 @@ public import Concatenation.TC.Substring
 public import Concatenation.TC.Thin
 public import Concatenation.TC.Undecidability
 public import Concatenation.ToFoundation.AddCoding
+public import Concatenation.ToFoundation.Arithmetic.Presburger
+public import Concatenation.ToFoundation.Arithmetic.PresburgerArithmetic
 public import Concatenation.ToFoundation.Arithmetic.R0.Cobham
 public import Concatenation.ToFoundation.Arithmetic.R0.Representation
 public import Concatenation.ToFoundation.Arithmetic.R0.Undecidability
@@ -36,4 +38,5 @@ public import Concatenation.ToFoundation.Interpretability.Table
 public import Concatenation.ToFoundation.Interpretability.Undecidability
 public import Concatenation.ToFoundation.Prefix
 public import Concatenation.ToMathlib.FreeSemigroup
+public import Concatenation.ToMathlib.Presburger
 public import Concatenation.WTC.Basic

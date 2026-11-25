@@ -73,6 +73,10 @@ instance : (ℒ⌢).DecidableEq := ⟨fun _ ↦ inferInstance, fun _ ↦ inferIn
 
 instance : (ℒ⌢).Encodable := ⟨fun _ ↦ inferInstance, fun _ ↦ inferInstance⟩
 
+instance : (ℒ⌢).Finite where
+  func := ⟨{⟨0, .zero⟩, ⟨0, .one⟩, ⟨2, .concat⟩}, by rintro ⟨k, f⟩; cases f <;> simp⟩
+  rel := ⟨{⟨2, .eq⟩}, by rintro ⟨k, r⟩; cases r; simp⟩
+
 instance : (ℒ⌢).Zero := ⟨Func.zero⟩
 
 instance : (ℒ⌢).One := ⟨Func.one⟩
@@ -106,6 +110,10 @@ instance (k) : Encodable (PrefixRel k) where
     | 2, 0 => some .pref
     | _, _ => none
   encodek x := by rcases x; simp
+
+instance : prefixRel.Finite where
+  func := Fintype.ofIsEmpty
+  rel := ⟨{⟨2, .pref⟩}, by rintro ⟨k, r⟩; cases r; simp⟩
 
 end PrefixRel
 

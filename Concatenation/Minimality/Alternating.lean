@@ -2,12 +2,13 @@ module
 
 public import Concatenation.Minimality.Basic
 public import Concatenation.Semantics.Prefix
+public import Concatenation.ToFoundation.Arithmetic.Presburger
 
 /-!
 # $\mathsf{ID}$ and $\mathsf{BT}$ without right cancellation
 
 The words without two equal adjacent letters are a model of both theories that is definable in
-$(\mathbb{N}, +)$.
+$(\mathbb{N}, +)$, so that its theory is decidable.
 -/
 
 @[expose] public section
@@ -236,26 +237,145 @@ instance models_BT_diff_concatRightCancel :
     simp only [models_iff]
     simpa using fun x ↦ isSubstring_ofFreeSemigroup⟩
 
+/-- The code of a word: twice its length minus one, plus one if its first letter is $1$. -/
+def code (x : AlternatingWord) : ℤ := 2 * x.len + if x.first then 1 else 0
+
+lemma code_injective : Function.Injective code := by
+  rintro ⟨a, n⟩ ⟨b, m⟩ h
+  simp only [code] at h
+  cases a <;> cases b <;> simp at h ⊢ <;> omega
+
+lemma exists_code_eq_iff {z : ℤ} : (∃ x, code x = z) ↔ 0 ≤ z := by
+  constructor
+  · rintro ⟨x, rfl⟩
+    simp only [code]
+    split_ifs <;> omega
+  · intro h
+    use ⟨decide (z % 2 = 1), (z / 2).toNat⟩
+    simp only [code, decide_eq_true_eq]
+    split_ifs <;> omega
+
+open Presburger in
+/-- The graph of the concatenation of `AlternatingWord` in the integers. -/
+def appendGraph : Presburger.Formula 3 :=
+  let last₀ : Presburger.Formula 3 :=
+    .or (.dvd true 4 (.var 1)) (.dvd true 4 (.var 1 - .ofInt 3))
+  let last₁ : Presburger.Formula 3 :=
+    .and (.dvd false 4 (.var 1)) (.dvd false 4 (.var 1 - .ofInt 3))
+  let value (c : ℤ) : Presburger.Formula 3 := .eq (.var 0) (.var 1 + .var 2 + .ofInt c)
+  .or (.and last₀ (.and (.dvd true 2 (.var 2)) (value 0))) <|
+    .or (.and last₀ (.and (.dvd false 2 (.var 2)) (value 1))) <|
+      .or (.and last₁ (.and (.dvd true 2 (.var 2)) (value 2)))
+        (.and last₁ (.and (.dvd false 2 (.var 2)) (value (-1))))
+
+lemma eval_appendGraph (x y z : AlternatingWord) :
+    appendGraph.eval ![code z, code x, code y] ↔ x ++ y = z := by
+  rcases x with ⟨a, n⟩
+  rcases y with ⟨b, m⟩
+  rcases z with ⟨c, l⟩
+  obtain ⟨n, rfl | rfl⟩ := n.even_or_odd'
+  all_goals
+    simp only [appendGraph, code, append_def, last, AlternatingWord.mk.injEq]
+    cases a <;> cases b <;> cases c <;> simp <;> omega
+
+open Presburger in
+/-- The definition of `AlternatingWord` in the integers, for the language of concatenation. -/
+def presburgerDefinition : PresburgerDefinition ℒ⌢ where
+  domain := .le (.ofInt 0) (.var 0)
+  func {k} f :=
+    match k, f with
+    | _, .zero => .eq (.var 0) (.ofInt 0)
+    | _, .one => .eq (.var 0) (.ofInt 1)
+    | _, .concat => appendGraph
+  rel {k} r :=
+    match k, r with
+    | _, .eq => .eq (.var 0) (.var 1)
+
+lemma defines_presburgerDefinition : presburgerDefinition.Defines code where
+  injective := code_injective
+  domain_iff z := by simp [presburgerDefinition, exists_code_eq_iff]
+  func_iff {k} f v y := by
+    match k, f with
+    | _, .zero =>
+      have e : code ⟨false, 0⟩ = 0 := by simp [code]
+      change _ ↔ (⟨false, 0⟩ : AlternatingWord) = y
+      rw [← code_injective.eq_iff, eq_comm, e]
+      simp [presburgerDefinition]
+    | _, .one =>
+      have e : code ⟨true, 0⟩ = 1 := by simp [code]
+      change _ ↔ (⟨true, 0⟩ : AlternatingWord) = y
+      rw [← code_injective.eq_iff, eq_comm, e]
+      simp [presburgerDefinition]
+    | _, .concat =>
+      change appendGraph.eval (code y :> code ∘ v) ↔ v 0 ++ v 1 = y
+      rw [Matrix.fun_eq_vec_two (v := code ∘ v)]
+      exact eval_appendGraph (v 0) (v 1) y
+  rel_iff {k} r v := by
+    match k, r with
+    | _, .eq =>
+      change _ ↔ v 0 = v 1
+      simp [presburgerDefinition, code_injective.eq_iff]
+
+open Presburger in
+/-- The prefix relation of `AlternatingWord` in the integers. -/
+def prefixGraph : Presburger.Formula 2 :=
+  .and (.dvd true 2 (.var 1 - .var 0)) (.le (.var 0) (.var 1))
+
+lemma eval_prefixGraph (x y : AlternatingWord) : prefixGraph.eval ![code x, code y] ↔ x ≤ y := by
+  rcases x with ⟨a, n⟩
+  rcases y with ⟨b, m⟩
+  simp only [prefixGraph, code, le_def]
+  cases a <;> cases b <;> simp <;> omega
+
+open Presburger in
+/--
+The definition of `AlternatingWord` in the integers, for the language of concatenation with the
+prefix relation.
+-/
+def presburgerDefinitionPrefix : PresburgerDefinition ℒ⌢⊑ where
+  domain := presburgerDefinition.domain
+  func f :=
+    match f with
+    | .inl f => presburgerDefinition.func f
+    | .inr f => f.elim
+  rel {k} r :=
+    match k, r with
+    | _, .inl r => presburgerDefinition.rel r
+    | _, .inr .pref => prefixGraph
+
+lemma defines_presburgerDefinitionPrefix : presburgerDefinitionPrefix.Defines code where
+  injective := code_injective
+  domain_iff := defines_presburgerDefinition.domain_iff
+  func_iff f v y := by
+    match f with
+    | .inl f => exact defines_presburgerDefinition.func_iff f v y
+    | .inr f => exact f.elim
+  rel_iff {k} r v := by
+    match k, r with
+    | _, .inl r => exact defines_presburgerDefinition.rel_iff r v
+    | _, .inr .pref =>
+      change prefixGraph.eval (code ∘ v) ↔ v 0 ≤ v 1
+      rw [Matrix.fun_eq_vec_two (v := code ∘ v)]
+      exact eval_prefixGraph (v 0) (v 1)
+
 end AlternatingWord
 
 /--
-$\mathsf{ID}$, also called $\mathsf{C}$, without right cancellation is not essentially undecidable,
-if the theory of `AlternatingWord` is decidable.
+$\mathsf{ID}$, also called $\mathsf{C}$, without right cancellation is not essentially undecidable.
 - [Mur22, Open Problem 3]
 -/
-theorem not_essentiallyUndecidable_ID_diff_concatRightCancel_of_decidable
-    (h : Entailment.Decidable (Tarski.Structure.theory ℒ⌢⊑ AlternatingWord)) :
+theorem not_essentiallyUndecidable_ID_diff_concatRightCancel :
     ¬(𝗜𝗗 \ {concatRightCancel} : Theory ℒ⌢⊑).EssentiallyUndecidable :=
-  Theory.not_essentiallyUndecidable_of_models _ AlternatingWord h
+  Theory.not_essentiallyUndecidable_of_models _ AlternatingWord
+    AlternatingWord.defines_presburgerDefinitionPrefix.decidable
 
 /--
-$\mathsf{BT}$ without right cancellation is not essentially undecidable, if the theory of
-`AlternatingWord` is decidable.
+$\mathsf{BT}$ without right cancellation is not essentially undecidable.
 - [Mur22, Open Problem 3]
 -/
-theorem not_essentiallyUndecidable_BT_diff_concatRightCancel_of_decidable
-    (h : Entailment.Decidable (Tarski.Structure.theory ℒ⌢ AlternatingWord)) :
+theorem not_essentiallyUndecidable_BT_diff_concatRightCancel :
     ¬(𝗕𝗧 \ {concatRightCancel} : Theory ℒ⌢).EssentiallyUndecidable :=
-  Theory.not_essentiallyUndecidable_of_models _ AlternatingWord h
+  Theory.not_essentiallyUndecidable_of_models _ AlternatingWord
+    AlternatingWord.defines_presburgerDefinition.decidable
 
 end FFL.FirstOrder.Concatenation

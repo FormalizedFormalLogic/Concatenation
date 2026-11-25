@@ -1,6 +1,7 @@
 module
 
 public import Foundation.FirstOrder.Syntax.Classical.PrimrecCoding
+public import Mathlib.Data.Fintype.Sum
 
 /-!
 # Coding of the sum of two languages
@@ -49,5 +50,15 @@ instance [L₁.Primcodable] [L₂.Primcodable] : (L₁.add L₂).Primcodable whe
     fun _ _ ↦ (encode_decode_sum _).symm
   rel := (primrec_sumCode Primcodable.rel Primcodable.rel).of_eq
     fun _ _ ↦ (encode_decode_sum _).symm
+
+instance [L₁.Finite] [L₂.Finite] : (L₁.add L₂).Finite where
+  func :=
+    have := Finite.func (L := L₁)
+    have := Finite.func (L := L₂)
+    Fintype.ofEquiv _ (Equiv.sigmaSumDistrib L₁.Func L₂.Func).symm
+  rel :=
+    have := Finite.rel (L := L₁)
+    have := Finite.rel (L := L₂)
+    Fintype.ofEquiv _ (Equiv.sigmaSumDistrib L₁.Rel L₂.Rel).symm
 
 end FFL.FirstOrder.Language

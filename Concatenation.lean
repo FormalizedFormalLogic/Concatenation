@@ -22,6 +22,7 @@ public import Concatenation.OpenProblems.Minimality
 public import Concatenation.OpenProblems.NotationInduction
 public import Concatenation.OpenProblems.Persistence
 public import Concatenation.OpenProblems.Sequence
+public import Concatenation.Semantics.AtomicPairing
 public import Concatenation.Semantics.Basic
 public import Concatenation.Semantics.Empty
 public import Concatenation.Semantics.Relativization
@@ -66,13 +67,17 @@ public import Concatenation.ToFoundation.Interpretability.Table
 public import Concatenation.ToFoundation.Interpretability.Undecidability
 public import Concatenation.ToFoundation.Interpretability.Unrelativized
 public import Concatenation.ToFoundation.Prefix
+public import Concatenation.ToFoundation.PrimrecCoding
 public import Concatenation.ToFoundation.TuringPersistence
+public import Concatenation.ToMathlib.AtomicPairing
 public import Concatenation.ToMathlib.FreeSemigroup
 public import Concatenation.ToMathlib.FreeSemigroupCode
 public import Concatenation.Tree.Basic
 public import Concatenation.WTC.Arithmetic
 public import Concatenation.WTC.Basic
+public import Concatenation.WTC.Editor
 public import Concatenation.WTC.Embedding
 public import Concatenation.WTC.LocallyFinitelySatisfiable
+public import Concatenation.WTC.Pairing
 public import Concatenation.WTC.Standard
 public import Concatenation.WTC.Undecidability

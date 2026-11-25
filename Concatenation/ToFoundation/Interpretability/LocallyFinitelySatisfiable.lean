@@ -16,6 +16,13 @@ namespace FFL.FirstOrder
 
 open _root_.FFL.Entailment
 
+/-- `T` does not directly interpret `U`. -/
+abbrev NotInterprets {L₁ L₂ : Language} [L₁.Eq] [L₂.Eq] (T : Theory L₁) [𝗘𝗤 _ ⪯ T]
+    (U : Theory L₂) : Prop := IsEmpty (T ⊳ U)
+
+@[inherit_doc]
+infix:50 " ⋫ " => NotInterprets
+
 namespace Theory
 
 variable {L : Language} {T U : Theory L}
@@ -141,8 +148,8 @@ A locally finitely satisfiable theory interprets no finitely axiomatizable theor
 models.
 - [Hor11, §3, Proposition 3.2]
 -/
-theorem isEmpty_of_not_hasFiniteModel [L₁.Finite] [L₂.Finite] (hT : T.LocallyFinitelySatisfiable)
-    (hU : FiniteAxiomatizable U) (h : ¬U.HasFiniteModel) : IsEmpty (T ⊳ U) :=
+theorem notInterprets_of_not_hasFiniteModel [L₁.Finite] [L₂.Finite] (hT : T.LocallyFinitelySatisfiable)
+    (hU : FiniteAxiomatizable U) (h : ¬U.HasFiniteModel) : T ⋫ U :=
   ⟨fun π ↦ h <| π.hasFiniteModel hT hU⟩
 
 end DirectInterpretation

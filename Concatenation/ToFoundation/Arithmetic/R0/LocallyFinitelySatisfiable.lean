@@ -146,8 +146,8 @@ $\mathsf{R}_0$ does not interpret $\mathsf{Q}$.
 - [Hor11, §3, Proposition 3.2]
 - [Hor12, §1]
 -/
-theorem isEmpty_R0_interprets_Q : IsEmpty (𝗥₀ ⊳ 𝗤) :=
-  DirectInterpretation.isEmpty_of_not_hasFiniteModel R0.locallyFinitelySatisfiable
+theorem R0.notInterprets_Q : 𝗥₀ ⋫ 𝗤 :=
+  DirectInterpretation.notInterprets_of_not_hasFiniteModel R0.locallyFinitelySatisfiable
     RobinsonQ.finiteAxiomatizable RobinsonQ.not_hasFiniteModel
 
 end FFL.FirstOrder.Arithmetic

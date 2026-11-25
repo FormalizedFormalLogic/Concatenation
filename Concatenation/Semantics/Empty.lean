@@ -16,6 +16,12 @@ namespace FFL.FirstOrder
 /-- A type with two letters `0`, `1`, a concatenation `++`, and the empty string `∅`. -/
 class ConcatenationEmptyStructure (α : Type*) extends ConcatenationStructure α, EmptyCollection α
 
+/-- The letters, the concatenation and the empty string transported along a bijection. -/
+abbrev ConcatenationEmptyStructure.ofEquiv {α β : Type*} [ConcatenationEmptyStructure β]
+    (e : α ≃ β) : ConcatenationEmptyStructure α where
+  toConcatenationStructure := .ofEquiv e
+  emptyCollection := e.symm ∅
+
 namespace ConcatenationEmptyStructure
 
 variable {α : Type*} [ConcatenationEmptyStructure α]
@@ -59,6 +65,14 @@ variable {M}
 @[simp]
 lemma val_star : (Semiterm.Operator.Star.star : Semiterm.Operator ℒ⌢ₑ 0).val ![] = (∅ : M) := rfl
 
+lemma standardModelEmpty_ofEquiv {α : Type*} (e : α ≃ M) :
+    @standardModelEmpty α (.ofEquiv e) = Tarski.Structure.ofEquiv e.symm :=
+  Tarski.Structure.ext
+    (funext₃ fun k f v ↦ by rcases f with (_ | _ | _) | ⟨⟨⟩⟩ <;> rfl)
+    (funext₃ fun k r v ↦ by
+      rcases r with ⟨⟨⟩⟩ | ⟨⟨⟩⟩
+      exact propext e.apply_eq_iff_eq.symm)
+
 end semantics
 
 section eval
@@ -72,14 +86,7 @@ lemma val_biteral_empty (u : FreeSemigroup Bool) :
     (biteral u : Semiterm ℒ⌢ₑ ξ n).val e ε = ofFreeSemigroup u := by
   have hb (b : Bool) : (letter b : Semiterm ℒ⌢ₑ ξ n).val e ε = if b then 1 else 0 := by
     cases b <;> simp [letter]
-  suffices ∀ (l : List Bool) (t : Semiterm ℒ⌢ₑ ξ n),
-      (l.foldl (fun t b ↦ ‘!!t ⌢ !!(letter b)’) t).val e ε =
-        l.foldl (fun m b ↦ m ++ if b then 1 else 0) (t.val e ε) by
-    simp [biteral, ofFreeSemigroup, this, hb]
-  intro l
-  induction l with
-  | nil => simp
-  | cons b l ih => simp [ih, hb]
+  simp [biteral, ofFreeSemigroup, hb]
 
 @[simp]
 lemma val_biteralEmpty (l : List Bool) :

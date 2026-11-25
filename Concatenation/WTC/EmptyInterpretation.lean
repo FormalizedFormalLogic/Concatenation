@@ -118,7 +118,7 @@ lemma val_ofFreeSemigroup (u : FreeSemigroup Bool) :
       ((l.foldl (fun m b ↦ m ++ if b then 1 else 0) x : nonemptyTranslation.Model M) : M) =
         l.foldl (fun m b ↦ m ++ if b then 1 else 0) (x : M) by
     rcases u with ⟨b, l⟩
-    rw [ofFreeSemigroup, this]
+    rw [ofFreeSemigroup, stringValue, this]
     cases b <;> rfl
   intro l
   induction l with

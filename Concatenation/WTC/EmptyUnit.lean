@@ -82,7 +82,7 @@ lemma ofList_append_singleton (hu : u ≠ []) (b : Bool) :
     (ofList (u ++ [b]) : M) = ofList u ++ ofList [b] := by
   rcases u with _ | ⟨d, l⟩
   · exact absurd rfl hu
-  · simp [ofList, ofFreeSemigroup]
+  · simp [ofList, ofFreeSemigroup, stringValue]
 
 lemma isAtom_ofList_singleton (b : Bool) : IsAtom (ofList [b] : M) := by
   cases b <;> simp

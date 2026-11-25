@@ -74,12 +74,8 @@ instance : (ℒ⌢).DecidableEq := ⟨fun _ ↦ inferInstance, fun _ ↦ inferIn
 instance : (ℒ⌢).Encodable := ⟨fun _ ↦ inferInstance, fun _ ↦ inferInstance⟩
 
 instance : (ℒ⌢).Finite where
-  func :=
-    { elems := {⟨0, Func.zero⟩, ⟨0, Func.one⟩, ⟨2, Func.concat⟩}
-      complete := by rintro ⟨_, _ | _ | _⟩ <;> simp }
-  rel :=
-    { elems := {⟨2, Rel.eq⟩}
-      complete := by rintro ⟨_, _ | _⟩; simp }
+  func := ⟨{⟨0, .zero⟩, ⟨0, .one⟩, ⟨2, .concat⟩}, by rintro ⟨_, _ | _ | _⟩ <;> simp⟩
+  rel := ⟨{⟨2, .eq⟩}, by rintro ⟨_, _ | _⟩; simp⟩
 
 instance : (ℒ⌢).Zero := ⟨Func.zero⟩
 

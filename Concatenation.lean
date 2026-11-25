@@ -32,6 +32,7 @@ public import Concatenation.TC.Basic
 public import Concatenation.TC.DefinitionalEquivalence
 public import Concatenation.TC.Empty
 public import Concatenation.TC.EmptyInterpretation
+public import Concatenation.TC.FiniteModel
 public import Concatenation.TC.MulSeq
 public import Concatenation.TC.Representation
 public import Concatenation.TC.Separation
@@ -42,12 +43,14 @@ public import Concatenation.ToFoundation.AddCoding
 public import Concatenation.ToFoundation.Arithmetic.IQ
 public import Concatenation.ToFoundation.Arithmetic.R
 public import Concatenation.ToFoundation.Arithmetic.R0.Cobham
+public import Concatenation.ToFoundation.Arithmetic.R0.LocallyFinitelySatisfiable
 public import Concatenation.ToFoundation.Arithmetic.R0.Representation
 public import Concatenation.ToFoundation.Arithmetic.R0.Undecidability
 public import Concatenation.ToFoundation.Bootstrapping
 public import Concatenation.ToFoundation.Concat
 public import Concatenation.ToFoundation.Decidability
 public import Concatenation.ToFoundation.Interpretability.DefinitionalEquivalence
+public import Concatenation.ToFoundation.Interpretability.LocallyFinitelySatisfiable
 public import Concatenation.ToFoundation.Interpretability.Relative
 public import Concatenation.ToFoundation.Interpretability.Table
 public import Concatenation.ToFoundation.Interpretability.Undecidability
@@ -57,5 +60,6 @@ public import Concatenation.ToMathlib.FreeSemigroupCode
 public import Concatenation.WTC.Arithmetic
 public import Concatenation.WTC.Basic
 public import Concatenation.WTC.Embedding
+public import Concatenation.WTC.LocallyFinitelySatisfiable
 public import Concatenation.WTC.Standard
 public import Concatenation.WTC.Undecidability

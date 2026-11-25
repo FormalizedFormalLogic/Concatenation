@@ -18,7 +18,7 @@ variable {L : Language} [L.Encodable] [L.Primcodable]
 
 /--
 Every consistent extension of `T` in its language is undecidable.
-- [Sve08, §2]
+- [Sve08, §1]
 -/
 class Theory.EssentiallyUndecidable (T : Theory L) : Prop where
   undecidable_of_consistent : ∀ U : Theory L, T ⪯ U → Entailment.Consistent U →

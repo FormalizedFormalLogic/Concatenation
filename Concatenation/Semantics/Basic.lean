@@ -158,11 +158,17 @@ def IsSubstring (x y : M) : Prop :=
 -/
 def IsPrefix (x y : M) : Prop := x = y ∨ ∃ v, y = x ++ v
 
+@[inherit_doc]
+scoped infix:50 " ⊑ₚ " => IsPrefix
+
 /--
 `x` is a suffix of `y`.
 - [Gan09, §1, Definition 1]
 -/
 def IsSuffix (x y : M) : Prop := x = y ∨ ∃ u, y = u ++ x
+
+@[inherit_doc]
+scoped infix:50 " ⊑ₛ " => IsSuffix
 
 /--
 `x` is a `c`-tally: every atom that is a substring of `x` is `c`.
@@ -206,23 +212,23 @@ lemma isSubstring_append_append (u x v : M) : IsSubstring x (u ++ x ++ v) := by
   right; right; right; left; use u, v
 
 @[refl, simp]
-lemma IsPrefix.refl (x : M) : IsPrefix x x := Or.inl rfl
+lemma IsPrefix.refl (x : M) : x ⊑ₚ x := Or.inl rfl
 
 @[simp]
-lemma isPrefix_append (x y : M) : IsPrefix x (x ++ y) := by
+lemma isPrefix_append (x y : M) : x ⊑ₚ x ++ y := by
   right; use y
 
 @[refl, simp]
-lemma IsSuffix.refl (x : M) : IsSuffix x x := Or.inl rfl
+lemma IsSuffix.refl (x : M) : x ⊑ₛ x := Or.inl rfl
 
 @[simp]
-lemma isSuffix_append (x y : M) : IsSuffix y (x ++ y) := by
+lemma isSuffix_append (x y : M) : y ⊑ₛ x ++ y := by
   right; use x
 
-lemma IsPrefix.isSubstring (h : IsPrefix x y) : IsSubstring x y := by
+lemma IsPrefix.isSubstring (h : x ⊑ₚ y) : IsSubstring x y := by
   rcases h with rfl | ⟨v, rfl⟩ <;> simp
 
-lemma IsSuffix.isSubstring (h : IsSuffix x y) : IsSubstring x y := by
+lemma IsSuffix.isSubstring (h : x ⊑ₛ y) : IsSubstring x y := by
   rcases h with rfl | ⟨u, rfl⟩ <;> simp
 
 @[simp]
@@ -233,11 +239,11 @@ lemma eval_isSubstring : M ⊧/![x, y] (isSubstring : Semisentence ℒ⌢ 2) ↔
   simp [isSubstring, IsSubstring, exists_or, eq_comm (b := y)]
 
 @[simp]
-lemma eval_isPrefix : M ⊧/![x, y] isPrefix ↔ IsPrefix x y := by
+lemma eval_isPrefix : M ⊧/![x, y] isPrefix ↔ x ⊑ₚ y := by
   simp [isPrefix, IsPrefix]
 
 @[simp]
-lemma eval_isSuffix : M ⊧/![x, y] isSuffix ↔ IsSuffix x y := by
+lemma eval_isSuffix : M ⊧/![x, y] isSuffix ↔ x ⊑ₛ y := by
   simp [isSuffix, IsSuffix]
 
 @[simp]

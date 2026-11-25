@@ -1,11 +1,13 @@
 module
 
 public import Foundation.FirstOrder.Syntax.Classical.BinderNotation
+public import Foundation.FirstOrder.Tarski.Operator
 
 /-!
 # Prefix symbol
 
-Languages with a binary relation symbol for prefixes, and the formula notation `t ⊑ u`.
+Languages with a binary relation symbol for prefixes, the formula notation `t ⊑ u`, and structures
+interpreting the symbol as a given order.
 -/
 
 @[expose] public section
@@ -43,5 +45,24 @@ macro_rules
   | `(⤫formula(lit)[ $binders* | $fbinders* | $t:first_order_term ⊑ $u:first_order_term ]) =>
     `(Semiformula.Operator.operator Semiformula.Operator.Prefix.pref
       ![⤫term(lit)[ $binders* | $fbinders* | $t ], ⤫term(lit)[ $binders* | $fbinders* | $u ]])
+
+namespace Tarski.Structure
+
+variable (L : Language) (M : Type*) [Tarski.Structure L M]
+
+/-- The operator of prefixes is interpreted as `≤`. -/
+protected class Prefix [Semiformula.Operator.Prefix L] [LE M] : Prop where
+  pref : ∀ a b : M, (@Semiformula.Operator.Prefix.pref L _).val ![a, b] ↔ a ≤ b
+
+attribute [simp] Prefix.pref
+
+end Tarski.Structure
+
+@[simp]
+lemma Semiformula.Operator.pref_iff_le {L : Language} {M : Type*} [Tarski.Structure L M]
+    [Operator.Prefix L] [LE M] [Tarski.Structure.Prefix L M] {v : Fin 2 → M} :
+    (@Operator.Prefix.pref L _).val v ↔ v 0 ≤ v 1 := by
+  rw [Matrix.fun_eq_vec_two (v := v)]
+  simp
 
 end FFL.FirstOrder

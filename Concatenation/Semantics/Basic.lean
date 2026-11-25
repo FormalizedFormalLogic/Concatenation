@@ -110,16 +110,19 @@ lemma weakerThan_of_models (T S : ConcatenationTheory) [𝗘𝗤 ℒ⌢ ⪯ S]
 
 section eval
 
-variable {M : Type*} [ConcatenationStructure M] {ξ : Type*} {n : ℕ} {e : Fin n → M} {ε : ξ → M}
+variable {L : Language} [L.Zero] [L.One] [L.Concat] {M : Type*} [ConcatenationStructure M]
+  [Tarski.Structure L M] [Tarski.Structure.Zero L M] [Tarski.Structure.One L M]
+  [Tarski.Structure.Concat L M] {ξ : Type*} {n : ℕ} {e : Fin n → M} {ε : ξ → M}
 
+omit [L.Concat] [Tarski.Structure.Concat L M] in
 @[simp]
-lemma val_letter (b : Bool) : (letter b : Semiterm ℒ⌢ ξ n).val e ε = if b then 1 else 0 := by
+lemma val_letter (b : Bool) : (letter b : Semiterm L ξ n).val e ε = if b then 1 else 0 := by
   cases b <;> simp [letter]
 
 @[simp]
 lemma val_biteral (x : FreeSemigroup Bool) :
-    (biteral x : Semiterm ℒ⌢ ξ n).val e ε = ConcatenationStructure.ofFreeSemigroup x := by
-  suffices ∀ (l : List Bool) (t : Semiterm ℒ⌢ ξ n),
+    (biteral x : Semiterm L ξ n).val e ε = ConcatenationStructure.ofFreeSemigroup x := by
+  suffices ∀ (l : List Bool) (t : Semiterm L ξ n),
       (l.foldl (fun t b ↦ ‘!!t ⌢ !!(letter b)’) t).val e ε =
         l.foldl (fun m b ↦ m ++ if b then 1 else 0) (t.val e ε) by
     simp [biteral, ConcatenationStructure.ofFreeSemigroup, this]
@@ -129,8 +132,8 @@ lemma val_biteral (x : FreeSemigroup Bool) :
   | cons b l ih => simp [ih]
 
 @[simp]
-lemma eval_isOneOf {l : List (FreeSemigroup Bool)} {x : M} :
-    M ⊧/![x] (isOneOf l : ConcatenationSemisentence 1) ↔
+lemma eval_isOneOf [L.Eq] [Tarski.Structure.Eq L M] {l : List (FreeSemigroup Bool)} {x : M} :
+    M ⊧/![x] (isOneOf l : Semisentence L 1) ↔
       ∃ γ ∈ l, x = ConcatenationStructure.ofFreeSemigroup γ := by
   simp [isOneOf]
 

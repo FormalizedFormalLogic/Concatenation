@@ -373,6 +373,144 @@ theorem Defines.models_iff [Nonempty M] {R' M' : Type} [CommRing R'] [LinearOrde
 
 end
 
+section
+
+variable [L.Eq]
+
+/-- The domain as a formula of arithmetic. -/
+def domainOperator : Semiformula.Operator ℒₒᵣ 1 := ⟨Δ.domain.toSemisentence⟩
+
+/-- The graph of a function symbol as a formula of arithmetic. -/
+def funcOperator (f : L.Func k) : Semiformula.Operator ℒₒᵣ (k + 1) :=
+  ⟨(Δ.func f).toSemisentence⟩
+
+/-- The interpretation of a relation symbol as a formula of arithmetic. -/
+def relOperator (r : L.Rel k) : Semiformula.Operator ℒₒᵣ k := ⟨(Δ.rel r).toSemisentence⟩
+
+/-- The domain is not empty. -/
+def domainNonempty : ArithmeticSentence := “∃ x, %(Δ.domainOperator) x”
+
+/-- The graph of a function symbol is that of a function on the domain. -/
+def funcDefined (f : L.Func k) : ArithmeticSentence :=
+  ∀¹* “(⋀ i, %(Δ.domainOperator) #(i : Fin k)) →
+    ∃! y, %(Δ.domainOperator) y ∧ %(Δ.funcOperator f) y ⋯”
+
+/-- The interpretation of the equality is the equality on the domain. -/
+def preserveEq : ArithmeticSentence :=
+  “∀ x y, %(Δ.domainOperator) x → %(Δ.domainOperator) y →
+    (%(Δ.relOperator Language.Eq.eq) x y ↔ x = y)”
+
+/--
+The theory of the discretely ordered commutative rings with division by positive elements in
+which `Δ` defines a structure for `L`.
+-/
+def theory : ArithmeticTheory :=
+  DiscreteEuclideanRing ∪
+    ({Δ.domainNonempty, Δ.preserveEq} ∪ Set.range fun f : (k : ℕ) × L.Func k ↦ Δ.funcDefined f.2)
+
+lemma theory_finite [L.Finite] : Δ.theory.Finite := by
+  have : Fintype ((k : ℕ) × L.Func k) := Language.Finite.func
+  exact (Theory.Eq.finite.insert _).union <|
+    ((Set.finite_singleton _).insert _).union <| Set.finite_range _
+
+noncomputable instance [L.Finite] : Δ.theory.Δ₁ := Theory.Δ₁.ofFinite _ Δ.theory_finite
+
+instance : 𝗘𝗤 ℒₒᵣ ⪯ Δ.theory :=
+  Entailment.WeakerThan.ofSubset fun _ h ↦ Or.inl <| Set.mem_insert_of_mem _ h
+
+/-- The translation of `L` into arithmetic that `Δ` gives. -/
+def translation : DirectTranslation Δ.theory L where
+  domain := Δ.domainOperator
+  rel := Δ.relOperator
+  func := Δ.funcOperator
+  domain_nonempty := Entailment.by_axm <| Or.inr <| Or.inl <| Or.inl rfl
+  func_defined f := Entailment.by_axm <| Or.inr <| Or.inr ⟨⟨_, f⟩, rfl⟩
+  preserve_eq := Entailment.by_axm <| Or.inr <| Or.inl <| Or.inr rfl
+
+variable {Δ}
+
+/-- A ring in which `Δ` defines a structure is a model of the theory of such rings. -/
+lemma Defines.models_theory {M : Type} [Nonempty M] [Tarski.Structure L M]
+    [Tarski.Structure.Eq L M] {ι : M → ℤ} (h : Δ.Defines ι) : ℤ↓[ℒₒᵣ] ⊧* Δ.theory := ⟨by
+  rintro σ (hσ | (rfl | rfl) | ⟨⟨k, f⟩, rfl⟩)
+  · exact Theory.models ℤ DiscreteEuclideanRing hσ
+  · apply (DirectTranslation.models_domainNonempty_iff _).mpr
+    obtain ⟨x⟩ := ‹Nonempty M›
+    use ι x
+    simpa [domainOperator, Semiformula.Operator.val] using (h.domain_iff _).mpr ⟨x, rfl⟩
+  · apply (DirectTranslation.models_preserveEq_iff _ _).mpr
+    intro x y hx hy
+    obtain ⟨a, rfl⟩ := (h.domain_iff x).mp <| by
+      simpa [domainOperator, Semiformula.Operator.val] using hx
+    obtain ⟨b, rfl⟩ := (h.domain_iff y).mp <| by
+      simpa [domainOperator, Semiformula.Operator.val] using hy
+    have := h.rel_iff Language.Eq.eq ![a, b]
+    simp only [Matrix.comp_vecCons'', Tarski.Structure.eq_lang] at this
+    simpa [relOperator, Semiformula.Operator.val, h.injective.eq_iff] using this
+  · apply (DirectTranslation.models_funcDefined_iff _ _).mpr
+    intro e he
+    have he' : ∀ i, ∃ x, ι x = e i := fun i ↦ (h.domain_iff _).mp <| by
+      simpa [domainOperator, Semiformula.Operator.val] using he i
+    choose v hv using he'
+    obtain rfl : ι ∘ v = e := funext hv
+    use ι (Tarski.Structure.func f v)
+    and_intros
+    · simpa [domainOperator, Semiformula.Operator.val] using (h.domain_iff _).mpr ⟨_, rfl⟩
+    · simpa [funcOperator, Semiformula.Operator.val] using (h.func_iff f v _).mpr rfl
+    · rintro y ⟨hy, hf⟩
+      obtain ⟨b, rfl⟩ := (h.domain_iff y).mp <| by
+        simpa [domainOperator, Semiformula.Operator.val] using hy
+      rw [(h.func_iff f v b).mp <| by simpa [funcOperator, Semiformula.Operator.val] using hf]⟩
+
+variable (Δ) in
+/-- In a model of `Δ.theory`, the formulas of `Δ` define the model of its translation. -/
+lemma defines_model (R : Type) [CommRing R] [LinearOrder R] [IsStrictOrderedRing R]
+    [R↓[ℒₒᵣ] ⊧* Δ.theory] : Δ.Defines fun x : Δ.translation.Model R ↦ (x : R) where
+  injective _ _ h := DirectTranslation.Model.ext h
+  domain_iff z := by
+    constructor
+    · intro hz
+      exact ⟨⟨z, by simpa [DirectTranslation.Dom, translation, domainOperator,
+        Semiformula.Operator.val] using hz⟩, rfl⟩
+    · rintro ⟨x, rfl⟩
+      simpa [DirectTranslation.Dom, translation, domainOperator, Semiformula.Operator.val] using
+        x.dom
+  func_iff f v y := by
+    rw [eq_comm, DirectTranslation.Model.func_iff]
+    exact (Formula.evalb_toSemisentence (Δ.func f)).symm
+  rel_iff r v := by
+    rw [DirectTranslation.Model.rel_iff]
+    exact (Formula.evalb_toSemisentence (Δ.rel r)).symm
+
+variable {M : Type} [Nonempty M] [Tarski.Structure L M] [Tarski.Structure.Eq L M] {ι : M → ℤ}
+  (h : Δ.Defines ι)
+
+include h
+
+/-- The theory of a structure defined in the integers is interpreted by its definition. -/
+abbrev Defines.interpretation : Δ.theory ⊳ Tarski.Structure.theory L M where
+  trln := Δ.translation
+  interpret_theory σ hσ := by
+    apply DiscreteEuclideanRing.provable_of_presburgerRing fun _ h ↦ Or.inl h
+    intro R _ _ _ _ hR
+    exact DirectTranslation.Model.translate_iff.mpr <| ((Δ.defines_model R).models_iff h σ).mpr hσ
+
+/--
+The theory of a structure for a finite language that is definable in the integers with addition
+and order is decidable.
+-/
+theorem Defines.decidable [L.Encodable] [L.Primcodable] [L.LORDefinable] [L.Finite] :
+    Entailment.Decidable (Tarski.Structure.theory L M) :=
+  have := h.models_theory
+  have : Entailment.Consistent Δ.theory := consistent_of_model Δ.theory ℤ
+  have : Entailment.Complete (Tarski.Structure.theory L M) := ⟨fun σ ↦ by
+    by_cases hσ : M↓[L] ⊧ σ
+    · exact .inl <| Entailment.by_axm hσ
+    · exact .inr <| Entailment.by_axm <| by simpa [models_iff] using hσ⟩
+  DirectInterpretation.decidable_of_complete h.interpretation
+
+end
+
 end PresburgerDefinition
 
 end FFL.FirstOrder

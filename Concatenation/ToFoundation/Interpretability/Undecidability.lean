@@ -78,4 +78,34 @@ theorem essentiallyUndecidable [U.EssentiallyUndecidable] : T.EssentiallyUndecid
     have : 𝗘𝗤 L₁ ⪯ T' := Entailment.WeakerThan.trans (inferInstanceAs (𝗘𝗤 L₁ ⪯ T)) hT
     (π.ofWeakerThanLeft (T' := T')).undecidable
 
+omit π in
+/--
+A complete theory directly interpreted in a consistent theory with a $\Delta_1$ set of axioms is
+decidable.
+-/
+theorem decidable_of_complete [T.Δ₁] [Entailment.Consistent T] [Entailment.Complete U]
+    (π : T ⊳ U) : Entailment.Decidable U := by
+  have key (σ : Sentence L₂) : ¬U ⊢ σ ↔ T ⊢ ∼π σ := by
+    constructor
+    · intro h
+      simpa using π.sound <| (Entailment.Complete.con (𝓢 := U) σ).resolve_left h
+    · intro h h'
+      have := π.sound h'
+      exact Entailment.Consistent.not_bot (𝓢 := T) <| by cl_prover [h, this]
+  constructor
+  apply ComputablePred.computable_iff_re_compl_re'.mpr
+  constructor
+  · apply ((Theory.rePred_provable T).comp π.trln.computable_translate).of_eq
+    intro σ
+    have : T ⊢ π σ ↔ U ⊢ σ := by
+      constructor
+      · intro h
+        by_contra h'
+        have := (key σ).mp h'
+        exact Entailment.Consistent.not_bot (𝓢 := T) <| by cl_prover [h, this]
+      · exact π.sound
+    exact this
+  · exact ((Theory.rePred_provable_neg T).comp π.trln.computable_translate).of_eq fun σ ↦
+      (key σ).symm
+
 end FFL.FirstOrder.DirectInterpretation

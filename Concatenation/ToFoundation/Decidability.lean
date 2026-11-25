@@ -110,6 +110,20 @@ variable [L.LORDefinable]
 
 open Arithmetic Bootstrapping
 
+lemma rePred_provable (T : Theory L) [T.Δ₁] : REPred fun σ : Sentence L ↦ T ⊢ σ := by
+  have h : 𝚺ᴬ₁-Predicate fun n : ℕ ↦ Provable T n := by definability
+  apply ((rePred_iff_sigma1.mpr h).comp Computable.encode).of_eq
+  intro σ
+  simp [← Sentence.quote_eq_encode_nat]
+
+lemma rePred_provable_neg (T : Theory L) [T.Δ₁] : REPred fun σ : Sentence L ↦ T ⊢ ∼σ := by
+  have h : 𝚺ᴬ₁-Predicate fun n : ℕ ↦ Provable T (neg L n) := by definability
+  apply ((rePred_iff_sigma1.mpr h).comp Computable.encode).of_eq
+  intro σ
+  change Provable T (neg L (Encodable.encode σ)) ↔ T ⊢ ∼σ
+  rw [← provable_iff_provable (T := T), ← Sentence.quote_eq_encode_nat]
+  simp [Sentence.quote_def, Semiformula.quote_def]
+
 open Classical in
 /-- A complete theory with a $\Delta_1$ set of axioms is decidable. -/
 theorem decidable_of_complete (T : Theory L) [T.Δ₁] [Entailment.Complete T] :
@@ -117,24 +131,18 @@ theorem decidable_of_complete (T : Theory L) [T.Δ₁] [Entailment.Complete T] :
   by_cases hT : Entailment.Inconsistent T
   · exact Entailment.decidable_of_incomplete hT
   have : Entailment.Consistent T := Entailment.not_inconsistent_iff_consistent.mp hT
-  have h₁ : 𝚺ᴬ₁-Predicate fun n : ℕ ↦ Provable T n := by definability
-  have h₂ : 𝚺ᴬ₁-Predicate fun n : ℕ ↦ Provable T (neg L n) := by definability
   constructor
   apply ComputablePred.computable_iff_re_compl_re'.mpr
   constructor
-  · apply ((rePred_iff_sigma1.mpr h₁).comp Computable.encode).of_eq
-    intro σ
-    simp [← Sentence.quote_eq_encode_nat, Entailment.theory]
-  · apply ((rePred_iff_sigma1.mpr h₂).comp Computable.encode).of_eq
+  · exact (rePred_provable T).of_eq fun σ ↦ by simp [Entailment.theory]
+  · apply (rePred_provable_neg T).of_eq
     intro σ
     have : T ⊢ ∼σ ↔ ¬T ⊢ σ := by
       constructor
       · intro h h'
         exact Entailment.Consistent.not_bot (𝓢 := T) <| by cl_prover [h, h']
       · exact (Entailment.Complete.con (𝓢 := T) σ).resolve_left
-    change Provable T (neg L (Encodable.encode σ)) ↔ ¬T ⊢ σ
-    rw [← this, ← provable_iff_provable (T := T), ← Sentence.quote_eq_encode_nat]
-    simp [Sentence.quote_def, Semiformula.quote_def]
+    exact this
 
 /--
 A theory with a model in which every relation symbol holds everywhere is not essentially

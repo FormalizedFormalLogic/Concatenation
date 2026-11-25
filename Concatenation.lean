@@ -10,6 +10,7 @@ public import Concatenation.OpenProblem.Attribute
 public import Concatenation.TC.Basic
 public import Concatenation.TC.Empty
 public import Concatenation.ToFoundation.Arithmetic.R0.Cobham
+public import Concatenation.ToFoundation.Arithmetic.R0.Representation
 public import Concatenation.ToFoundation.Bootstrapping
 public import Concatenation.ToFoundation.Concat
 public import Concatenation.ToFoundation.Decidability

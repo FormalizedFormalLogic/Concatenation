@@ -7,6 +7,7 @@ public import Concatenation.Coding
 public import Concatenation.D.Basic
 public import Concatenation.D.LeftCancellation
 public import Concatenation.DecoratedOrder.Basic
+public import Concatenation.DecoratedOrder.TallyLength
 public import Concatenation.F.Basic
 public import Concatenation.F.Radical
 public import Concatenation.F.Tame
@@ -69,6 +70,7 @@ public import Concatenation.ToFoundation.Prefix
 public import Concatenation.ToFoundation.TuringPersistence
 public import Concatenation.ToMathlib.FreeSemigroup
 public import Concatenation.ToMathlib.FreeSemigroupCode
+public import Concatenation.ToMathlib.NonemptyLowerSet
 public import Concatenation.Tree.Basic
 public import Concatenation.WTC.Arithmetic
 public import Concatenation.WTC.Basic

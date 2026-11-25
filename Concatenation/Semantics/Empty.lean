@@ -16,6 +16,12 @@ namespace FFL.FirstOrder
 /-- A type with two letters `0`, `1`, a concatenation `++`, and the empty string `∅`. -/
 class ConcatenationEmptyStructure (α : Type*) extends ConcatenationStructure α, EmptyCollection α
 
+/-- The letters, the concatenation and the empty string transported along a bijection. -/
+abbrev ConcatenationEmptyStructure.ofEquiv {α β : Type*} [ConcatenationEmptyStructure β]
+    (e : α ≃ β) : ConcatenationEmptyStructure α where
+  toConcatenationStructure := .ofEquiv e
+  emptyCollection := e.symm ∅
+
 namespace Concatenation
 
 open Language
@@ -47,6 +53,14 @@ variable {M}
 
 @[simp]
 lemma val_star : (Semiterm.Operator.Star.star : Semiterm.Operator ℒ⌢ₑ 0).val ![] = (∅ : M) := rfl
+
+lemma standardModelEmpty_ofEquiv {α : Type*} (e : α ≃ M) :
+    @standardModelEmpty α (.ofEquiv e) = Tarski.Structure.ofEquiv e.symm :=
+  Tarski.Structure.ext
+    (funext₃ fun k f v ↦ by rcases f with (_ | _ | _) | ⟨⟨⟩⟩ <;> rfl)
+    (funext₃ fun k r v ↦ by
+      rcases r with ⟨⟨⟩⟩ | ⟨⟨⟩⟩
+      exact propext e.apply_eq_iff_eq.symm)
 
 end semantics
 

@@ -4,13 +4,19 @@ public import Concatenation.BT.Basic
 public import Concatenation.Biteral
 public import Concatenation.Coding
 public import Concatenation.D.Basic
+public import Concatenation.F.Basic
+public import Concatenation.F.Radical
+public import Concatenation.F.Tame
+public import Concatenation.F.Undecidability
 public import Concatenation.Language
 public import Concatenation.OpenProblem
 public import Concatenation.OpenProblem.Attribute
 public import Concatenation.QT.Basic
 public import Concatenation.QT.Irreflexivity
 public import Concatenation.Semantics.Basic
+public import Concatenation.Semantics.Empty
 public import Concatenation.Semantics.Letters
+public import Concatenation.Semantics.Relativization
 public import Concatenation.Semantics.Sequence
 public import Concatenation.Semantics.Standard
 public import Concatenation.Seq.Arithmetic
@@ -20,6 +26,7 @@ public import Concatenation.Seq.Language
 public import Concatenation.TC.Arithmetic
 public import Concatenation.TC.Basic
 public import Concatenation.TC.Empty
+public import Concatenation.TC.EmptyInterpretation
 public import Concatenation.TC.FiniteModel
 public import Concatenation.TC.Interpretability
 public import Concatenation.TC.Matrix
@@ -47,6 +54,7 @@ public import Concatenation.ToFoundation.Interpretability.LocallyFinitelySatisfi
 public import Concatenation.ToFoundation.Interpretability.Table
 public import Concatenation.ToFoundation.Interpretability.Undecidability
 public import Concatenation.ToFoundation.Prefix
+public import Concatenation.ToMathlib.Encodable
 public import Concatenation.ToMathlib.FreeSemigroup
 public import Concatenation.ToMathlib.FreeSemigroupCode
 public import Concatenation.ToMathlib.NonnegSpecialLinearGroup

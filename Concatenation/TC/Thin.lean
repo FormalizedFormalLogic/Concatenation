@@ -1,5 +1,6 @@
 module
 
+public import Concatenation.Semantics.Standard
 public import Concatenation.TC.Substring
 public import AlphaCentauri.Interpretability.Basic
 
@@ -120,6 +121,18 @@ lemma IsThin.append (hx : IsThin x) (hy : IsThin y) : IsThin (x ++ y) := by
   · exact (hx z₁ h₁.isSubstring).append (hy z₂ h₂.isSubstring)
 
 end TC
+
+instance : (FreeSemigroup Bool)↓[ℒ⌢] ⊧* 𝗧𝗖⁺ := by
+  have h (x : FreeSemigroup Bool) : IsBounded x := by
+    induction x using FreeSemigroup.recOnMul with
+    | ih1 b =>
+      apply IsAtom.isBounded
+      cases b
+      · exact isAtom_zero
+      · exact isAtom_one
+    | ih2 b x hb hx => exact hb.append hx
+  have hT : (FreeSemigroup Bool)↓[ℒ⌢] ⊧* 𝗧𝗖 := inferInstance
+  simpa [models_iff, tc6] using ⟨h, fun φ hφ ↦ models_theory_iff.mp hT φ hφ⟩
 
 /--
 The translation of $\mathsf{TC}$ into itself relativized to the thin strings.

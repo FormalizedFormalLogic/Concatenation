@@ -138,9 +138,8 @@ instance [M↓[ℒ⌢ₑ] ⊧* 𝗧𝗖ₑ] : ((nonemptyTranslation 𝗧𝗖ₑ)
     obtain ⟨u, hu⟩ := TCEmpty.editor (congrArg Model.val h)
     rcases Classical.em (u = ∅) with rfl | hu'
     · left
-      rcases hu with ⟨h₁, h₂⟩ | ⟨h₁, h₂⟩
-      · exact ⟨Model.ext <| by simpa using h₁, Model.ext <| by simpa using h₂⟩
-      · exact ⟨Model.ext <| by simpa using h₁, Model.ext <| by simpa using h₂⟩
+      rcases hu with ⟨h₁, h₂⟩ | ⟨h₁, h₂⟩ <;>
+        exact ⟨Model.ext <| by simpa using h₁, Model.ext <| by simpa using h₂⟩
     · right
       use ⟨u, by simpa using hu'⟩
       exact hu.imp (And.imp Model.ext Model.ext) (And.imp Model.ext Model.ext)
@@ -226,29 +225,16 @@ instance [M↓[ℒ⌢] ⊧* 𝗧𝗖] : (Option M)↓[ℒ⌢ₑ] ⊧* 𝗧𝗖�
       exact Or.inr ⟨by simpa using h, by simp⟩
     · use some y
       exact Or.inl ⟨by simpa using h, by simp⟩
-    · rcases editor (Option.some.inj h) with ⟨rfl, rfl⟩ | ⟨u, ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩⟩
-      · use none
-        simp
-      · use some u
-        simp
-      · use some u
-        simp
+    · rcases editor (Option.some.inj h) with ⟨rfl, rfl⟩ | ⟨u, ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩⟩ <;>
+        [use none; use some u; use some u] <;> simp
   case zeroNeEmpty => simp [models_iff, Option.empty_eq_none, Option.zero_eq_some]
   case oneNeEmpty => simp [models_iff, Option.empty_eq_none, Option.one_eq_some]
   case zeroAtom =>
     suffices ∀ x y : Option M, x ++ y = 0 → x = ∅ ∨ y = ∅ by simpa [models_iff]
-    rintro (_ | x) (_ | y) h
-    · exact Or.inl rfl
-    · exact Or.inl rfl
-    · exact Or.inr rfl
-    · exact (zero_ne_append x y (Option.some.inj h).symm).elim
+    rintro (_ | x) (_ | y) h <;> simp_all [Option.empty_eq_none, Option.zero_eq_some]
   case oneAtom =>
     suffices ∀ x y : Option M, x ++ y = 1 → x = ∅ ∨ y = ∅ by simpa [models_iff]
-    rintro (_ | x) (_ | y) h
-    · exact Or.inl rfl
-    · exact Or.inl rfl
-    · exact Or.inr rfl
-    · exact (one_ne_append x y (Option.some.inj h).symm).elim
+    rintro (_ | x) (_ | y) h <;> simp_all [Option.empty_eq_none, Option.one_eq_some]
   case zeroNeOne => simp [models_iff, Option.zero_eq_some, Option.one_eq_some]
 
 end option
@@ -297,9 +283,7 @@ def emptyCode : Option M → M
 
 @[simp]
 lemma isEmptyCode_emptyCode (x : Option M) : IsEmptyCode (emptyCode x) := by
-  cases x
-  · exact Or.inl rfl
-  · exact Or.inr ⟨_, rfl⟩
+  cases x <;> simp [IsEmptyCode, emptyCode]
 
 lemma isEmptyCode_iff : IsEmptyCode x ↔ ∃ y, emptyCode y = x := by
   constructor

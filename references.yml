@@ -4,6 +4,28 @@
 # The keys are the citation keys used in docstrings, e.g. `- [Grz05, §3]`;
 # see docs/conventions.md. Entries are sorted by key.
 
+Dam17:
+  type: Article
+  title: From Strings to Sets
+  author: Damnjanovic, Zlatan
+  date: 2017
+  parent:
+    type: Repository
+    title: arXiv
+  serial-number:
+    arxiv: "1701.07548"
+
+Dam17a:
+  type: Article
+  title: Mutual Interpretability of Robinson Arithmetic and Adjunctive Set Theory with Extensionality
+  author: Damnjanovic, Zlatan
+  date: 2017
+  parent:
+    type: Repository
+    title: arXiv
+  serial-number:
+    arxiv: "1707.03531"
+
 GZ08:
   type: Chapter
   title: Undecidability and Concatenation
@@ -92,6 +114,18 @@ Hor11:
     title: RIMS Kôkyûroku
     volume: 1729
 
+KM24:
+  type: Article
+  title: "Notes on Interpretability between Weak First-order Theories: Theories of Sequences"
+  author:
+  - Kristiansen, Lars
+  - Murwanashyaka, Juvenal
+  date: 2024
+  serial-number:
+    arxiv: "2402.14286"
+  parent:
+    type: Repository
+    title: arXiv
 Hor12:
   type: Article
   title: Weak Theories of Concatenation and Arithmetic

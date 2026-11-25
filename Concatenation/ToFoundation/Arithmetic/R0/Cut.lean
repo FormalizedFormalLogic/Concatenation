@@ -184,18 +184,8 @@ end isTame
 
 section agree
 
-/-- $x \lhd y$ strictly. -/
-def CobhamLT (x y : M) : Prop := x ⊴ y ∧ x ≠ y
-
 @[inherit_doc]
 scoped infix:50 " ◃ " => CobhamLT
-
-/-- $x \lhd y$ strictly. -/
-def cobhamLT : ArithmeticSemisentence 2 := “x y. !cobhamLE x y ∧ x ≠ y”
-
-@[simp]
-lemma eval_cobhamLT : M ⊧/![x, y] cobhamLT ↔ x ◃ y := by
-  simp [cobhamLT, CobhamLT]
 
 variable {ψ : ArithmeticSemisentence 2} {e i j k m n : M}
 
@@ -272,7 +262,7 @@ lemma eval_isGood : M ⊧/![x] (isGood φ ψ) ↔ IsGood φ ψ x := by
 
 variable [M↓[ℒₒᵣ] ⊧* 𝗥₀]
 
-lemma cobhamLT_numeral_iff {n : ℕ} : x ◃ numeral n ↔ ∃ i < n, x = numeral i := by
+lemma cobhamLT_numeral_iff_exists {n : ℕ} : x ◃ numeral n ↔ ∃ i < n, x = numeral i := by
   constructor
   · rintro ⟨h, hne⟩
     obtain ⟨i, hi, rfl⟩ := eq_numeral_of_cobhamLE_numeral h
@@ -293,12 +283,12 @@ lemma agree_numeral_or (n : ℕ) (i j : M) : Agree ψ (numeral n) i j ∨
     obtain ⟨hk, hd⟩ := Nat.find_spec h
     have agree : Agree ψ (numeral (Nat.find h)) i j := by
       intro e he
-      obtain ⟨l, hl, rfl⟩ := cobhamLT_numeral_iff.mp he
+      obtain ⟨l, hl, rfl⟩ := cobhamLT_numeral_iff_exists.mp he
       by_contra H
       exact Nat.find_min h hl ⟨hl.trans hk, H⟩
     use numeral (Nat.find h)
     constructor
-    · exact cobhamLT_numeral_iff.mpr ⟨_, hk, rfl⟩
+    · exact cobhamLT_numeral_iff_exists.mpr ⟨_, hk, rfl⟩
     · by_cases hi : M ⊧/![numeral (Nat.find h), i] ψ
       · right
         exact ⟨agree.symm, by tauto, hi⟩
@@ -306,7 +296,7 @@ lemma agree_numeral_or (n : ℕ) (i j : M) : Agree ψ (numeral n) i j ∨
         exact ⟨agree, hi, by tauto⟩
   · left
     intro e he
-    obtain ⟨k, hk, rfl⟩ := cobhamLT_numeral_iff.mp he
+    obtain ⟨k, hk, rfl⟩ := cobhamLT_numeral_iff_exists.mp he
     by_contra H
     exact h ⟨k, hk, H⟩
 

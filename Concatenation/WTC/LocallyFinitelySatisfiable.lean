@@ -101,7 +101,7 @@ lemma ofFreeSemigroup_eq (u : FreeSemigroup Bool) :
       rw [List.foldl_cons, h₀, of_append_of, ih]
       congr 2
       simp [FreeSemigroup.of]
-  rw [ConcatenationStructure.ofFreeSemigroup, h₀, h]
+  rw [ConcatenationStructure.ofFreeSemigroup, Concatenation.stringValue, h₀, h]
   simp [FreeSemigroup.of]
 
 protected lemma append_assoc (a b c : Truncation N) : a ++ b ++ c = a ++ (b ++ c) := by
@@ -191,16 +191,16 @@ $\mathsf{WTC}$ does not interpret $\mathsf{TC}$.
 - [Hor11, §3, Corollary 3.17]
 - [Hor12, §4, Corollary 4.11]
 -/
-theorem isEmpty_WTC_interprets_TC : IsEmpty (𝗪𝗧𝗖 ⊳ 𝗧𝗖) :=
-  DirectInterpretation.isEmpty_of_not_hasFiniteModel WTC.locallyFinitelySatisfiable
+theorem WTC.notInterprets_TC : 𝗪𝗧𝗖 ⋫ 𝗧𝗖 :=
+  DirectInterpretation.notInterprets_of_not_hasFiniteModel WTC.locallyFinitelySatisfiable
     finiteAxiomatizable_TC not_hasFiniteModel_TC
 
-theorem isEmpty_WTC_interprets_Q : IsEmpty (𝗪𝗧𝗖 ⊳ 𝗤) :=
-  DirectInterpretation.isEmpty_of_not_hasFiniteModel WTC.locallyFinitelySatisfiable
+theorem WTC.notInterprets_Q : 𝗪𝗧𝗖 ⋫ 𝗤 :=
+  DirectInterpretation.notInterprets_of_not_hasFiniteModel WTC.locallyFinitelySatisfiable
     Arithmetic.RobinsonQ.finiteAxiomatizable Arithmetic.RobinsonQ.not_hasFiniteModel
 
-theorem isEmpty_R0_interprets_TC : IsEmpty (𝗥₀ ⊳ 𝗧𝗖) :=
-  DirectInterpretation.isEmpty_of_not_hasFiniteModel Arithmetic.R0.locallyFinitelySatisfiable
+theorem R0_notInterprets_TC : 𝗥₀ ⋫ 𝗧𝗖 :=
+  DirectInterpretation.notInterprets_of_not_hasFiniteModel Arithmetic.R0.locallyFinitelySatisfiable
     finiteAxiomatizable_TC not_hasFiniteModel_TC
 
 end FFL.FirstOrder.Concatenation

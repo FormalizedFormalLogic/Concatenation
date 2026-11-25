@@ -1,6 +1,6 @@
 module
 
-public import Concatenation.TC.Arithmetic
+public import Concatenation.TC.Interpretability
 public import Concatenation.ToFoundation.Arithmetic.R0.Undecidability
 public import Concatenation.ToFoundation.Arithmetic.R0.Visser
 public import Concatenation.ToFoundation.Interpretability.Undecidability
@@ -156,13 +156,6 @@ lemma arithmeticTranslation_dom (x : M) [M↓[ℒ⌢] ⊧* 𝗪𝗧𝗖] : arith
 section TCPlus
 
 variable {M : Type*} [ConcatenationStructure M] [M↓[ℒ⌢] ⊧* 𝗧𝗖⁺] {x y z : M}
-
-lemma exists_isMulSeq_tallyOf (hx : IsTally 1 x) : ∀ n, ∃ z, IsMulSeq x (tallyOf (n + 1)) z
-  | 0 => (existsUnique_isMulSeq_one hx).exists
-  | n + 1 => by
-    obtain ⟨z, hz⟩ := exists_isMulSeq_tallyOf hx n
-    obtain ⟨w, hw, hl⟩ := hz.exists_isLast
-    exact ⟨_, hz.extend hw hl⟩
 
 /-- A multiplication sequence in a model of $\mathsf{TC}^+$ is a multiplication table. -/
 lemma isMulTable_of_isMulSeq (h : IsMulSeq x y z) : IsMulTable x z := by
@@ -545,7 +538,7 @@ lemma append_ne_letter (a : α) : x ++ y ≠ ofLetter a := by
   exact FreeSemigroup.of_ne_mul a u v h.symm
 
 /-- A structure with an initial embedding of the nonempty strings is a model of `𝗪𝗧𝗖[α]`. -/
-theorem models_WTCLetters [Nonempty M] : M↓[ℒ⌢[α]] ⊧* 𝗪𝗧𝗖[α] := ⟨by
+lemma models_WTCLetters [Nonempty M] : M↓[ℒ⌢[α]] ⊧* 𝗪𝗧𝗖[α] := ⟨by
   intro σ h
   cases h
   case equal hφ =>
@@ -879,6 +872,27 @@ end letters
 
 section interpretability
 
+open Arithmetic
+
+/--
+$\mathsf{WTC}$ is locally finitely satisfiable.
+- [Hor11, §3, Corollary 3.16]
+- [Hor12, §4, Theorem 4.10]
+-/
+theorem WTC.locallyFinitelySatisfiable :
+    (𝗪𝗧𝗖 : ConcatenationTheory).LocallyFinitelySatisfiable :=
+  (inferInstance : 𝗥₀ ⊳ 𝗪𝗧𝗖).locallyFinitelySatisfiable R0.locallyFinitelySatisfiable
+
+theorem WTC.notInterprets_Q : 𝗪𝗧𝗖 ⋫ 𝗤 := R0.notInterprets_Q.of_left (inferInstance : 𝗥₀ ⊳ 𝗪𝗧𝗖)
+
+/--
+$\mathsf{WTC}$ does not interpret $\mathsf{TC}$.
+- [Hor11, §3, Corollary 3.17]
+- [Hor12, §4, Corollary 4.11]
+-/
+theorem WTC.notInterprets_TC : 𝗪𝗧𝗖 ⋫ 𝗧𝗖 :=
+  R0.notInterprets_TC.of_left (inferInstance : 𝗥₀ ⊳ 𝗪𝗧𝗖)
+
 variable {L : Language} [L.Eq] [L.Finite] [L.Encodable] [L.Primcodable] {T : Theory L} [𝗘𝗤 L ⪯ T]
 
 /--
@@ -890,9 +904,18 @@ if it is locally finitely satisfiable.
 -/
 theorem WTC.nonempty_interpretation_iff_locallyFinitelySatisfiable (hT : REPred (· ∈ T)) :
     Nonempty (𝗪𝗧𝗖 ⊳ T) ↔ T.LocallyFinitelySatisfiable :=
-  ⟨fun ⟨π⟩ ↦ π.locallyFinitelySatisfiable locallyFinitelySatisfiable, fun h ↦
-    let ⟨π⟩ := Arithmetic.R0.nonempty_interpretation_of_locallyFinitelySatisfiable hT h
-    ⟨π.comp (inferInstance : 𝗪𝗧𝗖 ⊳ 𝗥₀)⟩⟩
+  Iff.trans ⟨fun ⟨π⟩ ↦ ⟨π.comp (inferInstance : 𝗥₀ ⊳ 𝗪𝗧𝗖)⟩,
+      fun ⟨π⟩ ↦ ⟨π.comp (inferInstance : 𝗪𝗧𝗖 ⊳ 𝗥₀)⟩⟩
+    (R0.nonempty_interpretation_iff_locallyFinitelySatisfiable hT)
+
+/--
+A recursively enumerable theory of a finite language is not interpretable in $\mathsf{WTC}$ if and
+only if it is not locally finitely satisfiable.
+- [Hor12, §4, Corollary 4.12]
+-/
+theorem WTC.notInterprets_iff_not_locallyFinitelySatisfiable (hT : REPred (· ∈ T)) :
+    𝗪𝗧𝗖 ⋫ T ↔ ¬T.LocallyFinitelySatisfiable :=
+  notInterprets_iff.trans (nonempty_interpretation_iff_locallyFinitelySatisfiable hT).not
 
 end interpretability
 

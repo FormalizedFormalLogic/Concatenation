@@ -1,16 +1,19 @@
 module
 
 public import Foundation.FirstOrder.Arithmetic.Bootstrapping.Syntax.Theory
+public import Foundation.FirstOrder.Arithmetic.Bootstrapping.Syntax
 public import Foundation.FirstOrder.Syntax.Classical.PrimrecCoding
 
 /-!
-# Primitive recursive operations on formulas
+# Codes of formulas
 
-Quantifying and casting the bound variables are primitive recursive, and the range of a primitive
-recursive sequence of sentences is recursively enumerable.
+Quantifying and casting the bound variables of formulas are primitive recursive, and the internal
+substitution of a closed term agrees with the substitution.
 -/
 
 @[expose] public section
+
+open scoped FFL.FirstOrder.Arithmetic FFL.FirstOrder.Bounding
 
 namespace FFL.FirstOrder
 
@@ -60,17 +63,17 @@ variable {L : Language} [L.Encodable] [L.Primcodable] {ξ : Type*} [Primcodable 
 
 namespace Semiformula
 
-theorem primrec_all : Primrec fun φ : Semiformula L ξ (n + 1) ↦ ∀¹ φ :=
+lemma primrec_all : Primrec fun φ : Semiformula L ξ (n + 1) ↦ ∀¹ φ :=
   Primrec.encode_iff.mp <| Primrec.of_eq
     (f := fun φ : Semiformula L ξ (n + 1) ↦ Nat.pair 6 (encode φ) + 1)
     (by primrec) fun φ ↦ (encode_all φ).symm
 
-theorem primrec_ex : Primrec fun φ : Semiformula L ξ (n + 1) ↦ ∃¹ φ :=
+lemma primrec_ex : Primrec fun φ : Semiformula L ξ (n + 1) ↦ ∃¹ φ :=
   Primrec.encode_iff.mp <| Primrec.of_eq
     (f := fun φ : Semiformula L ξ (n + 1) ↦ Nat.pair 7 (encode φ) + 1)
     (by primrec) fun φ ↦ (encode_ex φ).symm
 
-theorem primrec_castLE (h : n ≤ n') :
+lemma primrec_castLE (h : n ≤ n') :
     Primrec fun φ : Semiformula L ξ n ↦ (Rew.castLE h ▹ φ : Semiformula L ξ n') :=
   Primrec.encode_iff.mp <| Primrec.encode.of_eq fun φ ↦ (encode_castLE φ h).symm
 
@@ -85,3 +88,15 @@ lemma Theory.RE.range [L.DecidableEq] {f : ℕ → Sentence L} (hf : Primrec f) 
 end
 
 end FFL.FirstOrder
+
+namespace FFL.FirstOrder.Arithmetic.Bootstrapping
+
+variable {V : Type*} [ORingStructure V] [V↓[ℒₒᵣ] ⊧* 𝗜𝚺₁] {L : Language} [L.Encodable]
+  [L.LORDefinable]
+
+lemma substs1_app_quote (σ : Semisentence L 1) (t : ClosedSemiterm L 0) :
+    substs1 L (⌜t⌝ : V) ⌜σ⌝ = ⌜(σ/[t] : Sentence L)⌝ := by
+  simp [substs1, Sentence.quote_def, Semiformula.quote_def, Rewriting.emb_subst_eq_subst_coe₁]
+  rfl
+
+end FFL.FirstOrder.Arithmetic.Bootstrapping

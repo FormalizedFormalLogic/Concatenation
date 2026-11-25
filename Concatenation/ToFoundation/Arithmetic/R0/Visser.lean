@@ -1,7 +1,7 @@
 module
 
 public import Concatenation.ToFoundation.Arithmetic.R0.LocallyFinitelySatisfiable
-public import Concatenation.ToFoundation.Arithmetic.R0.Naming
+public import Concatenation.ToFoundation.Arithmetic.R0.Certificate
 public import Foundation.FirstOrder.Incompleteness.Church
 
 /-!
@@ -792,6 +792,15 @@ theorem nonempty_interpretation_iff_locallyFinitelySatisfiable (hT : REPred (· 
     Nonempty (𝗥₀ ⊳ T) ↔ T.LocallyFinitelySatisfiable :=
   ⟨fun ⟨π⟩ ↦ π.locallyFinitelySatisfiable locallyFinitelySatisfiable,
     nonempty_interpretation_of_locallyFinitelySatisfiable hT⟩
+
+/--
+A recursively enumerable theory of a finite language is not interpretable in $\mathsf{R}_0$ if and
+only if it is not locally finitely satisfiable.
+- [Hor11, §3, Theorem 3.3]
+-/
+theorem notInterprets_iff_not_locallyFinitelySatisfiable (hT : REPred (· ∈ T)) :
+    𝗥₀ ⋫ T ↔ ¬T.LocallyFinitelySatisfiable :=
+  notInterprets_iff.trans (nonempty_interpretation_iff_locallyFinitelySatisfiable hT).not
 
 end theorems
 

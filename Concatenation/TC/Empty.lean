@@ -1,13 +1,13 @@
 module
 
-public import Concatenation.TC.Substring
+public import Concatenation.TC.Interpretability
 public import Concatenation.ToFoundation.Interpretability.DefinitionalEquivalence
 
 /-!
 # $\mathsf{TC}$ with and without the empty string
 
-The two theories are mutually interpretable, and even definitionally equivalent, by a definable
-bijection between all strings and the nonempty strings.
+The two theories are mutually interpretable, hence both essentially undecidable, and even
+definitionally equivalent, by a definable bijection between all strings and the nonempty strings.
 -/
 
 @[expose] public section
@@ -431,6 +431,15 @@ $\mathsf{TC}$ and $\mathsf{TC}$ with the empty string are mutually interpretable
 - [Vis09, Appendix A]
 -/
 instance : 𝗧𝗖 ⋈ 𝗧𝗖ₑ := ⟨inferInstance, inferInstance⟩
+
+instance : Entailment.Consistent 𝗧𝗖ₑ := DirectInterpretation.consistent (inferInstance : 𝗧𝗖 ⊳ 𝗧𝗖ₑ)
+
+/--
+$\mathsf{TC}$ with the empty string is essentially undecidable.
+- [Hor11, §2]
+-/
+instance : 𝗧𝗖ₑ.EssentiallyUndecidable :=
+  DirectInterpretation.essentiallyUndecidable (inferInstance : 𝗧𝗖ₑ ⊳ 𝗧𝗖)
 
 end code
 

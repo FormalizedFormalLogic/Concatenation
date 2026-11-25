@@ -2,9 +2,8 @@ module
 
 public import AlphaCentauri.ToMathlib.Algebra.Order.Ring.RingOfDifferences
 public import Concatenation.TC.Arithmetic
-public import Concatenation.ToFoundation.Arithmetic.PeanoMinus.Pairing
-public import Concatenation.ToFoundation.Arithmetic.PeanoMinusInterpretation
-public import Concatenation.ToFoundation.Arithmetic.R0.Undecidability
+public import Concatenation.ToFoundation.Arithmetic.PeanoMinus
+public import Concatenation.ToFoundation.Arithmetic.R0.LocallyFinitelySatisfiable
 public import Concatenation.ToFoundation.Interpretability.Undecidability
 public import Concatenation.ToMathlib.NonnegSpecialLinearGroup
 
@@ -389,6 +388,9 @@ instance : (𝗧𝗖 : ConcatenationTheory).EssentiallyUndecidable :=
 $\mathsf{TC}$ is undecidable.
 - [GZ08, Theorem 16]
 -/
-theorem undecidable : Entailment.Undecidable 𝗧𝗖 := Theory.EssentiallyUndecidable.undecidable 𝗧𝗖
+theorem TC.undecidable : Entailment.Undecidable 𝗧𝗖 := Theory.EssentiallyUndecidable.undecidable 𝗧𝗖
+
+theorem _root_.FFL.FirstOrder.Arithmetic.R0.notInterprets_TC : 𝗥₀ ⋫ 𝗧𝗖 :=
+  Arithmetic.R0.notInterprets_Q.of_right (inferInstance : 𝗧𝗖 ⊳ 𝗤)
 
 end FFL.FirstOrder.Concatenation

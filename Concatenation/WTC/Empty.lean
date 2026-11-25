@@ -69,24 +69,6 @@ variable {M : Type*} [ConcatenationEmptyStructure M] {c x y z s t : M} {u v : Li
 instance [M↓[ℒ⌢ₑ] ⊧* 𝗪𝗧𝗖ₑ] : M↓[ℒ⌢ₑ] ⊧* 𝗪𝗧𝗖ₑ⁻ :=
   ⟨fun _ h ↦ Theory.models M 𝗪𝗧𝗖ₑ h.isWTCEmptyAxiom⟩
 
-@[simp]
-lemma ofList_nil : (ofList [] : M) = ∅ := rfl
-
-@[simp]
-lemma ofList_false : (ofList [false] : M) = 0 := rfl
-
-@[simp]
-lemma ofList_true : (ofList [true] : M) = 1 := rfl
-
-lemma ofList_append_singleton (hu : u ≠ []) (b : Bool) :
-    (ofList (u ++ [b]) : M) = ofList u ++ ofList [b] := by
-  rcases u with _ | ⟨d, l⟩
-  · exact absurd rfl hu
-  · simp [ofList, ofFreeSemigroup, stringValue]
-
-lemma isAtom_ofList_singleton (b : Bool) : IsAtom (ofList [b] : M) := by
-  cases b <;> simp
-
 /--
 `c` embeds the binary strings onto an initial part of `M`: if a concatenation is a standard string,
 then so are its arguments.
@@ -443,14 +425,6 @@ theorem WTCEmptyMinusUnit.equiv_WTCEmpty : 𝗪𝗧𝗖ₑ⁻ ≊ 𝗪𝗧𝗖�
   Entailment.Equiv.antisymm_iff.mpr ⟨inferInstance, inferInstance⟩
 
 section standard
-
-/--
-The binary strings under concatenation.
-- [HH14, §2]
--/
-instance : ConcatenationEmptyStructure (List Bool) where
-  zero := [false]
-  one := [true]
 
 instance : (List Bool)↓[ℒ⌢ₑ] ⊧* 𝗪𝗧𝗖ₑ :=
   IsInitialEmptyEmbedding.models_WTCEmpty (c := id)

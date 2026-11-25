@@ -2,7 +2,6 @@ module
 
 public import Concatenation.F.Basic
 public import Concatenation.TC.Empty
-public import Concatenation.TC.Interpretability
 
 /-!
 # Mutual interpretability of $\mathsf{F}$ and $\mathsf{TC}$
@@ -535,16 +534,7 @@ $\mathsf{F}$ and $\mathsf{TC}$ are mutually interpretable.
 -/
 instance : 𝗙 ⋈ 𝗧𝗖 := ⟨inferInstance, inferInstance⟩
 
-instance : Entailment.Consistent 𝗧𝗖ₑ := DirectInterpretation.consistent (inferInstance : 𝗧𝗖 ⊳ 𝗧𝗖ₑ)
-
 instance : Entailment.Consistent 𝗙 := DirectInterpretation.consistent (inferInstance : 𝗧𝗖 ⊳ 𝗙)
-
-/--
-$\mathsf{TC}$ with the empty string is essentially undecidable.
-- [Hor11, §2]
--/
-instance : 𝗧𝗖ₑ.EssentiallyUndecidable :=
-  DirectInterpretation.essentiallyUndecidable (inferInstance : 𝗧𝗖ₑ ⊳ 𝗧𝗖)
 
 /--
 $\mathsf{F}$ is essentially undecidable.

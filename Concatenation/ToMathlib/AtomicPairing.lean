@@ -367,7 +367,7 @@ lemma eq_iff (h : F.Similar F' d ρ) (hab : (a, b) ∈ ρ) (hab' : (a', b') ∈ 
   IsPartialIso.eq_iff h (mem_reach (p := []) hab (Nat.zero_le d))
     (mem_reach (p := []) hab' (Nat.zero_le d))
 
-theorem insert_atom (h : F.Similar F' d ρ) (s : S) :
+lemma insert_atom (h : F.Similar F' d ρ) (s : S) :
     F.Similar F' d (insert (F.atom s, F'.atom s) ρ) := by
   have h' : F.IsPartialIso F' (insert (F.atom s, F'.atom s) (F.Reach F' d ρ)) :=
     IsPartialIso.insert h (fun _ _ hxy ↦ IsPartialIso.atom_iff h hxy s) fun s' ↦ by
@@ -406,7 +406,7 @@ lemma eq_append (h : F.Similar F' (d + 1) ρ) (hab : (a, b) ∈ ρ) (hab' : (a',
         (mem_reach (p := []) hab' (Nat.zero_le _))).mp (by rw [hx]; exact F.right_append hat)
     rw [← F'.left_append_right hy, hl, hr]
 
-theorem insert_append (h : F.Similar F' (d + 1) ρ) (hab : (a, b) ∈ ρ) (hab' : (a', b') ∈ ρ) :
+lemma insert_append (h : F.Similar F' (d + 1) ρ) (hab : (a, b) ∈ ρ) (hab' : (a', b') ∈ ρ) :
     F.Similar F' d (insert (a ++ a', b ++ b') ρ) := by
   have hs : (b, a) ∈ Prod.swap '' ρ := ⟨(a, b), hab, rfl⟩
   have hs' : (b', a') ∈ Prod.swap '' ρ := ⟨(a', b'), hab', rfl⟩
@@ -694,7 +694,7 @@ theorem exists_similar_insert (d : ℕ) : ∃ g, ∀ ρ : Set (M × M'), ρ.Fini
       exact (hN x s).symm
 
 /-- The same as `exists_similar_insert`, for an element on the right. -/
-theorem exists_similar_insert' (d : ℕ) : ∃ g, ∀ ρ : Set (M × M'), ρ.Finite → F.Similar F' g ρ →
+lemma exists_similar_insert' (d : ℕ) : ∃ g, ∀ ρ : Set (M × M'), ρ.Finite → F.Similar F' g ρ →
     ∀ b, ∃ a, F.Similar F' d (insert (a, b) ρ) := by
   obtain ⟨g, hg⟩ := exists_similar_insert F' F d
   use g

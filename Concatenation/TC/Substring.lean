@@ -1,7 +1,7 @@
 module
 
 public import AlphaCentauri.Interpretability.Basic
-public import Concatenation.Semantics.Basic
+public import Concatenation.TC.Basic
 public import Concatenation.ToFoundation.Interpretability.LocallyFinitelySatisfiable
 
 /-!
@@ -243,29 +243,17 @@ lemma IsPrefix.of_append_left_isAtom (hc : IsAtom c) (h : c ++ x ◨ c ++ y) : x
 
 end substring
 
-lemma finite_TC : (𝗧𝗖 : ConcatenationTheory).Finite := by
-  apply ((Theory.Eq.finite (L := ℒ⌢)).union (Set.toFinite {_, _, _, _, _})).subset fun σ hσ ↦ by
-    cases hσ with
-    | equal _ h => exact .inl h
-    | concatAssoc => exact .inr <| .inl rfl
-    | editor => exact .inr <| .inr <| .inl rfl
-    | zeroNeConcat => exact .inr <| .inr <| .inr <| .inl rfl
-    | oneNeConcat => exact .inr <| .inr <| .inr <| .inr <| .inl rfl
-    | zeroNeOne => exact .inr <| .inr <| .inr <| .inr <| .inr rfl
-
-lemma finiteAxiomatizable_TC : FiniteAxiomatizable 𝗧𝗖 := .of_finite finite_TC
-
-lemma infinite_of_models (M : Type*) [ConcatenationStructure M] [M↓[ℒ⌢] ⊧* 𝗧𝗖] : Infinite M :=
+lemma TC.infinite_of_models (M : Type*) [ConcatenationStructure M] [M↓[ℒ⌢] ⊧* 𝗧𝗖] : Infinite M :=
   not_finite_iff_infinite.mp fun _ ↦
     let ⟨x, hx⟩ := Finite.surjective_of_injective
       (fun _ _ ↦ isAtom_zero.append_right_cancel : (· ++ (0 : M)).Injective) 0
     zero_ne_append x 0 hx.symm
 
-theorem not_hasFiniteModel_TC : ¬(𝗧𝗖 : ConcatenationTheory).HasFiniteModel := by
+theorem TC.not_hasFiniteModel : ¬(𝗧𝗖 : ConcatenationTheory).HasFiniteModel := by
   intro h
   obtain ⟨M, _, _, s, _, hM⟩ := h.exists_eq
   obtain ⟨c, rfl⟩ := exists_eq_standardModel M s
-  exact not_finite_iff_infinite.mpr (infinite_of_models M) inferInstance
+  exact not_finite_iff_infinite.mpr (TC.infinite_of_models M) inferInstance
 
 section thin
 

@@ -652,6 +652,13 @@ instance : (arithmeticTranslation.Model M)↓[ℒₒᵣ] ⊧* 𝗥₀ :=
 
 end arithmeticTranslation
 
+lemma exists_isMulSeq_tallyOf {x : M} (hx : IsTally 1 x) : ∀ n, ∃ z, IsMulSeq x (tallyOf (n + 1)) z
+  | 0 => (existsUnique_isMulSeq_one hx).exists
+  | n + 1 => by
+    obtain ⟨z, hz⟩ := exists_isMulSeq_tallyOf hx n
+    obtain ⟨w, hw, hl⟩ := hz.exists_isLast
+    exact ⟨_, hz.extend hw hl⟩
+
 variable {γ : ArithmeticSemisentence 2} {f : ℕ → ℕ}
 
 lemma eval_transportedRepresentation (hγ : ∀ n, 𝗥₀ ⊢ “∀ y, !γ ↑n y ↔ y = ↑(f n)”) (n : ℕ) (y : M) :

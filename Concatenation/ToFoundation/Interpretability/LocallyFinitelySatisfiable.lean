@@ -2,6 +2,7 @@ module
 
 public import AlphaCentauri.Interpretability.Basic
 public import AlphaCentauri.ToFoundation.FirstOrder.Axiomatizability
+public import Concatenation.ToFoundation.Interpretability.Basic
 
 /-!
 # Locally finitely satisfiable theories
@@ -15,13 +16,6 @@ models.
 namespace FFL.FirstOrder
 
 open _root_.FFL.Entailment
-
-/-- `T` does not directly interpret `U`. -/
-abbrev NotInterprets {L₁ L₂ : Language} [L₁.Eq] [L₂.Eq] (T : Theory L₁) [𝗘𝗤 _ ⪯ T]
-    (U : Theory L₂) : Prop := IsEmpty (T ⊳ U)
-
-@[inherit_doc]
-infix:50 " ⋫ " => NotInterprets
 
 namespace Theory
 
@@ -89,7 +83,7 @@ variable {L₁ L₂ : Language} [L₁.Eq] [L₂.Eq] {T : Theory L₁} [𝗘𝗤 
 A finitely axiomatizable theory interpreted in `T` is interpreted in a finite subset of `T`.
 - [Hor11, §3, Proposition 3.2]
 -/
-theorem exists_finite_subset [L₁.Finite] [L₂.Finite] (π : T ⊳ U) (hU : FiniteAxiomatizable U) :
+lemma exists_finite_subset [L₁.Finite] [L₂.Finite] (π : T ⊳ U) (hU : FiniteAxiomatizable U) :
     ∃ F ⊆ T, F.Finite ∧ ∃ _ : 𝗘𝗤 L₁ ⪯ F, Nonempty (F ⊳ U) := by
   have : Fintype ((k : ℕ) × L₂.Func k) := Language.Finite.func
   obtain ⟨V, hV, hUV⟩ := hU
@@ -134,7 +128,7 @@ A finitely axiomatizable theory interpreted in a locally finitely satisfiable th
 model.
 - [Hor11, §3, Proposition 3.2]
 -/
-theorem hasFiniteModel [L₁.Finite] [L₂.Finite] (π : T ⊳ U) (hT : T.LocallyFinitelySatisfiable)
+lemma hasFiniteModel [L₁.Finite] [L₂.Finite] (π : T ⊳ U) (hT : T.LocallyFinitelySatisfiable)
     (hU : FiniteAxiomatizable U) : U.HasFiniteModel := by
   obtain ⟨F, hF, hfin, _, ⟨ρ⟩⟩ := π.exists_finite_subset hU
   obtain ⟨M, _, _, _, _, _⟩ := (hT F hF hfin).exists_eq

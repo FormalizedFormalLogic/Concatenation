@@ -238,7 +238,7 @@ If `x` and `y` are `1`-tallies and `z`, `z'` end with `0`, then `z ++ x = z' ++ 
 and `x = y`.
 - [Gan09, §3, Lemma 7]
 -/
-theorem tally_separation (hx : IsTally 1 x) (hy : IsTally 1 y) (hz : z ◧ 0)
+lemma tally_separation (hx : IsTally 1 x) (hy : IsTally 1 y) (hz : z ◧ 0)
     (hz' : z' ◧ 0) (h : z ++ x = z' ++ y) : z = z' ∧ x = y :=
   tally_separation_of_ne isAtom_zero Concatenation.zero_ne_one hx hy hz hz' h
 
@@ -637,7 +637,7 @@ If `r` is a multiplication sequence for `x` and `y` with last member `(w, y)`, t
 - [Gan09, §3, Theorem 4]
 - [Sve09, §3]
 -/
-theorem IsMulSeq.extend (hr : IsMulSeq x y r) (hw : IsTally 1 w) (hlast : IsLast (pairOf w y) r) :
+lemma IsMulSeq.extend (hr : IsMulSeq x y r) (hw : IsTally 1 w) (hlast : IsLast (pairOf w y) r) :
     IsMulSeq x (y ++ 1) (r ++ pairOf (w ++ x) (y ++ 1) ++ 0 ++ 0) := by
   obtain ⟨hx, hy, hps, hfirst, -, hrec⟩ := hr
   have ha := hw.append hx
@@ -668,7 +668,7 @@ sequence `r` for `x` and `y` with last member `(w, y)`.
 - [Gan09, §3, Theorem 4]
 - [Sve09, §3, Lemma 5]
 -/
-theorem IsMulSeq.restrict (hs : IsMulSeq x (y ++ 1) s) : ∃ r w, IsTally 1 w ∧ IsMulSeq x y r ∧
+lemma IsMulSeq.restrict (hs : IsMulSeq x (y ++ 1) s) : ∃ r w, IsTally 1 w ∧ IsMulSeq x y r ∧
     IsLast (pairOf w y) r ∧ s = r ++ pairOf (w ++ x) (y ++ 1) ++ 0 ++ 0 := by
   obtain ⟨k, a, ha, rfl⟩ := hs.exists_eq_append_pairOf
   obtain ⟨hx, hy1, hps, hfirst, -, hrec⟩ := hs

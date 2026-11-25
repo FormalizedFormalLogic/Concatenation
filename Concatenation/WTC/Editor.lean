@@ -1,7 +1,7 @@
 module
 
 public import Concatenation.TC.Interpretability
-public import Concatenation.ToFoundation.PrimrecCoding
+public import Concatenation.ToFoundation.Coding
 public import Concatenation.ToMathlib.AtomicPairing
 public import Concatenation.WTC.Basic
 
@@ -137,7 +137,7 @@ lemma exists_similar_eval (φ : Semisentence ℒ⌢ n) :
 Two atomic pairings with the same table of atoms, in which each of the two letters is the same
 atom, satisfy the same sentences.
 -/
-theorem models_iff_of_atomicPairing (σ : Sentence ℒ⌢) : M↓[ℒ⌢] ⊧ σ ↔ M'↓[ℒ⌢] ⊧ σ := by
+lemma models_iff_of_atomicPairing (σ : Sentence ℒ⌢) : M↓[ℒ⌢] ⊧ σ ↔ M'↓[ℒ⌢] ⊧ σ := by
   obtain ⟨k, hk⟩ := exists_similar_eval F F' h₀ h₁ σ
   exact hk ∅ Set.finite_empty (similar_empty k) ![] ![] fun i ↦ i.elim0
 
@@ -448,12 +448,9 @@ open AtomicPairing ConcatenationStructure
 
 variable {N : ℕ} {M : Type*} [ConcatenationStructure M] {x y : M}
 
-lemma finite_length_le (N : ℕ) : {u : FreeSemigroup Bool | u.length ≤ N + 1}.Finite :=
-  ((List.finite_length_le Bool (N + 1)).preimage FreeSemigroup.toList_injective.injOn).subset
-    fun u hu ↦ by simpa [FreeSemigroup.toList, FreeSemigroup.length] using hu
-
 /-- The strings of length at most `N + 1`. -/
-noncomputable def short (N : ℕ) : List (FreeSemigroup Bool) := (finite_length_le N).toFinset.toList
+noncomputable def short (N : ℕ) : List (FreeSemigroup Bool) :=
+  (FreeSemigroup.finite_length_le (N + 1)).toFinset.toList
 
 @[simp]
 lemma mem_short {u : FreeSemigroup Bool} : u ∈ short N ↔ u.length ≤ N + 1 := by simp [short]
@@ -574,8 +571,9 @@ instance : 𝗘𝗤 ℒ⌢ ⪯ PairingTheory N :=
   Entailment.WeakerThan.ofSubset fun φ hφ ↦ .inl <| IsPairingAxiom.equal φ hφ
 
 lemma finite_isPairingAxiom (N : ℕ) : (Set.ofPred (IsPairingAxiom N)).Finite := by
-  have h₂ := (finite_length_le N).prod (finite_length_le N)
-  have h₃ := (finite_length_le N).prod h₂
+  have h₁ := FreeSemigroup.finite_length_le (α := Bool) (N + 1)
+  have h₂ := h₁.prod h₁
+  have h₃ := h₁.prod h₂
   apply ((Theory.Eq.finite (L := ℒ⌢)).union <|
     (h₂.image fun p ↦ (“!!(biteral p.1) ≠ !!(biteral p.2)” : Sentence ℒ⌢)).union <|
     (h₃.image fun p ↦
@@ -777,7 +775,7 @@ lemma eventually_models {σ : Sentence ℒ⌢} (hσ : σ ∈ WTCEditor) :
 Every finite part of $\mathsf{WTC}$ with the editor axiom holds in all but finitely many of the
 structures `Pairing N`.
 -/
-theorem eventually_models_of_finite {F : Theory ℒ⌢} (hF : F ⊆ WTCEditor) (hfin : F.Finite) :
+lemma eventually_models_of_finite {F : Theory ℒ⌢} (hF : F ⊆ WTCEditor) (hfin : F.Finite) :
     ∀ᶠ N in Filter.atTop, (Pairing N)↓[ℒ⌢] ⊧* F :=
   ((Filter.eventually_all_finite hfin).mpr fun _ hσ ↦ eventually_models (hF hσ)).mono
     fun _ h ↦ models_theory_iff.mpr h
@@ -794,7 +792,7 @@ $\mathsf{WTC}$ with the editor axiom does not interpret $\mathsf{TC}$.
 -/
 theorem notInterprets_TC : WTCEditor ⋫ 𝗧𝗖 :=
   DirectInterpretation.notInterprets_of_forall_finite_not_essentiallyUndecidable
-    finiteAxiomatizable_TC fun _ ↦ not_essentiallyUndecidable_of_finite
+    TC.finiteAxiomatizable fun _ ↦ not_essentiallyUndecidable_of_finite
 
 end WTCEditor
 

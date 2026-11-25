@@ -3,6 +3,7 @@ module
 public import Mathlib.Algebra.Free
 public import Mathlib.Computability.Primrec.List
 public import Mathlib.Data.List.Infix
+public import Mathlib.Data.Set.Finite.List
 
 /-!
 # The free semigroup
@@ -105,6 +106,10 @@ lemma mem_substrings_iff :
     · exact ⟨u.toList, [], by simp⟩
     · exact ⟨[], v.toList, by simp⟩
     · exact ⟨u.toList, v.toList, by simp⟩
+
+lemma finite_length_le [Finite α] (n : ℕ) : {x : FreeSemigroup α | x.length ≤ n}.Finite :=
+  ((List.finite_length_le α n).preimage toList_injective.injOn).subset
+    fun x hx ↦ by simpa [toList, length] using hx
 
 lemma toList_inj : x.toList = y.toList ↔ x = y := toList_injective.eq_iff
 

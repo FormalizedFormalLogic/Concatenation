@@ -55,12 +55,8 @@ lemma exists_isTableOf (π : DirectTranslation T L₂) : ∃ tbl : V, IsTableOf 
   use ?[⌜π.domain.sentence⌝, r, f]
   constructor
   · simp [tableDomain]
-  · intro k R
-    rw [tableRel, h₁]
-    exact hr k R
-  · intro k F
-    rw [tableFunc, h₂]
-    exact hf k F
+  · exact fun R ↦ by rw [tableRel, h₁]; exact hr _ R
+  · exact fun F ↦ by rw [tableFunc, h₂]; exact hf _ F
 
 end Arithmetic.Bootstrapping
 

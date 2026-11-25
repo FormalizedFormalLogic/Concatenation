@@ -64,13 +64,13 @@ lemma IsAtom.append_left_cancel (hc : IsAtom c) (h : c ++ x = c ++ y) : x = y :=
   (hc.eq_of_append_eq_append_left hc h).2
 
 /--
-A substring of `x ++ y` is a substring of `x` or of `y`, or splits into an end segment of `x`
-followed by an initial segment of `y`.
+A substring of `x ++ y` is a substring of `x` or of `y`, or splits into a suffix of `x`
+followed by a prefix of `y`.
 - [Gan09, §3, Lemma 5]
 -/
 lemma IsSubstring.append_cases (h : IsSubstring z (x ++ y)) :
     IsSubstring z x ∨ IsSubstring z y ∨
-      ∃ z₁ z₂, z = z₁ ++ z₂ ∧ IsEndSegment z₁ x ∧ IsInitialSegment z₂ y := by
+      ∃ z₁ z₂, z = z₁ ++ z₂ ∧ IsSuffix z₁ x ∧ IsPrefix z₂ y := by
   rcases isSubstring_iff.mp h with rfl | ⟨u, h⟩ | ⟨v, h⟩ | ⟨u, v, h⟩
   · right; right; use x, y
   · rcases editor h with ⟨rfl, rfl⟩ | ⟨w, ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩⟩
@@ -135,26 +135,26 @@ lemma IsTally.ne_zero_append_zero (hx : IsTally 1 x) : x ≠ 0 ++ 0 := by
 lemma append_one_ne_zero_append_zero (x : M) : x ++ 1 ≠ 0 ++ 0 := fun h ↦
   Concatenation.zero_ne_one (isAtom_one.eq_of_append_eq_append isAtom_zero h).1.symm
 
-lemma IsEndSegment.append_left (h : IsEndSegment x y) : IsEndSegment x (u ++ y) := by
+lemma IsSuffix.append_left (h : IsSuffix x y) : IsSuffix x (u ++ y) := by
   rcases h with rfl | ⟨u', rfl⟩
   · simp
   · right; use u ++ u'; simp [Concatenation.append_assoc]
 
-lemma IsInitialSegment.append_right (h : IsInitialSegment x y) : IsInitialSegment x (y ++ v) := by
+lemma IsPrefix.append_right (h : IsPrefix x y) : IsPrefix x (y ++ v) := by
   rcases h with rfl | ⟨v', rfl⟩
   · simp
   · right; use v' ++ v; simp [Concatenation.append_assoc]
 
-lemma IsEndSegment.eq_of_isAtom (hc : IsAtom c) (hc' : IsAtom c') (h : IsEndSegment c x)
-    (h' : IsEndSegment c' x) : c = c' := by
+lemma IsSuffix.eq_of_isAtom (hc : IsAtom c) (hc' : IsAtom c') (h : IsSuffix c x)
+    (h' : IsSuffix c' x) : c = c' := by
   rcases h with rfl | ⟨u, rfl⟩ <;> rcases h' with h' | ⟨u', h'⟩
   · exact h'.symm
   · exact absurd h' hc.ne_append
   · exact absurd h' hc'.ne_append
   · exact (hc.eq_of_append_eq_append hc' h').1
 
-lemma IsInitialSegment.eq_of_isAtom (hc : IsAtom c) (hc' : IsAtom c') (h : IsInitialSegment c x)
-    (h' : IsInitialSegment c' x) : c = c' := by
+lemma IsPrefix.eq_of_isAtom (hc : IsAtom c) (hc' : IsAtom c') (h : IsPrefix c x)
+    (h' : IsPrefix c' x) : c = c' := by
   rcases h with rfl | ⟨v, rfl⟩ <;> rcases h' with h' | ⟨v', h'⟩
   · exact h'.symm
   · exact absurd h' hc.ne_append
@@ -162,28 +162,25 @@ lemma IsInitialSegment.eq_of_isAtom (hc : IsAtom c) (hc' : IsAtom c') (h : IsIni
   · exact (hc.eq_of_append_eq_append_left hc' h').1
 
 @[trans]
-lemma IsInitialSegment.trans (hxy : IsInitialSegment x y) (hyz : IsInitialSegment y z) :
-    IsInitialSegment x z := by
+lemma IsPrefix.trans (hxy : IsPrefix x y) (hyz : IsPrefix y z) : IsPrefix x z := by
   rcases hyz with rfl | ⟨v, rfl⟩
   · exact hxy
   · exact hxy.append_right
 
 @[trans]
-lemma IsEndSegment.trans (hxy : IsEndSegment x y) (hyz : IsEndSegment y z) : IsEndSegment x z := by
+lemma IsSuffix.trans (hxy : IsSuffix x y) (hyz : IsSuffix y z) : IsSuffix x z := by
   rcases hyz with rfl | ⟨u, rfl⟩
   · exact hxy
   · exact hxy.append_left
 
-lemma IsInitialSegment.total (hx : IsInitialSegment x z) (hy : IsInitialSegment y z) :
-    IsInitialSegment x y ∨ IsInitialSegment y x := by
+lemma IsPrefix.total (hx : IsPrefix x z) (hy : IsPrefix y z) : IsPrefix x y ∨ IsPrefix y x := by
   rcases hx with rfl | ⟨v, rfl⟩ <;> rcases hy with h | ⟨v', h⟩
   · simp [h]
   · right; right; use v'
   · left; right; use v
   · rcases editor h with ⟨rfl, -⟩ | ⟨u, ⟨rfl, -⟩ | ⟨rfl, -⟩⟩ <;> simp
 
-lemma IsEndSegment.total (hx : IsEndSegment x z) (hy : IsEndSegment y z) :
-    IsEndSegment x y ∨ IsEndSegment y x := by
+lemma IsSuffix.total (hx : IsSuffix x z) (hy : IsSuffix y z) : IsSuffix x y ∨ IsSuffix y x := by
   rcases hx with rfl | ⟨u, rfl⟩ <;> rcases hy with h | ⟨u', h⟩
   · simp [h]
   · right; right; use u'
@@ -205,7 +202,7 @@ lemma eq_zero_or_eq_zero_zero_of_isSubstring (h : IsSubstring t (0 ++ 0 : M)) :
   · rw [isAtom_zero.eq_of_isSubstring h₁.isSubstring, isAtom_zero.eq_of_isSubstring h₂.isSubstring]
     exact Or.inr rfl
 
-lemma eq_of_isEndSegment_isAtom_zero_zero (hc : IsAtom c) (h : IsEndSegment t (c ++ 0 ++ 0)) :
+lemma eq_of_isSuffix_isAtom_zero_zero (hc : IsAtom c) (h : IsSuffix t (c ++ 0 ++ 0)) :
     t = 0 ∨ t = 0 ++ 0 ∨ t = c ++ 0 ++ 0 := by
   rcases h with rfl | ⟨k, h⟩
   · simp
@@ -227,13 +224,13 @@ lemma zero_zero_append_ne_zero_zero : (0 ++ 0 ++ x : M) ≠ 0 ++ 0 := by
   · exact zero_ne_append _ _ h.symm
   · exact zero_ne_append _ _ h.symm
 
-lemma IsEndSegment.append_congr (h : IsEndSegment x y) : IsEndSegment (x ++ z) (y ++ z) := by
+lemma IsSuffix.append_congr (h : IsSuffix x y) : IsSuffix (x ++ z) (y ++ z) := by
   rcases h with rfl | ⟨u, rfl⟩
   · simp
   · right; use u; simp [Concatenation.append_assoc]
 
-lemma IsInitialSegment.of_append_left_isAtom (hc : IsAtom c)
-    (h : IsInitialSegment (c ++ x) (c ++ y)) : IsInitialSegment x y := by
+lemma IsPrefix.of_append_left_isAtom (hc : IsAtom c)
+    (h : IsPrefix (c ++ x) (c ++ y)) : IsPrefix x y := by
   rcases h with h | ⟨t, h⟩
   · rw [hc.append_left_cancel h]
   · right; use t; exact hc.append_left_cancel <| by simpa [Concatenation.append_assoc] using h

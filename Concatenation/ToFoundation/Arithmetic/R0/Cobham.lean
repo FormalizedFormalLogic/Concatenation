@@ -39,6 +39,8 @@ Cobham's order: $x \le y$, or $y$ is not regular.
 - [Sve08, §3.3]
 -/
 def CobhamLE (x y : M) : Prop := (x = y ∨ x < y) ∨ ¬IsRegular y
+@[inherit_doc]
+scoped infix:50 " ⊴ " => CobhamLE
 
 @[simp]
 lemma eval_isRegular : M ⊧/![y] isRegular ↔ IsRegular y := by
@@ -46,7 +48,7 @@ lemma eval_isRegular : M ⊧/![y] isRegular ↔ IsRegular y := by
     Semiformula.Operator.Eq.sentence_eq, Semiformula.Operator.LT.sentence_eq]
 
 @[simp]
-lemma eval_cobhamLE : M ⊧/![x, y] cobhamLE ↔ CobhamLE x y := by
+lemma eval_cobhamLE : M ⊧/![x, y] cobhamLE ↔ x ⊴ y := by
   simp [cobhamLE, CobhamLE, Semiformula.Operator.LE.sentence_eq, Semiformula.Operator.val,
     Semiformula.Operator.Eq.sentence_eq, Semiformula.Operator.LT.sentence_eq]
 
@@ -74,7 +76,7 @@ lemma isRegular_numeral (n : ℕ) : IsRegular (numeral n : M) := by
 Below a numeral, Cobham's order is $\le$.
 - [Sve08, §3.3, Lemma 2]
 -/
-lemma cobhamLE_numeral_iff {n : ℕ} : CobhamLE x (numeral n) ↔ x = numeral n ∨ x < numeral n := by
+lemma cobhamLE_numeral_iff {n : ℕ} : x ⊴ numeral n ↔ x = numeral n ∨ x < numeral n := by
   simp [CobhamLE, isRegular_numeral]
 
 lemma exists_eq_numeral_or_numeral_le_of_isRegular (hx : IsRegular x) (k : ℕ) :
@@ -100,7 +102,7 @@ lemma exists_eq_numeral_or_numeral_le_of_isRegular (hx : IsRegular x) (k : ℕ) 
 Every element is comparable with every numeral in Cobham's order.
 - [Sve08, §3.3, Lemma 2]
 -/
-lemma cobhamLE_numeral_or (n : ℕ) : CobhamLE x (numeral n) ∨ CobhamLE (numeral n) x := by
+lemma cobhamLE_numeral_or (n : ℕ) : x ⊴ numeral n ∨ numeral n ⊴ x := by
   by_cases hx : IsRegular x
   · rcases exists_eq_numeral_or_numeral_le_of_isRegular hx n with ⟨i, hi, rfl⟩ | h
     · left
@@ -110,7 +112,7 @@ lemma cobhamLE_numeral_or (n : ℕ) : CobhamLE x (numeral n) ∨ CobhamLE (numer
   · right
     exact Or.inr hx
 
-lemma eq_numeral_of_cobhamLE_numeral {n : ℕ} (h : CobhamLE x (numeral n)) :
+lemma eq_numeral_of_cobhamLE_numeral {n : ℕ} (h : x ⊴ numeral n) :
     ∃ i ≤ n, x = numeral i := by
   rcases cobhamLE_numeral_iff.mp h with rfl | h
   · use n
@@ -120,8 +122,8 @@ lemma eq_numeral_of_cobhamLE_numeral {n : ℕ} (h : CobhamLE x (numeral n)) :
     · exact i.isLt.le
     · rfl
 
-lemma cobhamLE_numeral_of_le {k q : ℕ} {w : M} (hkq : k ≤ q) (h : CobhamLE (numeral q) w) :
-    CobhamLE (numeral k) w := by
+lemma cobhamLE_numeral_of_le {k q : ℕ} {w : M} (hkq : k ≤ q) (h : numeral q ⊴ w) :
+    numeral k ⊴ w := by
   by_cases hw : IsRegular w
   · rcases exists_eq_numeral_or_numeral_le_of_isRegular hw k with ⟨i, hi, rfl⟩ | h'
     · rcases h with h | h
@@ -132,7 +134,7 @@ lemma cobhamLE_numeral_of_le {k q : ℕ} {w : M} (hkq : k ≤ q) (h : CobhamLE (
   · exact Or.inr hw
 
 @[simp]
-lemma numeral_cobhamLE_numeral_iff {k n : ℕ} : CobhamLE (numeral k : M) (numeral n) ↔ k ≤ n := by
+lemma numeral_cobhamLE_numeral_iff {k n : ℕ} : (numeral k : M) ⊴ numeral n ↔ k ≤ n := by
   simp [cobhamLE_numeral_iff]
   omega
 

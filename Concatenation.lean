@@ -77,6 +77,8 @@ public import Concatenation.WTC.Arithmetic
 public import Concatenation.WTC.Basic
 public import Concatenation.WTC.Editor
 public import Concatenation.WTC.Embedding
+public import Concatenation.WTC.EmptyInterpretation
+public import Concatenation.WTC.EmptyUnit
 public import Concatenation.WTC.LocallyFinitelySatisfiable
 public import Concatenation.WTC.Pairing
 public import Concatenation.WTC.Standard

@@ -19,28 +19,28 @@ open ConcatenationStructure
 variable {M : Type*} [ConcatenationStructure M] {ξ : Type*} {n : ℕ}
 
 /-- The substring relation as an operator. -/
-def substringOperator : Semiformula.Operator ℒ⌢ 2 := ⟨isSubstring⟩
+def substringOperator (L : Language) [L.Eq] [L.Concat] : Semiformula.Operator L 2 := ⟨isSubstring⟩
 
 @[simp]
 lemma val_substringOperator {v : Fin 2 → M} :
-    substringOperator.val v ↔ IsSubstring (v 0) (v 1) := by
+    (substringOperator ℒ⌢).val v ↔ IsSubstring (v 0) (v 1) := by
   rw [Matrix.fun_eq_vec_two (v := v)]
   exact eval_isSubstring
 
 /--
-Quantifiers bounded by the substring relation. `substringBounding.Hierarchy 𝚺 0` is the class of
-$\Sigma_0$ formulas, and `substringBounding.Hierarchy 𝚺 1` the class of $\Sigma_1$ formulas.
+Quantifiers bounded by the substring relation. `ℬ[⊑, L].Hierarchy 𝚺 0` is the class of
+$\Sigma_0$ formulas, and `ℬ[⊑, L].Hierarchy 𝚺 1` the class of $\Sigma_1$ formulas.
 - [Hor11, §3]
 - [Hor12, §3]
 -/
-def substringBounding : Bounding ℒ⌢ := ⟨{substringOperator}⟩
+def substringBounding (L : Language) [L.Eq] [L.Concat] : Bounding L := ⟨{substringOperator L}⟩
 
 @[inherit_doc]
-scoped notation "ℬ[⊆]" => substringBounding
+scoped notation "ℬ[⊑, " L "]" => substringBounding L
 
 @[simp]
 lemma mem_substringBounding_iff {R : Semiformula.Operator ℒ⌢ 2} :
-    R ∈ ℬ[⊆] ↔ R = substringOperator := Iff.rfl
+    R ∈ ℬ[⊑, ℒ⌢] ↔ R = substringOperator ℒ⌢ := Iff.rfl
 
 namespace WTC
 
@@ -59,7 +59,7 @@ lemma val_ofFreeSemigroup (t : Semiterm ℒ⌢ ξ n) :
     | _, Language.Concat.concat => simp [ih]
 
 /-- $\Sigma_0$ formulas are absolute for the standard strings. -/
-lemma eval_ofFreeSemigroup_iff_of_closure (hφ : ℬ[⊆].Closure φ) :
+lemma eval_ofFreeSemigroup_iff_of_closure (hφ : ℬ[⊑, ℒ⌢].Closure φ) :
     φ.Eval (M := M) (ofFreeSemigroup ∘ e) (ofFreeSemigroup ∘ ε) ↔ φ.Eval e ε := by
   induction hφ with
   | verum => simp
@@ -87,7 +87,7 @@ A $\Sigma_1$ formula true of some strings in the standard model is true of their
 model of $\mathsf{WTC}$.
 - [Hor12, §3, Theorem 3.13]
 -/
-lemma eval_ofFreeSemigroup_of_hierarchy (hφ : ℬ[⊆].Hierarchy 𝚺 1 φ) (h : φ.Eval e ε) :
+lemma eval_ofFreeSemigroup_of_hierarchy (hφ : ℬ[⊑, ℒ⌢].Hierarchy 𝚺 1 φ) (h : φ.Eval e ε) :
     φ.Eval (M := M) (ofFreeSemigroup ∘ e) (ofFreeSemigroup ∘ ε) := by
   revert e
   apply Bounding.Hierarchy.sigma_succ_induction (s := 0) (P := fun n φ ↦ ∀ {e : Fin n → _},
@@ -131,7 +131,7 @@ nonempty binary strings.
 - [Hor12, §3, Theorem 3.13]
 -/
 theorem sigma1_completeness {T : ConcatenationTheory} [𝗪𝗧𝗖 ⪯ T] {σ : ConcatenationSentence}
-    (hσ : ℬ[⊆].Hierarchy 𝚺 1 σ) (h : (FreeSemigroup Bool)↓[ℒ⌢] ⊧ σ) : T ⊢ σ := by
+    (hσ : ℬ[⊑, ℒ⌢].Hierarchy 𝚺 1 σ) (h : (FreeSemigroup Bool)↓[ℒ⌢] ⊧ σ) : T ⊢ σ := by
   have : 𝗘𝗤 ℒ⌢ ⪯ T := Entailment.WeakerThan.trans (𝓣 := 𝗪𝗧𝗖) inferInstance inferInstance
   apply complete.{0}
   intro M _ _

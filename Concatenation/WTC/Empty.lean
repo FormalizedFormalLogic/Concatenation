@@ -445,84 +445,30 @@ namespace WTCEmpty
 
 variable {M : Type} [ConcatenationEmptyStructure M] {x : M}
 
-/--
-The translation of $\mathsf{WTC}$ into $\mathsf{WTC}$ with the empty string, relativized to the
-nonempty strings.
-- [HH14, Theorem 3]
--/
-def nonemptyTranslation : DirectTranslation 𝗪𝗧𝗖ₑ ℒ⌢ where
-  domain := ⟨isNonempty⟩
-  rel
-    | Language.Concatenation.Rel.eq => ⟨“x y. x = y”⟩
-  func
-    | Language.Concatenation.Func.zero => ⟨“z. z = !!(op(0).const)”⟩
-    | Language.Concatenation.Func.one => ⟨“z. z = !!(op(1).const)”⟩
-    | Language.Concatenation.Func.concat => ⟨“z x y. z = x ⌢ y”⟩
-  domain_nonempty := completeEmpty.{0} _ _ fun M _ _ ↦ (models_domainNonempty_iff _).mpr <| by
-    use 0
-    simp [Semiformula.Operator.val, isAtom_ne_empty]
-  func_defined f := completeEmpty.{0} _ _ fun M _ _ ↦ (models_funcDefined_iff _ _).mpr <| by
-    intro e he
-    have he (i) : e i ≠ ∅ := by simpa [Semiformula.Operator.val] using he i
-    cases f
-    · suffices ∃! y : M, y ≠ ∅ ∧ y = 0 by simpa [Semiformula.Operator.val]
-      use 0
-      simp [isAtom_ne_empty]
-    · suffices ∃! y : M, y ≠ ∅ ∧ y = 1 by simpa [Semiformula.Operator.val]
-      use 1
-      simp [isAtom_ne_empty]
-    · suffices ∃! y : M, y ≠ ∅ ∧ y = e 0 ++ e 1 by simpa [Semiformula.Operator.val]
-      use e 0 ++ e 1
-      simpa using fun h ↦ he 0 (eq_empty_of_append_eq_empty h).1
-  preserve_eq := completeEmpty.{0} _ _ fun M _ _ ↦ (models_preserveEq_iff _ _).mpr <| by
-    exact fun _ _ _ _ ↦ Iff.rfl
+instance : NonemptyClosed 𝗪𝗧𝗖ₑ where
+  zero_ne_empty _ := isAtom_ne_empty isAtom_zero
+  one_ne_empty _ := isAtom_ne_empty isAtom_one
+  append_ne_empty _ _ _ _ _ hx h := hx (eq_empty_of_append_eq_empty h).1
 
 namespace nonemptyTranslation
 
-@[simp]
-lemma dom_iff : nonemptyTranslation.Dom x ↔ x ≠ ∅ := by
-  simp [DirectTranslation.dom_iff, nonemptyTranslation, Semiformula.Operator.val]
-
 variable [M↓[ℒ⌢ₑ] ⊧* 𝗪𝗧𝗖ₑ]
-
-/-- The letters and the concatenation of `M` restricted to the nonempty strings. -/
-abbrev concatenationStructure : ConcatenationStructure (nonemptyTranslation.Model M) where
-  zero := ⟨0, by simp [isAtom_ne_empty]⟩
-  one := ⟨1, by simp [isAtom_ne_empty]⟩
-  append x y := ⟨x ++ y, dom_iff.mpr fun h ↦ dom_iff.mp x.dom (eq_empty_of_append_eq_empty h).1⟩
-
-/--
-The structure of the model of `nonemptyTranslation` is the standard one of the letters and the
-concatenation restricted to the nonempty strings.
--/
-lemma struc_eq :
-    Model.struc nonemptyTranslation M = @standardModel _ concatenationStructure :=
-  Tarski.Structure.ext
-    (funext₃ fun k f v ↦ by
-      symm
-      apply Model.func_iff.mpr
-      cases f <;> simp [nonemptyTranslation, Semiformula.Operator.val] <;> rfl)
-    (funext₃ fun k r v ↦ by
-      cases r
-      exact propext <| Model.eq_iff v)
 
 section
 
-attribute [local instance] concatenationStructure
+attribute [local instance] Concatenation.nonemptyTranslation.concatenationStructure
 
 lemma val_ofFreeSemigroup (u : FreeSemigroup Bool) :
-    ((ofFreeSemigroup u : nonemptyTranslation.Model M) : M) = ofFreeSemigroup u :=
+    ((ofFreeSemigroup u : (nonemptyTranslation 𝗪𝗧𝗖ₑ).Model M) : M) = ofFreeSemigroup u :=
   (map_stringValue Model.val (fun _ _ ↦ rfl) _ u).trans <| by
     congr
     funext b
     cases b <;> rfl
 
-lemma isSubstring_val {x y : nonemptyTranslation.Model M} (h : IsSubstring x y) :
-    IsSubstring (x : M) y := h.map Model.val fun _ _ ↦ rfl
-
-lemma isSubstring_ofList_of_isSubstring {x : nonemptyTranslation.Model M} {u : FreeSemigroup Bool}
-    (h : IsSubstring x (ofFreeSemigroup u)) : IsSubstring (x : M) (ofList u.toList) := by
-  have h := isSubstring_val h
+lemma isSubstring_ofList_of_isSubstring {x : (nonemptyTranslation 𝗪𝗧𝗖ₑ).Model M}
+    {u : FreeSemigroup Bool} (h : IsSubstring x (ofFreeSemigroup u)) :
+    IsSubstring (x : M) (ofList u.toList) := by
+  have h := h.map Model.val fun _ _ ↦ rfl
   rwa [val_ofFreeSemigroup] at h
 
 end
@@ -534,10 +480,10 @@ The nonempty strings of a model of $\mathsf{WTC}$ with the empty string form a m
 $\mathsf{WTC}$.
 - [HH14, Theorem 3]
 -/
-instance [M↓[ℒ⌢ₑ] ⊧* 𝗪𝗧𝗖ₑ] : (nonemptyTranslation.Model M)↓[ℒ⌢] ⊧* 𝗪𝗧𝗖 := by
+instance [M↓[ℒ⌢ₑ] ⊧* 𝗪𝗧𝗖ₑ] : ((nonemptyTranslation 𝗪𝗧𝗖ₑ).Model M)↓[ℒ⌢] ⊧* 𝗪𝗧𝗖 := by
   rw [nonemptyTranslation.struc_eq]
-  let := nonemptyTranslation.concatenationStructure (M := M)
-  have nonempty (x : nonemptyTranslation.Model M) : (x : M) ≠ ∅ :=
+  let := nonemptyTranslation.concatenationStructure M 𝗪𝗧𝗖ₑ
+  have nonempty (x : (nonemptyTranslation 𝗪𝗧𝗖ₑ).Model M) : (x : M) ≠ ∅ :=
     nonemptyTranslation.dom_iff.mp x.dom
   have hc := isInitialEmptyEmbedding_ofList M
   constructor
@@ -545,7 +491,7 @@ instance [M↓[ℒ⌢ₑ] ⊧* 𝗪𝗧𝗖ₑ] : (nonemptyTranslation.Model M)�
   cases hσ
   case equal hφ => exact models_theory_iff.mp inferInstance _ hφ
   case concatAssoc u =>
-    suffices ∀ x y z : nonemptyTranslation.Model M,
+    suffices ∀ x y z : (nonemptyTranslation 𝗪𝗧𝗖ₑ).Model M,
         IsSubstring (x ++ y ++ z) (ofFreeSemigroup u) ∨
           IsSubstring (x ++ (y ++ z)) (ofFreeSemigroup u) → x ++ y ++ z = x ++ (y ++ z) by
       simpa [models_iff]
@@ -553,7 +499,7 @@ instance [M↓[ℒ⌢ₑ] ⊧* 𝗪𝗧𝗖ₑ] : (nonemptyTranslation.Model M)�
       h.imp nonemptyTranslation.isSubstring_ofList_of_isSubstring
         nonemptyTranslation.isSubstring_ofList_of_isSubstring
   case editor u =>
-    suffices ∀ x y s t : nonemptyTranslation.Model M, x ++ y = s ++ t →
+    suffices ∀ x y s t : (nonemptyTranslation 𝗪𝗧𝗖ₑ).Model M, x ++ y = s ++ t →
         IsSubstring (x ++ y) (ofFreeSemigroup u) → (x = s ∧ y = t) ∨
           ∃ w, (x ++ w = s ∧ y = w ++ t) ∨ (x = s ++ w ∧ w ++ y = t) by
       simpa [models_iff]
@@ -578,15 +524,15 @@ instance [M↓[ℒ⌢ₑ] ⊧* 𝗪𝗧𝗖ₑ] : (nonemptyTranslation.Model M)�
       use ⟨w, by simpa using hw'⟩
       exact hw.imp (And.imp Model.ext Model.ext) (And.imp Model.ext Model.ext)
   case concatNeZero =>
-    suffices ∀ x y : nonemptyTranslation.Model M, x ++ y ≠ 0 by simpa [models_iff]
+    suffices ∀ x y : (nonemptyTranslation 𝗪𝗧𝗖ₑ).Model M, x ++ y ≠ 0 by simpa [models_iff]
     exact fun x y h ↦ (eq_empty_of_append_isAtom <| Or.inl <| congrArg Model.val h).elim
       (nonempty x) (nonempty y)
   case concatNeOne =>
-    suffices ∀ x y : nonemptyTranslation.Model M, x ++ y ≠ 1 by simpa [models_iff]
+    suffices ∀ x y : (nonemptyTranslation 𝗪𝗧𝗖ₑ).Model M, x ++ y ≠ 1 by simpa [models_iff]
     exact fun x y h ↦ (eq_empty_of_append_isAtom <| Or.inr <| congrArg Model.val h).elim
       (nonempty x) (nonempty y)
   case zeroNeOne =>
-    suffices (0 : nonemptyTranslation.Model M) ≠ 1 by simpa [models_iff]
+    suffices (0 : (nonemptyTranslation 𝗪𝗧𝗖ₑ).Model M) ≠ 1 by simpa [models_iff]
     exact fun h ↦ WTCEmpty.zero_ne_one (M := M) <| congrArg Model.val h
 
 end WTCEmpty
@@ -596,7 +542,7 @@ $\mathsf{WTC}$ with the empty string interprets $\mathsf{WTC}$ on the nonempty s
 - [HH14, Theorem 3]
 -/
 instance : 𝗪𝗧𝗖ₑ ⊳ 𝗪𝗧𝗖 where
-  trln := WTCEmpty.nonemptyTranslation
+  trln := nonemptyTranslation 𝗪𝗧𝗖ₑ
   interpret_theory φ hφ := completeEmpty.{0} _ _ fun _ _ _ ↦
     Model.translate_iff.mpr <| models_theory_iff.mp inferInstance φ hφ
 

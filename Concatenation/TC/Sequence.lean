@@ -42,9 +42,11 @@ lemma eval_isPair : M ⊧/![z] isPair ↔ IsPair z := by simp [isPair, IsPair, p
 `0` and `00`.
 - [Gan09, §1, Definition 1(d)]
 -/
-def IsSeq (z : M) : Prop :=
-  0 ++ 0 ++ 1 ◨ z ∧ z ◧ 1 ++ 0 ++ 0 ∧
-    ∀ y, IsTally 0 y → IsSubstring y z → y = 0 ∨ y = 0 ++ 0
+@[mk_iff]
+structure IsSeq (z : M) : Prop where
+  isPrefix : 0 ++ 0 ++ 1 ◨ z
+  isSuffix : z ◧ 1 ++ 0 ++ 0
+  eq_of_isTally : ∀ y, IsTally 0 y → IsSubstring y z → y = 0 ∨ y = 0 ++ 0
 
 /-- `z` is a sequence. -/
 def isSeq : Semisentence ℒ⌢ 1 :=
@@ -54,7 +56,7 @@ def isSeq : Semisentence ℒ⌢ 1 :=
       y = !!(op(0).const) ∨ y = !!(op(0).const) ⌢ !!(op(0).const)”
 
 @[simp]
-lemma eval_isSeq : M ⊧/![z] isSeq ↔ IsSeq z := by simp [isSeq, IsSeq]
+lemma eval_isSeq : M ⊧/![z] isSeq ↔ IsSeq z := by simp [isSeq, isSeq_iff]
 
 /--
 `y` is a member of the sequence `z`.
@@ -454,7 +456,7 @@ lemma IsLast.pairOf_inj (hu : IsTally 1 u) (hv : IsTally 1 v) (hp : IsTally 1 p)
 lemma IsSeq.isSuffix_zero_zero (h : IsSeq z) : z ◧ 0 ++ 0 := by
   have h₁ : 1 ++ 0 ++ 0 ◧ (0 ++ 0 : M) := by
     right; use 1; simp [Concatenation.append_assoc]
-  exact h₁.trans h.2.1
+  exact h₁.trans h.isSuffix
 
 lemma isLast_append (h : z ◧ 0 ++ 0) : IsLast u (z ++ u ++ 0 ++ 0) := by
   rcases h with rfl | ⟨k, rfl⟩
@@ -507,8 +509,8 @@ variable (ha : IsTally 1 a) (hb : IsTally 1 b)
 include ha hb
 
 lemma isSeq_append_pairOf (hr : IsSeq r) : IsSeq (r ++ pairOf a b ++ 0 ++ 0) := by
-  and_intros
-  · exact hr.1.append_right.append_right.append_right
+  constructor
+  · exact hr.isPrefix.append_right.append_right.append_right
   · rcases hb.isSuffix with rfl | ⟨b', rfl⟩
     · right; use r ++ a ++ 0; simp [pairOf, Concatenation.append_assoc]
     · right; use r ++ a ++ 0 ++ b'; simp [pairOf, Concatenation.append_assoc]
@@ -516,11 +518,11 @@ lemma isSeq_append_pairOf (hr : IsSeq r) : IsSeq (r ++ pairOf a b ++ 0 ++ 0) := 
     rw [show r ++ pairOf a b ++ 0 ++ 0 = r ++ (pairOf a b ++ 0 ++ 0) by
       simp [Concatenation.append_assoc]] at h
     rcases ht.isSubstring_or_isSubstring h (Or.inr ha.isPrefix_pairOf_append) with h | h
-    · exact hr.2.2 t ht h
+    · exact hr.eq_of_isTally t ht h
     · exact eq_zero_or_eq_zero_zero_of_isSubstring_pairOf ha hb ht h
 
 lemma isSeq_zero_zero_append_pairOf : IsSeq (0 ++ 0 ++ pairOf a b ++ 0 ++ 0) := by
-  and_intros
+  constructor
   · exact ha.isPrefix_zero_zero_one
   · simpa only [pairOf, Concatenation.append_assoc] using
       (hb.isSuffix.append_left (u := 0 ++ 0 ++ a ++ 0)).append_congr (z := 0 ++ 0)
@@ -577,7 +579,7 @@ lemma isPairSeq_append_pairOf (hr : IsPairSeq r) : IsPairSeq (r ++ pairOf a b ++
       m ◨ pairOf a b).isPrefix_of_isAtom isAtom_one
         ha.isPrefix.append_right.append_right
     exact absurd h₂.isSubstring h₁.not_isSubstring_one
-  · exact absurd ((isSubstring_zero_zero_of_isSuffix hr.isSeq.2.1 hz₁).trans
+  · exact absurd ((isSubstring_zero_zero_of_isSuffix hr.isSeq.isSuffix hz₁).trans
       (isSubstring_append_left m _)) hv
 
 end append
@@ -611,18 +613,19 @@ lemma IsPairSeq.of_append_pairOf (hs : IsPairSeq (k ++ 0 ++ 0 ++ pairOf a b ++ 0
   have hsub : IsSubstring (k ++ 0 ++ 0) (k ++ 0 ++ 0 ++ pairOf a b ++ 0 ++ 0) :=
     ((isSubstring_append_left _ _).append_right).append_right
   have hseq : IsSeq (k ++ 0 ++ 0) := by
-    and_intros
+    constructor
     · exact hp.isPrefix_zero_zero_one.trans hfirst
     · obtain ⟨c, hc, hk⟩ := exists_isSuffix_isAtom k
       rcases hc with rfl | rfl
       · exfalso
         have h₁ : IsSubstring (0 ++ 0 ++ 0) (k ++ 0 ++ 0 ++ pairOf a b ++ 0 ++ 0) :=
           hk.append_congr.append_congr.isSubstring.trans hsub
-        rcases hs.isSeq.2.2 _ (isTally_zero_zero.append (isTally_self isAtom_zero)) h₁ with h | h
+        rcases hs.isSeq.eq_of_isTally _ (isTally_zero_zero.append (isTally_self isAtom_zero)) h₁
+          with h | h
         · exact zero_ne_append _ _ h.symm
         · exact zero_ne_append _ _ (isAtom_zero.append_right_cancel h).symm
       · exact hk.append_congr.append_congr
-    · exact fun t ht h ↦ hs.isSeq.2.2 t ht (h.trans hsub)
+    · exact fun t ht h ↦ hs.isSeq.eq_of_isTally t ht (h.trans hsub)
   exact ⟨hseq, fun v ⟨_, hv, h⟩ ↦ hs.2 v ⟨hs.isSeq, hv, h.trans hsub⟩⟩
 
 lemma IsLast.exists_eq_append (h : IsLast u z) : ∃ k, k ◧ 0 ++ 0 ++ u ∧ z = k ++ 0 ++ 0 := by

@@ -470,60 +470,20 @@ lemma existsUnique_snocGraph (x y : M) : ∃! z, SnocGraph z x y := by
   · use y * y + y + x + 1
     simp [SnocGraph, h]
 
-/-- The formula that represents the concatenation of codes on numerals. -/
-noncomputable abbrev appendCodeRepresentation : ArithmeticSemisentence 3 :=
-  cobhamRepresentation₂ appendCode
+/-- `z` is the concatenation of `x` and `y`, or `x` if there is none. -/
+def ConcatGraph (z x y : M) : Prop :=
+  IsValue₂ appendCode x y z ∨ (z = x ∧ ∀ w, ¬IsValue₂ appendCode x y w)
 
-/--
-`z` is the only value of `appendCodeRepresentation` at `x` and `y`, and `x` and `y` are below `z`
-in Cobham's order.
--/
-@[mk_iff]
-structure IsConcat (x y z : M) : Prop where
-  left_le : x ⊴ z
-  right_le : y ⊴ z
-  eval : M ⊧/![x, y, z] appendCodeRepresentation
-  unique (w : M) (hw : M ⊧/![x, y, w] appendCodeRepresentation) : w = z
-
-/--
-`z` is the only value of `appendCodeRepresentation` at `x` and `y`, and `x` and `y` are below `z`
-in Cobham's order.
--/
-noncomputable def isConcat : ArithmeticSemisentence 3 :=
-  “x y z. !cobhamLE x z ∧ !cobhamLE y z ∧ !appendCodeRepresentation x y z ∧
-    ∀ w, !appendCodeRepresentation x y w → w = z”
-
-@[simp]
-lemma eval_isConcat : M ⊧/![x, y, z] isConcat ↔ IsConcat x y z := by
-  simp [isConcat, isConcat_iff]
-
-/-- `z` is the concatenation of `x` and `y`: `IsConcat x y z`, or `z` is `x` if there is none. -/
-def ConcatGraph (z x y : M) : Prop := IsConcat x y z ∨ (z = x ∧ ∀ w, ¬IsConcat x y w)
-
-/-- `z` is the concatenation of `x` and `y`: `IsConcat x y z`, or `z` is `x` if there is none. -/
+/-- `z` is the concatenation of `x` and `y`, or `x` if there is none. -/
 noncomputable def concatGraph : ArithmeticSemisentence 3 :=
-  “z x y. !isConcat x y z ∨ (z = x ∧ ∀ w, ¬!isConcat x y w)”
+  “z x y. !(isValue₂ appendCode) x y z ∨ (z = x ∧ ∀ w, ¬!(isValue₂ appendCode) x y w)”
 
 @[simp]
 lemma eval_concatGraph : M ⊧/![z, x, y] concatGraph ↔ ConcatGraph z x y := by
   simp [concatGraph, ConcatGraph]
 
-lemma existsUnique_concatGraph (x y : M) : ∃! z, ConcatGraph z x y := by
-  by_cases h : ∃ z, IsConcat x y z
-  · obtain ⟨z, hz⟩ := h
-    use z
-    and_intros
-    · exact Or.inl hz
-    · rintro w (hw | ⟨-, hw⟩)
-      · exact hz.unique w hw.eval
-      · exact absurd hz (hw z)
-  · push Not at h
-    use x
-    and_intros
-    · exact Or.inr ⟨rfl, h⟩
-    · rintro w (hw | ⟨rfl, -⟩)
-      · exact absurd hw (h w)
-      · rfl
+lemma existsUnique_concatGraph (x y : M) : ∃! z, ConcatGraph z x y :=
+  existsUnique_isValue₂_or _ x y x
 
 /--
 The translation of the language of sequences into $\mathsf{R}_0$: a sequence is the numeral of its
@@ -564,24 +524,22 @@ lemma snocGraph_numeral (s t : FiniteSequence) :
   · simp [SnocGraph, FiniteSequence.code, Nat.pair, h, numeral_mul_numeral, numeral_add_numeral,
       R0.numeral_add_one]
 
-lemma isConcat_numeral (s t : FiniteSequence) :
-    IsConcat (numeral s.code : M) (numeral t.code) (numeral (s ++ t).code) where
-  left_le := by simpa using s.code_le_code_append_left t
-  right_le := by simpa using s.code_le_code_append_right t
-  eval := by simp [primrec₂_appendCode.to_comp]
-  unique := by simp [primrec₂_appendCode.to_comp]
+lemma concatGraph_numeral (s t : FiniteSequence) :
+    ConcatGraph (numeral (s ++ t).code : M) (numeral s.code) (numeral t.code) := by
+  have h := isValue₂_numeral (M := M) (m := s.code) (n := t.code) primrec₂_appendCode.to_comp
+  rw [appendCode_code] at h
+  exact .inl <| h (s.code_le_code_append_left t) (s.code_le_code_append_right t)
 
 lemma ConcatGraph.exists_of_numeral {s : FiniteSequence}
     (h : ConcatGraph (numeral s.code) x y) : ∃ u, u ◨ s ∧ x = numeral u.code := by
   rcases h with h | ⟨rfl, -⟩
-  · obtain ⟨m, -, rfl⟩ := eq_numeral_of_cobhamLE_numeral h.left_le
-    obtain ⟨n, -, rfl⟩ := eq_numeral_of_cobhamLE_numeral h.right_le
+  · obtain ⟨m, n, rfl, rfl, h'⟩ := h.exists_of_numeral primrec₂_appendCode.to_comp
     obtain ⟨u, rfl⟩ := code_surjective m
     obtain ⟨v, rfl⟩ := code_surjective n
     use u
     and_intros
     · use v
-      simpa [primrec₂_appendCode.to_comp, eq_comm] using h.eval
+      simpa using h'
     · rfl
   · use s
     and_intros
@@ -643,7 +601,7 @@ lemma isInitialEmbedding_ofSequence :
   injective s t h := by simpa [ofSequence] using h
   map_nil := rfl
   map_snoc s t := (snoc_eq_iff.mpr <| snocGraph_numeral s t).symm
-  map_append s t := (append_eq_iff.mpr <| Or.inl <| isConcat_numeral s t).symm
+  map_append s t := (append_eq_iff.mpr <| concatGraph_numeral s t).symm
   exists_of_isPrefix := by
     rintro x s ⟨y, h⟩
     obtain ⟨u, hu, hx⟩ := (append_eq_iff.mp h).exists_of_numeral

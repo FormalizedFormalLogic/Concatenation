@@ -163,4 +163,65 @@ lemma eval_cobhamRepresentation₂_numeral_iff {f : ℕ → ℕ → ℕ} (hf : C
   simp [models_iff] at this
   simp [cobhamRepresentation₂, eval_pairDef_numeral_iff, this]
 
+section value
+
+variable {f : ℕ → ℕ → ℕ} {M : Type*} [ORingStructure M] {x y z : M}
+
+/--
+`z` is the only value of `cobhamRepresentation₂ f` at `x` and `y`, and `x` and `y` are below `z` in
+Cobham's order.
+-/
+@[mk_iff]
+structure IsValue₂ (f : ℕ → ℕ → ℕ) (x y z : M) : Prop where
+  left_le : x ⊴ z
+  right_le : y ⊴ z
+  eval : M ⊧/![x, y, z] (cobhamRepresentation₂ f)
+  unique (w : M) (hw : M ⊧/![x, y, w] (cobhamRepresentation₂ f)) : w = z
+
+/--
+`z` is the only value of `cobhamRepresentation₂ f` at `x` and `y`, and `x` and `y` are below `z` in
+Cobham's order.
+-/
+noncomputable def isValue₂ (f : ℕ → ℕ → ℕ) : ArithmeticSemisentence 3 :=
+  “x y z. !cobhamLE x z ∧ !cobhamLE y z ∧ !(cobhamRepresentation₂ f) x y z ∧
+    ∀ w, !(cobhamRepresentation₂ f) x y w → w = z”
+
+@[simp]
+lemma eval_isValue₂ : M ⊧/![x, y, z] (isValue₂ f) ↔ IsValue₂ f x y z := by
+  simp [isValue₂, isValue₂_iff]
+
+/-- A value, or a given element if there is none, exists uniquely. -/
+lemma existsUnique_isValue₂_or (f : ℕ → ℕ → ℕ) (x y d : M) :
+    ∃! z, IsValue₂ f x y z ∨ (z = d ∧ ∀ w, ¬IsValue₂ f x y w) := by
+  by_cases h : ∃ z, IsValue₂ f x y z
+  · obtain ⟨z, hz⟩ := h
+    use z
+    and_intros
+    · exact .inl hz
+    · rintro w (hw | ⟨-, hw⟩)
+      · exact hz.unique w hw.eval
+      · exact absurd hz (hw z)
+  · push Not at h
+    use d
+    simp [h]
+
+variable [M↓[ℒₒᵣ] ⊧* 𝗥₀]
+
+lemma isValue₂_numeral (hf : Computable₂ f) {m n : ℕ} (hm : m ≤ f m n) (hn : n ≤ f m n) :
+    IsValue₂ f (numeral m : M) (numeral n) (numeral (f m n)) where
+  left_le := by simpa using hm
+  right_le := by simpa using hn
+  eval := by simp [hf]
+  unique := by simp [hf]
+
+/-- The arguments of a numeral value are numerals, and the value is that of `f`. -/
+lemma IsValue₂.exists_of_numeral (hf : Computable₂ f) {k : ℕ} (h : IsValue₂ f x y (numeral k)) :
+    ∃ m n, x = numeral m ∧ y = numeral n ∧ f m n = k := by
+  obtain ⟨m, -, rfl⟩ := eq_numeral_of_cobhamLE_numeral h.left_le
+  obtain ⟨n, -, rfl⟩ := eq_numeral_of_cobhamLE_numeral h.right_le
+  exact ⟨m, n, rfl, rfl,
+    (numeral_inj_iff.mp <| (eval_cobhamRepresentation₂_numeral_iff hf m n).mp h.eval).symm⟩
+
+end value
+
 end FFL.FirstOrder.Arithmetic.R0

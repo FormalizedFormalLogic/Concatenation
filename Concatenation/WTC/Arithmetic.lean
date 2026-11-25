@@ -563,41 +563,17 @@ open DirectTranslation ORingStructure Arithmetic Arithmetic.R0
 
 variable (α : Type) [Primcodable α]
 
-/-- The formula that represents the concatenation of codes on numerals. -/
-noncomputable abbrev mulCodeRepresentation : ArithmeticSemisentence 3 :=
-  cobhamRepresentation₂ (FreeSemigroup.mulCode α)
-
 variable {M : Type*} [ORingStructure M] {x y z : M}
 
-/--
-`z` is the only value of `mulCodeRepresentation` at `x` and `y`, and `x` and `y` are below `z` in
-Cobham's order.
--/
-@[mk_iff]
-structure IsConcat (x y z : M) : Prop where
-  left_le : x ⊴ z
-  right_le : y ⊴ z
-  eval : M ⊧/![x, y, z] (mulCodeRepresentation α)
-  unique (w : M) (hw : M ⊧/![x, y, w] (mulCodeRepresentation α)) : w = z
+/-- `z` is the concatenation of `x` and `y`, or `0` if there is none. -/
+def ConcatGraph (z x y : M) : Prop :=
+  IsValue₂ (FreeSemigroup.mulCode α) x y z ∨
+    (z = 0 ∧ ∀ w, ¬IsValue₂ (FreeSemigroup.mulCode α) x y w)
 
-/--
-`z` is the only value of `mulCodeRepresentation` at `x` and `y`, and `x` and `y` are below `z` in
-Cobham's order.
--/
-noncomputable def isConcat : ArithmeticSemisentence 3 :=
-  “x y z. !cobhamLE x z ∧ !cobhamLE y z ∧ !(mulCodeRepresentation α) x y z ∧
-    ∀ w, !(mulCodeRepresentation α) x y w → w = z”
-
-@[simp]
-lemma eval_isConcat : M ⊧/![x, y, z] (isConcat α) ↔ IsConcat α x y z := by
-  simp [isConcat, isConcat_iff]
-
-/-- `z` is the concatenation of `x` and `y`: `IsConcat α x y z`, or `z` is `0` if there is none. -/
-def ConcatGraph (z x y : M) : Prop := IsConcat α x y z ∨ (z = 0 ∧ ∀ w, ¬IsConcat α x y w)
-
-/-- `z` is the concatenation of `x` and `y`: `IsConcat α x y z`, or `z` is `0` if there is none. -/
+/-- `z` is the concatenation of `x` and `y`, or `0` if there is none. -/
 noncomputable def concatGraph : ArithmeticSemisentence 3 :=
-  “z x y. !(isConcat α) x y z ∨ (z = 0 ∧ ∀ w, ¬!(isConcat α) x y w)”
+  “z x y. !(isValue₂ (FreeSemigroup.mulCode α)) x y z ∨
+    (z = 0 ∧ ∀ w, ¬!(isValue₂ (FreeSemigroup.mulCode α)) x y w)”
 
 @[simp]
 lemma eval_concatGraph : M ⊧/![z, x, y] (concatGraph α) ↔ ConcatGraph α z x y := by
@@ -605,53 +581,28 @@ lemma eval_concatGraph : M ⊧/![z, x, y] (concatGraph α) ↔ ConcatGraph α z 
 
 variable {α}
 
-lemma IsConcat.eq {w : M} (hz : IsConcat α x y z) (hw : IsConcat α x y w) : z = w :=
-  hw.unique z hz.eval
-
 variable (α) in
-lemma existsUnique_concatGraph (x y : M) : ∃! z, ConcatGraph α z x y := by
-  by_cases h : ∃ z, IsConcat α x y z
-  · obtain ⟨z, hz⟩ := h
-    use z
-    and_intros
-    · exact Or.inl hz
-    · rintro w (hw | ⟨-, hw⟩)
-      · exact hw.eq hz
-      · exact absurd hz (hw z)
-  · push Not at h
-    use 0
-    and_intros
-    · exact Or.inr ⟨rfl, h⟩
-    · rintro w (hw | ⟨rfl, -⟩)
-      · exact absurd hw (h w)
-      · rfl
+lemma existsUnique_concatGraph (x y : M) : ∃! z, ConcatGraph α z x y :=
+  existsUnique_isValue₂_or _ x y 0
 
 section R0
 
 variable [M↓[ℒₒᵣ] ⊧* 𝗥₀]
 
-lemma isConcat_numeral (u v : FreeSemigroup α) :
-    IsConcat α (numeral u.code : M) (numeral v.code) (numeral (u * v).code) where
-  left_le := by simpa using u.code_le_code_mul_left v
-  right_le := by simpa using u.code_le_code_mul_right v
-  eval := by simp [FreeSemigroup.primrec₂_mulCode.to_comp]
-  unique := by simp [FreeSemigroup.primrec₂_mulCode.to_comp]
-
-lemma IsConcat.exists_of_numeral {w : FreeSemigroup α} (h : IsConcat α x y (numeral w.code)) :
-    ∃ u v : FreeSemigroup α, x = numeral u.code ∧ y = numeral v.code := by
-  obtain ⟨m, -, rfl⟩ := eq_numeral_of_cobhamLE_numeral h.left_le
-  obtain ⟨n, -, rfl⟩ := eq_numeral_of_cobhamLE_numeral h.right_le
-  have := (eval_cobhamRepresentation₂_numeral_iff FreeSemigroup.primrec₂_mulCode.to_comp m n).mp
-    h.eval
-  rw [numeral_inj_iff] at this
-  obtain ⟨u, v, rfl, rfl⟩ := FreeSemigroup.eq_code_of_mulCode_ne_zero (this ▸ w.code_ne_zero)
-  use u, v
+lemma concatGraph_numeral (u v : FreeSemigroup α) :
+    ConcatGraph α (numeral (u * v).code : M) (numeral u.code) (numeral v.code) := by
+  have h := isValue₂_numeral (M := M) (f := FreeSemigroup.mulCode α) (m := u.code) (n := v.code)
+    FreeSemigroup.primrec₂_mulCode.to_comp
+  rw [FreeSemigroup.mulCode_code] at h
+  exact .inl <| h (u.code_le_code_mul_left v) (u.code_le_code_mul_right v)
 
 lemma ConcatGraph.exists_of_numeral {w : FreeSemigroup α}
     (h : ConcatGraph α (numeral w.code) x y) :
     ∃ u v : FreeSemigroup α, x = numeral u.code ∧ y = numeral v.code := by
   rcases h with h | ⟨h, -⟩
-  · exact h.exists_of_numeral
+  · obtain ⟨m, n, rfl, rfl, h'⟩ := h.exists_of_numeral FreeSemigroup.primrec₂_mulCode.to_comp
+    obtain ⟨u, v, rfl, rfl⟩ := FreeSemigroup.eq_code_of_mulCode_ne_zero (h' ▸ w.code_ne_zero)
+    use u, v
   · have : w.code = 0 := numeral_inj_iff (M := M).mp <| by simpa using h
     exact absurd this w.code_ne_zero
 
@@ -727,7 +678,7 @@ lemma isInitialEmbedding_ofString :
     IsInitialEmbedding (ofString : FreeSemigroup α → (codeTranslation α).Model M) where
   injective u v h := by simpa [ofString] using h
   map_letter _ := rfl
-  map_append u v := (append_eq_iff.mpr <| Or.inl <| isConcat_numeral u v).symm
+  map_append u v := (append_eq_iff.mpr <| concatGraph_numeral u v).symm
   exists_of_append_eq h := by
     obtain ⟨u, v, hu, hv⟩ := (append_eq_iff.mp h).exists_of_numeral
     use u, v

@@ -28,12 +28,29 @@ lemma eval_isNonempty : M ⊧/![x] isNonempty ↔ x ≠ ∅ := by
   simp [isNonempty]
 
 /--
-The translation of $\mathsf{TC}$ into $\mathsf{TC}$ with the empty string, relativized to the
-nonempty strings.
+In the models of `T`, the letters are not empty, and the nonempty strings are closed under
+concatenation.
+-/
+class NonemptyClosed (T : Theory ℒ⌢ₑ) : Prop where
+  zero_ne_empty (M : Type) [ConcatenationEmptyStructure M] [M↓[ℒ⌢ₑ] ⊧* T] : (0 : M) ≠ ∅
+  one_ne_empty (M : Type) [ConcatenationEmptyStructure M] [M↓[ℒ⌢ₑ] ⊧* T] : (1 : M) ≠ ∅
+  append_ne_empty (M : Type) [ConcatenationEmptyStructure M] [M↓[ℒ⌢ₑ] ⊧* T] {x y : M}
+    (hx : x ≠ ∅) : x ++ y ≠ ∅
+
+instance : NonemptyClosed 𝗧𝗖ₑ where
+  zero_ne_empty _ := TCEmpty.zero_ne_empty
+  one_ne_empty _ := TCEmpty.one_ne_empty
+  append_ne_empty _ _ _ _ _ hx h := hx (TCEmpty.eq_empty_of_append_eq_empty h).1
+
+variable (T : Theory ℒ⌢ₑ) [𝗘𝗤 ℒ⌢ₑ ⪯ T] [NonemptyClosed T]
+
+/--
+The translation of the language without the empty string into a theory with the empty string,
+relativized to the nonempty strings.
 - [Vis09, Appendix A]
 - [HH14, Theorem 3]
 -/
-def nonemptyTranslation : DirectTranslation 𝗧𝗖ₑ ℒ⌢ where
+def nonemptyTranslation : DirectTranslation T ℒ⌢ where
   domain := ⟨isNonempty⟩
   rel
     | Language.Concatenation.Rel.eq => ⟨“x y. x = y”⟩
@@ -43,44 +60,47 @@ def nonemptyTranslation : DirectTranslation 𝗧𝗖ₑ ℒ⌢ where
     | Language.Concatenation.Func.concat => ⟨“z x y. z = x ⌢ y”⟩
   domain_nonempty := completeEmpty.{0} _ _ fun M _ _ ↦ (models_domainNonempty_iff _).mpr <| by
     use 0
-    simp [Semiformula.Operator.val]
+    simpa [Semiformula.Operator.val] using NonemptyClosed.zero_ne_empty T M
   func_defined f := completeEmpty.{0} _ _ fun M _ _ ↦ (models_funcDefined_iff _ _).mpr <| by
     intro e he
     have he (i) : e i ≠ ∅ := by simpa [Semiformula.Operator.val] using he i
     cases f
     · suffices ∃! y : M, y ≠ ∅ ∧ y = 0 by simpa [Semiformula.Operator.val]
       use 0
-      simp
+      simpa using NonemptyClosed.zero_ne_empty T M
     · suffices ∃! y : M, y ≠ ∅ ∧ y = 1 by simpa [Semiformula.Operator.val]
       use 1
-      simp
+      simpa using NonemptyClosed.one_ne_empty T M
     · suffices ∃! y : M, y ≠ ∅ ∧ y = e 0 ++ e 1 by simpa [Semiformula.Operator.val]
       use e 0 ++ e 1
-      simpa using fun h ↦ he 0 (TCEmpty.eq_empty_of_append_eq_empty h).1
+      simpa using NonemptyClosed.append_ne_empty (T := T) M (he 0)
   preserve_eq := completeEmpty.{0} _ _ fun M _ _ ↦ (models_preserveEq_iff _ _).mpr <| by
     exact fun _ _ _ _ ↦ Iff.rfl
 
 namespace nonemptyTranslation
 
+variable {T}
+
 @[simp]
-lemma dom_iff : nonemptyTranslation.Dom x ↔ x ≠ ∅ := by
+lemma dom_iff : (nonemptyTranslation T).Dom x ↔ x ≠ ∅ := by
   simp [DirectTranslation.dom_iff, nonemptyTranslation, Semiformula.Operator.val]
 
-variable [M↓[ℒ⌢ₑ] ⊧* 𝗧𝗖ₑ]
+variable [M↓[ℒ⌢ₑ] ⊧* T]
 
+variable (M T) in
 /-- The letters and the concatenation of `M` restricted to the nonempty strings. -/
-abbrev concatenationStructure : ConcatenationStructure (nonemptyTranslation.Model M) where
-  zero := ⟨0, by simp⟩
-  one := ⟨1, by simp⟩
-  append x y := ⟨x ++ y, dom_iff.mpr fun h ↦
-    dom_iff.mp x.dom (TCEmpty.eq_empty_of_append_eq_empty h).1⟩
+abbrev concatenationStructure : ConcatenationStructure ((nonemptyTranslation T).Model M) where
+  zero := ⟨0, dom_iff.mpr <| NonemptyClosed.zero_ne_empty T M⟩
+  one := ⟨1, dom_iff.mpr <| NonemptyClosed.one_ne_empty T M⟩
+  append x y := ⟨x ++ y, dom_iff.mpr <|
+    NonemptyClosed.append_ne_empty (T := T) M <| dom_iff.mp x.dom⟩
 
 /--
 The structure of the model of `nonemptyTranslation` is the standard one of the letters and the
 concatenation restricted to the nonempty strings.
 -/
 lemma struc_eq :
-    Model.struc nonemptyTranslation M = @standardModel _ concatenationStructure :=
+    Model.struc (nonemptyTranslation T) M = @standardModel _ (concatenationStructure M T) :=
   Tarski.Structure.ext
     (funext₃ fun k f v ↦ by
       symm
@@ -97,21 +117,21 @@ The nonempty strings of a model of $\mathsf{TC}$ with the empty string form a mo
 $\mathsf{TC}$.
 - [Vis09, Appendix A]
 -/
-instance [M↓[ℒ⌢ₑ] ⊧* 𝗧𝗖ₑ] : (nonemptyTranslation.Model M)↓[ℒ⌢] ⊧* 𝗧𝗖 := by
+instance [M↓[ℒ⌢ₑ] ⊧* 𝗧𝗖ₑ] : ((nonemptyTranslation 𝗧𝗖ₑ).Model M)↓[ℒ⌢] ⊧* 𝗧𝗖 := by
   rw [nonemptyTranslation.struc_eq]
-  let := nonemptyTranslation.concatenationStructure (M := M)
-  have nonempty (x : nonemptyTranslation.Model M) : (x : M) ≠ ∅ :=
+  let := nonemptyTranslation.concatenationStructure M 𝗧𝗖ₑ
+  have nonempty (x : (nonemptyTranslation 𝗧𝗖ₑ).Model M) : (x : M) ≠ ∅ :=
     nonemptyTranslation.dom_iff.mp x.dom
   constructor
   intro σ hσ
   cases hσ
   case equal hφ => exact models_theory_iff.mp inferInstance _ hφ
   case concatAssoc =>
-    suffices ∀ x y z : nonemptyTranslation.Model M, x ++ (y ++ z) = x ++ y ++ z by
+    suffices ∀ x y z : (nonemptyTranslation 𝗧𝗖ₑ).Model M, x ++ (y ++ z) = x ++ y ++ z by
       simpa [models_iff]
     exact fun x y z ↦ Model.ext (TCEmpty.append_assoc (x : M) y z).symm
   case editor =>
-    suffices ∀ x y z w : nonemptyTranslation.Model M, x ++ y = z ++ w →
+    suffices ∀ x y z w : (nonemptyTranslation 𝗧𝗖ₑ).Model M, x ++ y = z ++ w →
         (x = z ∧ y = w) ∨ ∃ u, (x ++ u = z ∧ y = u ++ w) ∨ (x = z ++ u ∧ u ++ y = w) by
       simpa [models_iff]
     intro x y z w h
@@ -125,15 +145,15 @@ instance [M↓[ℒ⌢ₑ] ⊧* 𝗧𝗖ₑ] : (nonemptyTranslation.Model M)↓[�
       use ⟨u, by simpa using hu'⟩
       exact hu.imp (And.imp Model.ext Model.ext) (And.imp Model.ext Model.ext)
   case zeroNeConcat =>
-    suffices ∀ x y : nonemptyTranslation.Model M, 0 ≠ x ++ y by simpa [models_iff]
+    suffices ∀ x y : (nonemptyTranslation 𝗧𝗖ₑ).Model M, 0 ≠ x ++ y by simpa [models_iff]
     exact fun x y h ↦ (TCEmpty.eq_empty_of_append_isAtom <| Or.inl (congrArg Model.val h).symm).elim
       (nonempty x) (nonempty y)
   case oneNeConcat =>
-    suffices ∀ x y : nonemptyTranslation.Model M, 1 ≠ x ++ y by simpa [models_iff]
+    suffices ∀ x y : (nonemptyTranslation 𝗧𝗖ₑ).Model M, 1 ≠ x ++ y by simpa [models_iff]
     exact fun x y h ↦ (TCEmpty.eq_empty_of_append_isAtom <| Or.inr (congrArg Model.val h).symm).elim
       (nonempty x) (nonempty y)
   case zeroNeOne =>
-    suffices (0 : nonemptyTranslation.Model M) ≠ 1 by simpa [models_iff]
+    suffices (0 : (nonemptyTranslation 𝗧𝗖ₑ).Model M) ≠ 1 by simpa [models_iff]
     exact fun h ↦ TCEmpty.zero_ne_one (M := M) (congrArg Model.val h)
 
 /--
@@ -142,7 +162,7 @@ $\mathsf{TC}$ with the empty string interprets $\mathsf{TC}$ on the nonempty str
 - [HH14, Theorem 3]
 -/
 instance : 𝗧𝗖ₑ ⊳ 𝗧𝗖 where
-  trln := nonemptyTranslation
+  trln := nonemptyTranslation 𝗧𝗖ₑ
   interpret_theory φ hφ := completeEmpty.{0} _ _ fun _ _ _ ↦
     Model.translate_iff.mpr <| models_theory_iff.mp inferInstance φ hφ
 
@@ -613,7 +633,7 @@ lemma func_concat_val_iff {e : Fin 3 → M} :
 variable [M↓[ℒ⌢ₑ] ⊧* 𝗧𝗖ₑ]
 
 /-- The bijection of the strings of `M` with the nonempty ones. -/
-noncomputable def equiv : shiftTranslation.Model M ≃ nonemptyTranslation.Model M :=
+noncomputable def equiv : shiftTranslation.Model M ≃ (nonemptyTranslation 𝗧𝗖ₑ).Model M :=
   Equiv.ofBijective (fun x ↦ ⟨shift (x : M), by simp⟩) <| by
     constructor
     · exact fun x y h ↦ Model.ext <| shift_injective <| congrArg Model.val h
@@ -624,19 +644,20 @@ noncomputable def equiv : shiftTranslation.Model M ≃ nonemptyTranslation.Model
 @[simp]
 lemma val_equiv (x : shiftTranslation.Model M) : (equiv x : M) = shift (x : M) := rfl
 
-lemma shift_equiv_symm (y : nonemptyTranslation.Model M) : shift ((equiv.symm y : _) : M) = y := by
+lemma shift_equiv_symm (y : (nonemptyTranslation 𝗧𝗖ₑ).Model M) :
+    shift ((equiv.symm y : _) : M) = y := by
   rw [← val_equiv, Equiv.apply_symm_apply]
 
 /-- The letters and the concatenation of the nonempty strings transported to all strings. -/
 noncomputable abbrev concatenationStructure : ConcatenationStructure (shiftTranslation.Model M) :=
-  let := nonemptyTranslation.concatenationStructure (M := M)
+  let := nonemptyTranslation.concatenationStructure M 𝗧𝗖ₑ
   .ofEquiv equiv
 
 lemma struc_eq :
     Model.struc shiftTranslation M = @standardModel _ concatenationStructure :=
   Tarski.Structure.ext
     (funext₃ fun k f v ↦ by
-      let := nonemptyTranslation.concatenationStructure (M := M)
+      let := nonemptyTranslation.concatenationStructure M 𝗧𝗖ₑ
       symm
       apply Model.func_iff.mpr
       cases f
@@ -654,13 +675,13 @@ The strings of a model of $\mathsf{TC}$ with the empty string, read as its nonem
 model of $\mathsf{TC}$.
 -/
 instance [M↓[ℒ⌢ₑ] ⊧* 𝗧𝗖ₑ] : (shiftTranslation.Model M)↓[ℒ⌢] ⊧* 𝗧𝗖 := by
-  have : nonemptyTranslation.Model M ≡ₑ[ℒ⌢] shiftTranslation.Model M := by
+  have : (nonemptyTranslation 𝗧𝗖ₑ).Model M ≡ₑ[ℒ⌢] shiftTranslation.Model M := by
     rw [shiftTranslation.struc_eq,
-      @standardModel_ofEquiv _ nonemptyTranslation.concatenationStructure,
+      @standardModel_ofEquiv _ (nonemptyTranslation.concatenationStructure M 𝗧𝗖ₑ),
       ← nonemptyTranslation.struc_eq]
     exact Tarski.Structure.ElementaryEquiv.ofEquiv _
   exact (Tarski.Structure.ElementaryEquiv.modelsTheory
-    (M₁ := nonemptyTranslation.Model M)).mp inferInstance
+    (M₁ := (nonemptyTranslation 𝗧𝗖ₑ).Model M)).mp inferInstance
 
 end shiftTranslation
 
@@ -926,12 +947,12 @@ noncomputable def optionEquiv : Option (shiftTranslation.Model M) ≃ M :=
 lemma optionEquiv_zero :
     let := concatenationStructure (M := M)
     optionEquiv (0 : Option (shiftTranslation.Model M)) = 0 :=
-  shift_equiv_symm nonemptyTranslation.concatenationStructure.toZero.zero
+  shift_equiv_symm (nonemptyTranslation.concatenationStructure M 𝗧𝗖ₑ).toZero.zero
 
 lemma optionEquiv_one :
     let := concatenationStructure (M := M)
     optionEquiv (1 : Option (shiftTranslation.Model M)) = 1 :=
-  shift_equiv_symm nonemptyTranslation.concatenationStructure.toOne.one
+  shift_equiv_symm (nonemptyTranslation.concatenationStructure M 𝗧𝗖ₑ).toOne.one
 
 lemma optionEquiv_append (x y : Option (shiftTranslation.Model M)) :
     let := concatenationStructure (M := M)
@@ -941,7 +962,7 @@ lemma optionEquiv_append (x y : Option (shiftTranslation.Model M)) :
   · exact (TCEmpty.empty_append _).symm
   · exact (TCEmpty.append_empty _).symm
   · exact shift_equiv_symm <|
-      nonemptyTranslation.concatenationStructure.toAppend.append (equiv x) (equiv y)
+      (nonemptyTranslation.concatenationStructure M 𝗧𝗖ₑ).toAppend.append (equiv x) (equiv y)
 
 lemma val_shiftOption_eq (x : Option (shiftTranslation.Model M)) :
     ((@shiftOption _ concatenationStructure x : shiftTranslation.Model M) : M) =

@@ -516,4 +516,163 @@ end IsApproximable
 
 end clauses
 
+section structures
+
+variable {L : Language} [L.Encodable] {W : M → Prop} {F : ℕ → M → M → M → Prop}
+  {N : Type*} [Nonempty N] [Tarski.Structure L N]
+
+variable (L W F) in
+/-- The structure `N` is the one that the facts `F` about the elements of `W` describe. -/
+structure IsDescribedBy (val : N → M) : Prop where
+  mem (a : N) : W (val a) ∧ F 2 (val a) 0 0
+  exists_eq (x : M) : W x → F 2 x 0 0 → ∃ a, val a = x
+  rel {n : ℕ} (R : L.Rel n) (v : Fin n → N) : Tarski.Structure.rel R v ↔
+    F 7 (mkPair (numeral n) (numeral (encode R))) (envCode (val ∘ v)) 0
+  func {n : ℕ} (f : L.Func n) (v : Fin n → N) : F 8 (mkPair (numeral n) (numeral (encode f)))
+    (envCode (val ∘ v)) (val (Tarski.Structure.func f v))
+
+variable [M↓[ℒₒᵣ] ⊧* 𝗥₀]
+
+lemma IsApproximable.env (h : IsApproximable A E W F) {n : ℕ} {v : Fin n → M}
+    (hv : ∀ i, W (v i) ∧ F 2 (v i) 0 0) :
+    W (envCode v) ∧ F 3 (numeral n) (envCode v) 0 := by
+  induction n with
+  | zero => exact ⟨h.zero, h.env_zero⟩
+  | succ n ih =>
+    have ih := ih fun i ↦ hv i.succ
+    exact ⟨h.pair _ _ (hv 0).1 ih.1, h.env_succ ih.1 (hv 0).1 ih.2 (hv 0).2⟩
+
+namespace IsDescribedBy
+
+variable {val : N → M} (hN : IsDescribedBy L W F val) (h : IsApproximable A E W F)
+include hN h
+
+lemma env {n : ℕ} (v : Fin n → N) :
+    W (envCode (val ∘ v)) ∧ F 3 (numeral n) (envCode (val ∘ v)) 0 :=
+  h.env fun i ↦ hN.mem (v i)
+
+lemma bvar {n : ℕ} (v : Fin n → N) (i : Fin n) :
+    F 5 (numeral (Nat.pair 0 i + 1)) (envCode (val ∘ v)) (val (v i)) := by
+  induction n with
+  | zero => exact i.elim0
+  | succ n ih =>
+    have env := hN.env h fun i ↦ v i.succ
+    cases i using Fin.cases with
+    | zero => exact h.bvar_zero env.1 (hN.mem _).1 env.2 (hN.mem _).2
+    | succ i =>
+      exact h.bvar_succ env.1 (hN.mem _).1 (hN.mem _).1 env.2 (hN.mem _).2 <|
+        ih (fun i ↦ v i.succ) i
+
+lemma vec {n k : ℕ} (v : Fin n → N) (t : Fin k → ClosedSemiterm L n)
+    (ht : ∀ i, F 5 (numeral (encode (t i))) (envCode (val ∘ v)) (val ((t i).val v Empty.elim))) :
+    F 6 (numeral (Matrix.vecToNat fun i ↦ encode (t i))) (envCode (val ∘ v))
+      (envCode (val ∘ fun i ↦ (t i).val v Empty.elim)) := by
+  have env := hN.env h v
+  induction k with
+  | zero => exact h.vec_nil env.1 env.2
+  | succ k ih =>
+    have e : (fun i ↦ encode (t i)) = encode (t 0) :> fun i ↦ encode (t i.succ) := by
+      funext i
+      cases i using Fin.cases <;> simp
+    rw [e, Matrix.encode_succ]
+    exact h.vec_cons env.1 (hN.mem _).1 (hN.env h fun i ↦ (t i.succ).val v Empty.elim).1 (ht 0) <|
+      ih (fun i ↦ t i.succ) fun i ↦ ht i.succ
+
+lemma term {n : ℕ} (v : Fin n → N) (t : ClosedSemiterm L n) :
+    F 5 (numeral (encode t)) (envCode (val ∘ v)) (val (t.val v Empty.elim)) := by
+  induction t with
+  | bvar i => exact hN.bvar h v i
+  | fvar x => exact x.elim
+  | func f t ih =>
+    have := hN.func f fun i ↦ (t i).val v Empty.elim
+    exact h.func (hN.env h v).1 (hN.env h _).1 (hN.mem _).1 (hN.vec h v t ih) this
+
+lemma evalb {n : ℕ} (v : Fin n → N) (φ : Semisentence L n)
+    (hφ : F 4 (numeral (encode φ)) (envCode (val ∘ v)) 0) : N ⊧/v φ := by
+  have env := (hN.env h v).1
+  match φ with
+  | .rel R t =>
+    have := (hN.rel R fun i ↦ (t i).val v Empty.elim).mpr <|
+      h.rel env (hN.env h _).1 hφ <| hN.vec h v t fun i ↦ hN.term h v (t i)
+    simpa [Semiformula.eval_rel, Function.comp_def] using this
+  | .nrel R t =>
+    have := (hN.rel R fun i ↦ (t i).val v Empty.elim).not.mpr <|
+      h.nrel env (hN.env h _).1 hφ <| hN.vec h v t fun i ↦ hN.term h v (t i)
+    simpa [Semiformula.eval_nrel, Function.comp_def] using this
+  | ⊤ => simp
+  | ⊥ => exact (h.falsum env hφ).elim
+  | φ ⋏ ψ =>
+    have := h.and env hφ
+    simpa using ⟨evalb v φ this.1, evalb v ψ this.2⟩
+  | φ ⋎ ψ =>
+    have : N ⊧/v φ ∨ N ⊧/v ψ := (h.or env hφ).imp (evalb v φ) (evalb v ψ)
+    simpa using this
+  | ∀¹ φ =>
+    have (a : N) : N ⊧/(a :> v) φ := evalb (a :> v) φ <|
+      h.all env (hN.mem a).1 hφ (hN.mem a).2
+    simpa using this
+  | ∃¹ φ =>
+    obtain ⟨x, hx, hdx, hφ⟩ := h.exs env hφ
+    obtain ⟨a, rfl⟩ := hN.exists_eq x hx hdx
+    have : N ⊧/(a :> v) φ := evalb (a :> v) φ hφ
+    simpa using ⟨a, this⟩
+
+end IsDescribedBy
+
+end structures
+
+section translation
+
+variable (A : ArithmeticSemisentence 2) (L : Language) [L.Encodable] [L.Eq]
+
+/-- The code of the environment `t`. -/
+def envCodeTerm {m : ℕ} : {n : ℕ} → (Fin n → ClosedSemiterm ℒₒᵣ m) → ClosedSemiterm ℒₒᵣ m
+  | 0, _ => ‘0’
+  | _ + 1, t => Rew.subst ![t 0, envCodeTerm fun i ↦ t i.succ] mkPairTerm
+
+@[simp]
+lemma val_envCodeTerm {m n : ℕ} {t : Fin n → ClosedSemiterm ℒₒᵣ m} {e : Fin m → M}
+    {f : Empty → M} : (envCodeTerm t).val e f = envCode fun i ↦ (t i).val e f := by
+  induction n with
+  | zero => simp [envCodeTerm]
+  | succ n ih => simp [envCodeTerm, envCode, ih]
+
+variable {φ : ArithmeticSemisentence 1} {ψ σ : ArithmeticSemisentence 2}
+
+/-- `x` belongs to the domain of the interpreted structure. -/
+def InDomain (φ : ArithmeticSemisentence 1) (ψ σ : ArithmeticSemisentence 2) (x : M) : Prop :=
+  IsSmall φ ψ x ∧ Holds φ ψ σ (numeral 2) x 0 0
+
+/-- `x` belongs to the domain of the interpreted structure. -/
+def inDomain (φ : ArithmeticSemisentence 1) (ψ σ : ArithmeticSemisentence 2) :
+    ArithmeticSemisentence 1 :=
+  “x. !(isSmall φ ψ) x ∧ !(holds φ ψ σ) 2 x 0 0”
+
+@[simp]
+lemma eval_inDomain : M ⊧/![x] (inDomain φ ψ σ) ↔ InDomain φ ψ σ x := by
+  simp [inDomain, InDomain]
+
+/-- The relation of arity `n` and code `R` of the interpreted structure. -/
+def describedRel (φ : ArithmeticSemisentence 1) (ψ σ : ArithmeticSemisentence 2) (n R : ℕ) :
+    ArithmeticSemisentence n :=
+  (holds φ ψ σ)/[‘7’, ‘!mkPairTerm ↑n ↑R’, envCodeTerm fun i ↦ #i, ‘0’]
+
+@[simp]
+lemma eval_describedRel {n R : ℕ} {v : Fin n → M} : M ⊧/v (describedRel φ ψ σ n R) ↔
+    Holds φ ψ σ (numeral 7) (mkPair (numeral n) (numeral R)) (envCode v) 0 := by
+  simp [describedRel]
+
+/-- The function of arity `n` and code `f` of the interpreted structure. -/
+def describedFunc (φ : ArithmeticSemisentence 1) (ψ σ : ArithmeticSemisentence 2) (n f : ℕ) :
+    ArithmeticSemisentence (n + 1) :=
+  (holds φ ψ σ)/[‘8’, ‘!mkPairTerm ↑n ↑f’, envCodeTerm fun i : Fin n ↦ #i.succ, #0]
+
+@[simp]
+lemma eval_describedFunc {n f : ℕ} {a : M} {v : Fin n → M} :
+    M ⊧/(a :> v) (describedFunc φ ψ σ n f) ↔
+      Holds φ ψ σ (numeral 8) (mkPair (numeral n) (numeral f)) (envCode v) a := by
+  simp [describedFunc]
+
+end translation
+
 end FFL.FirstOrder.Arithmetic.R0

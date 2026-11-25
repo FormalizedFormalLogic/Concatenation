@@ -9,6 +9,7 @@ public import Concatenation.OpenProblem.Attribute
 public import Concatenation.TC.Basic
 public import Concatenation.TC.Empty
 public import Concatenation.ToFoundation.Concat
+public import Concatenation.ToFoundation.Decidability
 public import Concatenation.ToFoundation.Prefix
 public import Concatenation.ToMathlib.FreeSemigroup
 public import Concatenation.WTC.Basic

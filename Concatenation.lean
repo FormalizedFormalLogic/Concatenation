@@ -11,6 +11,10 @@ public import Concatenation.Semantics.Basic
 public import Concatenation.Semantics.Letters
 public import Concatenation.Semantics.Sequence
 public import Concatenation.Semantics.Standard
+public import Concatenation.Seq.Arithmetic
+public import Concatenation.Seq.Basic
+public import Concatenation.Seq.Embedding
+public import Concatenation.Seq.Language
 public import Concatenation.TC.Arithmetic
 public import Concatenation.TC.Basic
 public import Concatenation.TC.Empty

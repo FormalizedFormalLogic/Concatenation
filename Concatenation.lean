@@ -13,12 +13,14 @@ public import Concatenation.Semantics.Standard
 public import Concatenation.TC.Arithmetic
 public import Concatenation.TC.Basic
 public import Concatenation.TC.Empty
+public import Concatenation.TC.Matrix
 public import Concatenation.TC.MulSeq
 public import Concatenation.TC.Representation
 public import Concatenation.TC.Separation
 public import Concatenation.TC.Substring
 public import Concatenation.TC.Thin
 public import Concatenation.TC.Undecidability
+public import Concatenation.ToFoundation.Arithmetic.PeanoMinus.Pairing
 public import Concatenation.ToFoundation.Arithmetic.PeanoMinusInterpretation
 public import Concatenation.ToFoundation.Arithmetic.R
 public import Concatenation.ToFoundation.Arithmetic.R0.Cobham
@@ -31,4 +33,5 @@ public import Concatenation.ToFoundation.Interpretability.Table
 public import Concatenation.ToFoundation.Interpretability.Undecidability
 public import Concatenation.ToFoundation.Prefix
 public import Concatenation.ToMathlib.FreeSemigroup
+public import Concatenation.ToMathlib.NonnegSpecialLinearGroup
 public import Concatenation.WTC.Basic

@@ -75,14 +75,15 @@ theorem decidable_of_complete (h : Entailment.Complete T) : Entailment.Decidable
   by_cases hT : Entailment.Consistent T
   · constructor
     apply ComputablePred.computable_iff_re_compl_re'.mpr
-    use T.rePred_provable
-    apply T.rePred_provable_neg.of_eq
-    intro σ
-    constructor
-    · intro hσ hσ'
-      exact Entailment.Consistent.not_bot (𝓢 := T) <| Entailment.neg_mdp hσ hσ'
-    · intro hσ
-      exact (h.con σ).resolve_left hσ
+    and_intros
+    · exact T.rePred_provable
+    · apply T.rePred_provable_neg.of_eq
+      intro σ
+      constructor
+      · intro hσ hσ'
+        exact Entailment.Consistent.not_bot (𝓢 := T) <| Entailment.neg_mdp hσ hσ'
+      · intro hσ
+        exact (h.con σ).resolve_left hσ
   · exact Entailment.decidable_of_incomplete <| Entailment.not_consistent_iff_inconsistent.mp hT
 
 end Theory

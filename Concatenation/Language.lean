@@ -170,6 +170,12 @@ end
 
 end Language
 
+abbrev ConcatenationTheory := Theory ℒ⌢
+
+abbrev ConcatenationSemisentence (n : ℕ) := Semisentence ℒ⌢ n
+
+abbrev ConcatenationSentence := Sentence ℒ⌢
+
 variable {ξ : Type*} {n : ℕ} [ToString ξ]
 
 def Semiterm.toStringConcatenation : Semiterm ℒ⌢ ξ n → String

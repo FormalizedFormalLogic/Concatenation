@@ -4,7 +4,7 @@ public import Mathlib.Algebra.Free
 public import Mathlib.Data.List.Infix
 
 /-!
-# Prefixes and substrings in the free semigroup
+# Prefixes, substrings and equidivisibility in the free semigroup
 -/
 
 @[expose] public section
@@ -72,5 +72,25 @@ lemma mem_substrings_iff :
     · exact ⟨u.toList, [], by simp⟩
     · exact ⟨[], v.toList, by simp⟩
     · exact ⟨u.toList, v.toList, by simp⟩
+
+lemma toList_inj : x.toList = y.toList ↔ x = y := toList_injective.eq_iff
+
+lemma of_ne_mul (a : α) (x y : FreeSemigroup α) : of a ≠ x * y := fun h ↦ by
+  simpa [length_mul, length_of, length] using congrArg length h
+
+/-- Equidivisibility of the free semigroup. -/
+lemma mul_eq_mul_iff {z w : FreeSemigroup α} :
+    x * y = z * w ↔ (x = z ∧ y = w) ∨ ∃ u, (x * u = z ∧ y = u * w) ∨ (x = z * u ∧ u * y = w) := by
+  rw [← toList_inj, toList_mul, toList_mul, List.append_eq_append_iff]
+  constructor
+  · rintro (⟨l, hz, hy⟩ | ⟨l, hx, hw⟩) <;> rcases eq_nil_or_exists_toList l with rfl | ⟨u, rfl⟩
+    · exact .inl ⟨toList_injective <| by simpa using hz.symm, toList_injective hy⟩
+    · exact .inr ⟨u, .inl ⟨toList_injective hz.symm, toList_injective hy⟩⟩
+    · exact .inl ⟨toList_injective <| by simpa using hx, toList_injective hw.symm⟩
+    · exact .inr ⟨u, .inr ⟨toList_injective hx, toList_injective hw.symm⟩⟩
+  · rintro (⟨rfl, rfl⟩ | ⟨u, ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩⟩)
+    · exact .inl ⟨[], by simp⟩
+    · exact .inl ⟨u.toList, by simp⟩
+    · exact .inr ⟨u.toList, by simp⟩
 
 end FreeSemigroup

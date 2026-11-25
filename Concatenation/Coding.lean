@@ -1,6 +1,7 @@
 module
 
 public import Concatenation.Biteral
+public import Concatenation.ToFoundation.AddCoding
 public import Concatenation.ToFoundation.Bootstrapping
 public import Foundation.FirstOrder.Incompleteness.Church
 
@@ -71,6 +72,47 @@ instance : (ℒ⌢).LORDefinable where
   rel_iff {k c} := by simpa [models_iff] using! mem_range_encode_rel_iff
 
 end Language.Concatenation
+
+namespace Language.PrefixRel
+
+instance : prefixRel.Primcodable where
+  func := by
+    apply (Primrec.const 0 : Primrec fun _ : ℕ × ℕ ↦ 0).of_eq
+    rintro ⟨k, e⟩
+    simp [Encodable.decode]
+  rel := by
+    have h : Primrec fun p : ℕ × ℕ ↦ if p.1 = 2 ∧ p.2 = 0 then 1 else 0 := by primrec
+    apply h.of_eq
+    rintro ⟨k, e⟩
+    match k, e with
+    |     0,     _ => rfl
+    |     1,     _ => rfl
+    |     2,     0 => rfl
+    |     2, _ + 1 => simp [Encodable.decode]
+    | _ + 3,     _ => simp [Encodable.decode]
+
+end Language.PrefixRel
+
+namespace Language
+
+instance : unit.{0}.Encodable where
+  func := fun k ↦ inferInstanceAs (Encodable (Constant.Func PUnit k))
+  rel := fun _ ↦ inferInstanceAs (Encodable PEmpty)
+
+instance : unit.{0}.Primcodable where
+  func := by
+    have h : Primrec fun p : ℕ × ℕ ↦ if p.1 = 0 ∧ p.2 = 0 then 1 else 0 := by primrec
+    apply h.of_eq
+    rintro ⟨k, e⟩
+    match k, e with
+    |     0,     0 => rfl
+    |     0, _ + 1 => rfl
+    | _ + 1,     _ => rfl
+  rel := by
+    apply (Primrec.const 0 : Primrec fun _ : ℕ × ℕ ↦ 0).of_eq
+    exact fun _ ↦ rfl
+
+end Language
 
 namespace Concatenation
 

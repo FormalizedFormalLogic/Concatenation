@@ -33,7 +33,7 @@ def IsPair (z : M) : Prop := ∃ x y, IsTally 1 x ∧ IsTally 1 y ∧ z = pairOf
 - [Gan09, §1, Definition 1(d)]
 -/
 def IsSeq (z : M) : Prop :=
-  IsInitialSegment (0 ++ 0 ++ 1) z ∧ IsEndSegment (1 ++ 0 ++ 0) z ∧
+  IsPrefix (0 ++ 0 ++ 1) z ∧ IsSuffix (1 ++ 0 ++ 0) z ∧
     ∀ y, IsTally 0 y → IsSubstring y z → y = 0 ∨ y = 0 ++ 0
 
 /--
@@ -53,13 +53,13 @@ def IsPairSeq (z : M) : Prop := IsSeq z ∧ ∀ y, Mem y z → IsPair y
 `u` is the first member of `z`.
 - [Gan09, §1, Definition 1(f)]
 -/
-def IsFirst (u z : M) : Prop := IsInitialSegment (0 ++ 0 ++ u ++ 0 ++ 0) z
+def IsFirst (u z : M) : Prop := IsPrefix (0 ++ 0 ++ u ++ 0 ++ 0) z
 
 /--
 `u` is the last member of `z`.
 - [Gan09, §1, Definition 1(f)]
 -/
-def IsLast (u z : M) : Prop := IsEndSegment (0 ++ 0 ++ u ++ 0 ++ 0) z
+def IsLast (u z : M) : Prop := IsSuffix (0 ++ 0 ++ u ++ 0 ++ 0) z
 
 /--
 `z` is a multiplication sequence for the `1`-tallies `x` and `y`: a sequence of pairs from
@@ -73,9 +73,9 @@ def IsMulSeq (x y z : M) : Prop :=
   IsTally 1 x ∧ IsTally 1 y ∧ IsPairSeq z ∧ IsFirst (pairOf x 1) z ∧
     (∃ w, IsTally 1 w ∧ IsLast (pairOf w y) z) ∧
     ∀ s u' v', IsTally 1 u' → IsTally 1 v' →
-      IsInitialSegment (s ++ 0 ++ 0 ++ pairOf u' v' ++ 0 ++ 0) z →
+      IsPrefix (s ++ 0 ++ 0 ++ pairOf u' v' ++ 0 ++ 0) z →
       ∃ u v, IsTally 1 u ∧ IsTally 1 v ∧ u' = u ++ x ∧ v' = v ++ 1 ∧
-        IsEndSegment (0 ++ 0 ++ pairOf u v) s
+        IsSuffix (0 ++ 0 ++ pairOf u v) s
 
 /-- `z` is an ordered pair of `1`-tallies. -/
 def isPair : Semisentence ℒ⌢ 1 :=
@@ -84,8 +84,8 @@ def isPair : Semisentence ℒ⌢ 1 :=
 
 /-- `z` is a sequence. -/
 def isSeq : Semisentence ℒ⌢ 1 :=
-  “z. !isInitialSegment (!!(op(0).const) ⌢ !!(op(0).const) ⌢ !!(op(1).const)) z ∧
-    !isEndSegment (!!(op(1).const) ⌢ !!(op(0).const) ⌢ !!(op(0).const)) z ∧
+  “z. !isPrefix (!!(op(0).const) ⌢ !!(op(0).const) ⌢ !!(op(1).const)) z ∧
+    !isSuffix (!!(op(1).const) ⌢ !!(op(0).const) ⌢ !!(op(0).const)) z ∧
     ∀ y, !isTally !!(op(0).const) y → !isSubstring y z →
       y = !!(op(0).const) ∨ y = !!(op(0).const) ⌢ !!(op(0).const)”
 
@@ -100,12 +100,12 @@ def isPairSeq : Semisentence ℒ⌢ 1 := “z. !isSeq z ∧ ∀ y, !mem y z → 
 
 /-- `u` is the first member of `z`. -/
 def isFirst : Semisentence ℒ⌢ 2 :=
-  “u z. !isInitialSegment
+  “u z. !isPrefix
     (!!(op(0).const) ⌢ !!(op(0).const) ⌢ u ⌢ !!(op(0).const) ⌢ !!(op(0).const)) z”
 
 /-- `u` is the last member of `z`. -/
 def isLast : Semisentence ℒ⌢ 2 :=
-  “u z. !isEndSegment
+  “u z. !isSuffix
     (!!(op(0).const) ⌢ !!(op(0).const) ⌢ u ⌢ !!(op(0).const) ⌢ !!(op(0).const)) z”
 
 /-- `z` is a multiplication sequence for the `1`-tallies `x` and `y`. -/
@@ -114,11 +114,11 @@ def isMulSeq : Semisentence ℒ⌢ 3 :=
     !isFirst (x ⌢ !!(op(0).const) ⌢ !!(op(1).const)) z ∧
     (∃ w, !isTally !!(op(1).const) w ∧ !isLast (w ⌢ !!(op(0).const) ⌢ y) z) ∧
     ∀ s u' v', !isTally !!(op(1).const) u' → !isTally !!(op(1).const) v' →
-      !isInitialSegment (s ⌢ !!(op(0).const) ⌢ !!(op(0).const) ⌢ (u' ⌢ !!(op(0).const) ⌢ v') ⌢
+      !isPrefix (s ⌢ !!(op(0).const) ⌢ !!(op(0).const) ⌢ (u' ⌢ !!(op(0).const) ⌢ v') ⌢
         !!(op(0).const) ⌢ !!(op(0).const)) z →
       ∃ u v, !isTally !!(op(1).const) u ∧ !isTally !!(op(1).const) v ∧
         u' = u ⌢ x ∧ v' = v ⌢ !!(op(1).const) ∧
-        !isEndSegment (!!(op(0).const) ⌢ !!(op(0).const) ⌢ (u ⌢ !!(op(0).const) ⌢ v)) s”
+        !isSuffix (!!(op(0).const) ⌢ !!(op(0).const) ⌢ (u ⌢ !!(op(0).const) ⌢ v)) s”
 
 variable {x y z u : M}
 

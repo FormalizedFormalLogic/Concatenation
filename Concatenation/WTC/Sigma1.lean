@@ -124,7 +124,8 @@ lemma eval_ofFreeSemigroup_of_hierarchy (hφ : ℬ[⊑, ℒ⌢].Hierarchy 𝚺 1
 
 end WTC
 
-lemma sigma1_completeness_of_hierarchy {T : ConcatenationTheory} [𝗪𝗧𝗖 ⪯ T] {σ : ConcatenationSentence}
+lemma sigma1_completeness_of_hierarchy {T : ConcatenationTheory} [𝗪𝗧𝗖 ⪯ T]
+    {σ : ConcatenationSentence}
     (hσ : ℬ[⊑, ℒ⌢].Hierarchy 𝚺 1 σ) (h : (FreeSemigroup Bool)↓[ℒ⌢] ⊧ σ) : T ⊢ σ := by
   have : 𝗘𝗤 ℒ⌢ ⪯ T := Entailment.WeakerThan.trans (𝓣 := 𝗪𝗧𝗖) inferInstance inferInstance
   apply complete.{0}

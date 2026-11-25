@@ -1,6 +1,6 @@
 module
 
-public import Concatenation.Semantics.Empty
+public import Concatenation.Semantics.Basic
 
 /-!
 # Tarski's theory of concatenation $\mathsf{F}$

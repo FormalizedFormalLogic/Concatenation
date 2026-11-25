@@ -8,7 +8,7 @@ public import Foundation.FirstOrder.LK.Completeness.CounterModel
 # Semantics of the language of concatenation
 
 Structures with two letters and a concatenation, read as structures for `ℒ⌢`, and the atoms,
-substrings, initial and end segments and tallies in them.
+substrings, prefixes, suffixes and tallies in them.
 -/
 
 @[expose] public section
@@ -153,16 +153,22 @@ def IsSubstring (x y : M) : Prop :=
     ∃ u v, y = u ++ (x ++ v)
 
 /--
-`x` is an initial segment of `y`.
+`x` is a prefix of `y`.
 - [Gan09, §1, Definition 1]
 -/
-def IsInitialSegment (x y : M) : Prop := x = y ∨ ∃ v, y = x ++ v
+def IsPrefix (x y : M) : Prop := x = y ∨ ∃ v, y = x ++ v
+
+@[inherit_doc]
+scoped infix:50 " ⊑ₚ " => IsPrefix
 
 /--
-`x` is an end segment of `y`.
+`x` is a suffix of `y`.
 - [Gan09, §1, Definition 1]
 -/
-def IsEndSegment (x y : M) : Prop := x = y ∨ ∃ u, y = u ++ x
+def IsSuffix (x y : M) : Prop := x = y ∨ ∃ u, y = u ++ x
+
+@[inherit_doc]
+scoped infix:50 " ⊑ₛ " => IsSuffix
 
 /--
 `x` is a `c`-tally: every atom that is a substring of `x` is `c`.
@@ -173,11 +179,11 @@ def IsTally (c x : M) : Prop := ∀ y, IsAtom y → IsSubstring y x → y = c
 /-- `x` is one of the letters `0` and `1`. -/
 def isAtom : Semisentence ℒ⌢ 1 := “x. x = !!(op(0).const) ∨ x = !!(op(1).const)”
 
-/-- `x` is an initial segment of `y`. -/
-def isInitialSegment : Semisentence ℒ⌢ 2 := “x y. x = y ∨ ∃ v, y = x ⌢ v”
+/-- `x` is a prefix of `y`. -/
+def isPrefix : Semisentence ℒ⌢ 2 := “x y. x = y ∨ ∃ v, y = x ⌢ v”
 
-/-- `x` is an end segment of `y`. -/
-def isEndSegment : Semisentence ℒ⌢ 2 := “x y. x = y ∨ ∃ u, y = u ⌢ x”
+/-- `x` is a suffix of `y`. -/
+def isSuffix : Semisentence ℒ⌢ 2 := “x y. x = y ∨ ∃ u, y = u ⌢ x”
 
 /-- `x` is a `c`-tally. -/
 def isTally : Semisentence ℒ⌢ 2 := “c x. ∀ y, !isAtom y → !isSubstring y x → y = c”
@@ -206,23 +212,23 @@ lemma isSubstring_append_append (u x v : M) : IsSubstring x (u ++ x ++ v) := by
   right; right; right; left; use u, v
 
 @[refl, simp]
-lemma IsInitialSegment.refl (x : M) : IsInitialSegment x x := Or.inl rfl
+lemma IsPrefix.refl (x : M) : x ⊑ₚ x := Or.inl rfl
 
 @[simp]
-lemma isInitialSegment_append (x y : M) : IsInitialSegment x (x ++ y) := by
+lemma isPrefix_append (x y : M) : x ⊑ₚ x ++ y := by
   right; use y
 
 @[refl, simp]
-lemma IsEndSegment.refl (x : M) : IsEndSegment x x := Or.inl rfl
+lemma IsSuffix.refl (x : M) : x ⊑ₛ x := Or.inl rfl
 
 @[simp]
-lemma isEndSegment_append (x y : M) : IsEndSegment y (x ++ y) := by
+lemma isSuffix_append (x y : M) : y ⊑ₛ x ++ y := by
   right; use x
 
-lemma IsInitialSegment.isSubstring (h : IsInitialSegment x y) : IsSubstring x y := by
+lemma IsPrefix.isSubstring (h : x ⊑ₚ y) : IsSubstring x y := by
   rcases h with rfl | ⟨v, rfl⟩ <;> simp
 
-lemma IsEndSegment.isSubstring (h : IsEndSegment x y) : IsSubstring x y := by
+lemma IsSuffix.isSubstring (h : x ⊑ₛ y) : IsSubstring x y := by
   rcases h with rfl | ⟨u, rfl⟩ <;> simp
 
 @[simp]
@@ -233,12 +239,12 @@ lemma eval_isSubstring : M ⊧/![x, y] (isSubstring : Semisentence ℒ⌢ 2) ↔
   simp [isSubstring, IsSubstring, exists_or, eq_comm (b := y)]
 
 @[simp]
-lemma eval_isInitialSegment : M ⊧/![x, y] isInitialSegment ↔ IsInitialSegment x y := by
-  simp [isInitialSegment, IsInitialSegment]
+lemma eval_isPrefix : M ⊧/![x, y] isPrefix ↔ x ⊑ₚ y := by
+  simp [isPrefix, IsPrefix]
 
 @[simp]
-lemma eval_isEndSegment : M ⊧/![x, y] isEndSegment ↔ IsEndSegment x y := by
-  simp [isEndSegment, IsEndSegment]
+lemma eval_isSuffix : M ⊧/![x, y] isSuffix ↔ x ⊑ₛ y := by
+  simp [isSuffix, IsSuffix]
 
 @[simp]
 lemma eval_isTally : M ⊧/![c, x] isTally ↔ IsTally c x := by

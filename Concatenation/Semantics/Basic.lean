@@ -244,6 +244,12 @@ section substring
 
 variable {M : Type*} [ConcatenationStructure M] {c x y : M}
 
+@[simp]
+lemma val_substringOperator {v : Fin 2 → M} :
+    (substringOperator ℒ⌢).val v ↔ IsSubstring (v 0) (v 1) := by
+  rw [Matrix.fun_eq_vec_two (v := v)]
+  exact eval_isSubstring
+
 /-- `x` is one of the letters `0` and `1`. -/
 def IsAtom (x : M) : Prop := x = 0 ∨ x = 1
 

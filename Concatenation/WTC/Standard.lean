@@ -2,7 +2,6 @@ module
 
 public import Concatenation.TC.Substring
 public import Concatenation.WTC.Basic
-public import Foundation.FirstOrder.Syntax.Classical.BoundingHierarchy
 
 /-!
 # Standard strings and $\Sigma_1$-completeness of $\mathsf{WTC}$
@@ -159,30 +158,6 @@ section sigma1
 open ConcatenationStructure
 
 variable {M : Type*} [ConcatenationStructure M] {ξ : Type*} {n : ℕ}
-
-/-- The substring relation as an operator. -/
-def substringOperator (L : Language) [L.Eq] [L.Concat] : Semiformula.Operator L 2 := ⟨isSubstring⟩
-
-@[simp]
-lemma val_substringOperator {v : Fin 2 → M} :
-    (substringOperator ℒ⌢).val v ↔ IsSubstring (v 0) (v 1) := by
-  rw [Matrix.fun_eq_vec_two (v := v)]
-  exact eval_isSubstring
-
-/--
-Quantifiers bounded by the substring relation. `ℬ[⊑, L].PrenexHierarchy 𝚺 0` is the class
-of $\Sigma_0$ formulas, and `ℬ[⊑, L].PrenexHierarchy 𝚺 1` the class of $\Sigma_1$ formulas.
-- [Hor11, §3]
-- [Hor12, §3]
--/
-def substringBounding (L : Language) [L.Eq] [L.Concat] : Bounding L := ⟨{substringOperator L}⟩
-
-@[inherit_doc]
-scoped notation "ℬ[⊑, " L "]" => substringBounding L
-
-@[simp]
-lemma mem_substringBounding_iff {R : Semiformula.Operator ℒ⌢ 2} :
-    R ∈ ℬ[⊑, ℒ⌢] ↔ R = substringOperator ℒ⌢ := Iff.rfl
 
 namespace WTC
 

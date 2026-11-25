@@ -67,20 +67,6 @@ HH14:
     title: Archive for Mathematical Logic
     volume: 53
 
-HP98:
-  type: Book
-  title: Metamathematics of First-Order Arithmetic
-  author:
-  - Hájek, Petr
-  - Pudlák, Pavel
-  date: 1998
-  publisher:
-    name: Springer
-    location: Berlin
-  parent:
-    type: Book
-    title: Perspectives in Mathematical Logic
-
 Hec15:
   type: Article
   title: Consistency and the Theory of Truth
@@ -105,18 +91,6 @@ Hor11:
     type: Periodical
     title: RIMS Kôkyûroku
     volume: 1729
-
-Lin03:
-  type: Book
-  title: Aspects of Incompleteness
-  author: Lindström, Per
-  edition: 2
-  date: 2003
-  publisher: Association for Symbolic Logic / A K Peters
-  parent:
-    type: Book
-    title: Lecture Notes in Logic
-    volume: 10
 
 Mur22:
   type: Article

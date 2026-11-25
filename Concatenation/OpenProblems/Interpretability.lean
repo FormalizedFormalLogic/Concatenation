@@ -2,15 +2,17 @@ module
 
 public import Concatenation.D.LeftCancellation
 public import Concatenation.TC.Basic
-public import Concatenation.TC.Empty
+public import Concatenation.TC.GrowingComma
 public import Concatenation.ToFoundation.Arithmetic.IQ
+public import Concatenation.ToFoundation.Arithmetic.PeanoMinusSmullyan
 public import Concatenation.ToFoundation.Decidability
 public import Concatenation.ToFoundation.Interpretability.Relative
+public import Concatenation.ToFoundation.Interpretability.Unrelativized
 public import Concatenation.WTC.Basic
 import Concatenation.OpenProblem
 
 /-!
-# Open problems on interpretability between theories of concatenation
+# Open problems on interpretability
 -/
 
 @[expose] public section
@@ -58,6 +60,14 @@ Is $\mathsf{IQ}$ interpretable in $\overline{\mathsf{ID}}$?
 open_problem IDLeft_interprets_IQ := RelativelyInterprets 𝗜𝗗ₗ 𝗜𝗤
 
 end Concatenation
+
+/--
+Does $\mathsf{PA}^-_{\mathsf{smu}}$ directly interpret the theory of concatenation with growing
+commas?
+- [Vis24, Open Question 7.1]
+-/
+open_problem PeanoMinusSmullyan_interprets_TCGrowingComma :=
+  UnrelativizedInterprets Arithmetic.PeanoMinusSmullyan Concatenation.TCGrowingComma
 
 /--
 A consistent, essentially undecidable, computably enumerable theory with equality.

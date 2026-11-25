@@ -2,9 +2,11 @@ module  -- shake: keep-all --deprecated_module: ignore
 
 public import Concatenation.BT.Basic
 public import Concatenation.Biteral
+public import Concatenation.BuildingBlocks.Basic
 public import Concatenation.Coding
 public import Concatenation.D.Basic
 public import Concatenation.D.LeftCancellation
+public import Concatenation.DecoratedOrder.Basic
 public import Concatenation.F.Basic
 public import Concatenation.F.Radical
 public import Concatenation.F.Tame
@@ -13,9 +15,12 @@ public import Concatenation.Language
 public import Concatenation.OpenProblem
 public import Concatenation.OpenProblem.Attribute
 public import Concatenation.OpenProblems.BoundedQuantifiers
+public import Concatenation.OpenProblems.BuildingBlocks
+public import Concatenation.OpenProblems.DecoratedOrder
 public import Concatenation.OpenProblems.Interpretability
 public import Concatenation.OpenProblems.Minimality
 public import Concatenation.OpenProblems.NotationInduction
+public import Concatenation.OpenProblems.Persistence
 public import Concatenation.OpenProblems.Sequence
 public import Concatenation.Semantics.Basic
 public import Concatenation.Semantics.Empty
@@ -27,12 +32,15 @@ public import Concatenation.Seq.Basic
 public import Concatenation.Seq.Editor
 public import Concatenation.Seq.Embedding
 public import Concatenation.Seq.Language
+public import Concatenation.SetTheory.Adjunctive
+public import Concatenation.SetTheory.Sequential
 public import Concatenation.TC.Arithmetic
 public import Concatenation.TC.Basic
 public import Concatenation.TC.DefinitionalEquivalence
 public import Concatenation.TC.Empty
 public import Concatenation.TC.EmptyInterpretation
 public import Concatenation.TC.FiniteModel
+public import Concatenation.TC.GrowingComma
 public import Concatenation.TC.MulSeq
 public import Concatenation.TC.Representation
 public import Concatenation.TC.Separation
@@ -41,6 +49,7 @@ public import Concatenation.TC.Thin
 public import Concatenation.TC.Undecidability
 public import Concatenation.ToFoundation.AddCoding
 public import Concatenation.ToFoundation.Arithmetic.IQ
+public import Concatenation.ToFoundation.Arithmetic.PeanoMinusSmullyan
 public import Concatenation.ToFoundation.Arithmetic.R
 public import Concatenation.ToFoundation.Arithmetic.R0.Cobham
 public import Concatenation.ToFoundation.Arithmetic.R0.LocallyFinitelySatisfiable
@@ -49,14 +58,18 @@ public import Concatenation.ToFoundation.Arithmetic.R0.Undecidability
 public import Concatenation.ToFoundation.Bootstrapping
 public import Concatenation.ToFoundation.Concat
 public import Concatenation.ToFoundation.Decidability
+public import Concatenation.ToFoundation.Interpretability.BiInterpretation
 public import Concatenation.ToFoundation.Interpretability.DefinitionalEquivalence
 public import Concatenation.ToFoundation.Interpretability.LocallyFinitelySatisfiable
 public import Concatenation.ToFoundation.Interpretability.Relative
 public import Concatenation.ToFoundation.Interpretability.Table
 public import Concatenation.ToFoundation.Interpretability.Undecidability
+public import Concatenation.ToFoundation.Interpretability.Unrelativized
 public import Concatenation.ToFoundation.Prefix
+public import Concatenation.ToFoundation.TuringPersistence
 public import Concatenation.ToMathlib.FreeSemigroup
 public import Concatenation.ToMathlib.FreeSemigroupCode
+public import Concatenation.Tree.Basic
 public import Concatenation.WTC.Arithmetic
 public import Concatenation.WTC.Basic
 public import Concatenation.WTC.Embedding

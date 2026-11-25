@@ -4,6 +4,21 @@
 # The keys are the citation keys used in docstrings, e.g. `- [Grz05, §3]`;
 # see docs/conventions.md. Entries are sorted by key.
 
+CPRUV10:
+  type: Article
+  title: Decorated Linear Order Types and the Theory of Concatenation
+  author:
+  - Čačić, Vedran
+  - Pudlák, Pavel
+  - Restall, Greg
+  - Urquhart, Alasdair
+  - Visser, Albert
+  date: 2010
+  parent:
+    type: Anthology
+    title: Logic Colloquium 2007
+    publisher: Cambridge University Press
+
 GZ08:
   type: Chapter
   title: Undecidability and Concatenation
@@ -180,6 +195,20 @@ Mur24a:
     title: Mathematical Logic Quarterly
     volume: 70
 
+PMV23:
+  type: Article
+  title: There are no minimal essentially undecidable theories
+  author:
+  - Pakhomov, Fedor
+  - Murwanashyaka, Juvenal
+  - Visser, Albert
+  date: 2022
+  serial-number:
+    arxiv: "2207.08174"
+  parent:
+    type: Repository
+    title: arXiv
+
 Sve08:
   type: Chapter
   title: Weak Theories and Essential Incompleteness
@@ -222,3 +251,14 @@ Vis09:
     title: Notre Dame Journal of Formal Logic
     volume: 50
     issue: 1
+
+Vis24:
+  type: Article
+  title: From Numbers to Container Strings
+  author: Visser, Albert
+  date: 2024
+  serial-number:
+    arxiv: "2411.15873"
+  parent:
+    type: Repository
+    title: arXiv

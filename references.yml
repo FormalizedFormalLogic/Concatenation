@@ -167,6 +167,19 @@ Mur24:
     title: Archive for Mathematical Logic
     volume: 63
 
+Mur24a:
+  type: Article
+  title: A weak theory of building blocks
+  author: Murwanashyaka, Juvenal
+  date: 2024
+  page-range: 233-254
+  serial-number:
+    doi: "10.1002/malq.202300015"
+  parent:
+    type: Periodical
+    title: Mathematical Logic Quarterly
+    volume: 70
+
 Sve08:
   type: Chapter
   title: Weak Theories and Essential Incompleteness

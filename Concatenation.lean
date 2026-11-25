@@ -25,6 +25,7 @@ public import Concatenation.Seq.Embedding
 public import Concatenation.Seq.Language
 public import Concatenation.TC.Arithmetic
 public import Concatenation.TC.Basic
+public import Concatenation.TC.DefinitionalEquivalence
 public import Concatenation.TC.Empty
 public import Concatenation.TC.EmptyInterpretation
 public import Concatenation.TC.FiniteModel
@@ -50,6 +51,7 @@ public import Concatenation.ToFoundation.Arithmetic.R0.Visser
 public import Concatenation.ToFoundation.Bootstrapping
 public import Concatenation.ToFoundation.Concat
 public import Concatenation.ToFoundation.Decidability
+public import Concatenation.ToFoundation.Interpretability.DefinitionalEquivalence
 public import Concatenation.ToFoundation.Interpretability.LocallyFinitelySatisfiable
 public import Concatenation.ToFoundation.Interpretability.Table
 public import Concatenation.ToFoundation.Interpretability.Undecidability

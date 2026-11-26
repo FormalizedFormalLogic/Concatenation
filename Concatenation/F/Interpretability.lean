@@ -85,6 +85,30 @@ lemma struc_eq : Model.struc (relativization T δ H) M =
       rcases r with ⟨⟨⟩⟩ | ⟨⟨⟩⟩
       exact propext <| Model.eq_iff v)
 
+section
+
+attribute [local instance] concatenationStructure
+
+variable {y : M} {hx : (relativization T δ H).Dom x} {hy : (relativization T δ H).Dom y}
+
+@[simp]
+lemma zero_eq_mk : (0 : (relativization T δ H).Model M) = ⟨0, (dom_iff T δ H).mpr (H M).zero⟩ :=
+  rfl
+
+@[simp]
+lemma one_eq_mk : (1 : (relativization T δ H).Model M) = ⟨1, (dom_iff T δ H).mpr (H M).one⟩ := rfl
+
+@[simp]
+lemma empty_eq_mk : (∅ : (relativization T δ H).Model M) = ⟨∅, (dom_iff T δ H).mpr (H M).empty⟩ :=
+  rfl
+
+@[simp]
+lemma mk_append_mk : (⟨x, hx⟩ ++ ⟨y, hy⟩ : (relativization T δ H).Model M) =
+    ⟨x ++ y, (dom_iff T δ H).mpr <| (H M).append ((dom_iff T δ H).mp hx) ((dom_iff T δ H).mp hy)⟩ :=
+  rfl
+
+end
+
 end relativization
 
 end relativization
@@ -240,49 +264,24 @@ instance {M : Type} [ConcatenationEmptyStructure M] [M↓[ℒ⌢ₑ] ⊧* 𝗙] 
   rw [relativization.struc_eq]
   let := relativization.concatenationStructure 𝗙 isHereditarilyTame
     (fun _ _ _ ↦ F.isConcatenationClosed_isHereditarilyTame) (M := M)
-  have tame (x : tameTranslation.Model M) : IsHereditarilyTame (x : M) := by
-    simpa only [relativization.dom_iff, eval_isHereditarilyTame] using x.dom
-  have dom {x : M} (h : IsHereditarilyTame x) : tameTranslation.Dom x := by simpa using h
   constructor
   intro σ hσ
   cases hσ
   case equal hφ => exact models_theory_iff.mp inferInstance _ hφ
-  case emptyConcat =>
-    suffices ∀ x : tameTranslation.Model M, ∅ ++ x = x by simpa [models_iff]
-    exact fun x ↦ Model.ext <| F.empty_append (x : M)
-  case concatEmpty =>
-    suffices ∀ x : tameTranslation.Model M, x ++ ∅ = x by simpa [models_iff]
-    exact fun x ↦ Model.ext <| F.append_empty (x : M)
-  case concatAssoc =>
-    suffices ∀ x y z : tameTranslation.Model M, x ++ y ++ z = x ++ (y ++ z) by simpa [models_iff]
-    exact fun x y z ↦ Model.ext <| F.append_assoc (x : M) y z
   case editor =>
-    suffices ∀ x y z w : tameTranslation.Model M, x ++ y = z ++ w →
-        ∃ u, (x ++ u = z ∧ y = u ++ w) ∨ (x = z ++ u ∧ u ++ y = w) by simpa [models_iff]
-    intro x y z w h
-    obtain ⟨u, ⟨h₁, h₂⟩ | ⟨h₁, h₂⟩⟩ :=
-      F.exists_of_append_eq_append (tame y).isTame (congrArg Model.val h)
-    · use ⟨u, dom <| F.isHereditarilyTame_of_isSuffix (tame z) <| by simp [← h₁]⟩
-      exact Or.inl ⟨Model.ext h₁, Model.ext h₂⟩
-    · use ⟨u, dom <| F.isHereditarilyTame_of_isSuffix (tame x) <| by simp [h₁]⟩
-      exact Or.inr ⟨Model.ext h₁, Model.ext h₂⟩
-  case zeroNeEmpty =>
-    suffices (0 : tameTranslation.Model M) ≠ ∅ by simpa [models_iff]
-    exact fun h ↦ F.isAtom_ne_empty (M := M) isAtom_zero (congrArg Model.val h)
-  case oneNeEmpty =>
-    suffices (1 : tameTranslation.Model M) ≠ ∅ by simpa [models_iff]
-    exact fun h ↦ F.isAtom_ne_empty (M := M) isAtom_one (congrArg Model.val h)
+    simpa [models_iff, Model.forall_iff, Model.exists_iff] using
+      fun (x : M) (hx : IsHereditarilyTame x) (y : M) (hy : IsHereditarilyTame y) (z : M)
+        (hz : IsHereditarilyTame z) (w : M) (_ : IsHereditarilyTame w) (h : x ++ y = z ++ w) ↦
+      match F.exists_of_append_eq_append hy.isTame h with
+      | ⟨u, .inl h'⟩ => ⟨u, F.isHereditarilyTame_of_isSuffix hz <| by simp [← h'.1], .inl h'⟩
+      | ⟨u, .inr h'⟩ => ⟨u, F.isHereditarilyTame_of_isSuffix hx <| by simp [h'.1], .inr h'⟩
   case zeroAtom =>
-    suffices ∀ x y : tameTranslation.Model M, x ++ y = 0 → x = ∅ ∨ y = ∅ by simpa [models_iff]
-    exact fun x y h ↦ (F.eq_empty_of_append_isAtom <| Or.inl <| congrArg Model.val h).imp
-      Model.ext Model.ext
+    simpa [models_iff, Model.forall_iff] using fun (x : M) (_ : IsHereditarilyTame x) (y : M)
+      (_ : IsHereditarilyTame y) (h : x ++ y = 0) ↦ F.eq_empty_of_append_isAtom (by simp [h])
   case oneAtom =>
-    suffices ∀ x y : tameTranslation.Model M, x ++ y = 1 → x = ∅ ∨ y = ∅ by simpa [models_iff]
-    exact fun x y h ↦ (F.eq_empty_of_append_isAtom <| Or.inr <| congrArg Model.val h).imp
-      Model.ext Model.ext
-  case zeroNeOne =>
-    suffices (0 : tameTranslation.Model M) ≠ 1 by simpa [models_iff]
-    exact fun h ↦ F.zero_ne_one (M := M) (congrArg Model.val h)
+    simpa [models_iff, Model.forall_iff] using fun (x : M) (_ : IsHereditarilyTame x) (y : M)
+      (_ : IsHereditarilyTame y) (h : x ++ y = 1) ↦ F.eq_empty_of_append_isAtom (by simp [h])
+  all_goals simp [models_iff, Model.forall_iff, F.append_assoc, F.isAtom_ne_empty]
 
 /--
 $\mathsf{F}$ interprets $\mathsf{TC}$ with the empty string on the hereditarily tame strings.
@@ -454,41 +453,27 @@ instance {M : Type} [ConcatenationEmptyStructure M] [M↓[ℒ⌢ₑ] ⊧* 𝗧�
   rw [relativization.struc_eq]
   let := relativization.concatenationStructure 𝗧𝗖ₑ isHereditarilyRadical
     (fun _ _ _ ↦ TCEmpty.isConcatenationClosed_isHereditarilyRadical) (M := M)
-  have radical (x : radicalTranslation.Model M) : IsHereditarilyRadical (x : M) := by
-    simpa only [relativization.dom_iff, eval_isHereditarilyRadical] using x.dom
-  have dom {x : M} (h : IsHereditarilyRadical x) : radicalTranslation.Dom x := by simpa using h
   constructor
   intro σ hσ
   cases hσ
   case equal hφ => exact models_theory_iff.mp inferInstance _ hφ
-  case emptyConcat =>
-    suffices ∀ x : radicalTranslation.Model M, ∅ ++ x = x by simpa [models_iff]
-    exact fun x ↦ Model.ext <| TCEmpty.empty_append (x : M)
-  case concatEmpty =>
-    suffices ∀ x : radicalTranslation.Model M, x ++ ∅ = x by simpa [models_iff]
-    exact fun x ↦ Model.ext <| TCEmpty.append_empty (x : M)
-  case concatAssoc =>
-    suffices ∀ x y z : radicalTranslation.Model M, x ++ y ++ z = x ++ (y ++ z) by
-      simpa [models_iff]
-    exact fun x y z ↦ Model.ext <| TCEmpty.append_assoc (x : M) y z
   case cancelRight =>
-    suffices ∀ x y z : radicalTranslation.Model M, x ++ z = y ++ z → x = y by simpa [models_iff]
-    exact fun x y z h ↦ Model.ext <| (TCEmpty.isRadical (radical z)).right <| congrArg Model.val h
+    simpa [models_iff, Model.forall_iff] using fun (x : M) (_ : IsHereditarilyRadical x) (y : M)
+      (_ : IsHereditarilyRadical y) (z : M) (hz : IsHereditarilyRadical z) ↦
+      (TCEmpty.isRadical hz).right (y := x) (z := y)
   case cancelLeft =>
-    suffices ∀ x y z : radicalTranslation.Model M, z ++ x = z ++ y → x = y by simpa [models_iff]
-    exact fun x y z h ↦ Model.ext <| (TCEmpty.isRadical (radical z)).left <| congrArg Model.val h
-  case concatZeroNeConcatOne =>
-    suffices ∀ x y : radicalTranslation.Model M, x ++ 0 ≠ y ++ 1 by simpa [models_iff]
-    exact fun x y h ↦ TCEmpty.append_zero_ne_append_one (x : M) y (congrArg Model.val h)
+    simpa [models_iff, Model.forall_iff] using fun (x : M) (_ : IsHereditarilyRadical x) (y : M)
+      (_ : IsHereditarilyRadical y) (z : M) (hz : IsHereditarilyRadical z) ↦
+      (TCEmpty.isRadical hz).left (y := x) (z := y)
   case emptyOrConcatLetter =>
-    suffices ∀ x : radicalTranslation.Model M, x ≠ ∅ → ∃ u, x = u ++ 0 ∨ x = u ++ 1 by
-      simpa [models_iff]
-    intro x hx
-    rcases TCEmpty.isEmptyOrAppendAtom (radical x) with h | ⟨u, h⟩
-    · exact (hx <| Model.ext h).elim
-    · use ⟨u, dom <| by
-        rcases h with h | h <;> exact TCEmpty.isHereditarilyRadical_left (h ▸ radical x)⟩
-      exact h.imp Model.ext Model.ext
+    simpa [models_iff, Model.forall_iff, Model.exists_iff] using
+      fun (x : M) (hx : IsHereditarilyRadical x) (hx' : x ≠ ∅) ↦
+      match TCEmpty.isEmptyOrAppendAtom hx with
+      | .inl h => (hx' h).elim
+      | .inr ⟨u, .inl h⟩ => ⟨u, TCEmpty.isHereditarilyRadical_left (h ▸ hx), .inl h⟩
+      | .inr ⟨u, .inr h⟩ => ⟨u, TCEmpty.isHereditarilyRadical_left (h ▸ hx), .inr h⟩
+  all_goals simp [models_iff, Model.forall_iff, TCEmpty.append_assoc,
+    TCEmpty.append_zero_ne_append_one]
 
 /--
 $\mathsf{TC}$ with the empty string interprets $\mathsf{F}$ on the hereditarily radical strings.

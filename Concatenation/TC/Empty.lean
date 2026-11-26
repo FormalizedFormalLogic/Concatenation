@@ -110,6 +110,26 @@ lemma struc_eq :
       cases r
       exact propext <| Model.eq_iff v)
 
+section
+
+attribute [local instance] concatenationStructure
+
+variable {x y : M} {hx : (nonemptyTranslation T).Dom x} {hy : (nonemptyTranslation T).Dom y}
+
+@[simp]
+lemma zero_eq_mk : (0 : (nonemptyTranslation T).Model M) =
+    ⟨0, dom_iff.mpr <| NonemptyClosed.zero_ne_empty T M⟩ := rfl
+
+@[simp]
+lemma one_eq_mk : (1 : (nonemptyTranslation T).Model M) =
+    ⟨1, dom_iff.mpr <| NonemptyClosed.one_ne_empty T M⟩ := rfl
+
+@[simp]
+lemma mk_append_mk : (⟨x, hx⟩ ++ ⟨y, hy⟩ : (nonemptyTranslation T).Model M) =
+    ⟨x ++ y, dom_iff.mpr <| NonemptyClosed.append_ne_empty (T := T) M <| dom_iff.mp hx⟩ := rfl
+
+end
+
 end nonemptyTranslation
 
 /--
@@ -120,40 +140,27 @@ $\mathsf{TC}$.
 instance [M↓[ℒ⌢ₑ] ⊧* 𝗧𝗖ₑ] : ((nonemptyTranslation 𝗧𝗖ₑ).Model M)↓[ℒ⌢] ⊧* 𝗧𝗖 := by
   rw [nonemptyTranslation.struc_eq]
   let := nonemptyTranslation.concatenationStructure M 𝗧𝗖ₑ
-  have nonempty (x : (nonemptyTranslation 𝗧𝗖ₑ).Model M) : (x : M) ≠ ∅ :=
-    nonemptyTranslation.dom_iff.mp x.dom
   constructor
   intro σ hσ
   cases hσ
   case equal hφ => exact models_theory_iff.mp inferInstance _ hφ
-  case concatAssoc =>
-    suffices ∀ x y z : (nonemptyTranslation 𝗧𝗖ₑ).Model M, x ++ (y ++ z) = x ++ y ++ z by
-      simpa [models_iff]
-    exact fun x y z ↦ Model.ext (TCEmpty.append_assoc (x : M) y z).symm
   case editor =>
-    suffices ∀ x y z w : (nonemptyTranslation 𝗧𝗖ₑ).Model M, x ++ y = z ++ w →
-        (x = z ∧ y = w) ∨ ∃ u, (x ++ u = z ∧ y = u ++ w) ∨ (x = z ++ u ∧ u ++ y = w) by
-      simpa [models_iff]
+    suffices ∀ x y z w : M, x ++ y = z ++ w → (x = z ∧ y = w) ∨
+        ∃ u, u ≠ ∅ ∧ ((x ++ u = z ∧ y = u ++ w) ∨ (x = z ++ u ∧ u ++ y = w)) by
+      simpa [models_iff, Model.forall_iff, Model.exists_iff] using
+        fun x _ y _ z _ w _ ↦ this x y z w
     intro x y z w h
-    obtain ⟨u, hu⟩ := TCEmpty.editor (congrArg Model.val h)
-    rcases Classical.em (u = ∅) with rfl | hu'
-    · left
-      rcases hu with ⟨h₁, h₂⟩ | ⟨h₁, h₂⟩ <;>
-        exact ⟨Model.ext <| by simpa using h₁, Model.ext <| by simpa using h₂⟩
-    · right
-      use ⟨u, by simpa using hu'⟩
-      exact hu.imp (And.imp Model.ext Model.ext) (And.imp Model.ext Model.ext)
+    obtain ⟨u, hu⟩ := TCEmpty.editor h
+    rcases eq_or_ne u ∅ with rfl | hu'
+    · exact .inl <| by simpa using hu
+    · exact .inr ⟨u, hu', hu⟩
   case zeroNeConcat =>
-    suffices ∀ x y : (nonemptyTranslation 𝗧𝗖ₑ).Model M, 0 ≠ x ++ y by simpa [models_iff]
-    exact fun x y h ↦ (TCEmpty.eq_empty_of_append_isAtom <| Or.inl (congrArg Model.val h).symm).elim
-      (nonempty x) (nonempty y)
+    simpa [models_iff, Model.forall_iff] using fun (x : M) (hx : x ≠ ∅) (y : M) (hy : y ≠ ∅)
+      (h : 0 = x ++ y) ↦ (TCEmpty.eq_empty_of_append_isAtom <| by simp [← h]).elim hx hy
   case oneNeConcat =>
-    suffices ∀ x y : (nonemptyTranslation 𝗧𝗖ₑ).Model M, 1 ≠ x ++ y by simpa [models_iff]
-    exact fun x y h ↦ (TCEmpty.eq_empty_of_append_isAtom <| Or.inr (congrArg Model.val h).symm).elim
-      (nonempty x) (nonempty y)
-  case zeroNeOne =>
-    suffices (0 : (nonemptyTranslation 𝗧𝗖ₑ).Model M) ≠ 1 by simpa [models_iff]
-    exact fun h ↦ TCEmpty.zero_ne_one (M := M) (congrArg Model.val h)
+    simpa [models_iff, Model.forall_iff] using fun (x : M) (hx : x ≠ ∅) (y : M) (hy : y ≠ ∅)
+      (h : 1 = x ++ y) ↦ (TCEmpty.eq_empty_of_append_isAtom <| by simp [← h]).elim hx hy
+  all_goals simp [models_iff, Model.forall_iff, TCEmpty.append_assoc]
 
 /--
 $\mathsf{TC}$ with the empty string interprets $\mathsf{TC}$ on the nonempty strings.

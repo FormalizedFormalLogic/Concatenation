@@ -476,8 +476,6 @@ $\mathsf{WTC}$.
 instance [M↓[ℒ⌢ₑ] ⊧* 𝗪𝗧𝗖ₑ] : ((nonemptyTranslation 𝗪𝗧𝗖ₑ).Model M)↓[ℒ⌢] ⊧* 𝗪𝗧𝗖 := by
   rw [nonemptyTranslation.struc_eq]
   let := nonemptyTranslation.concatenationStructure M 𝗪𝗧𝗖ₑ
-  have nonempty (x : (nonemptyTranslation 𝗪𝗧𝗖ₑ).Model M) : (x : M) ≠ ∅ :=
-    nonemptyTranslation.dom_iff.mp x.dom
   have hc := isInitialEmptyEmbedding_ofList M
   constructor
   intro σ hσ
@@ -512,16 +510,12 @@ instance [M↓[ℒ⌢ₑ] ⊧* 𝗪𝗧𝗖ₑ] : ((nonemptyTranslation 𝗪𝗧
       use ⟨w, by simpa using hw'⟩
       exact hw.imp (And.imp Model.ext Model.ext) (And.imp Model.ext Model.ext)
   case concatNeZero =>
-    suffices ∀ x y : (nonemptyTranslation 𝗪𝗧𝗖ₑ).Model M, x ++ y ≠ 0 by simpa [models_iff]
-    exact fun x y h ↦ (eq_empty_of_append_isAtom <| Or.inl <| congrArg Model.val h).elim
-      (nonempty x) (nonempty y)
+    simpa [models_iff, Model.forall_iff] using fun (x : M) (hx : x ≠ ∅) (y : M) (hy : y ≠ ∅)
+      (h : x ++ y = 0) ↦ (eq_empty_of_append_isAtom <| by simp [h]).elim hx hy
   case concatNeOne =>
-    suffices ∀ x y : (nonemptyTranslation 𝗪𝗧𝗖ₑ).Model M, x ++ y ≠ 1 by simpa [models_iff]
-    exact fun x y h ↦ (eq_empty_of_append_isAtom <| Or.inr <| congrArg Model.val h).elim
-      (nonempty x) (nonempty y)
-  case zeroNeOne =>
-    suffices (0 : (nonemptyTranslation 𝗪𝗧𝗖ₑ).Model M) ≠ 1 by simpa [models_iff]
-    exact fun h ↦ WTCEmpty.zero_ne_one (M := M) <| congrArg Model.val h
+    simpa [models_iff, Model.forall_iff] using fun (x : M) (hx : x ≠ ∅) (y : M) (hy : y ≠ ∅)
+      (h : x ++ y = 1) ↦ (eq_empty_of_append_isAtom <| by simp [h]).elim hx hy
+  case zeroNeOne => simp [models_iff, WTCEmpty.zero_ne_one]
 
 end WTCEmpty
 

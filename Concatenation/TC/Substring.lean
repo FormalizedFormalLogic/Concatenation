@@ -39,16 +39,17 @@ lemma IsSubstring.append_right (h : IsSubstring x y) : IsSubstring x (y ++ v) :=
 lemma IsSubstring.trans (hxy : IsSubstring x y) (hyz : IsSubstring y z) : IsSubstring x z := by
   grind [isSubstring_iff, IsSubstring.append_left, IsSubstring.append_right]
 
+@[grind .]
 lemma IsAtom.ne_append (hc : IsAtom c) : c ≠ x ++ y := by
   rcases hc with rfl | rfl <;> simp
 
 lemma IsAtom.eq_of_append_eq_append (hc : IsAtom c) (hc' : IsAtom c') (h : y ++ c = y' ++ c') :
     c = c' ∧ y = y' := by
-  rcases editor h with ⟨rfl, rfl⟩ | ⟨u, ⟨-, rfl⟩ | ⟨-, rfl⟩⟩ <;> grind [IsAtom.ne_append]
+  rcases editor h with ⟨rfl, rfl⟩ | ⟨u, ⟨-, rfl⟩ | ⟨-, rfl⟩⟩ <;> grind
 
 lemma IsAtom.eq_of_append_eq_append_left (hc : IsAtom c) (hc' : IsAtom c') (h : c ++ y = c' ++ y') :
     c = c' ∧ y = y' := by
-  rcases editor h with ⟨rfl, rfl⟩ | ⟨u, ⟨rfl, -⟩ | ⟨rfl, -⟩⟩ <;> grind [IsAtom.ne_append]
+  rcases editor h with ⟨rfl, rfl⟩ | ⟨u, ⟨rfl, -⟩ | ⟨rfl, -⟩⟩ <;> grind
 
 lemma IsAtom.append_right_cancel (hc : IsAtom c) (h : x ++ c = y ++ c) : x = y :=
   (hc.eq_of_append_eq_append hc h).2
@@ -83,7 +84,7 @@ lemma IsSubstring.append_cases (h : IsSubstring z (x ++ y)) :
     · simp
 
 lemma IsAtom.eq_of_isSubstring (hc : IsAtom c) (h : IsSubstring x c) : x = c := by
-  grind [isSubstring_iff, IsAtom.ne_append]
+  grind [isSubstring_iff]
 
 lemma isTally_self (hc : IsAtom c) : IsTally c c := fun _ _ h ↦ hc.eq_of_isSubstring h
 
@@ -132,11 +133,11 @@ lemma IsPrefix.append_right (h : x ◨ y) : x ◨ y ++ v := by
 
 lemma IsSuffix.eq_of_isAtom (hc : IsAtom c) (hc' : IsAtom c') (h : x ◧ c)
     (h' : x ◧ c') : c = c' := by
-  grind [IsSuffix, IsAtom.ne_append, IsAtom.eq_of_append_eq_append]
+  grind [IsSuffix, IsAtom.eq_of_append_eq_append]
 
 lemma IsPrefix.eq_of_isAtom (hc : IsAtom c) (hc' : IsAtom c') (h : c ◨ x)
     (h' : c' ◨ x) : c = c' := by
-  grind [IsPrefix, IsAtom.ne_append, IsAtom.eq_of_append_eq_append_left]
+  grind [IsPrefix, IsAtom.eq_of_append_eq_append_left]
 
 @[trans]
 lemma IsPrefix.trans (hxy : x ◨ y) (hyz : y ◨ z) : x ◨ z := by
@@ -158,7 +159,7 @@ lemma IsSuffix.total (hx : z ◧ x) (hy : z ◧ y) : y ◧ x ∨ x ◧ y := by
 
 lemma eq_and_eq_of_append_eq_append_isAtom (hc : IsAtom c) (hd : IsAtom d) (h : x ++ y = c ++ d) :
     x = c ∧ y = d := by
-  rcases editor h with h | ⟨u, ⟨h, -⟩ | ⟨-, h⟩⟩ <;> grind [IsAtom.ne_append]
+  rcases editor h with h | ⟨u, ⟨h, -⟩ | ⟨-, h⟩⟩ <;> grind
 
 lemma eq_zero_or_eq_zero_zero_of_isSubstring (h : IsSubstring t (0 ++ 0 : M)) :
     t = 0 ∨ t = 0 ++ 0 := by
@@ -382,6 +383,31 @@ lemma thinTranslation.struc_eq :
       cases r
       exact propext <| Model.eq_iff v)
 
+namespace thinTranslation
+
+section
+
+attribute [local instance] concatenationStructure
+
+variable {x y : M} {hx : thinTranslation.Dom x} {hy : thinTranslation.Dom y}
+
+@[simp]
+lemma zero_eq_mk : (0 : thinTranslation.Model M) = ⟨0, by simpa using isThin_zero⟩ := rfl
+
+@[simp]
+lemma one_eq_mk : (1 : thinTranslation.Model M) = ⟨1, by simpa using isThin_one⟩ := rfl
+
+@[simp]
+lemma mk_append_mk : (⟨x, hx⟩ ++ ⟨y, hy⟩ : thinTranslation.Model M) = ⟨x ++ y, by
+    simpa using (thinTranslation_dom_iff.mp hx).append (thinTranslation_dom_iff.mp hy)⟩ := rfl
+
+@[simp]
+lemma isAtom_mk : IsAtom (⟨x, hx⟩ : thinTranslation.Model M) ↔ IsAtom x := by simp [IsAtom]
+
+end
+
+end thinTranslation
+
 /--
 The thin strings of a model of $\mathsf{TC}$ form a model of $\mathsf{TC}^+$.
 - [Gan09, §3, Lemma 6]
@@ -389,50 +415,22 @@ The thin strings of a model of $\mathsf{TC}$ form a model of $\mathsf{TC}^+$.
 instance : (thinTranslation.Model M)↓[ℒ⌢] ⊧* 𝗧𝗖⁺ := by
   rw [thinTranslation.struc_eq]
   let := thinTranslation.concatenationStructure (M := M)
-  have thin (x : thinTranslation.Model M) : IsThin (x : M) := thinTranslation_dom_iff.mp x.dom
   constructor
   intro σ hσ
   rcases hσ with rfl | hσ
-  · suffices ∀ x : thinTranslation.Model M, IsBounded x by simpa [models_iff, tc6]
-    intro x
-    rcases (thin x).isBounded with h | ⟨⟨c, z, hc, hcz⟩, ⟨c', z', hc', hzc⟩⟩
-    · exact Or.inl <| h.imp Model.ext Model.ext
-    · right
-      constructor
-      · use ⟨c, thinTranslation_dom_iff.mpr hc.isThin⟩,
-          ⟨z, thinTranslation_dom_iff.mpr <| (thin x).of_isSubstring <| by simp [hcz]⟩
-        exact ⟨hc.imp Model.ext Model.ext, Model.ext hcz⟩
-      · use ⟨c', thinTranslation_dom_iff.mpr hc'.isThin⟩,
-          ⟨z', thinTranslation_dom_iff.mpr <| (thin x).of_isSubstring <| by simp [hzc]⟩
-        exact ⟨hc'.imp Model.ext Model.ext, Model.ext hzc⟩
+  · simpa [models_iff, tc6, Model.forall_iff, Model.exists_iff, IsBounded] using
+      fun (x : M) (hx : IsThin x) ↦ hx.isBounded.imp id fun ⟨⟨c, z, hc, h⟩, ⟨c', z', hc', h'⟩⟩ ↦
+        ⟨⟨c, hc, hc.isThin, z, hx.of_isSubstring <| by simp [h], h⟩,
+          ⟨c', hc', hc'.isThin, z', hx.of_isSubstring <| by simp [h'], h'⟩⟩
   · cases hσ
     case equal hφ => exact models_theory_iff.mp inferInstance _ hφ
-    case concatAssoc =>
-      suffices ∀ x y z : thinTranslation.Model M, x ++ (y ++ z) = x ++ y ++ z by
-        simpa [models_iff]
-      exact fun x y z ↦ Model.ext (Concatenation.append_assoc (x : M) y z).symm
     case editor =>
-      suffices ∀ x y z w : thinTranslation.Model M, x ++ y = z ++ w →
-          (x = z ∧ y = w) ∨ ∃ u, (x ++ u = z ∧ y = u ++ w) ∨ (x = z ++ u ∧ u ++ y = w) by
-        simpa [models_iff]
-      intro x y z w h
-      rcases editor (congrArg Model.val h) with ⟨h₁, h₂⟩ | ⟨u, ⟨h₁, h₂⟩ | ⟨h₁, h₂⟩⟩
-      · exact Or.inl ⟨Model.ext h₁, Model.ext h₂⟩
-      · right
-        use ⟨u, thinTranslation_dom_iff.mpr <| (thin z).of_isSubstring <| by simp [← h₁]⟩
-        exact Or.inl ⟨Model.ext h₁, Model.ext h₂⟩
-      · right
-        use ⟨u, thinTranslation_dom_iff.mpr <| (thin x).of_isSubstring <| by simp [h₁]⟩
-        exact Or.inr ⟨Model.ext h₁, Model.ext h₂⟩
-    case zeroNeConcat =>
-      suffices ∀ x y : thinTranslation.Model M, 0 ≠ x ++ y by simpa [models_iff]
-      exact fun x y h ↦ zero_ne_append (x : M) y (congrArg Model.val h)
-    case oneNeConcat =>
-      suffices ∀ x y : thinTranslation.Model M, 1 ≠ x ++ y by simpa [models_iff]
-      exact fun x y h ↦ one_ne_append (x : M) y (congrArg Model.val h)
-    case zeroNeOne =>
-      suffices (0 : thinTranslation.Model M) ≠ 1 by simpa [models_iff]
-      exact fun h ↦ Concatenation.zero_ne_one (congrArg Model.val h)
+      simpa [models_iff, Model.forall_iff, Model.exists_iff] using
+        fun (x : M) (hx : IsThin x) (y : M) (_ : IsThin y) (z : M) (hz : IsThin z) (w : M)
+          (_ : IsThin w) (h : x ++ y = z ++ w) ↦ (editor h).imp id fun ⟨u, hu⟩ ↦
+            ⟨u, hu.elim (fun h ↦ hz.of_isSubstring <| by simp [← h.1])
+              fun h ↦ hx.of_isSubstring <| by simp [h.1], hu⟩
+    all_goals simp [models_iff, Model.forall_iff, Concatenation.append_assoc]
 
 end model
 

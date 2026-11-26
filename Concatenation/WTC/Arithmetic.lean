@@ -1,11 +1,14 @@
 module
 
 public import Concatenation.TC.Interpretability
+public import Concatenation.ToFoundation.Arithmetic.R
 public import Concatenation.ToFoundation.Arithmetic.R0.Undecidability
 public import Concatenation.ToFoundation.Arithmetic.R0.Visser
+public import Concatenation.ToFoundation.Interpretability.DefinitionalEquivalence
 public import Concatenation.ToFoundation.Interpretability.Undecidability
 public import Concatenation.ToMathlib.FreeSemigroup
 public import Concatenation.WTC.Standard
+import Concatenation.OpenProblem
 
 /-!
 # Mutual interpretability of $\mathsf{WTC}$ and $\mathsf{R}_0$
@@ -851,5 +854,19 @@ theorem WTC.notInterprets_iff_not_locallyFinitelySatisfiable (hT : REPred (· �
   notInterprets_iff.trans (nonempty_interpretation_iff_locallyFinitelySatisfiable hT).not
 
 end interpretability
+
+/--
+Are $\mathsf{R}$ and $\mathsf{WTC}$,
+which are mutually interpretable by the cited theorem, bi-interpretable?
+- [HH14, Theorem 1]
+-/
+open_problem R_biInterpretable_WTC := Nonempty (BiInterpretation 𝗥 𝗪𝗧𝗖)
+
+/--
+Are $\mathsf{R}$ and $\mathsf{WTC}$,
+which are mutually interpretable by the cited theorem, definitionally equivalent?
+- [HH14, Theorem 1]
+-/
+open_problem R_definitionallyEquivalent_WTC := Nonempty (DefinitionalEquivalence 𝗥 𝗪𝗧𝗖)
 
 end FFL.FirstOrder.Concatenation

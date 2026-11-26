@@ -2,11 +2,13 @@ module
 
 public import Concatenation.Minimality.Basic
 public import Concatenation.Semantics.Basic
+public import Concatenation.ToFoundation.Arithmetic.Presburger
 
 /-!
 # $\mathsf{BT}$ without associativity
 
-A model of $\mathsf{BT}$ without associativity that is definable in $(\mathbb{N}, +)$.
+A model of $\mathsf{BT}$ without associativity that is definable in $(\mathbb{N}, +)$, so that
+its theory is decidable.
 -/
 
 @[expose] public section
@@ -124,16 +126,60 @@ instance models_BT_diff_concatAssoc :
     simp only [models_iff]
     simpa using fun x ↦ isSubstring_ofFreeSemigroup⟩
 
+open Presburger in
+/-- The definition of `TernaryCode` in the integers. -/
+def presburgerDefinition : PresburgerDefinition ℒ⌢ where
+  domain := .le (.ofInt 0) (.var 0)
+  func {k} f :=
+    match k, f with
+    | _, .zero => .eq (.var 0) (.ofInt 0)
+    | _, .one => .eq (.var 0) (.ofInt 1)
+    | _, .concat =>
+      .or (.and (.eq (.var 2) (.ofInt 0)) (.eq (.var 0) ((3 : ℤ) • LinearTerm.var 1 + .ofInt 3))) <|
+        .or (.and (.eq (.var 2) (.ofInt 1)) (.eq (.var 0) ((3 : ℤ) • LinearTerm.var 1 + .ofInt 4)))
+          (.and (.lt (.ofInt 1) (.var 2)) (.eq (.var 0) (.ofInt 2)))
+  rel {k} r :=
+    match k, r with
+    | _, .eq => .eq (.var 0) (.var 1)
+
+lemma defines_presburgerDefinition :
+    presburgerDefinition.Defines fun x : TernaryCode ↦ (x.val : ℤ) where
+  injective x y h := TernaryCode.ext <| by simpa using h
+  domain_iff z := by
+    constructor
+    · intro h
+      use ⟨z.toNat⟩
+      simpa [presburgerDefinition] using h
+    · rintro ⟨x, rfl⟩
+      simp [presburgerDefinition]
+  func_iff {k} f v y := by
+    match k, f with
+    | _, .zero =>
+      change _ ↔ (0 : TernaryCode) = y
+      simp [presburgerDefinition, TernaryCode.ext_iff, eq_comm]
+    | _, .one =>
+      change _ ↔ (1 : TernaryCode) = y
+      simp [presburgerDefinition, TernaryCode.ext_iff, eq_comm]
+    | _, .concat =>
+      change _ ↔ v 0 ++ v 1 = y
+      simp only [presburgerDefinition, TernaryCode.ext_iff, val_append]
+      simp
+      split_ifs <;> omega
+  rel_iff {k} r v := by
+    match k, r with
+    | _, .eq =>
+      change _ ↔ v 0 = v 1
+      simp [presburgerDefinition, TernaryCode.ext_iff]
+
 end TernaryCode
 
 /--
-$\mathsf{BT}$ without associativity is not essentially undecidable, if the theory of `TernaryCode`
-is decidable.
+$\mathsf{BT}$ without associativity is not essentially undecidable.
 - [Mur22, Open Problem 3]
 -/
-theorem not_essentiallyUndecidable_BT_diff_concatAssoc_of_decidable
-    (h : Entailment.Decidable (Tarski.Structure.theory ℒ⌢ TernaryCode)) :
+theorem not_essentiallyUndecidable_BT_diff_concatAssoc :
     ¬(𝗕𝗧 \ {concatAssoc} : Theory ℒ⌢).EssentiallyUndecidable :=
-  Theory.not_essentiallyUndecidable_of_models TernaryCode h
+  Theory.not_essentiallyUndecidable_of_models TernaryCode
+    TernaryCode.defines_presburgerDefinition.decidable
 
 end FFL.FirstOrder.Concatenation

@@ -229,3 +229,14 @@ Vis09:
     title: Notre Dame Journal of Formal Logic
     volume: 50
     issue: 1
+
+Vis24:
+  type: Article
+  title: From Numbers to Container Strings
+  author: Visser, Albert
+  date: 2024
+  serial-number:
+    arxiv: "2411.15873"
+  parent:
+    type: Repository
+    title: arXiv

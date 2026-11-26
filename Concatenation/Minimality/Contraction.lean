@@ -1,16 +1,17 @@
 module
 
 public import Concatenation.Minimality.Basic
-public import Concatenation.Semantics.Prefix
 public import Mathlib.Basic.Real.Basic
 public import Mathlib.Tactic.Linarith
 public import Mathlib.Tactic.Ring
+import Concatenation.OpenProblem
 
 /-!
 # $\mathsf{D}$ without one of the axioms on the prefixes of $y0$ and $y1$
 
 The dyadic contractions of the unit interval are a model of both theories that is definable in the
-field of real numbers with a predicate for the powers of two.
+field of real numbers with a predicate for the powers of two. Whether the theory of either model is
+decidable is open, and with it the minimality of $\mathsf{D}$.
 -/
 
 @[expose] public section
@@ -195,7 +196,7 @@ theory of the dyadic contractions ordered by the powers of $1$ is decidable.
 theorem not_essentiallyUndecidable_D_diff_prefixConcatZero_of_decidable
     (h : Entailment.Decidable (Tarski.Structure.theory ℒ⌢⊑ (DyadicContraction true))) :
     ¬(𝗗 \ {prefixConcatZero} : Theory ℒ⌢⊑).EssentiallyUndecidable :=
-  Theory.not_essentiallyUndecidable_of_models _ (DyadicContraction true) h
+  Theory.not_essentiallyUndecidable_of_models (DyadicContraction true) h
 
 /--
 $\mathsf{D}$ without the axiom on the prefixes of $y1$ is not essentially undecidable, if the
@@ -205,6 +206,22 @@ theory of the dyadic contractions ordered by the powers of $0$ is decidable.
 theorem not_essentiallyUndecidable_D_diff_prefixConcatOne_of_decidable
     (h : Entailment.Decidable (Tarski.Structure.theory ℒ⌢⊑ (DyadicContraction false))) :
     ¬(𝗗 \ {prefixConcatOne} : Theory ℒ⌢⊑).EssentiallyUndecidable :=
-  Theory.not_essentiallyUndecidable_of_models _ (DyadicContraction false) h
+  Theory.not_essentiallyUndecidable_of_models (DyadicContraction false) h
+
+/--
+Is $\mathsf{D} - \mathsf{D}_5$, without the axiom
+$x \preceq y0 \leftrightarrow x = y0 \lor x \preceq y$, not essentially undecidable?
+- [Mur22, Open Problem 2]
+-/
+open_problem not_essentiallyUndecidable_D_diff_prefixConcatZero :=
+  ¬(𝗗 \ {prefixConcatZero} : Theory ℒ⌢⊑).EssentiallyUndecidable
+
+/--
+Is $\mathsf{D} - \mathsf{D}_6$, without the axiom
+$x \preceq y1 \leftrightarrow x = y1 \lor x \preceq y$, not essentially undecidable?
+- [Mur22, Open Problem 2]
+-/
+open_problem not_essentiallyUndecidable_D_diff_prefixConcatOne :=
+  ¬(𝗗 \ {prefixConcatOne} : Theory ℒ⌢⊑).EssentiallyUndecidable
 
 end FFL.FirstOrder.Concatenation

@@ -1,7 +1,6 @@
 module
 
 public import Concatenation.Minimality.Basic
-public import Concatenation.Semantics.Prefix
 
 /-!
 # $\mathsf{ID}$ and $\mathsf{BT}$ without right cancellation
@@ -246,7 +245,7 @@ if the theory of `AlternatingWord` is decidable.
 theorem not_essentiallyUndecidable_ID_diff_concatRightCancel_of_decidable
     (h : Entailment.Decidable (Tarski.Structure.theory ℒ⌢⊑ AlternatingWord)) :
     ¬(𝗜𝗗 \ {concatRightCancel} : Theory ℒ⌢⊑).EssentiallyUndecidable :=
-  Theory.not_essentiallyUndecidable_of_models _ AlternatingWord h
+  Theory.not_essentiallyUndecidable_of_models AlternatingWord h
 
 /--
 $\mathsf{BT}$ without right cancellation is not essentially undecidable, if the theory of
@@ -256,6 +255,6 @@ $\mathsf{BT}$ without right cancellation is not essentially undecidable, if the 
 theorem not_essentiallyUndecidable_BT_diff_concatRightCancel_of_decidable
     (h : Entailment.Decidable (Tarski.Structure.theory ℒ⌢ AlternatingWord)) :
     ¬(𝗕𝗧 \ {concatRightCancel} : Theory ℒ⌢).EssentiallyUndecidable :=
-  Theory.not_essentiallyUndecidable_of_models _ AlternatingWord h
+  Theory.not_essentiallyUndecidable_of_models AlternatingWord h
 
 end FFL.FirstOrder.Concatenation

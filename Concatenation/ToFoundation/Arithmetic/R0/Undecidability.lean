@@ -17,13 +17,13 @@ namespace FFL.FirstOrder.Arithmetic.R0
 open Bootstrapping Bootstrapping.Arithmetic
 
 /--
-The theorems of a consistent extension of $\mathsf{R}_0$ are not computable.
+A consistent extension of $\mathsf{R}_0$ is undecidable.
 - [Sve08, §3.3]
 - [HH14, §1]
 -/
-theorem uncomputable_theory_of_consistent (T : ArithmeticTheory) [𝗥₀ ⪯ T]
-    [Entailment.Consistent T] : ¬ComputablePred (· ∈ T.theory) := by
-  intro hC
+theorem undecidable_of_consistent (T : ArithmeticTheory) [𝗥₀ ⪯ T]
+    [Entailment.Consistent T] : Entailment.Undecidable T := by
+  rintro ⟨hC⟩
   have hQuoteSubst :
       Computable₂ fun σ π : ArithmeticSemisentence 1 ↦ (σ/[⌜π⌝] : ArithmeticSentence) :=
     computable₂_iff_sigma1_simulate (f := substNumeral (V := ℕ)) (by definability)
@@ -66,7 +66,7 @@ $\mathsf{R}_0$ is essentially undecidable.
 - [HH14, §1]
 -/
 instance : (𝗥₀ : ArithmeticTheory).EssentiallyUndecidable where
-  undecidable_of_consistent T _ _ h := uncomputable_theory_of_consistent T h.dec
+  undecidable_of_consistent T _ _ := undecidable_of_consistent T
 
 /--
 The theorems of $\mathsf{R}_0$ are not computable.

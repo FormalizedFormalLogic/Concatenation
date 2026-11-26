@@ -81,7 +81,7 @@ lemma cobhamLE_refl (x : M) : x ⊴ x := Or.inl <| Or.inl rfl
 variable [M↓[ℒₒᵣ] ⊧* 𝗥₀]
 
 @[simp, grind =]
-lemma numeral_add_one' (n : ℕ) : (numeral n : M) + 1 = numeral (n + 1) := by
+lemma numeral_add_one_of_R0 (n : ℕ) : (numeral n : M) + 1 = numeral (n + 1) := by
   simpa using numeral_add_numeral (M := M) n 1
 
 /--

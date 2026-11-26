@@ -530,7 +530,7 @@ include hφ
 
 lemma isAddCut_one : IsAddCut φ ψ (1 : M) := by
   apply And.intro _ fun y hy ↦ hy.add_one hno
-  have h : (0 : M) + 1 = 1 := by simpa using numeral_add_one' (M := M) 0
+  have h : (0 : M) + 1 = 1 := by simpa using numeral_add_one_of_R0 (M := M) 0
   exact h ▸ (hasPath_zero hφ).add_one hno
 
 lemma isMulCut_numeral (n : ℕ) : IsMulCut φ ψ (numeral n : M) := by

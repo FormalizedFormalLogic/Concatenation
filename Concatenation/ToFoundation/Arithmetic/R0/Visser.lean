@@ -320,7 +320,7 @@ variable [M↓[ℒₒᵣ] ⊧* 𝗥₀]
 
 lemma isNode_numeral (k x : ℕ) : IsNode (numeral (Nat.pair k x + 1) : M) (numeral k) (numeral x) :=
   ⟨numeral (Nat.pair k x), by simp, (eval_pairDef_numeral_iff k x).mpr rfl,
-    (numeral_add_one' _).symm⟩
+    (numeral_add_one_of_R0 _).symm⟩
 
 namespace IsApproximable
 
@@ -361,7 +361,7 @@ lemma bvar_zero (hs : W s) (ha : W a) (hns : F 3 (numeral n) s 0) (hda : F 2 a 0
   have hda := (hF 2 (by simp) _ _ _ v₃ v₀ v₀).mp hda
   have has := (hF 3 (by simp) _ _ _ v₄ v₅ v₀).mp has
   apply (hF 5 (by simp) _ _ _ v₆ v₅ v₃).mpr
-  rw [← numeral_add_one' n] at has
+  rw [← numeral_add_one_of_R0 n] at has
   exact hc.bvar_zero _ (hn _ v₆).1 _ hns.lt₁ _ hns.lt₂ _ hda.lt₁
     (by simpa using isNode_numeral (M := M) 0 0) (hn _ v₆).2 hns hda has
 
@@ -380,7 +380,7 @@ lemma bvar_succ {i : ℕ} (hs : W s) (ha : W a) (hb : W b) (hns : F 3 (numeral n
   have hbs := (hF 3 (by simp) _ _ _ v₅ v₆ v₀).mp hbs
   have ht := (hF 5 (by simp) _ _ _ v₇ v₂ v₃).mp ht
   apply (hF 5 (by simp) _ _ _ v₈ v₆ v₃).mpr
-  rw [← numeral_add_one' n] at hbs
+  rw [← numeral_add_one_of_R0 n] at hbs
   exact hc.bvar_succ _ ht.lt₁ _ (hn _ v₈).1 _ (hn _ v₉).1 _ hns.lt₁ _ hns.lt₂ _ ht.lt₃ _ hdb.lt₁
     (by simpa using isNode_numeral (M := M) 0 i)
     (by simpa using isNode_numeral (M := M) 0 (i + 1)) (hn _ v₈).2 hbs hdb ht

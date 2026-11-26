@@ -9,6 +9,7 @@ public import Concatenation.F.Interpretability
 public import Concatenation.Language
 public import Concatenation.OpenProblem
 public import Concatenation.OpenProblem.Attribute
+public import Concatenation.OpenProblems.RestrictedSchemata
 public import Concatenation.QT.Basic
 public import Concatenation.Semantics.Basic
 public import Concatenation.Seq.Basic

@@ -26,34 +26,13 @@ variable {L : Language} [L.Encodable] {ξ : Type*} [Encodable ξ] {n n' : ℕ}
 lemma Semiterm.encode_castLE (h : n ≤ n') (t : Semiterm L ξ n) :
     encode (Rew.castLE h t) = encode t := by
   simp only [encode_eq_toNat]
-  induction t with
-  | bvar x => simp [toNat]
-  | fvar x => simp [toNat]
-  | func f v ih => simp [Rew.func, toNat_func, ih]
+  induction t <;> simp [toNat, Rew.func, toNat_func, *]
 
 lemma Semiformula.encode_castLE (φ : Semiformula L ξ n) :
     ∀ {n' : ℕ} (h : n ≤ n'), encode (Rew.castLE h ▹ φ) = encode φ := by
-  induction φ using rec' with
-  | hverum => intro n' h; rfl
-  | hfalsum => intro n' h; rfl
-  | hrel r v =>
-    intro n' h
-    simp [encode_rel, Function.comp_def, Semiterm.encode_castLE]
-  | hnrel r v =>
-    intro n' h
-    simp [encode_nrel, Function.comp_def, Semiterm.encode_castLE]
-  | hand φ ψ ihφ ihψ =>
-    intro n' h
-    simp [encode_and, ← encode_eq_toNat, ihφ, ihψ]
-  | hor φ ψ ihφ ihψ =>
-    intro n' h
-    simp [encode_or, ← encode_eq_toNat, ihφ, ihψ]
-  | hall φ ih =>
-    intro n' h
-    simp [encode_all, ← encode_eq_toNat, ih]
-  | hexs φ ih =>
-    intro n' h
-    simp [encode_ex, ← encode_eq_toNat, ih]
+  induction φ using rec' <;> intro n' h <;>
+    simp [encode_rel, encode_nrel, encode_verum, encode_falsum, encode_and, encode_or, encode_all,
+      encode_ex, Function.comp_def, Semiterm.encode_castLE, ← encode_eq_toNat, *]
 
 end
 

@@ -101,8 +101,7 @@ lemma hasStage_numeral {j : ℕ} (h : ∃ c : ℕ, IsCertificate A E c j) :
     · exact (hc.eq_of_le _ h' cert).symm
   constructor
   · exact ⟨_, stage⟩
-  · intro c hc d hd
-    rw [eq c hc, eq d hd]
+  · grind
   · intro c hc x hx
     rw [eq c hc]
     obtain ⟨i, hi, rfl⟩ := eq_numeral_of_cobhamLE_numeral hx
@@ -351,8 +350,7 @@ lemma env_succ (hs : W s) (ha : W a) (hns : F 3 (numeral n) s 0) (hda : F 2 a 0 
   have hns := (hF 3 (by simp) _ _ _ v₁ v₂ v₀).mp hns
   have hda := (hF 2 (by simp) _ _ _ v₃ v₀ v₀).mp hda
   apply (hF 3 (by simp) _ _ _ v₄ v₅ v₀).mpr
-  rw [← numeral_add_one n]
-  exact hc.env_succ _ hns.lt₁ _ hns.lt₂ _ hda.lt₁ (hn _ v₁).2 hns hda
+  simpa using hc.env_succ _ hns.lt₁ _ hns.lt₂ _ hda.lt₁ (hn _ v₁).2 hns hda
 
 lemma ax (hA : ℬ[<, ℒₒᵣ].Hierarchy 𝚺 0 A) {w : ℕ} (hp : ℕ ⊧/![p, w] A) :
     F 4 (numeral p) 0 0 := by
@@ -397,7 +395,7 @@ lemma bvar_succ {i : ℕ} (hs : W s) (ha : W a) (hb : W b) (hns : F 3 (numeral n
   rw [← numeral_add_one n] at hbs
   exact hc.bvar_succ _ ht.lt₁ _ (hn _ v₈).1 _ (hn _ v₉).1 _ hns.lt₁ _ hns.lt₂ _ ht.lt₃ _ hdb.lt₁
     (by simpa using isNode_numeral (M := M) 0 i)
-    (by simpa [numeral_add_one] using isNode_numeral (M := M) 0 (i + 1)) (hn _ v₈).2 hbs hdb ht
+    (by simpa using isNode_numeral (M := M) 0 (i + 1)) (hn _ v₈).2 hbs hdb ht
 
 lemma func (hs : W s) (hd : W d) (ha : W a) (hv : F 6 (numeral v) s d)
     (hf : F 8 (mkPair (numeral n) (numeral f)) d a) :
@@ -406,7 +404,7 @@ lemma func (hs : W s) (hd : W d) (ha : W a) (hv : F 6 (numeral v) s d)
     [s, d, a, numeral v, numeral n, numeral f, mkPair (numeral n) (numeral f),
       numeral (Nat.pair f v), numeral (Nat.pair n (Nat.pair f v)),
       numeral (Nat.pair 2 (Nat.pair n (Nat.pair f v)) + 1)]
-    (by simp [h.num, hs, hd, ha, h.pair])
+    (by simp [h.num, hs, hd, ha])
   simp only [List.forall_mem_cons] at hl
   obtain ⟨v₁, v₂, v₃, v₄, v₅, v₆, v₇, v₈, v₉, v₀, -⟩ := hl
   have hv := (hF 6 (by simp) _ _ _ v₄ v₁ v₂).mp hv
@@ -493,7 +491,7 @@ lemma rel (hs : W s) (hd : W d)
     [0, s, d, numeral v, numeral n, numeral R, mkPair (numeral n) (numeral R),
       numeral (Nat.pair R v), numeral (Nat.pair n (Nat.pair R v)),
       numeral (Nat.pair 0 (Nat.pair n (Nat.pair R v)) + 1)]
-    (by simp [h.zero, h.num, hs, hd, h.pair])
+    (by simp [h.zero, h.num, hs, hd])
   simp only [List.forall_mem_cons] at hl
   obtain ⟨v₀, v₁, v₂, v₃, v₄, v₅, v₆, v₇, v₈, v₉, -⟩ := hl
   have hp := (hF 4 (by simp) _ _ _ v₉ v₁ v₀).mp hp
@@ -510,7 +508,7 @@ lemma nrel (hs : W s) (hd : W d)
     [0, s, d, numeral v, numeral n, numeral R, mkPair (numeral n) (numeral R),
       numeral (Nat.pair R v), numeral (Nat.pair n (Nat.pair R v)),
       numeral (Nat.pair 1 (Nat.pair n (Nat.pair R v)) + 1)]
-    (by simp [h.zero, h.num, hs, hd, h.pair])
+    (by simp [h.zero, h.num, hs, hd])
   simp only [List.forall_mem_cons] at hl
   obtain ⟨v₀, v₁, v₂, v₃, v₄, v₅, v₆, v₇, v₈, v₉, -⟩ := hl
   have hp := (hF 4 (by simp) _ _ _ v₉ v₁ v₀).mp hp

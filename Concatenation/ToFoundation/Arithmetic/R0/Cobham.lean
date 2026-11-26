@@ -74,6 +74,7 @@ lemma eval_cobhamLT : M ⊧/![x, y] cobhamLT ↔ CobhamLT x y := by
 
 variable [M↓[ℒₒᵣ] ⊧* 𝗥₀]
 
+@[simp, grind =]
 lemma numeral_add_one (n : ℕ) : (numeral n : M) + 1 = numeral (n + 1) := by
   simpa using numeral_add_numeral (M := M) n 1
 
@@ -81,6 +82,7 @@ lemma numeral_add_one (n : ℕ) : (numeral n : M) + 1 = numeral (n + 1) := by
 Every numeral is regular.
 - [Sve08, §3.3, Lemma 2]
 -/
+@[grind .]
 lemma isRegular_numeral (n : ℕ) : IsRegular (numeral n : M) := by
   constructor
   · rcases Nat.eq_zero_or_pos n with rfl | hn
@@ -89,13 +91,14 @@ lemma isRegular_numeral (n : ℕ) : IsRegular (numeral n : M) := by
       simpa using (numeral_lt_numeral_iff (M := M)).mpr hn
   · intro v hv
     rcases lt_numeral_iff.mp hv with ⟨i, rfl⟩
-    rw [numeral_add_one, numeral_inj_iff, numeral_lt_numeral_iff]
+    simp
     omega
 
 /--
 Below a numeral, Cobham's order is $\le$.
 - [Sve08, §3.3, Lemma 2]
 -/
+@[grind =]
 lemma cobhamLE_numeral_iff {n : ℕ} : x ⊴ numeral n ↔ x = numeral n ∨ x < numeral n := by
   simp [CobhamLE, isRegular_numeral]
 
@@ -104,19 +107,8 @@ lemma exists_eq_numeral_or_numeral_le_of_isRegular (hx : IsRegular x) (k : ℕ) 
   induction k with
   | zero => simpa using hx.zero_le
   | succ k ih =>
-    rcases ih with ⟨i, hi, rfl⟩ | h | h
-    · left
-      use i
-      and_intros
-      · omega
-      · rfl
-    · left
-      use k
-      and_intros
-      · omega
-      · exact h.symm
-    · right
-      simpa [numeral_add_one] using hx.add_one_le _ h
+    have := hx.add_one_le (numeral k)
+    grind
 
 /--
 Every element is comparable with every numeral in Cobham's order.
@@ -125,35 +117,27 @@ Every element is comparable with every numeral in Cobham's order.
 lemma cobhamLE_numeral_or (n : ℕ) : x ⊴ numeral n ∨ numeral n ⊴ x := by
   by_cases hx : IsRegular x
   · rcases exists_eq_numeral_or_numeral_le_of_isRegular hx n with ⟨i, hi, rfl⟩ | h
-    · left
-      simp [cobhamLE_numeral_iff, hi]
-    · right
-      exact Or.inl h
-  · right
-    exact Or.inr hx
+    · simp [cobhamLE_numeral_iff, hi]
+    · exact .inr <| .inl h
+  · exact .inr <| .inr hx
 
 lemma eq_numeral_of_cobhamLE_numeral {n : ℕ} (h : x ⊴ numeral n) :
     ∃ i ≤ n, x = numeral i := by
   rcases cobhamLE_numeral_iff.mp h with rfl | h
   · use n
   · rcases lt_numeral_iff.mp h with ⟨i, rfl⟩
-    use i
-    and_intros
-    · exact i.isLt.le
-    · rfl
+    use i, i.isLt.le
 
 lemma cobhamLE_numeral_of_le {k q : ℕ} {w : M} (hkq : k ≤ q) (h : numeral q ⊴ w) :
     numeral k ⊴ w := by
   by_cases hw : IsRegular w
   · rcases exists_eq_numeral_or_numeral_le_of_isRegular hw k with ⟨i, hi, rfl⟩ | h'
-    · rcases h with h | h
-      · simp only [numeral_inj_iff, numeral_lt_numeral_iff] at h
-        omega
-      · exact absurd hw h
+    · simp [CobhamLE, hw] at h
+      omega
     · exact Or.inl h'
   · exact Or.inr hw
 
-@[simp]
+@[simp, grind =]
 lemma numeral_cobhamLE_numeral_iff {k n : ℕ} : (numeral k : M) ⊴ numeral n ↔ k ≤ n := by
   simp [cobhamLE_numeral_iff]
   omega
@@ -162,16 +146,9 @@ lemma numeral_cobhamLE_numeral_iff {k n : ℕ} : (numeral k : M) ⊴ numeral n �
 Below a numeral, the strict part of Cobham's order is $<$.
 - [Sve08, §3.3, Lemma 2]
 -/
+@[grind =]
 lemma cobhamLT_numeral_iff {n : ℕ} : CobhamLT x (numeral n) ↔ x < numeral n := by
-  rw [CobhamLT, cobhamLE_numeral_iff]
-  constructor
-  · rintro ⟨h | h, hne⟩
-    · exact absurd h hne
-    · exact h
-  · intro h
-    and_intros
-    · exact Or.inr h
-    · rintro rfl
-      exact not_numeral_lt_self n h
+  have := not_numeral_lt_self (M := M) n
+  grind [CobhamLT]
 
 end FFL.FirstOrder.Arithmetic.R0

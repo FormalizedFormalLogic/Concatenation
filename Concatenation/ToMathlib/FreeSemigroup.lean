@@ -101,9 +101,8 @@ lemma mem_substrings_iff :
     · exact .inr <| .inr <| .inl ⟨v, toList_injective <| by simpa using e.symm⟩
     · exact .inr <| .inl ⟨u, toList_injective <| by simpa using e.symm⟩
     · exact .inr <| .inr <| .inr ⟨u, v, toList_injective <| by simpa using e.symm⟩
-  · rintro (rfl | ⟨u, rfl⟩ | ⟨v, rfl⟩ | ⟨u, v, rfl⟩)
-    exacts [List.infix_refl _, ⟨u.toList, [], by simp⟩, ⟨[], v.toList, by simp⟩,
-      ⟨u.toList, v.toList, by simp⟩]
+  · rintro (rfl | ⟨u, rfl⟩ | ⟨v, rfl⟩ | ⟨u, v, rfl⟩) <;>
+      simp [List.infix_append_left, List.infix_append_right]
 
 lemma finite_length_le [Finite α] (n : ℕ) : {x : FreeSemigroup α | x.length ≤ n}.Finite :=
   ((List.finite_length_le α n).preimage toList_injective.injOn).subset

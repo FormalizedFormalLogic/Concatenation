@@ -43,7 +43,7 @@ private lemma squarePair_lt (h : x + y < x' + y') : squarePair x y < squarePair 
     _ ≤ (x' + y') * (x' + y') := by gcongr
     _ ≤ squarePair x' y' := by simp [squarePair]
 
-@[simp]
+@[simp, grind =]
 lemma squarePair_inj : squarePair x y = squarePair x' y' ↔ x = x' ∧ y = y' := by
   constructor
   · intro h
@@ -223,11 +223,8 @@ protected lemma add (hx : IsAdditive x) (hy : IsAdditive y) : IsAdditive (x + y)
     rw [← hy.add_assoc, hx.add_comm u hu, hy.add_assoc, hy.add_comm u hu, hu.add_assoc]
   comparable u hu := by
     obtain ⟨w, rfl | rfl⟩ := hy.comparable u hu
-    · obtain ⟨v, rfl | rfl⟩ := hx.comparable w <| hy.toIsPreadditive.of_add hu
-      · use v
-        simp [hy.add_assoc]
-      · use v
-        simp [hy.add_assoc]
+    · obtain ⟨v, rfl | rfl⟩ := hx.comparable w <| hy.toIsPreadditive.of_add hu <;>
+        use v <;> simp [hy.add_assoc]
     · use x + w
       simp [hu.add_assoc]
 
@@ -297,8 +294,7 @@ protected lemma one : IsAdditive (1 : M) where
     rcases zero_or_succ u with rfl | ⟨z, rfl⟩
     · use 1
       simp
-    · use z
-      simp
+    · use z, .inl rfl
 
 end IsAdditive
 

@@ -62,17 +62,22 @@ open Classical in
 noncomputable def right (x : M) : M :=
   if h : F.IsAtom x then x else (F.exists_append (not_exists.mp h)).choose_spec.choose
 
+@[grind =]
 lemma left_of_isAtom (h : F.IsAtom x) : F.left x = x := by simp [left, h]
 
+@[grind =]
 lemma right_of_isAtom (h : F.IsAtom x) : F.right x = x := by simp [right, h]
 
+@[grind =]
 lemma left_append_right (h : ¬F.IsAtom x) : F.left x ++ F.right x = x := by
   simp only [left, right, h, ↓reduceDIte]
   exact (F.exists_append (not_exists.mp h)).choose_spec.choose_spec.symm
 
+@[grind =]
 lemma left_append (h : ¬F.IsAtom (y ++ z)) : F.left (y ++ z) = y :=
   (F.append_injective (not_exists.mp h) (F.left_append_right h).symm).1.symm
 
+@[grind =]
 lemma right_append (h : ¬F.IsAtom (y ++ z)) : F.right (y ++ z) = z :=
   (F.append_injective (not_exists.mp h) (F.left_append_right h).symm).2.symm
 
@@ -91,6 +96,7 @@ lemma child_false : F.child false x = F.left x := rfl
 @[simp]
 lemma child_true : F.child true x = F.right x := rfl
 
+@[grind =]
 lemma child_of_isAtom (h : F.IsAtom x) : F.child i x = x := by
   cases i <;> simp [F.left_of_isAtom h, F.right_of_isAtom h]
 
@@ -103,8 +109,10 @@ lemma comp_nil : F.comp [] x = x := rfl
 @[simp]
 lemma comp_cons : F.comp (i :: p) x = F.comp p (F.child i x) := rfl
 
+@[simp]
 lemma comp_append : F.comp (p ++ q) x = F.comp q (F.comp p x) := List.foldl_append ..
 
+@[grind =]
 lemma comp_of_isAtom (h : F.IsAtom x) : F.comp p x = x := by
   induction p with
   | nil => rfl
@@ -115,8 +123,10 @@ noncomputable def tower : ℕ → M
   | 0 => F.exists_ne_atom.choose
   | n + 1 => tower n ++ tower n
 
+@[simp]
 lemma tower_succ : F.tower (n + 1) = F.tower n ++ F.tower n := rfl
 
+@[grind .]
 lemma not_isAtom_tower (n : ℕ) : ¬F.IsAtom (F.tower n) := by
   induction n with
   | zero => exact not_exists.mpr F.exists_ne_atom.choose_spec
@@ -131,9 +141,7 @@ lemma tower_injective : Function.Injective F.tower := by
     | succ j _ ih => exact ih.tail ⟨F.tower j, .inl rfl⟩
   intro i j hij
   by_contra hne
-  rcases Nat.lt_or_gt_of_ne hne with hlt | hlt
-  · exact F.acyclic _ (hij ▸ h hlt)
-  · exact F.acyclic _ (hij ▸ h hlt)
+  rcases Nat.lt_or_gt_of_ne hne with hlt | hlt <;> exact F.acyclic _ (hij ▸ h hlt)
 
 variable (T : Set M)
 
@@ -155,12 +163,11 @@ lemma heightLE_induction {P : ℕ → M → Prop} (h₀ : ∀ n x, x ∉ T → P
   induction n with
   | zero => exact fun x h ↦ h₀ 0 x h
   | succ n ih =>
-    intro x h
-    by_cases hx : x ∈ T
-    · rcases h with h | ⟨hl, hr⟩
-      · exact (h hx).elim
+    rintro x (h | ⟨hl, hr⟩)
+    · exact h₀ _ x h
+    · by_cases hx : x ∈ T
       · exact h₁ n x hx (ih _ hl) (ih _ hr)
-    · exact h₀ _ x hx
+      · exact h₀ _ x hx
 
 lemma heightLE_length (hT : ∀ x ∈ T, ¬F.IsAtom x) (L : List M) (x : M)
     (hx : ∀ y, Relation.ReflTransGen IsFactor y x → y ∈ T → y ∈ L) : F.HeightLE T L.length x := by
@@ -258,6 +265,7 @@ def Reach (d : ℕ) (ρ : Set (M × M')) : Set (M × M') :=
 
 variable {F F'}
 
+@[grind ←]
 lemma mem_reach (h : (a, b) ∈ ρ) (hp : p.length ≤ d) :
     (F.comp p a, F'.comp p b) ∈ F.Reach F' d ρ := ⟨a, b, p, h, hp, rfl⟩
 
@@ -269,7 +277,7 @@ lemma child_mem_reach (h : (x, y) ∈ F.Reach F' d ρ) (i : Bool) :
     (F.child i x, F'.child i y) ∈ F.Reach F' (d + 1) ρ := by
   obtain ⟨a, b, p, hab, hp, h⟩ := h
   obtain ⟨rfl, rfl⟩ := Prod.mk.inj h
-  exact ⟨a, b, p ++ [i], hab, by simpa using hp, by simp [comp_append]⟩
+  exact ⟨a, b, p ++ [i], hab, by simpa using hp, by simp⟩
 
 lemma reach_insert : F.Reach F' d (insert (a, b) ρ) =
     F.Reach F' d ρ ∪ {z | ∃ p : List Bool, p.length ≤ d ∧ z = (F.comp p a, F'.comp p b)} := by
@@ -376,8 +384,7 @@ lemma insert_atom (h : F.Similar F' d ρ) (s : S) :
   rw [reach_insert]
   rintro z (hz | ⟨p, -, rfl⟩)
   · exact .inr hz
-  · rw [F.comp_of_isAtom ⟨s, rfl⟩, F'.comp_of_isAtom ⟨s, rfl⟩]
-    exact .inl rfl
+  · grind [IsAtom]
 
 lemma append_eq_atom (h : F.Similar F' d ρ) (hab : (a, b) ∈ ρ) (hab' : (a', b') ∈ ρ) {s : S}
     (hs : a ++ a' = F.atom s) : b ++ b' = F'.atom s := by
@@ -431,12 +438,8 @@ lemma insert_append (h : F.Similar F' (d + 1) ρ) (hab : (a, b) ∈ ρ) (hab' : 
         have hp' : p.length ≤ d := Nat.le_of_succ_le hp
         right
         cases i
-        · rw [comp_cons, comp_cons, child_false, child_false, F.left_append ha,
-            F'.left_append hb]
-          exact mem_reach hab hp'
-        · rw [comp_cons, comp_cons, child_true, child_true, F.right_append ha,
-            F'.right_append hb]
-          exact mem_reach hab' hp'
+        · simpa [F.left_append ha, F'.left_append hb] using mem_reach hab hp'
+        · simpa [F.right_append ha, F'.right_append hb] using mem_reach hab' hp'
 
 end Similar
 
@@ -485,7 +488,7 @@ theorem exists_similar_insert (d : ℕ) : ∃ g, ∀ ρ : Set (M × M'), ρ.Fini
     exact hL p hp.le
   have hTc (x : M) (hx : x ∈ T) (i : Bool) : F.child i x ∈ L := by
     obtain ⟨⟨p, hp, rfl⟩, -, -⟩ := hx
-    simpa [comp_append] using hL (p ++ [i]) (by simp; omega)
+    simpa using hL (p ++ [i]) (by simp; omega)
   obtain ⟨H, hH₀, hH₁, hHt⟩ := F.exists_copy (M' := M') (fun x (hx : x ∈ T) ↦ hx.2.1) L hTL φ
   rw [hLK] at hHt
   have hold {x : M} {y : M'} (hxy : (x, y) ∈ F.Reach F' θ ρ) : (x, H x) ∈ F.Reach F' θ ρ := by
@@ -536,7 +539,7 @@ theorem exists_similar_insert (d : ℕ) : ∃ g, ∀ ρ : Set (M × M'), ρ.Fini
     obtain ⟨x, hx⟩ : ∃ x, x = F.comp p a := ⟨_, rfl⟩
     rw [← hx]
     have hcL : F.child i x ∈ L := by
-      simpa [comp_append, hx] using hL (p ++ [i]) (by simp; omega)
+      simpa [hx] using hL (p ++ [i]) (by simp; omega)
     by_cases ho : ∃ y, (x, y) ∈ F.Reach F' θ ρ
     · obtain ⟨y, hy⟩ := ho
       have h₁ := child_mem_reach (hold hy) i

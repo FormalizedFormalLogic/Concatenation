@@ -35,7 +35,7 @@ theorem undecidable (T : Theory L) [T.EssentiallyUndecidable] [Entailment.Consis
     Entailment.Undecidable T :=
   undecidable_of_consistent (T := T) T (Entailment.WeakerThan.refl T) inferInstance
 
-theorem of_weakerThan (T U : Theory L) [T.EssentiallyUndecidable] [T ⪯ U] :
+lemma of_weakerThan (T U : Theory L) [T.EssentiallyUndecidable] [T ⪯ U] :
     U.EssentiallyUndecidable where
   undecidable_of_consistent V hUV hV :=
     undecidable_of_consistent (T := T) V (Entailment.WeakerThan.trans inferInstance hUV) hV
@@ -45,6 +45,16 @@ instance (T : Theory L) [T.EssentiallyUndecidable] : Entailment.EssentiallyUndec
     Entailment.consistent_of_incomplete (h := hU)
 
 end Theory.EssentiallyUndecidable
+
+/-- A theory with a model whose theory is decidable is not essentially undecidable. -/
+lemma Theory.not_essentiallyUndecidable_of_models {T : Theory L} (M : Type*) [Nonempty M]
+    [Tarski.Structure L M] [M↓[L] ⊧* T]
+    (h : Entailment.Decidable (Tarski.Structure.theory L M)) : ¬T.EssentiallyUndecidable := fun _ ↦
+  have : M↓[L] ⊧* Tarski.Structure.theory L M := models_theory_iff.mpr fun _ h ↦ h
+  Theory.EssentiallyUndecidable.undecidable_of_consistent (T := T) (Tarski.Structure.theory L M)
+    (Entailment.weakerThan_iff.mpr fun h ↦
+      Entailment.by_axm <| consequence_iff'.mp (Theory.Proof.sound h) M)
+    (consistent_of_model _ M) h
 
 namespace Theory
 

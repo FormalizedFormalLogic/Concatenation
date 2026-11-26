@@ -1,8 +1,8 @@
 module
 
 public import Concatenation.Biteral
-public import Concatenation.ToFoundation.AddCoding
-public import Concatenation.ToFoundation.Bootstrapping
+public import Concatenation.ToFoundation.Coding
+public import Concatenation.ToMathlib.Encodable
 public import Foundation.FirstOrder.Incompleteness.Church
 
 /-!
@@ -73,44 +73,104 @@ instance : (ℒ⌢).LORDefinable where
 
 end Language.Concatenation
 
-namespace Language.PrefixRel
+namespace Language.ConcatenationLetters
 
-instance : prefixRel.Primcodable where
+instance {α : Type} [Primcodable α] : (ℒ⌢[α]).Primcodable where
   func := by
-    apply (Primrec.const 0 : Primrec fun _ : ℕ × ℕ ↦ 0).of_eq
+    have h : Primrec fun p : ℕ × ℕ ↦
+        if p.1 = 0 then Encodable.encode (Encodable.decode p.2 : Option α)
+        else if p.1 = 2 ∧ p.2 = 0 then 1 else 0 :=
+      Primrec.ite (by primrec) (Primrec.encode.comp <| Primrec.decode.comp Primrec.snd)
+        (by primrec)
+    apply h.of_eq
     rintro ⟨k, e⟩
-    simp [Encodable.decode]
+    match k, e with
+    |     0,     e =>
+      rcases h : (Encodable.decode e : Option α) with _ | a <;> simp [Encodable.decode, h]
+      rfl
+    |     1,     _ => simp [Encodable.decode]
+    |     2,     0 => rfl
+    |     2, _ + 1 => simp [Encodable.decode]
+    | _ + 3,     _ => simp [Encodable.decode]
+  rel := Language.Primcodable.rel (L := ℒ⌢)
+
+lemma mem_range_encode_func_iff {n k f : ℕ} :
+    f ∈ Set.range (Encodable.encode : (ℒ⌢[Fin n]).Func k → ℕ) ↔
+      (k = 0 ∧ f < n) ∨ (k = 2 ∧ f = 0) := by
+  constructor
+  · rintro ⟨f, rfl⟩
+    rcases f with a | _
+    · exact .inl ⟨rfl, a.isLt⟩
+    · exact .inr ⟨rfl, rfl⟩
+  · rintro (⟨rfl, h⟩ | ⟨rfl, rfl⟩)
+    · use .letter ⟨f, h⟩; rfl
+    · use .concat; rfl
+
+instance {n : ℕ} : (ℒ⌢[Fin n]).LORDefinable where
+  func := .mkSigma “k f. (k = 0 ∧ f < ↑n) ∨ (k = 2 ∧ f = 0)”
+  rel := .mkSigma “k r. k = 2 ∧ r = 0”
+  func_iff {k c} := by simpa [models_iff] using! mem_range_encode_func_iff
+  rel_iff {k c} := by simpa [models_iff] using! Concatenation.mem_range_encode_rel_iff
+
+end Language.ConcatenationLetters
+
+namespace Language
+
+lemma concatenationEmpty.decode_func_two_mul (k m : ℕ) :
+    (Encodable.decode (2 * m) : Option ((ℒ⌢ₑ).Func k)) =
+      (Encodable.decode m : Option ((ℒ⌢).Func k)).map Sum.inl :=
+  Encodable.decode_sum_two_mul (β := Constant.Func PUnit k) m
+
+lemma concatenationEmpty.decode_func_two_mul_add_one (k m : ℕ) :
+    (Encodable.decode (2 * m + 1) : Option ((ℒ⌢ₑ).Func k)) =
+      (Encodable.decode m : Option (Constant.Func PUnit k)).map Sum.inr :=
+  Encodable.decode_sum_two_mul_add_one (β := Constant.Func PUnit k) m
+
+lemma concatenationEmpty.decode_rel_two_mul (k m : ℕ) :
+    (Encodable.decode (2 * m) : Option ((ℒ⌢ₑ).Rel k)) =
+      (Encodable.decode m : Option ((ℒ⌢).Rel k)).map Sum.inl :=
+  Encodable.decode_sum_two_mul (β := PEmpty) m
+
+lemma concatenationEmpty.decode_rel_two_mul_add_one (k m : ℕ) :
+    (Encodable.decode (2 * m + 1) : Option ((ℒ⌢ₑ).Rel k)) = none :=
+  Encodable.decode_sum_two_mul_add_one (β := PEmpty) m
+
+open concatenationEmpty in
+instance : (ℒ⌢ₑ).Primcodable where
+  func := by
+    have h : Primrec fun p : ℕ × ℕ ↦
+        if (p.1 = 0 ∧ p.2 < 3) ∨ (p.1 = 2 ∧ p.2 = 0) then p.2 + 1 else 0 := by
+      primrec
+    apply h.of_eq
+    rintro ⟨k, e⟩
+    obtain ⟨m, rfl | rfl⟩ := Nat.even_or_odd' e
+    · simp only [decode_func_two_mul]
+      match k, m with
+      |     0,     0 => rfl
+      |     0,     1 => rfl
+      |     0, m + 2 => simp [Encodable.decode]; rfl
+      |     1,     _ => simp [Encodable.decode]; rfl
+      |     2,     0 => rfl
+      |     2, _ + 1 => simp [Encodable.decode]; rfl
+      | _ + 3,     _ => simp [Encodable.decode]; rfl
+    · simp only [decode_func_two_mul_add_one]
+      match k, m with
+      |     0,     0 => rfl
+      |     0, m + 1 => simp [Encodable.decode]; rfl
+      | _ + 1,     _ => simp [Encodable.decode]; rfl
   rel := by
     have h : Primrec fun p : ℕ × ℕ ↦ if p.1 = 2 ∧ p.2 = 0 then 1 else 0 := by primrec
     apply h.of_eq
     rintro ⟨k, e⟩
-    match k, e with
-    |     0,     _ => rfl
-    |     1,     _ => rfl
-    |     2,     0 => rfl
-    |     2, _ + 1 => simp [Encodable.decode]
-    | _ + 3,     _ => simp [Encodable.decode]
-
-end Language.PrefixRel
-
-namespace Language
-
-instance : unit.{0}.Encodable where
-  func := fun k ↦ inferInstanceAs (Encodable (Constant.Func PUnit k))
-  rel := fun _ ↦ inferInstanceAs (Encodable PEmpty)
-
-instance : unit.{0}.Primcodable where
-  func := by
-    have h : Primrec fun p : ℕ × ℕ ↦ if p.1 = 0 ∧ p.2 = 0 then 1 else 0 := by primrec
-    apply h.of_eq
-    rintro ⟨k, e⟩
-    match k, e with
-    |     0,     0 => rfl
-    |     0, _ + 1 => rfl
-    | _ + 1,     _ => rfl
-  rel := by
-    apply (Primrec.const 0 : Primrec fun _ : ℕ × ℕ ↦ 0).of_eq
-    exact fun _ ↦ rfl
+    obtain ⟨m, rfl | rfl⟩ := Nat.even_or_odd' e
+    · simp only [decode_rel_two_mul]
+      match k, m with
+      |     0,     _ => simp [Encodable.decode]; rfl
+      |     1,     _ => simp [Encodable.decode]; rfl
+      |     2,     0 => rfl
+      |     2, _ + 1 => simp [Encodable.decode]; rfl
+      | _ + 3,     _ => simp [Encodable.decode]; rfl
+    · simp [decode_rel_two_mul_add_one]
 
 lemma concatenationEmpty.mem_range_encode_func_iff {k f : ℕ} :
     f ∈ Set.range (Encodable.encode : (ℒ⌢ₑ).Func k → ℕ) ↔ (k = 0 ∧ f = 0) ∨ (k = 0 ∧ f = 1) ∨
@@ -170,7 +230,7 @@ lemma numeralTerm_add_one_eq_biteral (n : ℕ) :
   induction n with
   | zero => rfl
   | succ n ih =>
-    simp only [biteral, List.replicate_succ', List.foldl_append] at ih ⊢
+    simp only [biteral, stringTerm, List.replicate_succ', List.foldl_append] at ih ⊢
     rw [← ih]
     rfl
 

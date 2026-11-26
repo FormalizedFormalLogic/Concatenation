@@ -4,20 +4,27 @@
 # The keys are the citation keys used in docstrings, e.g. `- [Grz05, §3]`;
 # see docs/conventions.md. Entries are sorted by key.
 
-CPRUV10:
+Dam17:
   type: Article
-  title: Decorated Linear Order Types and the Theory of Concatenation
-  author:
-  - Čačić, Vedran
-  - Pudlák, Pavel
-  - Restall, Greg
-  - Urquhart, Alasdair
-  - Visser, Albert
-  date: 2010
+  title: From Strings to Sets
+  author: Damnjanovic, Zlatan
+  date: 2017
   parent:
-    type: Anthology
-    title: Logic Colloquium 2007
-    publisher: Cambridge University Press
+    type: Repository
+    title: arXiv
+  serial-number:
+    arxiv: "1701.07548"
+
+Dam17a:
+  type: Article
+  title: Mutual Interpretability of Robinson Arithmetic and Adjunctive Set Theory with Extensionality
+  author: Damnjanovic, Zlatan
+  date: 2017
+  parent:
+    type: Repository
+    title: arXiv
+  serial-number:
+    arxiv: "1707.03531"
 
 GZ08:
   type: Chapter
@@ -121,21 +128,6 @@ Hor12:
     volume: 53
     issue: 2
 
-KM21:
-  type: Article
-  title: First-order concatenation theory with bounded quantifiers
-  author:
-  - Kristiansen, Lars
-  - Murwanashyaka, Juvenal
-  date: 2021
-  page-range: 77-104
-  serial-number:
-    doi: "10.1007/s00153-020-00735-6"
-  parent:
-    type: Periodical
-    title: Archive for Mathematical Logic
-    volume: 60
-
 KM24:
   type: Article
   title: "Notes on Interpretability between Weak First-order Theories: Theories of Sequences"
@@ -162,13 +154,6 @@ Mur22:
     title: Archive for Mathematical Logic
     volume: 61
 
-Mur23:
-  type: Thesis
-  title: Papers on Weak First-Order Theories and Decidability Problems
-  author: Murwanashyaka, Juvenal
-  date: 2023
-  organization: University of Oslo
-
 Mur24:
   type: Article
   title: Weak essentially undecidable theories of concatenation, part II
@@ -194,20 +179,6 @@ Mur24a:
     type: Periodical
     title: Mathematical Logic Quarterly
     volume: 70
-
-PMV23:
-  type: Article
-  title: There are no minimal essentially undecidable theories
-  author:
-  - Pakhomov, Fedor
-  - Murwanashyaka, Juvenal
-  - Visser, Albert
-  date: 2022
-  serial-number:
-    arxiv: "2207.08174"
-  parent:
-    type: Repository
-    title: arXiv
 
 Sve08:
   type: Chapter
@@ -251,14 +222,3 @@ Vis09:
     title: Notre Dame Journal of Formal Logic
     volume: 50
     issue: 1
-
-Vis24:
-  type: Article
-  title: From Numbers to Container Strings
-  author: Visser, Albert
-  date: 2024
-  serial-number:
-    arxiv: "2411.15873"
-  parent:
-    type: Repository
-    title: arXiv

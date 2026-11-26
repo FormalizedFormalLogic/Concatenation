@@ -101,14 +101,18 @@ rewrite, so it is written as if it were already there.
   def isRegularDef : 𝚺ᴬ₀.Semisentence 1 := .mkSigma “y. 0 ≤ y ∧ ∀ v < y, v + 1 ≤ y”
 
   instance isRegular_defined : 𝚺ᴬ₀-Predicate[V] IsRegular via isRegularDef := .mk fun v ↦ by
-    simp [isRegularDef, isRegular_iff]
+    simp [isRegularDef, isRegular_iff, Semiformula.Operator.LE.sentence_eq, Semiformula.Operator.val,
+      Semiformula.Operator.Eq.sentence_eq, Semiformula.Operator.LT.sentence_eq]
 
   instance isRegular_definable : 𝚺ᴬ₀-Predicate[V] IsRegular := isRegular_defined.to_definable
   ```
-  A formula of another language without a hierarchy notation is tied to its relation the same
-  way with the unclassified classes, `ℒ⌢-relation[M] R via φ` and `ℒ⌢-predicate[M] P via φ`,
-  as Foundation's set theory does for `ℒₛₑₜ`. A lemma that computes a formula's value only under
-  extra hypotheses stays a lemma.
+  The bracketed model in these notations expands to the named argument `(V := V)`, so the model
+  variable is called `V`. A formula whose quantifiers or parameters keep it out of every
+  hierarchy class uses the unclassified `ℒₒᵣ-relation[M] R via φ`. A formula of another language
+  without a hierarchy notation is tied to its relation the same way with the unclassified
+  classes, `ℒ⌢-relation[M] R via φ` and `ℒ⌢-predicate[M] P via φ`, as Foundation's set theory
+  does for `ℒₛₑₜ`. A lemma that computes a formula's value only under extra hypotheses stays a
+  lemma.
 - **`<|` for low-precedence application.** Write `f <| x`, not `f $ x`, and prefer it to
   parentheses whenever the argument runs to the end of the term: `exact Or.inr <| Or.inl h`, not
   `exact Or.inr (Or.inl h)`. Foundation's guidelines do not choose between the two spellings;

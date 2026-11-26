@@ -7,6 +7,10 @@ public import Concatenation.D.Basic
 public import Concatenation.F.Basic
 public import Concatenation.F.Interpretability
 public import Concatenation.Language
+public import Concatenation.Minimality.Alternating
+public import Concatenation.Minimality.Basic
+public import Concatenation.Minimality.Contraction
+public import Concatenation.Minimality.NonAssociative
 public import Concatenation.OpenProblem
 public import Concatenation.OpenProblem.Attribute
 public import Concatenation.QT.Basic

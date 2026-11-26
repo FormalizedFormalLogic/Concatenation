@@ -151,6 +151,8 @@ instance (k) : Encodable (PrefixRel k) where
     | _, _ => none
   encodek x := by rcases x; simp
 
+instance : prefixRel.Encodable := ⟨fun _ ↦ inferInstance, fun _ ↦ inferInstance⟩
+
 end PrefixRel
 
 /-- The single symbol for the successor of strings. -/

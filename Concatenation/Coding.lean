@@ -202,6 +202,63 @@ instance : (ℒ⌢ₑ).LORDefinable where
     simpa [models_iff] using! concatenationEmpty.mem_range_encode_func_iff
   rel_iff {k c} := by simpa [models_iff] using! concatenationEmpty.mem_range_encode_rel_iff
 
+namespace PrefixRel
+
+instance : prefixRel.Primcodable where
+  func := by
+    apply (Primrec.const 0 : Primrec fun _ : ℕ × ℕ ↦ 0).of_eq
+    rintro ⟨k, e⟩
+    simp [Encodable.decode]
+  rel := by
+    have h : Primrec fun p : ℕ × ℕ ↦ if p.1 = 2 ∧ p.2 = 0 then 1 else 0 := by primrec
+    apply h.of_eq
+    rintro ⟨k, e⟩
+    match k, e with
+    |     0,     _ => rfl
+    |     1,     _ => rfl
+    |     2,     0 => rfl
+    |     2, _ + 1 => simp [Encodable.decode]
+    | _ + 3,     _ => simp [Encodable.decode]
+
+end PrefixRel
+
+namespace ConcatenationPrefix
+
+lemma mem_range_encode_func_iff {k f : ℕ} :
+    f ∈ Set.range (Encodable.encode : (ℒ⌢⊑).Func k → ℕ) ↔ (k = 0 ∧ f = 0) ∨ (k = 0 ∧ f = 2) ∨
+    (k = 2 ∧ f = 0) := by
+  constructor
+  · rintro ⟨f | f, rfl⟩
+    · rcases f
+      · exact .inl ⟨rfl, rfl⟩
+      · exact .inr <| .inl ⟨rfl, rfl⟩
+      · exact .inr <| .inr ⟨rfl, rfl⟩
+    · exact f.elim
+  · rintro (⟨rfl, rfl⟩ | ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩)
+    · use Sum.inl Concatenation.Func.zero; rfl
+    · use Sum.inl Concatenation.Func.one; rfl
+    · use Sum.inl Concatenation.Func.concat; rfl
+
+lemma mem_range_encode_rel_iff {k r : ℕ} :
+    r ∈ Set.range (Encodable.encode : (ℒ⌢⊑).Rel k → ℕ) ↔ (k = 2 ∧ r = 0) ∨ (k = 2 ∧ r = 1) := by
+  constructor
+  · rintro ⟨r | r, rfl⟩
+    · rcases r
+      exact .inl ⟨rfl, rfl⟩
+    · rcases r
+      exact .inr ⟨rfl, rfl⟩
+  · rintro (⟨rfl, rfl⟩ | ⟨rfl, rfl⟩)
+    · use Sum.inl Concatenation.Rel.eq; rfl
+    · use Sum.inr PrefixRel.pref; rfl
+
+instance : (ℒ⌢⊑).LORDefinable where
+  func := .mkSigma “k f. (k = 0 ∧ f = 0) ∨ (k = 0 ∧ f = 2) ∨ (k = 2 ∧ f = 0)”
+  rel := .mkSigma “k r. (k = 2 ∧ r = 0) ∨ (k = 2 ∧ r = 1)”
+  func_iff {k c} := by simpa [models_iff] using! mem_range_encode_func_iff
+  rel_iff {k c} := by simpa [models_iff] using! mem_range_encode_rel_iff
+
+end ConcatenationPrefix
+
 end Language
 
 namespace Concatenation

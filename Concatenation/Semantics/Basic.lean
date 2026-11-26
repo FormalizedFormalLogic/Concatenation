@@ -31,6 +31,15 @@ variable {α : Type*} [ConcatenationStructure α]
 def ofFreeSemigroup (x : FreeSemigroup Bool) : α :=
   Concatenation.stringValue (fun b ↦ if b then 1 else 0) x
 
+lemma ofFreeSemigroup_of (b : Bool) :
+    (ofFreeSemigroup (FreeSemigroup.of b) : α) = if b then 1 else 0 := rfl
+
+lemma ofFreeSemigroup_mul_of (x : FreeSemigroup Bool) (b : Bool) :
+    (ofFreeSemigroup (x * FreeSemigroup.of b) : α) = ofFreeSemigroup x ++ if b then 1 else 0 := by
+  rcases x with ⟨a, l⟩
+  change (l ++ [b]).foldl _ _ = _
+  simp [ofFreeSemigroup, Concatenation.stringValue]
+
 end ConcatenationStructure
 
 /-- The letters and the concatenation transported along a bijection. -/
@@ -180,20 +189,23 @@ lemma map_stringValue {α M N : Type*} [Append M] [Append N] (g : M → N)
 
 section eval
 
-variable {M : Type*} [ConcatenationStructure M] {ξ : Type*} {n : ℕ} {e : Fin n → M} {ε : ξ → M}
+variable {L : Language} [L.Zero] [L.One] [L.Concat] {M : Type*} [ConcatenationStructure M]
+  [Tarski.Structure L M] [Tarski.Structure.Zero L M] [Tarski.Structure.One L M]
+  [Tarski.Structure.Concat L M] {ξ : Type*} {n : ℕ} {e : Fin n → M} {ε : ξ → M}
 
+omit [L.Concat] [Tarski.Structure.Concat L M] in
 @[simp]
-lemma val_letter (b : Bool) : (letter b : Semiterm ℒ⌢ ξ n).val e ε = if b then 1 else 0 := by
+lemma val_letter (b : Bool) : (letter b : Semiterm L ξ n).val e ε = if b then 1 else 0 := by
   cases b <;> simp [letter]
 
 @[simp]
 lemma val_biteral (x : FreeSemigroup Bool) :
-    (biteral x : Semiterm ℒ⌢ ξ n).val e ε = ConcatenationStructure.ofFreeSemigroup x := by
+    (biteral x : Semiterm L ξ n).val e ε = ConcatenationStructure.ofFreeSemigroup x := by
   simp [biteral, ConcatenationStructure.ofFreeSemigroup]
 
 @[simp]
-lemma eval_isOneOf {l : List (FreeSemigroup Bool)} {x : M} :
-    M ⊧/![x] (isOneOf l : ConcatenationSemisentence 1) ↔
+lemma eval_isOneOf [L.Eq] [Tarski.Structure.Eq L M] {l : List (FreeSemigroup Bool)} {x : M} :
+    M ⊧/![x] (isOneOf l : Semisentence L 1) ↔
       ∃ γ ∈ l, x = ConcatenationStructure.ofFreeSemigroup γ := by
   simp [isOneOf]
 
@@ -446,6 +458,30 @@ lemma standardModelEmpty_ofEquiv {α : Type*} (e : α ≃ M) :
 
 end semantics
 
+section pref
+
+variable (M : Type*) [LE M]
+
+instance prefixRelStructure : Tarski.Structure prefixRel M where
+  func := fun _ f ↦ f.elim
+  rel := fun _ r ↦
+    match r with
+    | PrefixRel.pref => fun v ↦ v 0 ≤ v 1
+
+variable [ConcatenationStructure M]
+
+instance : Tarski.Structure.Eq ℒ⌢⊑ M := ⟨fun _ _ ↦ iff_of_eq rfl⟩
+
+instance : Tarski.Structure.Zero ℒ⌢⊑ M := ⟨rfl⟩
+
+instance : Tarski.Structure.One ℒ⌢⊑ M := ⟨rfl⟩
+
+instance : Tarski.Structure.Concat ℒ⌢⊑ M := ⟨fun _ _ ↦ rfl⟩
+
+instance : Tarski.Structure.Prefix ℒ⌢⊑ M := ⟨fun _ _ ↦ iff_of_eq rfl⟩
+
+end pref
+
 section eval
 
 open ConcatenationStructure ConcatenationEmptyStructure
@@ -453,18 +489,12 @@ open ConcatenationStructure ConcatenationEmptyStructure
 variable {M : Type*} [ConcatenationEmptyStructure M] {ξ : Type*} {n : ℕ} {e : Fin n → M} {ε : ξ → M}
   {x y : M}
 
-lemma val_biteral_empty (u : FreeSemigroup Bool) :
-    (biteral u : Semiterm ℒ⌢ₑ ξ n).val e ε = ofFreeSemigroup u := by
-  have hb (b : Bool) : (letter b : Semiterm ℒ⌢ₑ ξ n).val e ε = if b then 1 else 0 := by
-    cases b <;> simp [letter]
-  simp [biteral, ofFreeSemigroup, hb]
-
 @[simp]
 lemma val_biteralEmpty (l : List Bool) :
     (biteralEmpty l : Semiterm ℒ⌢ₑ ξ n).val e ε = ofList l := by
   cases l
   · simp [biteralEmpty, ofList]
-  · simp [biteralEmpty, ofList, val_biteral_empty]
+  · simp [biteralEmpty, ofList]
 
 @[simp]
 lemma eval_isSubstring_empty :

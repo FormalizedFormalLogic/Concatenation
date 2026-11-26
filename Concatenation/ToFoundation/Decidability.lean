@@ -3,6 +3,7 @@ module
 public import Foundation.FirstOrder.Arithmetic.Bootstrapping.DerivabilityCondition.D1
 public import Foundation.FirstOrder.Arithmetic.Bootstrapping.Syntax.CraigTrick
 public import Foundation.FirstOrder.LK.Basic
+public import Foundation.FirstOrder.LK.Completeness.CounterModel
 public import Foundation.FirstOrder.Syntax.Classical.PrimrecCoding
 public import Foundation.Logic.Decidability
 
@@ -18,6 +19,51 @@ consistent extensions are undecidable.
 open scoped FFL.FirstOrder.Arithmetic FFL.FirstOrder.Bounding
 
 namespace FFL.FirstOrder
+
+universe u
+
+section rel
+
+variable {L : Language.{u}} {M N : Type*} [Nonempty M] [Nonempty N] [sM : Tarski.Structure L M]
+  [sN : Tarski.Structure L N]
+
+/-- Two structures in which every relation symbol holds everywhere satisfy the same formulas. -/
+lemma Semiformula.eval_iff_eval_of_rel {ξ : Type*} {n : ℕ} (hM : ∀ k (r : L.Rel k) v, sM.rel r v)
+    (hN : ∀ k (r : L.Rel k) v, sN.rel r v) (φ : Semiformula L ξ n) (e : Fin n → M) (ε : ξ → M)
+    (e' : Fin n → N) (ε' : ξ → N) : Eval (s := sM) e ε φ ↔ Eval (s := sN) e' ε' φ := by
+  induction φ using Semiformula.rec' with
+  | hverum => simp
+  | hfalsum => simp
+  | hrel r v => simp [eval_rel, hM, hN]
+  | hnrel r v => simp [eval_nrel, hM, hN]
+  | hand φ ψ ihφ ihψ => simp [ihφ e e', ihψ e e']
+  | hor φ ψ ihφ ihψ => simp [ihφ e e', ihψ e e']
+  | hall φ ih =>
+    simp only [eval_all]
+    exact ⟨fun h y ↦ (ih (Classical.arbitrary M :> e) _).mp <| h _,
+      fun h x ↦ (ih _ (Classical.arbitrary N :> e')).mpr <| h _⟩
+  | hexs φ ih =>
+    simp only [eval_ex]
+    exact ⟨fun ⟨x, h⟩ ↦ ⟨Classical.arbitrary N, (ih _ _).mp h⟩,
+      fun ⟨y, h⟩ ↦ ⟨Classical.arbitrary M, (ih _ _).mpr h⟩⟩
+
+/--
+A theory in all of whose models every relation symbol holds everywhere proves exactly the sentences
+true in one such model.
+-/
+lemma Theory.provable_iff_models_of_rel {U : Theory L} (N : Type u) [Nonempty N]
+    [sN : Tarski.Structure L N] [h₀ : N↓[L] ⊧* U] (hN : ∀ k (r : L.Rel k) v, sN.rel r v)
+    (h : ∀ (M : Type u) [Nonempty M] [s : Tarski.Structure L M], M↓[L] ⊧* U →
+      ∀ k (r : L.Rel k) v, s.rel r v) {σ : Sentence L} : U ⊢ σ ↔ N↓[L] ⊧ σ := by
+  constructor
+  · exact models_of_provable h₀
+  · intro hσ
+    apply Theory.Proof.small_complete
+    apply consequence_iff.mpr
+    intro M _ s hM
+    exact (Semiformula.eval_iff_eval_of_rel (h M hM) hN σ _ _ _ _).mpr hσ
+
+end rel
 
 variable {L : Language} [L.Encodable] [L.Primcodable]
 
@@ -97,5 +143,31 @@ theorem decidable_of_complete (h : Entailment.Complete T) : Entailment.Decidable
   · exact Entailment.decidable_of_incomplete <| Entailment.not_consistent_iff_inconsistent.mp hT
 
 end Theory
+
+section
+
+variable {L : Language.{u}} [L.Encodable] [L.Primcodable] [L.LORDefinable] [L.DecidableEq]
+
+/--
+A theory with a model in which every relation symbol holds everywhere is not essentially
+undecidable, if a recursively enumerable set of sentences true in that model forces this on every
+model.
+-/
+theorem Theory.not_essentiallyUndecidable_of_models_of_rel
+    (T U : Theory L) [U.RE] (N : Type u) [Nonempty N] [sN : Tarski.Structure L N] [hT : N↓[L] ⊧* T]
+    [N↓[L] ⊧* U] (hN : ∀ k (r : L.Rel k) v, sN.rel r v)
+    (h : ∀ (M : Type u) [Nonempty M] [s : Tarski.Structure L M], M↓[L] ⊧* U →
+      ∀ k (r : L.Rel k) v, s.rel r v) : ¬T.EssentiallyUndecidable := fun hT' ↦
+  have : T ⪯ U := Entailment.weakerThan_iff.mpr fun hσ ↦
+    (provable_iff_models_of_rel N hN h).mpr <| models_of_provable hT hσ
+  have : Entailment.Consistent U := consistent_of_model U N
+  have : Entailment.Complete U := ⟨fun σ ↦ by
+    by_cases hσ : N↓[L] ⊧ σ
+    · exact .inl <| (provable_iff_models_of_rel N hN h).mpr hσ
+    · exact .inr <| (provable_iff_models_of_rel N hN h).mpr <| by simpa [models_iff] using hσ⟩
+  Theory.EssentiallyUndecidable.undecidable_of_consistent (T := T) U inferInstance inferInstance
+    (Theory.decidable_of_complete U inferInstance)
+
+end
 
 end FFL.FirstOrder

@@ -2,6 +2,8 @@ module
 
 public import Concatenation.TC.Interpretability
 public import Concatenation.ToFoundation.Interpretability.DefinitionalEquivalence
+public import Foundation.FirstOrder.Arithmetic.Schemata
+import Concatenation.OpenProblem
 
 /-!
 # $\mathsf{TC}$ with and without the empty string
@@ -1049,5 +1051,43 @@ def tcDefinitionalEquivalence : DefinitionalEquivalence 𝗧𝗖 𝗧𝗖ₑ whe
       let e' (i) : shiftTranslation.Model M := ⟨e i, shiftTranslation.dom _⟩
       (translateOperator_val_iff shiftInterpretation _ e').trans <|
         shiftTranslation.func_val_iff f e' }
+
+section notationInduction
+
+/--
+The notation induction axiom for `φ`.
+- [HH14, Question 3]
+-/
+def notationInduction {ξ : Type*} (φ : Semiformula ℒ⌢ₑ ξ 1) : Formula ℒ⌢ₑ ξ :=
+  “!φ ⋆ → (∀ x, !φ x → !φ (x ⌢ !!(op(0).const)) ∧ !φ (x ⌢ !!(op(1).const))) → ∀ x, !φ x”
+
+/--
+Axioms of the theory $\Sigma_n\text{-}\mathsf{TCI}$.
+- [HH14, Question 3]
+-/
+inductive IsTCISigmaAxiom (n : ℕ) : Sentence ℒ⌢ₑ → Prop
+  | tcEmpty : ∀ φ ∈ 𝗧𝗖ₑ, IsTCISigmaAxiom n φ
+  | notationInduction (φ : Semiformula ℒ⌢ₑ ℕ 1) : ℬ[⊑, ℒ⌢ₑ].Hierarchy 𝚺 n φ →
+      IsTCISigmaAxiom n (notationInduction φ).univCl
+
+/--
+The theory $\Sigma_n\text{-}\mathsf{TCI}$: $\mathsf{TC}$ with the empty string and notation
+induction for the $\Sigma_n$ formulas.
+- [HH14, Question 3]
+-/
+abbrev TCISigma (n : ℕ) : Theory ℒ⌢ₑ := Set.ofPred (IsTCISigmaAxiom n)
+
+instance (n : ℕ) : 𝗧𝗖ₑ ⪯ TCISigma n := Entailment.WeakerThan.ofSubset IsTCISigmaAxiom.tcEmpty
+
+instance (n : ℕ) : 𝗘𝗤 ℒ⌢ₑ ⪯ TCISigma n :=
+  Entailment.WeakerThan.trans (𝓣 := 𝗧𝗖ₑ) inferInstance inferInstance
+
+/--
+Are $\Sigma_n\text{-}\mathsf{TCI}$ and $\mathsf{I}\Sigma_n$ mutually interpretable for each $n$?
+- [HH14, Question 3]
+-/
+open_problem TCISigma_mutuallyInterpretable_ISigma := ∀ n : ℕ, Nonempty (TCISigma n ⋈ 𝗜𝚺 n)
+
+end notationInduction
 
 end FFL.FirstOrder.Concatenation

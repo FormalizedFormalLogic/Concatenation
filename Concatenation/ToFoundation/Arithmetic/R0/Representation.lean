@@ -24,8 +24,8 @@ Cobham's order.
 - [Sve08, §3.3, Theorem 3]
 -/
 def cobhamComparison (φ : ArithmeticSemisentence 3) : ArithmeticSemisentence 2 :=
-  “x y. ∃ w, !cobhamLE y w ∧ (∃ v, !cobhamLE v w ∧ !φ x y v) ∧
-    ∀ z u, !cobhamLE z w → !cobhamLE u w → !φ x z u → y = z”
+  “x y. ∃ w, !cobhamLEDef y w ∧ (∃ v, !cobhamLEDef v w ∧ !φ x y v) ∧
+    ∀ z u, !cobhamLEDef z w → !cobhamLEDef u w → !φ x z u → y = z”
 
 variable {M : Type*} [ORingStructure M] {φ : ArithmeticSemisentence 3}
   {A : ArithmeticSemisentence 2}
@@ -186,13 +186,14 @@ structure IsValue₂ (f : ℕ → ℕ → ℕ) (x y z : M) : Prop where
 `z` is the only value of `cobhamRepresentation₂ f` at `x` and `y`, and `x` and `y` are below `z` in
 Cobham's order.
 -/
-noncomputable def isValue₂ (f : ℕ → ℕ → ℕ) : ArithmeticSemisentence 3 :=
-  “x y z. !cobhamLE x z ∧ !cobhamLE y z ∧ !(cobhamRepresentation₂ f) x y z ∧
+noncomputable def isValue₂Def (f : ℕ → ℕ → ℕ) : ArithmeticSemisentence 3 :=
+  “x y z. !cobhamLEDef x z ∧ !cobhamLEDef y z ∧ !(cobhamRepresentation₂ f) x y z ∧
     ∀ w, !(cobhamRepresentation₂ f) x y w → w = z”
 
-@[simp]
-lemma eval_isValue₂ : M ⊧/![x, y, z] (isValue₂ f) ↔ IsValue₂ f x y z := by
-  simp [isValue₂, isValue₂_iff]
+instance isValue₂_defined : ℒₒᵣ-relation₃[M] (IsValue₂ f) via isValue₂Def f :=
+  ⟨fun v ↦ by simp [isValue₂Def, isValue₂_iff]⟩
+
+instance isValue₂_definable : ℒₒᵣ-relation₃[M] (IsValue₂ f) := isValue₂_defined.to_definable
 
 /-- A value, or a given element if there is none, exists uniquely. -/
 lemma existsUnique_isValue₂_or (f : ℕ → ℕ → ℕ) (x y d : M) :

@@ -476,7 +476,7 @@ def ConcatGraph (z x y : M) : Prop :=
 
 /-- `z` is the concatenation of `x` and `y`, or `x` if there is none. -/
 noncomputable def concatGraph : ArithmeticSemisentence 3 :=
-  “z x y. !(isValue₂ appendCode) x y z ∨ (z = x ∧ ∀ w, ¬!(isValue₂ appendCode) x y w)”
+  “z x y. !(isValue₂Def appendCode) x y z ∨ (z = x ∧ ∀ w, ¬!(isValue₂Def appendCode) x y w)”
 
 @[simp]
 lemma eval_concatGraph : M ⊧/![z, x, y] concatGraph ↔ ConcatGraph z x y := by

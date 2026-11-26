@@ -31,12 +31,13 @@ structure IsStage (A : ArithmeticSemisentence 2) (E : ℕ) (j c : M) : Prop wher
   eq_of_le : ∀ d, d ⊴ c → IsCertificate A E d j → d = c
 
 /-- `c` is the least certificate of level `j`. -/
-def isStage (A : ArithmeticSemisentence 2) (E : ℕ) : ArithmeticSemisentence 2 := “j c.
-  !(isCertificate A E) c j ∧ ∀ d, !cobhamLE d c → !(isCertificate A E) d j → d = c”
+def isStageDef (A : ArithmeticSemisentence 2) (E : ℕ) : ArithmeticSemisentence 2 := “j c.
+  !(isCertificateDef A E) c j ∧ ∀ d, !cobhamLEDef d c → !(isCertificateDef A E) d j → d = c”
 
-@[simp]
-lemma eval_isStage : M ⊧/![j, c] (isStage A E) ↔ IsStage A E j c := by
-  simp [isStage, isStage_iff]
+instance isStage_defined : ℒₒᵣ-relation[M] (IsStage A E) via isStageDef A E :=
+  ⟨fun v ↦ by simp [isStageDef, isStage_iff]⟩
+
+instance isStage_definable : ℒₒᵣ-relation[M] (IsStage A E) := isStage_defined.to_definable
 
 /-- `j` has a unique least certificate, which bounds the elements up to `j`. -/
 @[mk_iff]
@@ -46,25 +47,27 @@ structure HasStage (A : ArithmeticSemisentence 2) (E : ℕ) (j : M) : Prop where
   lt : ∀ c, IsStage A E j c → ∀ x, x ⊴ j → x < c
 
 /-- `j` has a unique least certificate, which bounds the elements up to `j`. -/
-def hasStage (A : ArithmeticSemisentence 2) (E : ℕ) : ArithmeticSemisentence 1 := “j.
-  (∃ c, !(isStage A E) j c) ∧ (∀ c, !(isStage A E) j c → ∀ d, !(isStage A E) j d → c = d) ∧
-  ∀ c, !(isStage A E) j c → ∀ x, !cobhamLE x j → x < c”
+def hasStageDef (A : ArithmeticSemisentence 2) (E : ℕ) : ArithmeticSemisentence 1 := “j.
+  (∃ c, !(isStageDef A E) j c) ∧ (∀ c, !(isStageDef A E) j c → ∀ d, !(isStageDef A E) j d → c = d) ∧
+  ∀ c, !(isStageDef A E) j c → ∀ x, !cobhamLEDef x j → x < c”
 
-@[simp]
-lemma eval_hasStage : M ⊧/![j] (hasStage A E) ↔ HasStage A E j := by
-  simp [hasStage, hasStage_iff]
+instance hasStage_defined : ℒₒᵣ-predicate[M] (HasStage A E) via hasStageDef A E :=
+  ⟨fun v ↦ by simp [hasStageDef, hasStage_iff]⟩
+
+instance hasStage_definable : ℒₒᵣ-predicate[M] (HasStage A E) := hasStage_defined.to_definable
 
 /-- `x` belongs to the least certificate of level `j`. -/
 def MemStage (A : ArithmeticSemisentence 2) (E : ℕ) (x j : M) : Prop :=
   ∃ c, IsStage A E j c ∧ M ⊧/![x, c] bitDef.val
 
 /-- `x` belongs to the least certificate of level `j`. -/
-def memStage (A : ArithmeticSemisentence 2) (E : ℕ) : ArithmeticSemisentence 2 :=
-  “x j. ∃ c, !(isStage A E) j c ∧ !bitDef x c”
+def memStageDef (A : ArithmeticSemisentence 2) (E : ℕ) : ArithmeticSemisentence 2 :=
+  “x j. ∃ c, !(isStageDef A E) j c ∧ !bitDef x c”
 
-@[simp]
-lemma eval_memStage : M ⊧/![x, j] (memStage A E) ↔ MemStage A E x j := by
-  simp [memStage, MemStage]
+instance memStage_defined : ℒₒᵣ-relation[M] (MemStage A E) via memStageDef A E :=
+  ⟨fun v ↦ by simp [memStageDef, MemStage]⟩
+
+instance memStage_definable : ℒₒᵣ-relation[M] (MemStage A E) := memStage_defined.to_definable
 
 variable [M↓[ℒₒᵣ] ⊧* 𝗥₀] (hA : ℬ[<, ℒₒᵣ].Hierarchy 𝚺 0 A)
 
@@ -113,28 +116,30 @@ def Holds (φ : ArithmeticSemisentence 1) (ψ σ : ArithmeticSemisentence 2) (k 
 The fact of tag `k` about `x`, `y` and `z` belongs to the set that `σ` assigns to the greatest good
 element or, if there is none, to the limit of the sets defined by `ψ`.
 -/
-def holds (φ : ArithmeticSemisentence 1) (ψ σ : ArithmeticSemisentence 2) :
+def holdsDef (φ : ArithmeticSemisentence 1) (ψ σ : ArithmeticSemisentence 2) :
     ArithmeticSemisentence 4 := “k x y z.
-  (∃ m, !(isGreatestGood φ ψ) m ∧ ∃ c, !σ m c ∧ !fact c k x y z) ∨
-  (¬∃ m, !(isGreatestGood φ ψ) m) ∧
-    !(memLimit φ ψ) (!mkPairTerm k (!mkPairTerm x (!mkPairTerm y z)))”
+  (∃ m, !(isGreatestGoodDef φ ψ) m ∧ ∃ c, !σ m c ∧ !factDef c k x y z) ∨
+  (¬∃ m, !(isGreatestGoodDef φ ψ) m) ∧
+    !(memLimitDef φ ψ) (!mkPairTerm k (!mkPairTerm x (!mkPairTerm y z)))”
 
-@[simp]
-lemma eval_holds : M ⊧/![k, x, y, z] (holds φ ψ σ) ↔ Holds φ ψ σ k x y z := by
-  simp [holds, Holds]
+instance holds_defined : ℒₒᵣ-relation₄[M] (Holds φ ψ σ) via holdsDef φ ψ σ :=
+  ⟨fun v ↦ by simp [holdsDef, Holds]⟩
+
+instance holds_definable : ℒₒᵣ-relation₄[M] (Holds φ ψ σ) := holds_defined.to_definable
 
 /-- There is a greatest good element, or `x` belongs to the shortened cut. -/
 def IsSmall (φ : ArithmeticSemisentence 1) (ψ : ArithmeticSemisentence 2) (x : M) : Prop :=
   (∃ m : M, IsGreatestGood φ ψ m) ∨ IsMulCut φ ψ x
 
 /-- There is a greatest good element, or `x` belongs to the shortened cut. -/
-def isSmall (φ : ArithmeticSemisentence 1) (ψ : ArithmeticSemisentence 2) :
+def isSmallDef (φ : ArithmeticSemisentence 1) (ψ : ArithmeticSemisentence 2) :
     ArithmeticSemisentence 1 :=
-  “x. (∃ m, !(isGreatestGood φ ψ) m) ∨ !(isMulCut φ ψ) x”
+  “x. (∃ m, !(isGreatestGoodDef φ ψ) m) ∨ !(isMulCutDef φ ψ) x”
 
-@[simp]
-lemma eval_isSmall : M ⊧/![x] (isSmall φ ψ) ↔ IsSmall φ ψ x := by
-  simp [isSmall, IsSmall]
+instance isSmall_defined : ℒₒᵣ-predicate[M] (IsSmall φ ψ) via isSmallDef φ ψ :=
+  ⟨fun v ↦ by simp [isSmallDef, IsSmall]⟩
+
+instance isSmall_definable : ℒₒᵣ-predicate[M] (IsSmall φ ψ) := isSmall_defined.to_definable
 
 end holds
 
@@ -169,42 +174,43 @@ lemma mkPair_le_mkPair_of_isMulCut {φ : ArithmeticSemisentence 1} {ψ : Arithme
 
 lemma isApproximable_holds (hA : ℬ[<, ℒₒᵣ].Hierarchy 𝚺 0 A)
     (h : ∀ j : ℕ, ∃ c : ℕ, IsCertificate A E c j) :
-    IsApproximable A E (IsSmall (M := M) (hasStage A E) (memStage A E))
-      (fun k ↦ Holds (hasStage A E) (memStage A E) (isStage A E) (numeral k)) := by
-  have hφ (n : ℕ) : M ⊧/![numeral n] (hasStage A E) :=
-    eval_hasStage.mpr <| hasStage_numeral hA (h n)
-  by_cases hm : ∃ m : M, IsGreatestGood (hasStage A E) (memStage A E) m
+    IsApproximable A E (IsSmall (M := M) (hasStageDef A E) (memStageDef A E))
+      (fun k ↦ Holds (hasStageDef A E) (memStageDef A E) (isStageDef A E) (numeral k)) := by
+  have hφ (n : ℕ) : M ⊧/![numeral n] (hasStageDef A E) :=
+    (Defined.eval_iff _).mpr <| hasStage_numeral hA (h n)
+  by_cases hm : ∃ m : M, IsGreatestGood (hasStageDef A E) (memStageDef A E) m
   · constructor
     · exact fun _ ↦ .inl hm
     · exact fun _ _ _ _ ↦ .inl hm
     intro s _
     obtain ⟨m, hm⟩ := hm
-    have stage : HasStage A E m := eval_hasStage.mp <| hm.1.eval m <| cobhamLE_refl m
+    have stage : HasStage A E m := (Defined.eval_iff _).mp <| hm.1.eval m <| cobhamLE_refl m
     obtain ⟨c, hc⟩ := stage.exists_isStage
     have hle (n : ℕ) : numeral n ⊴ m := hm.2 _ <| isGood_numeral hφ n
     use c, m, fun _ ↦ True
     have holds (k x y z : M) :
-        Holds (hasStage A E) (memStage A E) (isStage A E) k x y z ↔ Fact c k x y z := by
+        Holds (hasStageDef A E) (memStageDef A E) (isStageDef A E) k x y z ↔ Fact c k x y z := by
       constructor
       · rintro (⟨m', hm', c', hc', h⟩ | ⟨h, -⟩)
         · obtain rfl := hm.1.tame.antisymm m' (hm'.2 m hm.1) (hm.2 m' hm'.1)
-          rwa [stage.unique c hc c' (eval_isStage.mp hc')]
+          rwa [stage.unique c hc c' ((Defined.eval_iff _).mp hc')]
         · exact absurd ⟨m, hm⟩ h
-      · exact fun h ↦ .inl ⟨m, hm, c, eval_isStage.mpr hc, h⟩
+      · exact fun h ↦ .inl ⟨m, hm, c, (Defined.eval_iff _).mpr hc, h⟩
     exact ⟨hc.isCertificate, fun _ _ ↦ trivial, fun _ _ _ _ ↦ trivial, fun _ _ ↦ .inl ⟨m, hm⟩,
       fun _ _ _ _ _ _ _ ↦ trivial, fun n _ ↦ ⟨stage.lt c hc _ <| hle n, hle n⟩,
       fun k _ x y z _ _ _ ↦ holds _ x y z⟩
-  · have small {x : M} : IsSmall (hasStage A E) (memStage A E) x ↔
-      IsMulCut (hasStage A E) (memStage A E) x := or_iff_right hm
-    have holds {k x y z : M} : Holds (hasStage A E) (memStage A E) (isStage A E) k x y z ↔
-        MemLimit (hasStage A E) (memStage A E) (mkPair k (mkPair x (mkPair y z))) :=
+  · have small {x : M} : IsSmall (hasStageDef A E) (memStageDef A E) x ↔
+      IsMulCut (hasStageDef A E) (memStageDef A E) x := or_iff_right hm
+    have holds {k x y z : M} : Holds (hasStageDef A E) (memStageDef A E) (isStageDef A E) k x y z ↔
+        MemLimit (hasStageDef A E) (memStageDef A E) (mkPair k (mkPair x (mkPair y z))) :=
       (or_iff_right fun ⟨m, h, _⟩ ↦ hm ⟨m, h⟩).trans <| and_iff_right hm
-    have num (n : ℕ) := isMulCut_numeral (ψ := memStage A E) hm hφ n
+    have num (n : ℕ) := isMulCut_numeral (ψ := memStageDef A E) hm hφ n
     constructor
     · exact fun n ↦ small.mpr <| num n
     · exact fun x y hx hy ↦ small.mpr <| (small.mp hx).mkPair hm hφ (small.mp hy)
     intro s hs
-    obtain ⟨b, hb, hsb⟩ : ∃ b : M, IsMulCut (hasStage A E) (memStage A E) b ∧ ∀ x ∈ s, x ⊴ b := by
+    obtain ⟨b, hb, hsb⟩ :
+        ∃ b : M, IsMulCut (hasStageDef A E) (memStageDef A E) b ∧ ∀ x ∈ s, x ⊴ b := by
       clear holds
       induction s with
       | nil => exact ⟨_, num 0, by simp⟩
@@ -220,7 +226,7 @@ lemma isApproximable_holds (hA : ℬ[<, ℒₒᵣ].Hierarchy 𝚺 0 A)
     have hB₂ := hb.mkPair hm hφ hB₁
     have hB := (num 9).mkPair hm hφ hB₂
     obtain ⟨j, hj, hbj, hjB⟩ := HasPath.exists_memLimit_iff (hB.1.1.add_one hm) hb.isGood
-    have stage : HasStage A E j := eval_hasStage.mp <| hj.eval j <| cobhamLE_refl j
+    have stage : HasStage A E j := (Defined.eval_iff _).mp <| hj.eval j <| cobhamLE_refl j
     obtain ⟨c, hc⟩ := stage.exists_isStage
     have lt {x : M} (hx : x ⊴ b) : x < c := stage.lt c hc x <| hj.tame.trans b x hx hbj
     use c, j, (· ⊴ b)
@@ -242,10 +248,10 @@ lemma isApproximable_holds (hA : ℬ[<, ℒₒᵣ].Hierarchy 𝚺 0 A)
         · exact .inl ⟨hle, e⟩]
       constructor
       · intro h
-        obtain ⟨d, hd, h⟩ := eval_memStage.mp h
+        obtain ⟨d, hd, h⟩ := (Defined.eval_iff _).mp h
         obtain rfl := stage.unique c hc d hd
         exact ⟨lt hx, lt hy, lt hz, h⟩
-      · exact fun h ↦ eval_memStage.mpr ⟨c, hc, h.mem⟩
+      · exact fun h ↦ (Defined.eval_iff _).mpr ⟨c, hc, h.mem⟩
 
 end approximation
 
@@ -624,18 +630,19 @@ def InDomain (φ : ArithmeticSemisentence 1) (ψ σ : ArithmeticSemisentence 2) 
   IsSmall φ ψ x ∧ Holds φ ψ σ (numeral 2) x 0 0
 
 /-- `x` belongs to the domain of the interpreted structure. -/
-def inDomain (φ : ArithmeticSemisentence 1) (ψ σ : ArithmeticSemisentence 2) :
+def inDomainDef (φ : ArithmeticSemisentence 1) (ψ σ : ArithmeticSemisentence 2) :
     ArithmeticSemisentence 1 :=
-  “x. !(isSmall φ ψ) x ∧ !(holds φ ψ σ) 2 x 0 0”
+  “x. !(isSmallDef φ ψ) x ∧ !(holdsDef φ ψ σ) 2 x 0 0”
 
-@[simp]
-lemma eval_inDomain : M ⊧/![x] (inDomain φ ψ σ) ↔ InDomain φ ψ σ x := by
-  simp [inDomain, InDomain]
+instance inDomain_defined : ℒₒᵣ-predicate[M] (InDomain φ ψ σ) via inDomainDef φ ψ σ :=
+  ⟨fun v ↦ by simp [inDomainDef, InDomain]⟩
+
+instance inDomain_definable : ℒₒᵣ-predicate[M] (InDomain φ ψ σ) := inDomain_defined.to_definable
 
 /-- The relation of arity `n` and code `R` of the interpreted structure. -/
 def describedRel (φ : ArithmeticSemisentence 1) (ψ σ : ArithmeticSemisentence 2) (n R : ℕ) :
     ArithmeticSemisentence n :=
-  (holds φ ψ σ)/[‘7’, ‘!mkPairTerm ↑n ↑R’, envCodeTerm fun i ↦ #i, ‘0’]
+  (holdsDef φ ψ σ)/[‘7’, ‘!mkPairTerm ↑n ↑R’, envCodeTerm fun i ↦ #i, ‘0’]
 
 @[simp]
 lemma eval_describedRel {n R : ℕ} {v : Fin n → M} : M ⊧/v (describedRel φ ψ σ n R) ↔
@@ -645,7 +652,7 @@ lemma eval_describedRel {n R : ℕ} {v : Fin n → M} : M ⊧/v (describedRel φ
 /-- The function of arity `n` and code `f` of the interpreted structure. -/
 def describedFunc (φ : ArithmeticSemisentence 1) (ψ σ : ArithmeticSemisentence 2) (n f : ℕ) :
     ArithmeticSemisentence (n + 1) :=
-  (holds φ ψ σ)/[‘8’, ‘!mkPairTerm ↑n ↑f’, envCodeTerm fun i : Fin n ↦ #i.succ, #0]
+  (holdsDef φ ψ σ)/[‘8’, ‘!mkPairTerm ↑n ↑f’, envCodeTerm fun i : Fin n ↦ #i.succ, #0]
 
 @[simp]
 lemma eval_describedFunc {n f : ℕ} {a : M} {v : Fin n → M} :
@@ -674,38 +681,40 @@ def certificateTranslation (hA : ℬ[<, ℒₒᵣ].Hierarchy 𝚺 0 A)
     (h : ∀ j : ℕ, ∃ c : ℕ, IsCertificate A (eqCode L) c j) :
     DirectTranslation 𝗥₀ L :=
   let E := eqCode L
-  { domain := ⟨inDomain (hasStage A E) (memStage A E) (isStage A E)⟩
-    rel := fun {n} R ↦ ⟨describedRel (hasStage A E) (memStage A E) (isStage A E) n (encode R)⟩
-    func := fun {n} f ↦ ⟨describedFunc (hasStage A E) (memStage A E) (isStage A E) n (encode f)⟩
+  { domain := ⟨inDomainDef (hasStageDef A E) (memStageDef A E) (isStageDef A E)⟩
+    rel := fun {n} R ↦
+      ⟨describedRel (hasStageDef A E) (memStageDef A E) (isStageDef A E) n (encode R)⟩
+    func := fun {n} f ↦
+      ⟨describedFunc (hasStageDef A E) (memStageDef A E) (isStageDef A E) n (encode f)⟩
     domain_nonempty := complete.{0} _ _ fun M _ _ ↦ (models_domainNonempty_iff _).mpr <| by
       have := isApproximable_holds (M := M) hA h
       use 0
       simpa only [Semiformula.Operator.val, Semiformula.eval_substs] using
-        eval_inDomain.mpr ⟨this.zero, this.dom_zero⟩
+        (Defined.eval_iff _).mpr ⟨this.zero, this.dom_zero⟩
     func_defined := fun {n} f ↦ complete.{0} _ _ fun M _ _ ↦ (models_funcDefined_iff _ _).mpr <| by
       have := isApproximable_holds (M := M) hA h
       intro e he
-      have he (i) := eval_inDomain.mp (he i)
+      have he (i) := (Defined.eval_iff _).mp (he i)
       have env := this.env he
       obtain ⟨a, ha, hda, hfa⟩ := this.fn_total (f := encode f) env.1 env.2
-      exact (existsUnique_congr fun a ↦ and_congr eval_inDomain eval_describedFunc).mpr
+      exact (existsUnique_congr fun a ↦ and_congr (Defined.eval_iff _) eval_describedFunc).mpr
         ⟨a, ⟨⟨ha, hda⟩, hfa⟩, fun b ⟨hb, hfb⟩ ↦
           this.fn_unique (this.pair _ _ (this.num _) (this.num _)) env.1 hb.1 ha hfb hfa⟩
     preserve_eq := complete.{0} _ _ fun M _ _ ↦ (models_preserveEq_iff _ _).mpr <| by
       have := isApproximable_holds (M := M) hA h
       intro x y hx hy
-      have hx := eval_inDomain.mp hx
-      have hy := eval_inDomain.mp hy
+      have hx := (Defined.eval_iff _).mp hx
+      have hy := (Defined.eval_iff _).mp hy
       exact eval_describedRel.trans <| this.eq_iff hx.1 hy.1 hx.2 hy.2 }
 
 lemma certificateTranslation.isDescribedBy_model [M↓[ℒₒᵣ] ⊧* 𝗥₀] (hA : ℬ[<, ℒₒᵣ].Hierarchy 𝚺 0 A)
     (h : ∀ j : ℕ, ∃ c : ℕ, IsCertificate A (eqCode L) c j) :
-    IsDescribedBy L (IsSmall (hasStage A (eqCode L)) (memStage A (eqCode L)))
-      (fun k ↦ Holds (hasStage A (eqCode L)) (memStage A (eqCode L)) (isStage A (eqCode L))
+    IsDescribedBy L (IsSmall (hasStageDef A (eqCode L)) (memStageDef A (eqCode L)))
+      (fun k ↦ Holds (hasStageDef A (eqCode L)) (memStageDef A (eqCode L)) (isStageDef A (eqCode L))
         (numeral k))
       (Model.val : (certificateTranslation hA h).Model M → M) where
-  mem a := eval_inDomain.mp a.dom
-  exists_eq x hx hdx := ⟨⟨x, eval_inDomain.mpr ⟨hx, hdx⟩⟩, rfl⟩
+  mem a := (inDomain_defined.iff _).mp a.dom
+  exists_eq x hx hdx := ⟨⟨x, (inDomain_defined.iff _).mpr ⟨hx, hdx⟩⟩, rfl⟩
   rel _ _ := eval_describedRel
   func f v := eval_describedFunc.mp <| Model.eval_func f v
 

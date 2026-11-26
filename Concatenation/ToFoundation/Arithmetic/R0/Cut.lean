@@ -15,14 +15,15 @@ closed under addition and multiplication and on which a definable family of sets
 namespace FFL.FirstOrder.Arithmetic.R0.Visser
 
 open ORingStructure
+open scoped FFL.FirstOrder.Bounding
 
-variable {M : Type*} [ORingStructure M] {x y z : M}
+variable {V : Type*} [ORingStructure V] {x y z : V}
 
 section isTame
 
 /-- Cobham's order has the order-theoretic properties of a numeral at `x`. -/
 @[mk_iff]
-structure IsTame (x : M) : Prop where
+structure IsTame (x : V) : Prop where
   total : ∀ y, x ⊴ y ∨ y ⊴ x
   trans : ∀ y z, z ⊴ y → y ⊴ x → z ⊴ x
   antisymm : ∀ y, x ⊴ y → y ⊴ x → x = y
@@ -37,23 +38,24 @@ structure IsTame (x : M) : Prop where
   one_mul : 1 * x = x
 
 /-- Cobham's order has the order-theoretic properties of a numeral at `x`. -/
-def isTame : ArithmeticSemisentence 1 := “x.
-  (∀ y, !cobhamLE x y ∨ !cobhamLE y x) ∧
-  (∀ y z, !cobhamLE z y → !cobhamLE y x → !cobhamLE z x) ∧
-  (∀ y, !cobhamLE x y → !cobhamLE y x → x = y) ∧
-  !cobhamLE 0 x ∧
-  (∀ y, !cobhamLE x y → x = y ∨ !cobhamLE (x + 1) y) ∧
-  (∀ y, !cobhamLE y (x + 1) ↔ !cobhamLE y x ∨ y = x + 1) ∧
-  ¬!cobhamLE (x + 1) x ∧
+def isTameDef : ArithmeticSemisentence 1 := “x.
+  (∀ y, !cobhamLEDef x y ∨ !cobhamLEDef y x) ∧
+  (∀ y z, !cobhamLEDef z y → !cobhamLEDef y x → !cobhamLEDef z x) ∧
+  (∀ y, !cobhamLEDef x y → !cobhamLEDef y x → x = y) ∧
+  !cobhamLEDef 0 x ∧
+  (∀ y, !cobhamLEDef x y → x = y ∨ !cobhamLEDef (x + 1) y) ∧
+  (∀ y, !cobhamLEDef y (x + 1) ↔ !cobhamLEDef y x ∨ y = x + 1) ∧
+  ¬!cobhamLEDef (x + 1) x ∧
   x + 0 = x ∧ 0 + x = x ∧ x * 0 = 0 ∧ x * 1 = x ∧ 1 * x = x”
 
-@[simp]
-lemma eval_isTame : M ⊧/![x] isTame ↔ IsTame x := by
-  simp [isTame, isTame_iff]
+instance isTame_defined : ℒₒᵣ-predicate[V] IsTame via isTameDef :=
+  ⟨fun v ↦ by simp [isTameDef, isTame_iff]⟩
+
+instance isTame_definable : ℒₒᵣ-predicate[V] IsTame := isTame_defined.to_definable
 
 /-- Addition and multiplication behave at `x`, `y` and `z` as at numerals. -/
 @[mk_iff]
-structure IsTame₃ (x y z : M) : Prop where
+structure IsTame₃ (x y z : V) : Prop where
   add_assoc : x + y + z = x + (y + z)
   mul_assoc : x * y * z = x * (y * z)
   mul_add : x * (y + z) = x * y + x * z
@@ -64,38 +66,40 @@ structure IsTame₃ (x y z : M) : Prop where
   mkPair_le_right : y ⊴ z → mkPair x y ⊴ mkPair x z
 
 /-- Addition and multiplication behave at `x`, `y` and `z` as at numerals. -/
-def isTame₃ : ArithmeticSemisentence 3 := “x y z.
+def isTame₃Def : 𝚺ᴬ₀.Semisentence 3 := .mkSigma “x y z.
   x + y + z = x + (y + z) ∧ x * y * z = x * (y * z) ∧ x * (y + z) = x * y + x * z ∧
-  (!cobhamLE y z → !cobhamLE (x + y) (x + z)) ∧ (!cobhamLE y z → !cobhamLE (x * y) (x * z)) ∧
-  !cobhamLE x (x + y) ∧
-  (!cobhamLE y z → !cobhamLE (!mkPairTerm y x) (!mkPairTerm z x)) ∧
-  (!cobhamLE y z → !cobhamLE (!mkPairTerm x y) (!mkPairTerm x z))”
+  (!cobhamLEDef y z → !cobhamLEDef (x + y) (x + z)) ∧
+  (!cobhamLEDef y z → !cobhamLEDef (x * y) (x * z)) ∧
+  !cobhamLEDef x (x + y) ∧
+  (!cobhamLEDef y z → !cobhamLEDef (!mkPairTerm y x) (!mkPairTerm z x)) ∧
+  (!cobhamLEDef y z → !cobhamLEDef (!mkPairTerm x y) (!mkPairTerm x z))”
 
-@[simp]
-lemma eval_isTame₃ : M ⊧/![x, y, z] isTame₃ ↔ IsTame₃ x y z := by
-  simp [isTame₃, isTame₃_iff]
+instance isTame₃_defined : 𝚺ᴬ₀-Relation₃[V] IsTame₃ via isTame₃Def := .mk fun v ↦ by
+  simp [isTame₃Def, isTame₃_iff]
 
-variable [M↓[ℒₒᵣ] ⊧* 𝗥₀]
+instance isTame₃_definable : 𝚺ᴬ₀-Relation₃[V] IsTame₃ := isTame₃_defined.to_definable
+
+variable [V↓[ℒₒᵣ] ⊧* 𝗥₀]
 
 @[grind .]
-lemma isTame_numeral (n : ℕ) : IsTame (numeral n : M) where
+lemma isTame_numeral (n : ℕ) : IsTame (numeral n : V) where
   total y := (cobhamLE_numeral_or n).symm
   trans y z hz hy := by grind [eq_numeral_of_cobhamLE_numeral]
   antisymm y hxy hyx := by grind [eq_numeral_of_cobhamLE_numeral]
-  zero_le := by simpa using numeral_cobhamLE_numeral_iff (M := M) (k := 0) (n := n)
+  zero_le := by simpa using numeral_cobhamLE_numeral_iff (V := V) (k := 0) (n := n)
   add_one_le y hy := by
     have := cobhamLE_numeral_or (x := y) (n + 1)
     grind [eq_numeral_of_cobhamLE_numeral]
   le_add_one_iff y := by grind [eq_numeral_of_cobhamLE_numeral]
   not_add_one_le := by simp
-  add_zero := by simpa using numeral_add_numeral (M := M) n 0
-  zero_add := by simpa using numeral_add_numeral (M := M) 0 n
-  mul_zero := by simpa using numeral_mul_numeral (M := M) n 0
-  mul_one := by simpa using numeral_mul_numeral (M := M) n 1
-  one_mul := by simpa using numeral_mul_numeral (M := M) 1 n
+  add_zero := by simpa using numeral_add_numeral (M := V) n 0
+  zero_add := by simpa using numeral_add_numeral (M := V) 0 n
+  mul_zero := by simpa using numeral_mul_numeral (M := V) n 0
+  mul_one := by simpa using numeral_mul_numeral (M := V) n 1
+  one_mul := by simpa using numeral_mul_numeral (M := V) 1 n
 
 @[grind .]
-lemma isTame₃_numeral (k n m : ℕ) : IsTame₃ (numeral k : M) (numeral n) (numeral m) := by
+lemma isTame₃_numeral (k n m : ℕ) : IsTame₃ (numeral k : V) (numeral n) (numeral m) := by
   constructor <;> simp +contextual [numeral_add_numeral, numeral_mul_numeral, Nat.add_assoc,
     Nat.mul_assoc, Nat.mul_add, Nat.mul_le_mul_left, mkPair_le_mkPair]
 
@@ -103,40 +107,42 @@ end isTame
 
 section agree
 
-variable {ψ : ArithmeticSemisentence 2} {e i j k m n : M}
+variable {ψ : ArithmeticSemisentence 2} {e i j k m n : V}
 
 /-- The sets defined by `ψ` with the parameters `i` and `j` agree below `m`. -/
-def Agree (ψ : ArithmeticSemisentence 2) (m i j : M) : Prop :=
-  ∀ e, e ◃ m → (M ⊧/![e, i] ψ ↔ M ⊧/![e, j] ψ)
+def Agree (ψ : ArithmeticSemisentence 2) (m i j : V) : Prop :=
+  ∀ e, e ◃ m → (V ⊧/![e, i] ψ ↔ V ⊧/![e, j] ψ)
 
 /-- The sets defined by `ψ` with the parameters `i` and `j` agree below `m`. -/
-def agree (ψ : ArithmeticSemisentence 2) : ArithmeticSemisentence 3 :=
-  “m i j. ∀ e, !cobhamLT e m → (!ψ e i ↔ !ψ e j)”
+def agreeDef (ψ : ArithmeticSemisentence 2) : ArithmeticSemisentence 3 :=
+  “m i j. ∀ e, !cobhamLTDef e m → (!ψ e i ↔ !ψ e j)”
 
-@[simp]
-lemma eval_agree : M ⊧/![m, i, j] (agree ψ) ↔ Agree ψ m i j := by
-  simp [agree, Agree]
+instance agree_defined : ℒₒᵣ-relation₃[V] (Agree ψ) via agreeDef ψ :=
+  ⟨fun v ↦ by simp [agreeDef, Agree]⟩
+
+instance agree_definable : ℒₒᵣ-relation₃[V] (Agree ψ) := agree_defined.to_definable
 
 /--
 The sets defined by `ψ` with the parameters `i` and `j` first differ at `e`, which belongs to the
 second one.
 -/
 @[mk_iff]
-structure LeftAt (ψ : ArithmeticSemisentence 2) (e i j : M) : Prop where
+structure LeftAt (ψ : ArithmeticSemisentence 2) (e i j : V) : Prop where
   agree : Agree ψ e i j
-  left : ¬M ⊧/![e, i] ψ
-  right : M ⊧/![e, j] ψ
+  left : ¬V ⊧/![e, i] ψ
+  right : V ⊧/![e, j] ψ
 
 /--
 The sets defined by `ψ` with the parameters `i` and `j` first differ at `e`, which belongs to the
 second one.
 -/
-def leftAt (ψ : ArithmeticSemisentence 2) : ArithmeticSemisentence 3 :=
-  “e i j. !(agree ψ) e i j ∧ ¬!ψ e i ∧ !ψ e j”
+def leftAtDef (ψ : ArithmeticSemisentence 2) : ArithmeticSemisentence 3 :=
+  “e i j. !(agreeDef ψ) e i j ∧ ¬!ψ e i ∧ !ψ e j”
 
-@[simp]
-lemma eval_leftAt : M ⊧/![e, i, j] (leftAt ψ) ↔ LeftAt ψ e i j := by
-  simp [leftAt, leftAt_iff]
+instance leftAt_defined : ℒₒᵣ-relation₃[V] (LeftAt ψ) via leftAtDef ψ :=
+  ⟨fun v ↦ by simp [leftAtDef, leftAt_iff]⟩
+
+instance leftAt_definable : ℒₒᵣ-relation₃[V] (LeftAt ψ) := leftAt_defined.to_definable
 
 @[grind →]
 lemma Agree.symm (h : Agree ψ m i j) : Agree ψ m j i := fun e he ↦ (h e he).symm
@@ -155,33 +161,35 @@ variable {φ : ArithmeticSemisentence 1} {ψ : ArithmeticSemisentence 2}
 by `ψ` have a first difference.
 -/
 @[mk_iff]
-structure IsGood (φ : ArithmeticSemisentence 1) (ψ : ArithmeticSemisentence 2) (x : M) : Prop where
+structure IsGood (φ : ArithmeticSemisentence 1) (ψ : ArithmeticSemisentence 2) (x : V) : Prop where
   isTame : ∀ y, y ⊴ x → IsTame y
   isTame₃ : ∀ w, w ⊴ x → ∀ y z u, y ⊴ w → z ⊴ w → u ⊴ w → IsTame₃ y z u
-  eval : ∀ y, y ⊴ x → M ⊧/![y] φ
+  eval : ∀ y, y ⊴ x → V ⊧/![y] φ
   agree_or : ∀ m, m ⊴ x → ∀ i j, Agree ψ m i j ∨ ∃ e, e ◃ m ∧ (LeftAt ψ e i j ∨ LeftAt ψ e j i)
 
 /--
 `x` is good for `φ` and `ψ`: below `x` arithmetic is tame, `φ` holds, and distinct sets defined
 by `ψ` have a first difference.
 -/
-def isGood (φ : ArithmeticSemisentence 1) (ψ : ArithmeticSemisentence 2) :
+def isGoodDef (φ : ArithmeticSemisentence 1) (ψ : ArithmeticSemisentence 2) :
     ArithmeticSemisentence 1 := “x.
-  (∀ y, !cobhamLE y x → !isTame y) ∧
-  (∀ w, !cobhamLE w x → ∀ y z u, !cobhamLE y w → !cobhamLE z w → !cobhamLE u w → !isTame₃ y z u) ∧
-  (∀ y, !cobhamLE y x → !φ y) ∧
-  ∀ m, !cobhamLE m x → ∀ i j, !(agree ψ) m i j ∨
-    ∃ e, !cobhamLT e m ∧ (!(leftAt ψ) e i j ∨ !(leftAt ψ) e j i)”
+  (∀ y, !cobhamLEDef y x → !isTameDef y) ∧
+  (∀ w, !cobhamLEDef w x → ∀ y z u, !cobhamLEDef y w → !cobhamLEDef z w → !cobhamLEDef u w →
+    !isTame₃Def y z u) ∧
+  (∀ y, !cobhamLEDef y x → !φ y) ∧
+  ∀ m, !cobhamLEDef m x → ∀ i j, !(agreeDef ψ) m i j ∨
+    ∃ e, !cobhamLTDef e m ∧ (!(leftAtDef ψ) e i j ∨ !(leftAtDef ψ) e j i)”
 
-@[simp]
-lemma eval_isGood : M ⊧/![x] (isGood φ ψ) ↔ IsGood φ ψ x := by
-  simp [isGood, isGood_iff]
+instance isGood_defined : ℒₒᵣ-predicate[V] (IsGood φ ψ) via isGoodDef φ ψ :=
+  ⟨fun v ↦ by simp [isGoodDef, isGood_iff]⟩
 
-variable [M↓[ℒₒᵣ] ⊧* 𝗥₀]
+instance isGood_definable : ℒₒᵣ-predicate[V] (IsGood φ ψ) := isGood_defined.to_definable
 
-lemma agree_numeral_or (n : ℕ) (i j : M) : Agree ψ (numeral n) i j ∨
+variable [V↓[ℒₒᵣ] ⊧* 𝗥₀]
+
+lemma agree_numeral_or (n : ℕ) (i j : V) : Agree ψ (numeral n) i j ∨
     ∃ e, e ◃ numeral n ∧ (LeftAt ψ e i j ∨ LeftAt ψ e j i) := by
-  by_cases h : ∃ k < n, ¬(M ⊧/![numeral k, i] ψ ↔ M ⊧/![numeral k, j] ψ)
+  by_cases h : ∃ k < n, ¬(V ⊧/![numeral k, i] ψ ↔ V ⊧/![numeral k, j] ψ)
   · right
     classical
     obtain ⟨hk, hd⟩ := Nat.find_spec h
@@ -193,7 +201,7 @@ lemma agree_numeral_or (n : ℕ) (i j : M) : Agree ψ (numeral n) i j ∨
     use numeral (Nat.find h)
     constructor
     · exact cobhamLT_numeral_iff_exists.mpr ⟨_, hk, rfl⟩
-    · by_cases hi : M ⊧/![numeral (Nat.find h), i] ψ
+    · by_cases hi : V ⊧/![numeral (Nat.find h), i] ψ
       · right
         exact ⟨agree.symm, by tauto, hi⟩
       · left
@@ -204,7 +212,7 @@ lemma agree_numeral_or (n : ℕ) (i j : M) : Agree ψ (numeral n) i j ∨
     by_contra H
     exact h ⟨k, hk, H⟩
 
-lemma isGood_numeral (h : ∀ n : ℕ, M ⊧/![numeral n] φ) (n : ℕ) : IsGood φ ψ (numeral n : M) where
+lemma isGood_numeral (h : ∀ n : ℕ, V ⊧/![numeral n] φ) (n : ℕ) : IsGood φ ψ (numeral n : V) where
   isTame y hy := by grind [eq_numeral_of_cobhamLE_numeral]
   isTame₃ w hw y z u hy hz hu := by grind [eq_numeral_of_cobhamLE_numeral]
   eval y hy := by grind [eq_numeral_of_cobhamLE_numeral]
@@ -214,120 +222,130 @@ end good
 
 section path
 
-variable {φ : ArithmeticSemisentence 1} {ψ : ArithmeticSemisentence 2} {e i j k m n : M}
+variable {φ : ArithmeticSemisentence 1} {ψ : ArithmeticSemisentence 2} {e i j k m n : V}
 
 /-- `m` is the greatest good element. -/
-def IsGreatestGood (φ : ArithmeticSemisentence 1) (ψ : ArithmeticSemisentence 2) (m : M) : Prop :=
+def IsGreatestGood (φ : ArithmeticSemisentence 1) (ψ : ArithmeticSemisentence 2) (m : V) : Prop :=
   IsGood φ ψ m ∧ ∀ x, IsGood φ ψ x → x ⊴ m
 
 /-- `m` is the greatest good element. -/
-def isGreatestGood (φ : ArithmeticSemisentence 1) (ψ : ArithmeticSemisentence 2) :
+def isGreatestGoodDef (φ : ArithmeticSemisentence 1) (ψ : ArithmeticSemisentence 2) :
     ArithmeticSemisentence 1 :=
-  “m. !(isGood φ ψ) m ∧ ∀ x, !(isGood φ ψ) x → !cobhamLE x m”
+  “m. !(isGoodDef φ ψ) m ∧ ∀ x, !(isGoodDef φ ψ) x → !cobhamLEDef x m”
 
-@[simp]
-lemma eval_isGreatestGood : M ⊧/![m] (isGreatestGood φ ψ) ↔ IsGreatestGood φ ψ m := by
-  simp [isGreatestGood, IsGreatestGood]
+instance isGreatestGood_defined : ℒₒᵣ-predicate[V] (IsGreatestGood φ ψ) via isGreatestGoodDef φ ψ :=
+  ⟨fun v ↦ by simp [isGreatestGoodDef, IsGreatestGood]⟩
+
+instance isGreatestGood_definable : ℒₒᵣ-predicate[V] (IsGreatestGood φ ψ) :=
+  isGreatestGood_defined.to_definable
 
 /--
 Cofinally many sets defined by `ψ` with good parameters agree below `m` with the one of parameter
 `j`.
 -/
-def IsCofinal (φ : ArithmeticSemisentence 1) (ψ : ArithmeticSemisentence 2) (m j : M) : Prop :=
+def IsCofinal (φ : ArithmeticSemisentence 1) (ψ : ArithmeticSemisentence 2) (m j : V) : Prop :=
   ∀ k, IsGood φ ψ k → ∃ i, IsGood φ ψ i ∧ k ⊴ i ∧ Agree ψ m i j
 
 /--
 Cofinally many sets defined by `ψ` with good parameters agree below `m` with the one of parameter
 `j`.
 -/
-def isCofinal (φ : ArithmeticSemisentence 1) (ψ : ArithmeticSemisentence 2) :
+def isCofinalDef (φ : ArithmeticSemisentence 1) (ψ : ArithmeticSemisentence 2) :
     ArithmeticSemisentence 2 :=
-  “m j. ∀ k, !(isGood φ ψ) k → ∃ i, !(isGood φ ψ) i ∧ !cobhamLE k i ∧ !(agree ψ) m i j”
+  “m j. ∀ k, !(isGoodDef φ ψ) k → ∃ i, !(isGoodDef φ ψ) i ∧ !cobhamLEDef k i ∧ !(agreeDef ψ) m i j”
 
-@[simp]
-lemma eval_isCofinal : M ⊧/![m, j] (isCofinal φ ψ) ↔ IsCofinal φ ψ m j := by
-  simp [isCofinal, IsCofinal]
+instance isCofinal_defined : ℒₒᵣ-relation[V] (IsCofinal φ ψ) via isCofinalDef φ ψ :=
+  ⟨fun v ↦ by simp [isCofinalDef, IsCofinal]⟩
+
+instance isCofinal_definable : ℒₒᵣ-relation[V] (IsCofinal φ ψ) := isCofinal_defined.to_definable
 
 /-- `j` is leftmost among the cofinal parameters up to agreement below `m`. -/
 @[mk_iff]
 structure IsLeftmost (φ : ArithmeticSemisentence 1) (ψ : ArithmeticSemisentence 2)
-    (m j : M) : Prop where
+    (m j : V) : Prop where
   isCofinal : IsCofinal φ ψ m j
   not_leftAt : ∀ i, IsCofinal φ ψ m i → ∀ e, e ◃ m → ¬LeftAt ψ e i j
 
 /-- `j` is leftmost among the cofinal parameters up to agreement below `m`. -/
-def isLeftmost (φ : ArithmeticSemisentence 1) (ψ : ArithmeticSemisentence 2) :
+def isLeftmostDef (φ : ArithmeticSemisentence 1) (ψ : ArithmeticSemisentence 2) :
     ArithmeticSemisentence 2 := “m j.
-  !(isCofinal φ ψ) m j ∧ ∀ i, !(isCofinal φ ψ) m i → ∀ e, !cobhamLT e m → ¬!(leftAt ψ) e i j”
+  !(isCofinalDef φ ψ) m j ∧
+    ∀ i, !(isCofinalDef φ ψ) m i → ∀ e, !cobhamLTDef e m → ¬!(leftAtDef ψ) e i j”
 
-@[simp]
-lemma eval_isLeftmost : M ⊧/![m, j] (isLeftmost φ ψ) ↔ IsLeftmost φ ψ m j := by
-  simp [isLeftmost, isLeftmost_iff]
+instance isLeftmost_defined : ℒₒᵣ-relation[V] (IsLeftmost φ ψ) via isLeftmostDef φ ψ :=
+  ⟨fun v ↦ by simp [isLeftmostDef, isLeftmost_iff]⟩
+
+instance isLeftmost_definable : ℒₒᵣ-relation[V] (IsLeftmost φ ψ) := isLeftmost_defined.to_definable
 
 /-- `j` is leftmost up to agreement below every `m` up to `n`. -/
-def IsPath (φ : ArithmeticSemisentence 1) (ψ : ArithmeticSemisentence 2) (n j : M) : Prop :=
+def IsPath (φ : ArithmeticSemisentence 1) (ψ : ArithmeticSemisentence 2) (n j : V) : Prop :=
   ∀ m, m ⊴ n → IsLeftmost φ ψ m j
 
 /-- `j` is leftmost up to agreement below every `m` up to `n`. -/
-def isPath (φ : ArithmeticSemisentence 1) (ψ : ArithmeticSemisentence 2) :
+def isPathDef (φ : ArithmeticSemisentence 1) (ψ : ArithmeticSemisentence 2) :
     ArithmeticSemisentence 2 :=
-  “n j. ∀ m, !cobhamLE m n → !(isLeftmost φ ψ) m j”
+  “n j. ∀ m, !cobhamLEDef m n → !(isLeftmostDef φ ψ) m j”
 
-@[simp]
-lemma eval_isPath : M ⊧/![n, j] (isPath φ ψ) ↔ IsPath φ ψ n j := by
-  simp [isPath, IsPath]
+instance isPath_defined : ℒₒᵣ-relation[V] (IsPath φ ψ) via isPathDef φ ψ :=
+  ⟨fun v ↦ by simp [isPathDef, IsPath]⟩
 
-/-- `e` belongs to the limit of the sets defined by `ψ`. -/
-def MemLimit (φ : ArithmeticSemisentence 1) (ψ : ArithmeticSemisentence 2) (e : M) : Prop :=
-  ∃ j, IsPath φ ψ (e + 1) j ∧ M ⊧/![e, j] ψ
+instance isPath_definable : ℒₒᵣ-relation[V] (IsPath φ ψ) := isPath_defined.to_definable
 
 /-- `e` belongs to the limit of the sets defined by `ψ`. -/
-def memLimit (φ : ArithmeticSemisentence 1) (ψ : ArithmeticSemisentence 2) :
+def MemLimit (φ : ArithmeticSemisentence 1) (ψ : ArithmeticSemisentence 2) (e : V) : Prop :=
+  ∃ j, IsPath φ ψ (e + 1) j ∧ V ⊧/![e, j] ψ
+
+/-- `e` belongs to the limit of the sets defined by `ψ`. -/
+def memLimitDef (φ : ArithmeticSemisentence 1) (ψ : ArithmeticSemisentence 2) :
     ArithmeticSemisentence 1 :=
-  “e. ∃ j, !(isPath φ ψ) (e + 1) j ∧ !ψ e j”
+  “e. ∃ j, !(isPathDef φ ψ) (e + 1) j ∧ !ψ e j”
 
-@[simp]
-lemma eval_memLimit : M ⊧/![e] (memLimit φ ψ) ↔ MemLimit φ ψ e := by
-  simp [memLimit, MemLimit]
+instance memLimit_defined : ℒₒᵣ-predicate[V] (MemLimit φ ψ) via memLimitDef φ ψ :=
+  ⟨fun v ↦ by simp [memLimitDef, MemLimit]⟩
+
+instance memLimit_definable : ℒₒᵣ-predicate[V] (MemLimit φ ψ) := memLimit_defined.to_definable
 
 /-- There is a path of length `n`. -/
-def HasPath (φ : ArithmeticSemisentence 1) (ψ : ArithmeticSemisentence 2) (n : M) : Prop :=
+def HasPath (φ : ArithmeticSemisentence 1) (ψ : ArithmeticSemisentence 2) (n : V) : Prop :=
   IsGood φ ψ n ∧ ∃ j, IsPath φ ψ n j
 
 /-- There is a path of length `n`. -/
-def hasPath (φ : ArithmeticSemisentence 1) (ψ : ArithmeticSemisentence 2) :
+def hasPathDef (φ : ArithmeticSemisentence 1) (ψ : ArithmeticSemisentence 2) :
     ArithmeticSemisentence 1 :=
-  “n. !(isGood φ ψ) n ∧ ∃ j, !(isPath φ ψ) n j”
+  “n. !(isGoodDef φ ψ) n ∧ ∃ j, !(isPathDef φ ψ) n j”
 
-@[simp]
-lemma eval_hasPath : M ⊧/![n] (hasPath φ ψ) ↔ HasPath φ ψ n := by
-  simp [hasPath, HasPath]
+instance hasPath_defined : ℒₒᵣ-predicate[V] (HasPath φ ψ) via hasPathDef φ ψ :=
+  ⟨fun v ↦ by simp [hasPathDef, HasPath]⟩
+
+instance hasPath_definable : ℒₒᵣ-predicate[V] (HasPath φ ψ) := hasPath_defined.to_definable
 
 /-- The lengths of paths are closed under the addition of `x`. -/
-def IsAddCut (φ : ArithmeticSemisentence 1) (ψ : ArithmeticSemisentence 2) (x : M) : Prop :=
+def IsAddCut (φ : ArithmeticSemisentence 1) (ψ : ArithmeticSemisentence 2) (x : V) : Prop :=
   HasPath φ ψ x ∧ ∀ y, HasPath φ ψ y → HasPath φ ψ (y + x)
 
 /-- The lengths of paths are closed under the addition of `x`. -/
-def isAddCut (φ : ArithmeticSemisentence 1) (ψ : ArithmeticSemisentence 2) :
+def isAddCutDef (φ : ArithmeticSemisentence 1) (ψ : ArithmeticSemisentence 2) :
     ArithmeticSemisentence 1 :=
-  “x. !(hasPath φ ψ) x ∧ ∀ y, !(hasPath φ ψ) y → !(hasPath φ ψ) (y + x)”
+  “x. !(hasPathDef φ ψ) x ∧ ∀ y, !(hasPathDef φ ψ) y → !(hasPathDef φ ψ) (y + x)”
 
-@[simp]
-lemma eval_isAddCut : M ⊧/![x] (isAddCut φ ψ) ↔ IsAddCut φ ψ x := by
-  simp [isAddCut, IsAddCut]
+instance isAddCut_defined : ℒₒᵣ-predicate[V] (IsAddCut φ ψ) via isAddCutDef φ ψ :=
+  ⟨fun v ↦ by simp [isAddCutDef, IsAddCut]⟩
+
+instance isAddCut_definable : ℒₒᵣ-predicate[V] (IsAddCut φ ψ) := isAddCut_defined.to_definable
 
 /-- The elements of `isAddCut φ ψ` are closed under the multiplication by `x`. -/
-def IsMulCut (φ : ArithmeticSemisentence 1) (ψ : ArithmeticSemisentence 2) (x : M) : Prop :=
+def IsMulCut (φ : ArithmeticSemisentence 1) (ψ : ArithmeticSemisentence 2) (x : V) : Prop :=
   IsAddCut φ ψ x ∧ ∀ y, IsAddCut φ ψ y → IsAddCut φ ψ (y * x)
 
 /-- The elements of `isAddCut φ ψ` are closed under the multiplication by `x`. -/
-def isMulCut (φ : ArithmeticSemisentence 1) (ψ : ArithmeticSemisentence 2) :
+def isMulCutDef (φ : ArithmeticSemisentence 1) (ψ : ArithmeticSemisentence 2) :
     ArithmeticSemisentence 1 :=
-  “x. !(isAddCut φ ψ) x ∧ ∀ y, !(isAddCut φ ψ) y → !(isAddCut φ ψ) (y * x)”
+  “x. !(isAddCutDef φ ψ) x ∧ ∀ y, !(isAddCutDef φ ψ) y → !(isAddCutDef φ ψ) (y * x)”
 
-@[simp]
-lemma eval_isMulCut : M ⊧/![x] (isMulCut φ ψ) ↔ IsMulCut φ ψ x := by
-  simp [isMulCut, IsMulCut]
+instance isMulCut_defined : ℒₒᵣ-predicate[V] (IsMulCut φ ψ) via isMulCutDef φ ψ :=
+  ⟨fun v ↦ by simp [isMulCutDef, IsMulCut]⟩
+
+instance isMulCut_definable : ℒₒᵣ-predicate[V] (IsMulCut φ ψ) := isMulCut_defined.to_definable
 
 namespace IsGood
 
@@ -438,7 +456,7 @@ lemma IsMulCut.isGood (hx : IsMulCut φ ψ x) : IsGood φ ψ x := hx.1.1.1
 Below the length of a path, the limit agrees with cofinally many of the sets defined by `ψ`.
 -/
 lemma HasPath.exists_memLimit_iff (hn : HasPath φ ψ n) (hk : IsGood φ ψ k) :
-    ∃ j, IsGood φ ψ j ∧ k ⊴ j ∧ ∀ e, e ◃ n → (MemLimit φ ψ e ↔ M ⊧/![e, j] ψ) := by
+    ∃ j, IsGood φ ψ j ∧ k ⊴ j ∧ ∀ e, e ◃ n → (MemLimit φ ψ e ↔ V ⊧/![e, j] ψ) := by
   obtain ⟨hn, j₀, hj₀⟩ := hn
   obtain ⟨j, hj, hkj, ha⟩ := (hj₀ n <| cobhamLE_refl n).isCofinal k hk
   use j
@@ -453,9 +471,9 @@ lemma HasPath.exists_memLimit_iff (hn : HasPath φ ψ n) (hk : IsGood φ ψ k) :
       (hn.of_le he.1).lt_add_one_iff.mpr <| .inr rfl).mp h
   · exact fun h ↦ ⟨j₀, hj₀.mono hn he', h⟩
 
-lemma hasPath_zero [M↓[ℒₒᵣ] ⊧* 𝗥₀] (hφ : ∀ n : ℕ, M ⊧/![numeral n] φ) : HasPath φ ψ (0 : M) := by
-  have h₀ : IsGood φ ψ (0 : M) := by simpa using isGood_numeral (M := M) (ψ := ψ) hφ 0
-  have hlt (e : M) : ¬e ◃ 0 := by simpa using cobhamLT_numeral_iff_exists (x := e) (n := 0)
+lemma hasPath_zero [V↓[ℒₒᵣ] ⊧* 𝗥₀] (hφ : ∀ n : ℕ, V ⊧/![numeral n] φ) : HasPath φ ψ (0 : V) := by
+  have h₀ : IsGood φ ψ (0 : V) := by simpa using isGood_numeral (V := V) (ψ := ψ) hφ 0
+  have hlt (e : V) : ¬e ◃ 0 := by simpa using cobhamLT_numeral_iff_exists (x := e) (n := 0)
   apply And.intro h₀
   use 0
   intro m hm
@@ -466,7 +484,7 @@ lemma hasPath_zero [M↓[ℒₒᵣ] ⊧* 𝗥₀] (hφ : ∀ n : ℕ, M ⊧/![nu
 
 section
 
-variable (hno : ¬∃ m : M, IsGreatestGood φ ψ m)
+variable (hno : ¬∃ m : V, IsGreatestGood φ ψ m)
 include hno
 
 lemma IsGood.add_one (hx : IsGood φ ψ x) : IsGood φ ψ (x + 1) := by
@@ -484,13 +502,13 @@ lemma HasPath.add_one (hn : HasPath φ ψ n) : HasPath φ ψ (n + 1) := by
   have hn' : IsGood φ ψ (n + 1) := hn.add_one hno
   have hle : n ⊴ n + 1 := (hn.tame.le_add_one_iff n).mpr <| .inl <| cobhamLE_refl n
   have hj' : IsLeftmost φ ψ n j := hj n <| cobhamLE_refl n
-  have agree {i i' : M} (h : Agree ψ n i i') (hi : M ⊧/![n, i] ψ ↔ M ⊧/![n, i'] ψ) :
+  have agree {i i' : V} (h : Agree ψ n i i') (hi : V ⊧/![n, i] ψ ↔ V ⊧/![n, i'] ψ) :
       Agree ψ (n + 1) i i' := by
     intro e he
     rcases hn.lt_add_one_iff.mp he with he | rfl
     · exact h e he
     · exact hi
-  have path {i : M} (hi : Agree ψ n i j) (hc : IsCofinal φ ψ (n + 1) i)
+  have path {i : V} (hi : Agree ψ n i j) (hc : IsCofinal φ ψ (n + 1) i)
       (hL : ∀ i', IsCofinal φ ψ (n + 1) i' → ¬LeftAt ψ n i' i) : IsPath φ ψ (n + 1) i := by
     intro m hm
     rcases (hn.tame.le_add_one_iff m).mp hm with hm | rfl
@@ -501,12 +519,12 @@ lemma HasPath.add_one (hn : HasPath φ ψ n) : HasPath φ ψ (n + 1) := by
       · exact hj'.not_leftAt i' (hi'.mono hn' hle) e he <| h.congr_left he hi hn
       · exact hL i' hi' h
   apply And.intro hn'
-  by_cases h₀ : ∃ i, Agree ψ n i j ∧ ¬M ⊧/![n, i] ψ ∧ IsCofinal φ ψ (n + 1) i
+  by_cases h₀ : ∃ i, Agree ψ n i j ∧ ¬V ⊧/![n, i] ψ ∧ IsCofinal φ ψ (n + 1) i
   · obtain ⟨i, hi, hni, hc⟩ := h₀
     use i
     exact path hi hc fun i' _ h ↦ hni h.right
   · obtain ⟨k₀, hk₀, h₁⟩ : ∃ k₀, IsGood φ ψ k₀ ∧
-        ∀ i, IsGood φ ψ i → k₀ ⊴ i → Agree ψ n i j → M ⊧/![n, i] ψ := by
+        ∀ i, IsGood φ ψ i → k₀ ⊴ i → Agree ψ n i j → V ⊧/![n, i] ψ := by
       by_contra! H
       obtain ⟨i, hi, -, hij, hni⟩ := H n hn
       apply h₀
@@ -525,23 +543,23 @@ lemma HasPath.add_one (hn : HasPath φ ψ n) : HasPath φ ψ (n + 1) := by
       exact ⟨i, hi, hi.tame.trans k' k hkk' hki, agree (hij.trans hij₀.symm) <|
         iff_of_true (h₁ i hi (hi.tame.trans k' k₀ hk₀k' hki) hij) (h₁ i₀ hi₀ hki₀ hij₀)⟩
 
-variable [M↓[ℒₒᵣ] ⊧* 𝗥₀] (hφ : ∀ n : ℕ, M ⊧/![numeral n] φ)
+variable [V↓[ℒₒᵣ] ⊧* 𝗥₀] (hφ : ∀ n : ℕ, V ⊧/![numeral n] φ)
 include hφ
 
-lemma isAddCut_one : IsAddCut φ ψ (1 : M) := by
+lemma isAddCut_one : IsAddCut φ ψ (1 : V) := by
   apply And.intro _ fun y hy ↦ hy.add_one hno
-  have h : (0 : M) + 1 = 1 := by simpa using numeral_add_one_of_R0 (M := M) 0
+  have h : (0 : V) + 1 = 1 := by simpa using numeral_add_one_of_R0 (V := V) 0
   exact h ▸ (hasPath_zero hφ).add_one hno
 
-lemma isMulCut_numeral (n : ℕ) : IsMulCut φ ψ (numeral n : M) := by
-  have h₁ : IsMulCut φ ψ (1 : M) := ⟨isAddCut_one hno hφ, fun y hy ↦ by
+lemma isMulCut_numeral (n : ℕ) : IsMulCut φ ψ (numeral n : V) := by
+  have h₁ : IsMulCut φ ψ (1 : V) := ⟨isAddCut_one hno hφ, fun y hy ↦ by
     rwa [hy.1.1.tame.mul_one]⟩
   induction n with
   | zero => simpa using h₁.of_le h₁.isGood.tame.zero_le
   | succ n ih => simpa using ih.add h₁
 
 lemma IsMulCut.mkPair (hx : IsMulCut φ ψ x) (hy : IsMulCut φ ψ y) : IsMulCut φ ψ (mkPair x y) :=
-  have h₁ : IsMulCut φ ψ (1 : M) := by simpa using isMulCut_numeral hno hφ 1
+  have h₁ : IsMulCut φ ψ (1 : V) := by simpa using isMulCut_numeral hno hφ 1
   have h := (hx.add hy).add h₁
   (h.mul h).add hx
 

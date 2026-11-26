@@ -555,8 +555,8 @@ def ConcatGraph (z x y : M) : Prop :=
 
 /-- `z` is the concatenation of `x` and `y`, or `0` if there is none. -/
 noncomputable def concatGraph : ArithmeticSemisentence 3 :=
-  “z x y. !(isValue₂ (FreeSemigroup.mulCode α)) x y z ∨
-    (z = 0 ∧ ∀ w, ¬!(isValue₂ (FreeSemigroup.mulCode α)) x y w)”
+  “z x y. !(isValue₂Def (FreeSemigroup.mulCode α)) x y z ∨
+    (z = 0 ∧ ∀ w, ¬!(isValue₂Def (FreeSemigroup.mulCode α)) x y w)”
 
 @[simp]
 lemma eval_concatGraph : M ⊧/![z, x, y] (concatGraph α) ↔ ConcatGraph α z x y := by

@@ -31,7 +31,7 @@ def matrixCode (p q r s : M) : M := squarePair (squarePair p q) (squarePair r s)
 
 /-- `x` is the code of the matrix $\begin{pmatrix} p & q \\ r & s \end{pmatrix}$. -/
 def isMatrixCode : ArithmeticSemisentence 5 :=
-  “x p q r s. ∃ u v, !isSquarePair u p q ∧ !isSquarePair v r s ∧ !isSquarePair x u v”
+  “x p q r s. ∃ u v, !squarePairDef u p q ∧ !squarePairDef v r s ∧ !squarePairDef x u v”
 
 @[simp]
 lemma eval_isMatrixCode : M ⊧/![x, p, q, r, s] isMatrixCode ↔ x = matrixCode p q r s := by

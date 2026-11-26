@@ -106,7 +106,7 @@ def cobhamTranslation : DirectTranslation 𝗥₀ ℒₒᵣ where
   domain := ⟨“x. ⊤”⟩
   rel
     | .eq => ⟨“x y. x = y”⟩
-    | .lt => ⟨cobhamLT⟩
+    | .lt => ⟨cobhamLTDef⟩
   func f := ⟨“z. z = !!(Semiterm.func f (#·.succ))”⟩
   domain_nonempty := complete.{0} _ _ fun M _ _ ↦ (models_domainNonempty_iff _).mpr <| by
     simp [Semiformula.Operator.val]

@@ -16,6 +16,7 @@ public import Concatenation.Seq.Interpretability
 public import Concatenation.TC.Arithmetic
 public import Concatenation.TC.Basic
 public import Concatenation.TC.Empty
+public import Concatenation.TC.GrowingComma
 public import Concatenation.TC.Interpretability
 public import Concatenation.TC.Sequence
 public import Concatenation.TC.Substring

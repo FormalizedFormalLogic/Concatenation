@@ -1,12 +1,15 @@
 module
 
+public import Concatenation.D.Basic
 public import Concatenation.TC.Empty
 public import Concatenation.TC.Interpretability
 public import Concatenation.ToFoundation.Coding
+public import Concatenation.ToFoundation.Interpretability.Relative
 public import Concatenation.ToMathlib.AtomicPairing
 public import Concatenation.WTC.Basic
 public import Concatenation.WTC.Empty
 public import Concatenation.WTC.Standard
+import Concatenation.OpenProblem
 
 /-!
 # $\mathsf{WTC}$ with the editor axiom
@@ -1073,5 +1076,21 @@ $\mathsf{WTC}$ with the empty string and the editor axiom does not interpret $\m
 theorem WTCEmptyEditor.notInterprets_TCEmpty : WTCEmptyEditor ⋫ 𝗧𝗖ₑ :=
   ⟨fun π ↦ WTCEditor.notInterprets_TC.false <| DirectInterpretation.comp
     (inferInstance : 𝗧𝗖ₑ ⊳ 𝗧𝗖) <| π.comp (inferInstance : WTCEditor ⊳ WTCEmptyEditor)⟩
+
+/--
+Does $\mathsf{WTC}$ with the empty string and the editor axiom interpret $\mathsf{ID}$? The two
+theories are those of the cited places.
+- [HH14, Definition 1, Question 1]
+- [Mur24, §1]
+-/
+open_problem WTCEmptyEditor_interprets_ID := RelativelyInterprets WTCEmptyEditor 𝗜𝗗
+
+/--
+Does $\mathsf{ID}$ interpret $\mathsf{WTC}$ with the empty string and the editor axiom? The two
+theories are those of the cited places.
+- [HH14, Definition 1, Question 1]
+- [Mur24, §1]
+-/
+open_problem ID_interprets_WTCEmptyEditor := RelativelyInterprets 𝗜𝗗 WTCEmptyEditor
 
 end FFL.FirstOrder.Concatenation

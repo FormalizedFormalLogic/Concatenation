@@ -5,7 +5,8 @@ public import Foundation.FirstOrder.LK.Interpretation
 /-!
 # Non-interpretability
 
-The negation of direct interpretability, and its transfer along interpretations.
+The negation of direct interpretability, and its transfer along interpretations; interpretations
+that are not relativized.
 -/
 
 @[expose] public section
@@ -34,5 +35,12 @@ lemma of_left (h : T ⋫ V) (π : T ⊳ U) : U ⋫ V := ⟨fun ρ ↦ h.false (�
 lemma of_right (h : T ⋫ V) (π : U ⊳ V) : T ⋫ U := ⟨fun ρ ↦ h.false (π.comp ρ)⟩
 
 end NotInterprets
+
+/--
+`T` interprets `U` on its whole universe, preserving equality.
+- [Mur23, Definition 198]
+-/
+def UnrelativizedInterprets (T : Theory L₁) [𝗘𝗤 _ ⪯ T] (U : Theory L₂) : Prop :=
+  ∃ π : T ⊳ U, T ⊢ “∀ x, %(π.trln.domain) x”
 
 end FFL.FirstOrder

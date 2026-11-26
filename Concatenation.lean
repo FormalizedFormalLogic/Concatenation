@@ -38,6 +38,7 @@ public import Concatenation.ToFoundation.Interpretability.DefinitionalEquivalenc
 public import Concatenation.ToFoundation.Interpretability.LocallyFinitelySatisfiable
 public import Concatenation.ToFoundation.Interpretability.Undecidability
 public import Concatenation.ToFoundation.Naming
+public import Concatenation.ToFoundation.Sequential
 public import Concatenation.ToMathlib.AtomicPairing
 public import Concatenation.ToMathlib.Encodable
 public import Concatenation.ToMathlib.FreeSemigroup

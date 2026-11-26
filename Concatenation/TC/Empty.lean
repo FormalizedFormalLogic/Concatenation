@@ -1067,7 +1067,7 @@ Axioms of the theory $\Sigma_n\text{-}\mathsf{TCI}$.
 -/
 inductive IsTCISigmaAxiom (n : ℕ) : Sentence ℒ⌢ₑ → Prop
   | tcEmpty : ∀ φ ∈ 𝗧𝗖ₑ, IsTCISigmaAxiom n φ
-  | notationInduction (φ : Semiformula ℒ⌢ₑ ℕ 1) : ℬ[⊑, ℒ⌢ₑ].Hierarchy 𝚺 n φ →
+  | notationInduction (φ : Semiformula ℒ⌢ₑ ℕ 1) : ℬ[⊑, ℒ⌢ₑ].PrenexHierarchy 𝚺 n φ →
       IsTCISigmaAxiom n (notationInduction φ).univCl
 
 /--

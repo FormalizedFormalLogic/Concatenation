@@ -1,7 +1,7 @@
 module
 
 public import Concatenation.Biteral
-public import Concatenation.ToFoundation.Bootstrapping
+public import Concatenation.ToFoundation.Coding
 public import Concatenation.ToMathlib.Encodable
 public import Foundation.FirstOrder.Incompleteness.Church
 

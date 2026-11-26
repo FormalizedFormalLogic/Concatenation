@@ -66,14 +66,6 @@ lemma models_iff_models_R0 : M↓[ℒₒᵣ] ⊧* 𝗥 ↔
 
 instance [M↓[ℒₒᵣ] ⊧* 𝗥] : M↓[ℒₒᵣ] ⊧* 𝗥₀ := (models_iff_models_R0.mp inferInstance).1
 
-/--
-Every element of a model of $\mathsf{R}$ is comparable with every numeral.
-- [Hor11, §3, Definition 3.1]
--/
-lemma eq_numeral_or_lt_numeral_or_numeral_lt [M↓[ℒₒᵣ] ⊧* 𝗥] (n : ℕ) (x : M) :
-    x = numeral n ∨ x < numeral n ∨ numeral n < x :=
-  (models_iff_models_R0.mp inferInstance).2 n x
-
 end
 
 instance : ℕ↓[ℒₒᵣ] ⊧* 𝗥 := by
@@ -88,6 +80,20 @@ instance : Entailment.Consistent 𝗥 :=
   Sound.consistent_of_satisfiable ⟨_, this⟩
 
 end R
+
+section
+
+variable {M : Type*} [ORingStructure M]
+
+/--
+Every element of a model of $\mathsf{R}$ is comparable with every numeral.
+- [Hor11, §3, Definition 3.1]
+-/
+lemma eq_numeral_or_lt_numeral_or_numeral_lt [M↓[ℒₒᵣ] ⊧* 𝗥] (n : ℕ) (x : M) :
+    x = numeral n ∨ x < numeral n ∨ numeral n < x :=
+  (R.models_iff_models_R0.mp inferInstance).2 n x
+
+end
 
 namespace R0
 

@@ -2,19 +2,62 @@ module
 
 public import AlphaCentauri.Interpretability.Basic
 public import Foundation.FirstOrder.Arithmetic.PeanoMinus.Basic
+public import Mathlib.Tactic.Ring
 
 /-!
-# $\mathsf{Q}$ interprets $\mathsf{PA}^-$
+# The theory $\mathsf{PA}^-$
 
-A definable class of a model of $\mathsf{Q}$ closed under addition, multiplication and differences
-on which the axioms of $\mathsf{PA}^-$ hold.
+An injective pairing in $\mathsf{PA}^-$, and the interpretation of $\mathsf{PA}^-$ in $\mathsf{Q}$.
 -/
 
 @[expose] public section
 
-namespace FFL.FirstOrder.Arithmetic.RobinsonQ
+namespace FFL.FirstOrder.Arithmetic
 
-open DirectTranslation
+variable {M : Type*} [ORingStructure M] {x y x' y' z : M}
+
+/-- The pair $(x + y)^2 + x$ of `x` and `y`. -/
+def squarePair (x y : M) : M := (x + y) * (x + y) + x
+
+/-- `z` is the pair $(x + y)^2 + x$ of `x` and `y`. -/
+def isSquarePair : ArithmeticSemisentence 3 := “z x y. z = (x + y) * (x + y) + x”
+
+@[simp]
+lemma eval_isSquarePair : M ⊧/![z, x, y] isSquarePair ↔ z = squarePair x y := by
+  simp [isSquarePair, squarePair]
+
+variable [M↓[ℒₒᵣ] ⊧* 𝗣𝗔⁻]
+
+private lemma squarePair_lt (h : x + y < x' + y') : squarePair x y < squarePair x' y' := by
+  have h₁ : x + y + 1 ≤ x' + y' := by
+    obtain ⟨z, hz, h₂⟩ := lt_iff_exists_add.mp h
+    rw [h₂]
+    gcongr
+    exact one_le_of_zero_lt z hz
+  calc
+    squarePair x y ≤ (x + y) * (x + y) + (x + y) := by simp [squarePair]
+    _ < (x + y + 1) * (x + y + 1) := by
+      have : (x + y + 1) * (x + y + 1) = (x + y) * (x + y) + (x + y) + (x + y + 1) := by ring
+      rw [this]
+      exact lt_add_of_pos_right _ <| by simp
+    _ ≤ (x' + y') * (x' + y') := by gcongr
+    _ ≤ squarePair x' y' := by simp [squarePair]
+
+@[simp, grind =]
+lemma squarePair_inj : squarePair x y = squarePair x' y' ↔ x = x' ∧ y = y' := by
+  constructor
+  · intro h
+    rcases lt_trichotomy (x + y) (x' + y') with h₁ | h₁ | h₁
+    · exact absurd h (squarePair_lt h₁).ne
+    · obtain rfl : x = x' := by simpa [squarePair, h₁] using h
+      exact ⟨rfl, by simpa using h₁⟩
+    · exact absurd h (squarePair_lt h₁).ne'
+  · rintro ⟨rfl, rfl⟩
+    rfl
+
+end FFL.FirstOrder.Arithmetic
+
+namespace FFL.FirstOrder.Arithmetic
 
 variable {M : Type*} [ORingStructure M] {a b c d x y z : M}
 
@@ -178,11 +221,8 @@ protected lemma add (hx : IsAdditive x) (hy : IsAdditive y) : IsAdditive (x + y)
     rw [← hy.add_assoc, hx.add_comm u hu, hy.add_assoc, hy.add_comm u hu, hu.add_assoc]
   comparable u hu := by
     obtain ⟨w, rfl | rfl⟩ := hy.comparable u hu
-    · obtain ⟨v, rfl | rfl⟩ := hx.comparable w <| hy.toIsPreadditive.of_add hu
-      · use v
-        simp [hy.add_assoc]
-      · use v
-        simp [hy.add_assoc]
+    · obtain ⟨v, rfl | rfl⟩ := hx.comparable w <| hy.toIsPreadditive.of_add hu <;>
+        use v <;> simp [hy.add_assoc]
     · use x + w
       simp [hu.add_assoc]
 
@@ -252,12 +292,11 @@ protected lemma one : IsAdditive (1 : M) where
     rcases zero_or_succ u with rfl | ⟨z, rfl⟩
     · use 1
       simp
-    · use z
-      simp
+    · use z, .inl rfl
 
 end IsAdditive
 
-protected lemma mul_one (hx : 0 + x = x) : x * 1 = x := by
+lemma mul_one_of_zero_add (hx : 0 + x = x) : x * 1 = x := by
   rw [← zero_add_one, Arithmetic.mul_succ, Arithmetic.mul_zero, hx]
 
 namespace IsPremultiplicative
@@ -272,9 +311,9 @@ protected lemma zero : IsPremultiplicative (0 : M) where
 
 protected lemma one : IsPremultiplicative (1 : M) where
   toIsAdditive := .one
-  isAdditive_mul u hu := by rwa [RobinsonQ.mul_one hu.zero_add]
-  mul_add u v hu := by rw [RobinsonQ.mul_one hu.zero_add, Arithmetic.mul_succ]
-  add_mul u v hu hv := by simp only [RobinsonQ.mul_one, (hu.add hv).zero_add, hu.zero_add,
+  isAdditive_mul u hu := by rwa [mul_one_of_zero_add hu.zero_add]
+  mul_add u v hu := by rw [mul_one_of_zero_add hu.zero_add, Arithmetic.mul_succ]
+  add_mul u v hu hv := by simp only [mul_one_of_zero_add, (hu.add hv).zero_add, hu.zero_add,
     hv.zero_add]
   zero_mul := by simp
   one_mul := by simp
@@ -332,9 +371,9 @@ protected lemma zero : IsMultiplicative (0 : M) where
 protected lemma one : IsMultiplicative (1 : M) where
   toIsPremultiplicative := .one
   mul_assoc u v hu hv := by
-    rw [RobinsonQ.mul_one hv.zero_add, RobinsonQ.mul_one (hv.isAdditive_mul u hu).zero_add]
-  mul_comm u hu _ := by rw [RobinsonQ.mul_one hu.zero_add, hu.one_mul]
-  isPremultiplicative_mul u hu := by rwa [RobinsonQ.mul_one hu.zero_add]
+    rw [mul_one_of_zero_add hv.zero_add, mul_one_of_zero_add (hv.isAdditive_mul u hu).zero_add]
+  mul_comm u hu _ := by rw [mul_one_of_zero_add hu.zero_add, hu.one_mul]
+  isPremultiplicative_mul u hu := by rwa [mul_one_of_zero_add hu.zero_add]
 
 protected lemma add (hx : IsMultiplicative x) (hy : IsMultiplicative y) :
     IsMultiplicative (x + y) where
@@ -369,6 +408,10 @@ lemma of_add (hx : IsMultiplicative x) (h : IsMultiplicative (z + x)) : IsMultip
 end IsMultiplicative
 
 end
+
+namespace RobinsonQ
+
+open DirectTranslation
 
 /--
 The translation of the language of arithmetic into $\mathsf{Q}$ on the multiplicative elements:
@@ -464,7 +507,7 @@ protected lemma add_comm : a + b = b + a :=
 protected lemma mul_zero : a * 0 = 0 := Model.ext <| Arithmetic.mul_zero (a : M)
 
 protected lemma mul_one : a * 1 = a :=
-  Model.ext <| RobinsonQ.mul_one (isMultiplicative_val a).zero_add
+  Model.ext <| mul_one_of_zero_add (isMultiplicative_val a).zero_add
 
 protected lemma mul_assoc : a * b * c = a * (b * c) :=
   Model.ext <| (isMultiplicative_val c).mul_assoc a b (isMultiplicative_val a).toIsAdditive
@@ -621,4 +664,6 @@ instance : 𝗤 ⊳ 𝗣𝗔⁻ where
   interpret_theory φ hφ := complete.{0} _ _ fun _ _ _ ↦
     Model.translate_iff.mpr <| models_theory_iff.mp inferInstance φ hφ
 
-end FFL.FirstOrder.Arithmetic.RobinsonQ
+end RobinsonQ
+
+end FFL.FirstOrder.Arithmetic

@@ -2,6 +2,7 @@ module
 
 public import Concatenation.Language
 public import Concatenation.ToMathlib.FreeSemigroup
+public import Foundation.FirstOrder.Syntax.Classical.BoundingHierarchy
 
 /-!
 # Canonical terms for strings
@@ -51,5 +52,23 @@ def isOneOf (l : List (FreeSemigroup Bool)) : Semisentence L 1 :=
 -/
 def isSubstring : Semisentence L 2 :=
   “x y. x = y ∨ ∃ k l, k ⌢ x = y ∨ x ⌢ l = y ∨ (k ⌢ x) ⌢ l = y ∨ k ⌢ (x ⌢ l) = y”
+
+/-- The substring relation as an operator. -/
+def substringOperator (L : Language) [L.Eq] [L.Concat] : Semiformula.Operator L 2 := ⟨isSubstring⟩
+
+/--
+Quantifiers bounded by the substring relation. `ℬ[⊑, L].PrenexHierarchy 𝚺 0` is the class
+of $\Sigma_0$ formulas, and `ℬ[⊑, L].PrenexHierarchy 𝚺 1` the class of $\Sigma_1$ formulas.
+- [Hor11, §3]
+- [Hor12, §3]
+-/
+def substringBounding (L : Language) [L.Eq] [L.Concat] : Bounding L := ⟨{substringOperator L}⟩
+
+@[inherit_doc]
+scoped notation "ℬ[⊑, " L "]" => substringBounding L
+
+@[simp]
+lemma mem_substringBounding_iff {R : Semiformula.Operator ℒ⌢ 2} :
+    R ∈ ℬ[⊑, ℒ⌢] ↔ R = substringOperator ℒ⌢ := Iff.rfl
 
 end FFL.FirstOrder.Concatenation

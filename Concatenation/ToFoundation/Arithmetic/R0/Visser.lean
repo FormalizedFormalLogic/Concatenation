@@ -1,7 +1,7 @@
 module
 
 public import Concatenation.ToFoundation.Arithmetic.R0.LocallyFinitelySatisfiable
-public import Concatenation.ToFoundation.Arithmetic.R0.Naming
+public import Concatenation.ToFoundation.Arithmetic.R0.Certificate
 public import Foundation.FirstOrder.Incompleteness.Church
 
 /-!
@@ -19,6 +19,8 @@ open ORingStructure Encodable DirectTranslation
 
 variable {M : Type*} [ORingStructure M] {A : ArithmeticSemisentence 2} {E : ℕ}
   {c j k x y z : M}
+
+namespace Visser
 
 section stage
 
@@ -66,20 +68,6 @@ lemma eval_memStage : M ⊧/![x, j] (memStage A E) ↔ MemStage A E x j := by
 
 variable [M↓[ℒₒᵣ] ⊧* 𝗥₀] (hA : ℬ[<, ℒₒᵣ].Hierarchy 𝚺 0 A)
 
-lemma eval_numeral_iff_of_deltaZero₂ (hA : ℬ[<, ℒₒᵣ].Hierarchy 𝚺 0 A) (i j : ℕ) :
-    M ⊧/![numeral i, numeral j] A ↔ ℕ ⊧/![i, j] A := by
-  have e : (numeral ∘ ![i, j] : Fin 2 → M) = ![numeral i, numeral j] := by
-    funext x
-    match x with | 0 | 1 => rfl
-  constructor
-  · intro h
-    by_contra h'
-    have := bold_sigma_one_completeness' (M := M) (σ := ∼A) (by simpa using hA.of_zero)
-      (bv := ![i, j]) (by simpa using h')
-    exact absurd h (by simpa [e] using this)
-  · intro h
-    simpa [e] using bold_sigma_one_completeness' (M := M) hA.of_zero h
-
 include hA in
 lemma isCertificate_numeral_iff (i j : ℕ) :
     IsCertificate A E (numeral i : M) (numeral j) ↔ IsCertificate A E i j := by
@@ -101,8 +89,7 @@ lemma hasStage_numeral {j : ℕ} (h : ∃ c : ℕ, IsCertificate A E c j) :
     · exact (hc.eq_of_le _ h' cert).symm
   constructor
   · exact ⟨_, stage⟩
-  · intro c hc d hd
-    rw [eq c hc, eq d hd]
+  · grind
   · intro c hc x hx
     rw [eq c hc]
     obtain ⟨i, hi, rfl⟩ := eq_numeral_of_cobhamLE_numeral hx
@@ -333,7 +320,7 @@ variable [M↓[ℒₒᵣ] ⊧* 𝗥₀]
 
 lemma isNode_numeral (k x : ℕ) : IsNode (numeral (Nat.pair k x + 1) : M) (numeral k) (numeral x) :=
   ⟨numeral (Nat.pair k x), by simp, (eval_pairDef_numeral_iff k x).mpr rfl,
-    (numeral_add_one _).symm⟩
+    (numeral_add_one_of_R0 _).symm⟩
 
 namespace IsApproximable
 
@@ -351,8 +338,7 @@ lemma env_succ (hs : W s) (ha : W a) (hns : F 3 (numeral n) s 0) (hda : F 2 a 0 
   have hns := (hF 3 (by simp) _ _ _ v₁ v₂ v₀).mp hns
   have hda := (hF 2 (by simp) _ _ _ v₃ v₀ v₀).mp hda
   apply (hF 3 (by simp) _ _ _ v₄ v₅ v₀).mpr
-  rw [← numeral_add_one n]
-  exact hc.env_succ _ hns.lt₁ _ hns.lt₂ _ hda.lt₁ (hn _ v₁).2 hns hda
+  simpa using hc.env_succ _ hns.lt₁ _ hns.lt₂ _ hda.lt₁ (hn _ v₁).2 hns hda
 
 lemma ax (hA : ℬ[<, ℒₒᵣ].Hierarchy 𝚺 0 A) {w : ℕ} (hp : ℕ ⊧/![p, w] A) :
     F 4 (numeral p) 0 0 := by
@@ -375,7 +361,7 @@ lemma bvar_zero (hs : W s) (ha : W a) (hns : F 3 (numeral n) s 0) (hda : F 2 a 0
   have hda := (hF 2 (by simp) _ _ _ v₃ v₀ v₀).mp hda
   have has := (hF 3 (by simp) _ _ _ v₄ v₅ v₀).mp has
   apply (hF 5 (by simp) _ _ _ v₆ v₅ v₃).mpr
-  rw [← numeral_add_one n] at has
+  rw [← numeral_add_one_of_R0 n] at has
   exact hc.bvar_zero _ (hn _ v₆).1 _ hns.lt₁ _ hns.lt₂ _ hda.lt₁
     (by simpa using isNode_numeral (M := M) 0 0) (hn _ v₆).2 hns hda has
 
@@ -394,10 +380,10 @@ lemma bvar_succ {i : ℕ} (hs : W s) (ha : W a) (hb : W b) (hns : F 3 (numeral n
   have hbs := (hF 3 (by simp) _ _ _ v₅ v₆ v₀).mp hbs
   have ht := (hF 5 (by simp) _ _ _ v₇ v₂ v₃).mp ht
   apply (hF 5 (by simp) _ _ _ v₈ v₆ v₃).mpr
-  rw [← numeral_add_one n] at hbs
+  rw [← numeral_add_one_of_R0 n] at hbs
   exact hc.bvar_succ _ ht.lt₁ _ (hn _ v₈).1 _ (hn _ v₉).1 _ hns.lt₁ _ hns.lt₂ _ ht.lt₃ _ hdb.lt₁
     (by simpa using isNode_numeral (M := M) 0 i)
-    (by simpa [numeral_add_one] using isNode_numeral (M := M) 0 (i + 1)) (hn _ v₈).2 hbs hdb ht
+    (by simpa using isNode_numeral (M := M) 0 (i + 1)) (hn _ v₈).2 hbs hdb ht
 
 lemma func (hs : W s) (hd : W d) (ha : W a) (hv : F 6 (numeral v) s d)
     (hf : F 8 (mkPair (numeral n) (numeral f)) d a) :
@@ -406,7 +392,7 @@ lemma func (hs : W s) (hd : W d) (ha : W a) (hv : F 6 (numeral v) s d)
     [s, d, a, numeral v, numeral n, numeral f, mkPair (numeral n) (numeral f),
       numeral (Nat.pair f v), numeral (Nat.pair n (Nat.pair f v)),
       numeral (Nat.pair 2 (Nat.pair n (Nat.pair f v)) + 1)]
-    (by simp [h.num, hs, hd, ha, h.pair])
+    (by simp [h.num, hs, hd, ha])
   simp only [List.forall_mem_cons] at hl
   obtain ⟨v₁, v₂, v₃, v₄, v₅, v₆, v₇, v₈, v₉, v₀, -⟩ := hl
   have hv := (hF 6 (by simp) _ _ _ v₄ v₁ v₂).mp hv
@@ -493,7 +479,7 @@ lemma rel (hs : W s) (hd : W d)
     [0, s, d, numeral v, numeral n, numeral R, mkPair (numeral n) (numeral R),
       numeral (Nat.pair R v), numeral (Nat.pair n (Nat.pair R v)),
       numeral (Nat.pair 0 (Nat.pair n (Nat.pair R v)) + 1)]
-    (by simp [h.zero, h.num, hs, hd, h.pair])
+    (by simp [h.zero, h.num, hs, hd])
   simp only [List.forall_mem_cons] at hl
   obtain ⟨v₀, v₁, v₂, v₃, v₄, v₅, v₆, v₇, v₈, v₉, -⟩ := hl
   have hp := (hF 4 (by simp) _ _ _ v₉ v₁ v₀).mp hp
@@ -510,7 +496,7 @@ lemma nrel (hs : W s) (hd : W d)
     [0, s, d, numeral v, numeral n, numeral R, mkPair (numeral n) (numeral R),
       numeral (Nat.pair R v), numeral (Nat.pair n (Nat.pair R v)),
       numeral (Nat.pair 1 (Nat.pair n (Nat.pair R v)) + 1)]
-    (by simp [h.zero, h.num, hs, hd, h.pair])
+    (by simp [h.zero, h.num, hs, hd])
   simp only [List.forall_mem_cons] at hl
   obtain ⟨v₀, v₁, v₂, v₃, v₄, v₅, v₆, v₇, v₈, v₉, -⟩ := hl
   have hp := (hF 4 (by simp) _ _ _ v₉ v₁ v₀).mp hp
@@ -631,18 +617,6 @@ end structures
 
 section translation
 
-/-- The code of the environment `t`. -/
-def envCodeTerm {m : ℕ} : {n : ℕ} → (Fin n → ClosedSemiterm ℒₒᵣ m) → ClosedSemiterm ℒₒᵣ m
-  | 0, _ => ‘0’
-  | _ + 1, t => Rew.subst ![t 0, envCodeTerm fun i ↦ t i.succ] mkPairTerm
-
-@[simp]
-lemma val_envCodeTerm {m n : ℕ} {t : Fin n → ClosedSemiterm ℒₒᵣ m} {e : Fin m → M}
-    {f : Empty → M} : (envCodeTerm t).val e f = envCode fun i ↦ (t i).val e f := by
-  induction n with
-  | zero => simp [envCodeTerm]
-  | succ n ih => simp [envCodeTerm, envCode, ih]
-
 variable {φ : ArithmeticSemisentence 1} {ψ σ : ArithmeticSemisentence 2}
 
 /-- `x` belongs to the domain of the interpreted structure. -/
@@ -685,6 +659,16 @@ variable (L) in
 /-- The code of the equality symbol of `L`. -/
 abbrev eqCode : ℕ := encode (Language.Eq.eq : L.Rel 2)
 
+end translation
+
+end Visser
+
+open Visser
+
+section translation
+
+variable {L : Language} [L.Encodable] [L.Eq]
+
 /-- The translation that describes the models coded by the certificates. -/
 def certificateTranslation (hA : ℬ[<, ℒₒᵣ].Hierarchy 𝚺 0 A)
     (h : ∀ j : ℕ, ∃ c : ℕ, IsCertificate A (eqCode L) c j) :
@@ -714,7 +698,7 @@ def certificateTranslation (hA : ℬ[<, ℒₒᵣ].Hierarchy 𝚺 0 A)
       have hy := eval_inDomain.mp hy
       exact eval_describedRel.trans <| this.eq_iff hx.1 hy.1 hx.2 hy.2 }
 
-lemma isDescribedBy_model [M↓[ℒₒᵣ] ⊧* 𝗥₀] (hA : ℬ[<, ℒₒᵣ].Hierarchy 𝚺 0 A)
+lemma certificateTranslation.isDescribedBy_model [M↓[ℒₒᵣ] ⊧* 𝗥₀] (hA : ℬ[<, ℒₒᵣ].Hierarchy 𝚺 0 A)
     (h : ∀ j : ℕ, ∃ c : ℕ, IsCertificate A (eqCode L) c j) :
     IsDescribedBy L (IsSmall (hasStage A (eqCode L)) (memStage A (eqCode L)))
       (fun k ↦ Holds (hasStage A (eqCode L)) (memStage A (eqCode L)) (isStage A (eqCode L))
@@ -733,7 +717,8 @@ lemma nonempty_interpretation (hA : ℬ[<, ℒₒᵣ].Hierarchy 𝚺 0 A)
   ⟨⟨certificateTranslation hA h, fun σ hσ ↦ complete.{0} _ _ fun M _ _ ↦
     let ⟨_, hw⟩ := hT σ hσ
     have := isApproximable_holds (M := M) hA h
-    Model.translate_iff.mpr <| (isDescribedBy_model hA h).evalb this ![] σ <| this.ax hA hw⟩⟩
+    Model.translate_iff.mpr <|
+      (certificateTranslation.isDescribedBy_model hA h).evalb this ![] σ <| this.ax hA hw⟩⟩
 
 end translation
 
@@ -792,6 +777,15 @@ theorem nonempty_interpretation_iff_locallyFinitelySatisfiable (hT : REPred (· 
     Nonempty (𝗥₀ ⊳ T) ↔ T.LocallyFinitelySatisfiable :=
   ⟨fun ⟨π⟩ ↦ π.locallyFinitelySatisfiable locallyFinitelySatisfiable,
     nonempty_interpretation_of_locallyFinitelySatisfiable hT⟩
+
+/--
+A recursively enumerable theory of a finite language is not interpretable in $\mathsf{R}_0$ if and
+only if it is not locally finitely satisfiable.
+- [Hor11, §3, Theorem 3.3]
+-/
+theorem notInterprets_iff_not_locallyFinitelySatisfiable (hT : REPred (· ∈ T)) :
+    𝗥₀ ⋫ T ↔ ¬T.LocallyFinitelySatisfiable :=
+  notInterprets_iff.trans (nonempty_interpretation_iff_locallyFinitelySatisfiable hT).not
 
 end theorems
 

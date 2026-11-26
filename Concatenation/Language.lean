@@ -1,7 +1,6 @@
 module
 
 public import Concatenation.ToFoundation.Concat
-public import Concatenation.ToFoundation.Prefix
 
 /-!
 # Language of the theory of concatenation

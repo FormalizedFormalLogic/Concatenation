@@ -179,7 +179,7 @@ $\mathsf{BT}$ without associativity is not essentially undecidable.
 -/
 theorem not_essentiallyUndecidable_BT_diff_concatAssoc :
     ¬(𝗕𝗧 \ {concatAssoc} : Theory ℒ⌢).EssentiallyUndecidable :=
-  Theory.not_essentiallyUndecidable_of_models _ TernaryCode
+  Theory.not_essentiallyUndecidable_of_models TernaryCode
     TernaryCode.defines_presburgerDefinition.decidable
 
 end FFL.FirstOrder.Concatenation

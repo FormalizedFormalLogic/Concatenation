@@ -413,7 +413,7 @@ lemma theory_finite [L.Finite] : Δ.theory.Finite := by
   exact (Theory.Eq.finite.insert _).union <|
     ((Set.finite_singleton _).insert _).union <| Set.finite_range _
 
-noncomputable instance [L.Finite] : Δ.theory.Δ₁ := Theory.Δ₁.ofFinite _ Δ.theory_finite
+instance [L.Finite] : Δ.theory.RE := Theory.RE.ofFinite Δ.theory_finite
 
 instance : 𝗘𝗤 ℒₒᵣ ⪯ Δ.theory :=
   Entailment.WeakerThan.ofSubset fun _ h ↦ Or.inl <| Set.mem_insert_of_mem _ h

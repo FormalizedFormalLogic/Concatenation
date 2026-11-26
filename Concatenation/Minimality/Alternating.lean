@@ -1,7 +1,6 @@
 module
 
 public import Concatenation.Minimality.Basic
-public import Concatenation.Semantics.Prefix
 public import Concatenation.ToFoundation.Arithmetic.Presburger
 
 /-!
@@ -366,7 +365,7 @@ $\mathsf{ID}$, also called $\mathsf{C}$, without right cancellation is not essen
 -/
 theorem not_essentiallyUndecidable_ID_diff_concatRightCancel :
     ¬(𝗜𝗗 \ {concatRightCancel} : Theory ℒ⌢⊑).EssentiallyUndecidable :=
-  Theory.not_essentiallyUndecidable_of_models _ AlternatingWord
+  Theory.not_essentiallyUndecidable_of_models AlternatingWord
     AlternatingWord.defines_presburgerDefinitionPrefix.decidable
 
 /--
@@ -375,7 +374,7 @@ $\mathsf{BT}$ without right cancellation is not essentially undecidable.
 -/
 theorem not_essentiallyUndecidable_BT_diff_concatRightCancel :
     ¬(𝗕𝗧 \ {concatRightCancel} : Theory ℒ⌢).EssentiallyUndecidable :=
-  Theory.not_essentiallyUndecidable_of_models _ AlternatingWord
+  Theory.not_essentiallyUndecidable_of_models AlternatingWord
     AlternatingWord.defines_presburgerDefinition.decidable
 
 end FFL.FirstOrder.Concatenation

@@ -35,8 +35,10 @@ def isEntry : Semisentence ℒ⌢ 3 :=
   “u v w. !isSubstring (!!(op(0).const) ⌢ !!(op(0).const) ⌢ (u ⌢ !!(op(0).const) ⌢ v) ⌢
     !!(op(0).const) ⌢ !!(op(0).const)) w”
 
-@[simp]
-lemma eval_isEntry : M ⊧/![u, v, w] isEntry ↔ IsEntry u v w := by simp [isEntry, IsEntry, pairOf]
+instance isEntry_defined : ℒ⌢-relation₃[M] IsEntry via isEntry :=
+  ⟨fun v ↦ by simp [isEntry, IsEntry, pairOf]⟩
+
+instance isEntry_definable : ℒ⌢-relation₃[M] IsEntry := isEntry_defined.to_definable
 
 /--
 `w` is a multiplication table for `x`: each pair of `1`-tallies listed in it is `(x, 1)` or is
@@ -54,8 +56,10 @@ def isMulTable : Semisentence ℒ⌢ 2 :=
       ∃ u v, !isTally !!(op(1).const) u ∧ !isTally !!(op(1).const) v ∧
         u' = u ⌢ x ∧ v' = v ⌢ !!(op(1).const) ∧ !isEntry u v w”
 
-@[simp]
-lemma eval_isMulTable : M ⊧/![x, w] isMulTable ↔ IsMulTable x w := by simp [isMulTable, IsMulTable]
+instance isMulTable_defined : ℒ⌢-relation[M] IsMulTable via isMulTable :=
+  ⟨fun v ↦ by simp [isMulTable, IsMulTable]⟩
+
+instance isMulTable_definable : ℒ⌢-relation[M] IsMulTable := isMulTable_defined.to_definable
 
 /-- `z` is a product of the `1`-tallies `x` and `y`, read off a multiplication table. -/
 def IsProduct (z x y : M) : Prop :=
@@ -66,8 +70,10 @@ def isProduct : Semisentence ℒ⌢ 3 :=
   “z x y. !isTally !!(op(1).const) z ∧ !isTally !!(op(1).const) x ∧ !isTally !!(op(1).const) y ∧
     ∃ w, !isMulTable x w ∧ !isEntry z y w”
 
-@[simp]
-lemma eval_isProduct : M ⊧/![z, x, y] isProduct ↔ IsProduct z x y := by simp [isProduct, IsProduct]
+instance isProduct_defined : ℒ⌢-relation₃[M] IsProduct via isProduct :=
+  ⟨fun v ↦ by simp [isProduct, IsProduct]⟩
+
+instance isProduct_definable : ℒ⌢-relation₃[M] IsProduct := isProduct_defined.to_definable
 
 /-- `z` is the sum of `x` and `y`: their concatenation, with `0` neutral. -/
 def AddGraph (z x y : M) : Prop :=
@@ -78,8 +84,10 @@ def addGraph : Semisentence ℒ⌢ 3 :=
   “z x y. (y = !!(op(0).const) ∧ z = x) ∨ (y ≠ !!(op(0).const) ∧ x = !!(op(0).const) ∧ z = y) ∨
     (y ≠ !!(op(0).const) ∧ x ≠ !!(op(0).const) ∧ z = x ⌢ y)”
 
-@[simp]
-lemma eval_addGraph : M ⊧/![z, x, y] addGraph ↔ AddGraph z x y := by simp [addGraph, AddGraph]
+instance addGraph_defined : ℒ⌢-relation₃[M] AddGraph via addGraph :=
+  ⟨fun v ↦ by simp [addGraph, AddGraph]⟩
+
+instance addGraph_definable : ℒ⌢-relation₃[M] AddGraph := addGraph_defined.to_definable
 
 /-- `z` is the product of `x` and `y` if there is exactly one, and `0` otherwise. -/
 def MulGraph (z x y : M) : Prop :=
@@ -90,8 +98,10 @@ def mulGraph : Semisentence ℒ⌢ 3 :=
   “z x y. ((∃! r, !isProduct r x y) ∧ !isProduct z x y) ∨
     (¬(∃! r, !isProduct r x y) ∧ z = !!(op(0).const))”
 
-@[simp]
-lemma eval_mulGraph : M ⊧/![z, x, y] mulGraph ↔ MulGraph z x y := by simp [mulGraph, MulGraph]
+instance mulGraph_defined : ℒ⌢-relation₃[M] MulGraph via mulGraph :=
+  ⟨fun v ↦ by simp [mulGraph, MulGraph]⟩
+
+instance mulGraph_definable : ℒ⌢-relation₃[M] MulGraph := mulGraph_defined.to_definable
 
 /-- `x` is less than `y`: `0` below everything else, or a proper prefix of `y`. -/
 def LtGraph (x y : M) : Prop := (x = 0 ∧ y ≠ 0) ∨ ∃ v, y = x ++ v
@@ -100,8 +110,10 @@ def LtGraph (x y : M) : Prop := (x = 0 ∧ y ≠ 0) ∨ ∃ v, y = x ++ v
 def ltGraph : Semisentence ℒ⌢ 2 :=
   “x y. (x = !!(op(0).const) ∧ y ≠ !!(op(0).const)) ∨ ∃ v, y = x ⌢ v”
 
-@[simp]
-lemma eval_ltGraph : M ⊧/![x, y] ltGraph ↔ LtGraph x y := by simp [ltGraph, LtGraph]
+instance ltGraph_defined : ℒ⌢-relation[M] LtGraph via ltGraph :=
+  ⟨fun v ↦ by simp [ltGraph, LtGraph]⟩
+
+instance ltGraph_definable : ℒ⌢-relation[M] LtGraph := ltGraph_defined.to_definable
 
 lemma existsUnique_addGraph (x y : M) : ∃! z, AddGraph z x y := by
   by_cases hy : y = 0
@@ -387,13 +399,15 @@ variable {a b : arithmeticTranslation.Model M}
 lemma val_add_eq_iff : ((a + b : arithmeticTranslation.Model M) : M) = z ↔ AddGraph z a b := by
   have h := Model.eval_func (π := arithmeticTranslation) (M := M) Language.ORing.Func.add ![a, b]
   rw [Matrix.fun_eq_vec_two fun i ↦ ((![a, b] : Fin 2 → arithmeticTranslation.Model M) i : M)] at h
-  simp only [arithmeticTranslation, Semiformula.Operator.val, Matrix.cons_val, eval_addGraph] at h
+  simp only [arithmeticTranslation, Semiformula.Operator.val, Matrix.cons_val,
+    Defined.eval_iff] at h
   exact ⟨fun e ↦ e ▸ h, (existsUnique_addGraph _ _).unique h⟩
 
 lemma val_mul_eq_iff : ((a * b : arithmeticTranslation.Model M) : M) = z ↔ MulGraph z a b := by
   have h := Model.eval_func (π := arithmeticTranslation) (M := M) Language.ORing.Func.mul ![a, b]
   rw [Matrix.fun_eq_vec_two fun i ↦ ((![a, b] : Fin 2 → arithmeticTranslation.Model M) i : M)] at h
-  simp only [arithmeticTranslation, Semiformula.Operator.val, Matrix.cons_val, eval_mulGraph] at h
+  simp only [arithmeticTranslation, Semiformula.Operator.val, Matrix.cons_val,
+    Defined.eval_iff] at h
   exact ⟨fun e ↦ e ▸ h, (existsUnique_mulGraph _ _).unique h⟩
 
 @[simp]
@@ -554,13 +568,15 @@ def ConcatGraph (z x y : M) : Prop :=
     (z = 0 ∧ ∀ w, ¬IsValue₂ (FreeSemigroup.mulCode α) x y w)
 
 /-- `z` is the concatenation of `x` and `y`, or `0` if there is none. -/
-noncomputable def concatGraph : ArithmeticSemisentence 3 :=
+noncomputable def concatGraphDef : ArithmeticSemisentence 3 :=
   “z x y. !(isValue₂Def (FreeSemigroup.mulCode α)) x y z ∨
     (z = 0 ∧ ∀ w, ¬!(isValue₂Def (FreeSemigroup.mulCode α)) x y w)”
 
-@[simp]
-lemma eval_concatGraph : M ⊧/![z, x, y] (concatGraph α) ↔ ConcatGraph α z x y := by
-  simp [concatGraph, ConcatGraph]
+instance concatGraph_defined : ℒₒᵣ-relation₃[M] (ConcatGraph α) via concatGraphDef α :=
+  ⟨fun v ↦ by simp [concatGraphDef, ConcatGraph]⟩
+
+instance concatGraph_definable : ℒₒᵣ-relation₃[M] (ConcatGraph α) :=
+  (concatGraph_defined α).to_definable
 
 variable {α}
 
@@ -602,7 +618,7 @@ noncomputable def codeTranslation : DirectTranslation 𝗥₀ ℒ⌢[α] where
     | .eq => ⟨“x y. x = y”⟩
   func
     | .letter a => ⟨“z. z = ↑(FreeSemigroup.code (FreeSemigroup.of a))”⟩
-    | .concat => ⟨concatGraph α⟩
+    | .concat => ⟨concatGraphDef α⟩
   domain_nonempty := Arithmetic.complete.{0} _ _ fun M _ _ ↦ (models_domainNonempty_iff _).mpr <| by
     simp [Semiformula.Operator.val]
   func_defined f := Arithmetic.complete.{0} _ _ fun M _ _ ↦ (models_funcDefined_iff _ _).mpr <| by
@@ -653,7 +669,7 @@ lemma append_eq_iff {x y z : (codeTranslation α).Model M} :
     x ++ y = z ↔ ConcatGraph α (z : M) x y := by
   have := Model.func_iff (π := codeTranslation α) (M := M) (f := .concat) (y := z) (v := ![x, y])
   rw [Matrix.fun_eq_vec_two fun i ↦ ((![x, y] : Fin 2 → (codeTranslation α).Model M) i : M)] at this
-  simp only [codeTranslation, Semiformula.Operator.val, Matrix.cons_val, eval_concatGraph] at this
+  simp only [codeTranslation, Semiformula.Operator.val, Matrix.cons_val, Defined.eval_iff] at this
   exact eq_comm.trans this
 
 /-- The strings are embedded onto an initial part of the model of `codeTranslation`. -/

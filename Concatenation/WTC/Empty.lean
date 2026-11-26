@@ -539,8 +539,10 @@ def IsDecode (w y : M) : Prop := y = 1 ++ w ∧ ∀ v, y = 1 ++ v → v = w
 def isDecode : Semisentence ℒ⌢ 2 :=
   “w y. y = !!(op(1).const) ⌢ w ∧ ∀ v, y = !!(op(1).const) ⌢ v → v = w”
 
-@[simp]
-lemma eval_isDecode : M ⊧/![w, y] isDecode ↔ IsDecode w y := by simp [isDecode, IsDecode]
+instance isDecode_defined : ℒ⌢-relation[M] IsDecode via isDecode :=
+  ⟨fun v ↦ by simp [isDecode, IsDecode]⟩
+
+instance isDecode_definable : ℒ⌢-relation[M] IsDecode := isDecode_defined.to_definable
 
 /--
 `z` is the code of the concatenation of the strings coded by `x` and `y`, or the letter $0$ if `y`
@@ -559,9 +561,10 @@ def isCodeAppend : Semisentence ℒ⌢ 3 :=
   “z x y. (y = !!(op(1).const) ∧ z = x) ∨ (∃ w, !isDecode w y ∧ z = x ⌢ w) ∨
     (y ≠ !!(op(1).const) ∧ (∀ w, ¬!isDecode w y) ∧ z = !!(op(0).const))”
 
-@[simp]
-lemma eval_isCodeAppend : M ⊧/![z, x, y] isCodeAppend ↔ IsCodeAppend z x y := by
-  simp [isCodeAppend, IsCodeAppend]
+instance isCodeAppend_defined : ℒ⌢-relation₃[M] IsCodeAppend via isCodeAppend :=
+  ⟨fun v ↦ by simp [isCodeAppend, IsCodeAppend]⟩
+
+instance isCodeAppend_definable : ℒ⌢-relation₃[M] IsCodeAppend := isCodeAppend_defined.to_definable
 
 /-- The code of a possibly empty binary string: the string after the letter $1$. -/
 def emptyCode (u : List Bool) : M := ofFreeSemigroup ⟨true, u⟩
@@ -683,7 +686,8 @@ lemma struc_eq :
       · simp [emptyTranslation, Semiformula.Operator.val]
         rfl
       · rw [Matrix.fun_eq_vec_two fun i ↦ (v i : M)]
-        exact eval_isCodeAppend.mpr (existsUnique_isCodeAppend (v 0 : M) (v 1)).choose_spec.1
+        exact (Defined.eval_iff (φ := isCodeAppend) _).mpr
+          (existsUnique_isCodeAppend (v 0 : M) (v 1)).choose_spec.1
       · simp [emptyTranslation, Semiformula.Operator.val]
         rfl)
     (funext₃ fun k r v ↦ by

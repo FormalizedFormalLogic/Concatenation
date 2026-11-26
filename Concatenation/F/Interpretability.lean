@@ -120,9 +120,10 @@ variable {M : Type*} [ConcatenationEmptyStructure M] {x y z w : M}
 /-- `x` is a suffix of `y`, in the language with the empty string. -/
 def isSuffixEmpty : Semisentence ℒ⌢ₑ 2 := “x y. x = y ∨ ∃ u, y = u ⌢ x”
 
-@[simp]
-lemma eval_isSuffixEmpty : M ⊧/![x, y] isSuffixEmpty ↔ y ◧ x := by
-  simp [isSuffixEmpty, IsSuffix]
+instance isSuffixEmpty_defined : ℒ⌢ₑ-relation[M] IsSuffix via isSuffixEmpty :=
+  ⟨fun v ↦ by simp [isSuffixEmpty, IsSuffix]⟩
+
+instance isSuffixEmpty_definable : ℒ⌢ₑ-relation[M] IsSuffix := isSuffixEmpty_defined.to_definable
 
 /--
 `x` is tame: every suffix of a string that ends with `x` is comparable with `x`.
@@ -139,9 +140,9 @@ def IsTame (x : M) : Prop := ∀ u y, u ++ x ◧ y → x ◧ y ∨ y ◧ x
 def isTame : Semisentence ℒ⌢ₑ 1 :=
   “x. ∀ u y, !isSuffixEmpty y (u ⌢ x) → !isSuffixEmpty y x ∨ !isSuffixEmpty x y”
 
-@[simp]
-lemma eval_isTame : M ⊧/![x] isTame ↔ IsTame x := by
-  simp [isTame, IsTame]
+instance isTame_defined : ℒ⌢ₑ-predicate[M] IsTame via isTame := ⟨fun v ↦ by simp [isTame, IsTame]⟩
+
+instance isTame_definable : ℒ⌢ₑ-predicate[M] IsTame := isTame_defined.to_definable
 
 /-- Every suffix of `x` is tame. -/
 def IsHereditarilyTame (x : M) : Prop := ∀ y, x ◧ y → IsTame y
@@ -149,9 +150,11 @@ def IsHereditarilyTame (x : M) : Prop := ∀ y, x ◧ y → IsTame y
 /-- Every suffix of `x` is tame. -/
 def isHereditarilyTame : Semisentence ℒ⌢ₑ 1 := “x. ∀ y, !isSuffixEmpty y x → !isTame y”
 
-@[simp]
-lemma eval_isHereditarilyTame : M ⊧/![x] isHereditarilyTame ↔ IsHereditarilyTame x := by
-  simp [isHereditarilyTame, IsHereditarilyTame]
+instance isHereditarilyTame_defined : ℒ⌢ₑ-predicate[M] IsHereditarilyTame via isHereditarilyTame :=
+  ⟨fun v ↦ by simp [isHereditarilyTame, IsHereditarilyTame]⟩
+
+instance isHereditarilyTame_definable : ℒ⌢ₑ-predicate[M] IsHereditarilyTame :=
+  isHereditarilyTame_defined.to_definable
 
 lemma IsHereditarilyTame.isTame (hx : IsHereditarilyTame x) : IsTame x := hx x (IsSuffix.refl x)
 
@@ -312,11 +315,12 @@ structure IsRadical (x : M) : Prop where
 def isRadical : Semisentence ℒ⌢ₑ 1 :=
   “x. (∀ y z, y ⌢ x = z ⌢ x → y = z) ∧ (∀ y z, x ⌢ y = x ⌢ z → y = z)”
 
-@[simp]
-lemma eval_isRadical : M ⊧/![x] isRadical ↔ IsRadical x := by
-  suffices ((∀ y z, y ++ x = z ++ x → y = z) ∧ ∀ y z, x ++ y = x ++ z → y = z) ↔ IsRadical x by
-    simpa [isRadical]
+instance isRadical_defined : ℒ⌢ₑ-predicate[M] IsRadical via isRadical := .mk fun v ↦ by
+  suffices ((∀ y z, y ++ v 0 = z ++ v 0 → y = z) ∧ ∀ y z, v 0 ++ y = v 0 ++ z → y = z) ↔
+      IsRadical (v 0) by simpa [isRadical]
   exact ⟨fun h ↦ ⟨h.1 _ _, h.2 _ _⟩, fun h ↦ ⟨fun _ _ ↦ h.right, fun _ _ ↦ h.left⟩⟩
+
+instance isRadical_definable : ℒ⌢ₑ-predicate[M] IsRadical := isRadical_defined.to_definable
 
 /--
 `x` is empty or ends with a letter.
@@ -331,9 +335,12 @@ def IsEmptyOrAppendAtom (x : M) : Prop := x = ∅ ∨ ∃ u, x = u ++ 0 ∨ x = 
 def isEmptyOrAppendAtom : Semisentence ℒ⌢ₑ 1 :=
   “x. x = ⋆ ∨ ∃ u, x = u ⌢ !!(op(0).const) ∨ x = u ⌢ !!(op(1).const)”
 
-@[simp]
-lemma eval_isEmptyOrAppendAtom : M ⊧/![x] isEmptyOrAppendAtom ↔ IsEmptyOrAppendAtom x := by
-  simp [isEmptyOrAppendAtom, IsEmptyOrAppendAtom]
+instance isEmptyOrAppendAtom_defined :
+    ℒ⌢ₑ-predicate[M] IsEmptyOrAppendAtom via isEmptyOrAppendAtom :=
+  ⟨fun v ↦ by simp [isEmptyOrAppendAtom, IsEmptyOrAppendAtom]⟩
+
+instance isEmptyOrAppendAtom_definable : ℒ⌢ₑ-predicate[M] IsEmptyOrAppendAtom :=
+  isEmptyOrAppendAtom_defined.to_definable
 
 /-- Every prefix of `x` is radical, and empty or ends with a letter. -/
 def IsHereditarilyRadical (x : M) : Prop :=
@@ -343,9 +350,12 @@ def IsHereditarilyRadical (x : M) : Prop :=
 def isHereditarilyRadical : Semisentence ℒ⌢ₑ 1 :=
   “x. ∀ y z, x = y ⌢ z → !isRadical y ∧ !isEmptyOrAppendAtom y”
 
-@[simp]
-lemma eval_isHereditarilyRadical : M ⊧/![x] isHereditarilyRadical ↔ IsHereditarilyRadical x := by
-  simp [isHereditarilyRadical, IsHereditarilyRadical]
+instance isHereditarilyRadical_defined :
+    ℒ⌢ₑ-predicate[M] IsHereditarilyRadical via isHereditarilyRadical :=
+  ⟨fun v ↦ by simp [isHereditarilyRadical, IsHereditarilyRadical]⟩
+
+instance isHereditarilyRadical_definable : ℒ⌢ₑ-predicate[M] IsHereditarilyRadical :=
+  isHereditarilyRadical_defined.to_definable
 
 end
 

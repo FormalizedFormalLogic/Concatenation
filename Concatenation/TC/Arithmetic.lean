@@ -34,8 +34,10 @@ def isNumber : Semisentence ℒ⌢ 1 :=
   “x. !isTally !!(op(1).const) x ∨ x = !!(op(0).const) ∨
     x = !!(op(0).const) ⌢ !!(op(0).const)”
 
-@[simp]
-lemma eval_isNumber : M ⊧/![x] isNumber ↔ IsNumber x := by simp [isNumber, IsNumber]
+instance isNumber_defined : ℒ⌢-predicate[M] IsNumber via isNumber :=
+  ⟨fun v ↦ by simp [isNumber, IsNumber]⟩
+
+instance isNumber_definable : ℒ⌢-predicate[M] IsNumber := isNumber_defined.to_definable
 
 /--
 `z` is the sum of `x` and `y`: the concatenation of `1`-tallies, with `0` neutral and `0 0`
@@ -55,8 +57,10 @@ def addGraph : Semisentence ℒ⌢ 3 :=
     (y = !!(op(0).const) ∧ x ≠ !!(op(0).const) ⌢ !!(op(0).const) ∧ z = x) ∨
     (!isTally !!(op(1).const) x ∧ !isTally !!(op(1).const) y ∧ z = x ⌢ y)”
 
-@[simp]
-lemma eval_addGraph : M ⊧/![z, x, y] addGraph ↔ AddGraph z x y := by simp [addGraph, AddGraph]
+instance addGraph_defined : ℒ⌢-relation₃[M] AddGraph via addGraph :=
+  ⟨fun v ↦ by simp [addGraph, AddGraph]⟩
+
+instance addGraph_definable : ℒ⌢-relation₃[M] AddGraph := addGraph_defined.to_definable
 
 /--
 `z` is the product of `x` and `y`: `0` if `y` is `0`; `0 0` if `y` is not `0` and one of `x` and `y`
@@ -85,9 +89,10 @@ def mulGraph : Semisentence ℒ⌢ 3 :=
           ∃ r, !isMulSeq x y r ∧ !isLast (z ⌢ !!(op(0).const) ⌢ y) r) ∨
         (¬(∃! r, !isMulSeq x y r) ∧ z = !!(op(0).const) ⌢ !!(op(0).const))))”
 
-@[simp]
-lemma eval_mulGraph : M ⊧/![z, x, y] mulGraph ↔ MulGraph z x y := by
-  simp [mulGraph, MulGraph, pairOf]
+instance mulGraph_defined : ℒ⌢-relation₃[M] MulGraph via mulGraph :=
+  ⟨fun v ↦ by simp [mulGraph, MulGraph, pairOf]⟩
+
+instance mulGraph_definable : ℒ⌢-relation₃[M] MulGraph := mulGraph_defined.to_definable
 
 /-- `x` is less than `y`: the translation of `∃ c, x + (c + 1) = y`. -/
 def LtGraph (x y : M) : Prop := ∃ c, IsNumber c ∧ ∃ d, AddGraph d c 1 ∧ AddGraph y x d
@@ -96,8 +101,10 @@ def LtGraph (x y : M) : Prop := ∃ c, IsNumber c ∧ ∃ d, AddGraph d c 1 ∧ 
 def ltGraph : Semisentence ℒ⌢ 2 :=
   “x y. ∃ c, !isNumber c ∧ ∃ d, !addGraph d c !!(op(1).const) ∧ !addGraph y x d”
 
-@[simp]
-lemma eval_ltGraph : M ⊧/![x, y] ltGraph ↔ LtGraph x y := by simp [ltGraph, LtGraph]
+instance ltGraph_defined : ℒ⌢-relation[M] LtGraph via ltGraph :=
+  ⟨fun v ↦ by simp [ltGraph, LtGraph]⟩
+
+instance ltGraph_definable : ℒ⌢-relation[M] LtGraph := ltGraph_defined.to_definable
 
 lemma isNumber_zero : IsNumber (0 : M) := Or.inr <| Or.inl rfl
 
@@ -296,14 +303,16 @@ lemma addGraph_val_add (a b : arithmeticTranslation.Model M) :
     AddGraph ((a + b : arithmeticTranslation.Model M) : M) a b := by
   have h := Model.eval_func (π := arithmeticTranslation) (M := M) Language.ORing.Func.add ![a, b]
   rw [Matrix.fun_eq_vec_two fun i ↦ ((![a, b] : Fin 2 → arithmeticTranslation.Model M) i : M)] at h
-  simp only [arithmeticTranslation, Semiformula.Operator.val, Matrix.cons_val, eval_addGraph] at h
+  simp only [arithmeticTranslation, Semiformula.Operator.val, Matrix.cons_val,
+    Defined.eval_iff] at h
   exact h
 
 lemma mulGraph_val_mul (a b : arithmeticTranslation.Model M) :
     MulGraph ((a * b : arithmeticTranslation.Model M) : M) a b := by
   have h := Model.eval_func (π := arithmeticTranslation) (M := M) Language.ORing.Func.mul ![a, b]
   rw [Matrix.fun_eq_vec_two fun i ↦ ((![a, b] : Fin 2 → arithmeticTranslation.Model M) i : M)] at h
-  simp only [arithmeticTranslation, Semiformula.Operator.val, Matrix.cons_val, eval_mulGraph] at h
+  simp only [arithmeticTranslation, Semiformula.Operator.val, Matrix.cons_val,
+    Defined.eval_iff] at h
   exact h
 
 lemma val_add_eq_iff : ((a + b : arithmeticTranslation.Model M) : M) = z ↔ AddGraph z a b :=

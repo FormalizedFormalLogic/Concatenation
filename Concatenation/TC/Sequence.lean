@@ -34,8 +34,10 @@ def isPair : Semisentence ℒ⌢ 1 :=
   “z. ∃ x y, !isTally !!(op(1).const) x ∧ !isTally !!(op(1).const) y ∧
     z = x ⌢ !!(op(0).const) ⌢ y”
 
-@[simp]
-lemma eval_isPair : M ⊧/![z] isPair ↔ IsPair z := by simp [isPair, IsPair, pairOf]
+instance isPair_defined : ℒ⌢-predicate[M] IsPair via isPair :=
+  ⟨fun v ↦ by simp [isPair, IsPair, pairOf]⟩
+
+instance isPair_definable : ℒ⌢-predicate[M] IsPair := isPair_defined.to_definable
 
 /--
 `z` is a sequence: it begins with `001`, ends with `100`, and its only `0`-tally substrings are
@@ -55,8 +57,9 @@ def isSeq : Semisentence ℒ⌢ 1 :=
     ∀ y, !isTally !!(op(0).const) y → !isSubstring y z →
       y = !!(op(0).const) ∨ y = !!(op(0).const) ⌢ !!(op(0).const)”
 
-@[simp]
-lemma eval_isSeq : M ⊧/![z] isSeq ↔ IsSeq z := by simp [isSeq, isSeq_iff]
+instance isSeq_defined : ℒ⌢-predicate[M] IsSeq via isSeq := ⟨fun v ↦ by simp [isSeq, isSeq_iff]⟩
+
+instance isSeq_definable : ℒ⌢-predicate[M] IsSeq := isSeq_defined.to_definable
 
 /--
 `y` is a member of the sequence `z`.
@@ -71,8 +74,9 @@ def mem : Semisentence ℒ⌢ 2 :=
     !isSubstring
       (!!(op(0).const) ⌢ !!(op(0).const) ⌢ y ⌢ !!(op(0).const) ⌢ !!(op(0).const)) z”
 
-@[simp]
-lemma eval_mem : M ⊧/![y, z] mem ↔ Mem y z := by simp [mem, Mem]
+instance mem_defined : ℒ⌢-relation[M] Mem via mem := ⟨fun v ↦ by simp [mem, Mem]⟩
+
+instance mem_definable : ℒ⌢-relation[M] Mem := mem_defined.to_definable
 
 /--
 `z` is a sequence of ordered pairs.
@@ -83,8 +87,10 @@ def IsPairSeq (z : M) : Prop := IsSeq z ∧ ∀ y, Mem y z → IsPair y
 /-- `z` is a sequence of ordered pairs. -/
 def isPairSeq : Semisentence ℒ⌢ 1 := “z. !isSeq z ∧ ∀ y, !mem y z → !isPair y”
 
-@[simp]
-lemma eval_isPairSeq : M ⊧/![z] isPairSeq ↔ IsPairSeq z := by simp [isPairSeq, IsPairSeq]
+instance isPairSeq_defined : ℒ⌢-predicate[M] IsPairSeq via isPairSeq :=
+  ⟨fun v ↦ by simp [isPairSeq, IsPairSeq]⟩
+
+instance isPairSeq_definable : ℒ⌢-predicate[M] IsPairSeq := isPairSeq_defined.to_definable
 
 /--
 `u` is the first member of `z`.
@@ -97,8 +103,10 @@ def isFirst : Semisentence ℒ⌢ 2 :=
   “u z. !isPrefix
     (!!(op(0).const) ⌢ !!(op(0).const) ⌢ u ⌢ !!(op(0).const) ⌢ !!(op(0).const)) z”
 
-@[simp]
-lemma eval_isFirst : M ⊧/![u, z] isFirst ↔ IsFirst u z := by simp [isFirst, IsFirst]
+instance isFirst_defined : ℒ⌢-relation[M] IsFirst via isFirst :=
+  ⟨fun v ↦ by simp [isFirst, IsFirst]⟩
+
+instance isFirst_definable : ℒ⌢-relation[M] IsFirst := isFirst_defined.to_definable
 
 /--
 `u` is the last member of `z`.
@@ -111,8 +119,9 @@ def isLast : Semisentence ℒ⌢ 2 :=
   “u z. !isSuffix
     (!!(op(0).const) ⌢ !!(op(0).const) ⌢ u ⌢ !!(op(0).const) ⌢ !!(op(0).const)) z”
 
-@[simp]
-lemma eval_isLast : M ⊧/![u, z] isLast ↔ IsLast u z := by simp [isLast, IsLast]
+instance isLast_defined : ℒ⌢-relation[M] IsLast via isLast := ⟨fun v ↦ by simp [isLast, IsLast]⟩
+
+instance isLast_definable : ℒ⌢-relation[M] IsLast := isLast_defined.to_definable
 
 /--
 `z` is a multiplication sequence for the `1`-tallies `x` and `y`: a sequence of pairs from
@@ -145,9 +154,10 @@ def isMulSeq : Semisentence ℒ⌢ 3 :=
         u' = u ⌢ x ∧ v' = v ⌢ !!(op(1).const) ∧
         !isSuffix (!!(op(0).const) ⌢ !!(op(0).const) ⌢ (u ⌢ !!(op(0).const) ⌢ v)) s”
 
-@[simp]
-lemma eval_isMulSeq : M ⊧/![x, y, z] isMulSeq ↔ IsMulSeq x y z := by
-  simp [isMulSeq, isMulSeq_iff, pairOf]
+instance isMulSeq_defined : ℒ⌢-relation₃[M] IsMulSeq via isMulSeq :=
+  ⟨fun v ↦ by simp [isMulSeq, isMulSeq_iff, pairOf]⟩
+
+instance isMulSeq_definable : ℒ⌢-relation₃[M] IsMulSeq := isMulSeq_defined.to_definable
 
 lemma IsPairSeq.isSeq (h : IsPairSeq z) : IsSeq z := h.1
 

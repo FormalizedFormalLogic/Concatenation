@@ -98,9 +98,11 @@ lemma val_successor {e : Fin 1 → M} {ε : Empty → M} : successor.val e ε = 
 -/
 def IsInitialSegment (x y : M) : Prop := (x = 0 ∧ y ≠ 0) ∨ ∃ z, x ++ z = y
 
-@[simp]
-lemma eval_isInitialSegment : M ⊧/![x, y] isInitialSegment ↔ IsInitialSegment x y := by
-  simp [isInitialSegment, IsInitialSegment]
+instance isInitialSegment_defined : ℒ⌢ₛ-relation[M] IsInitialSegment via isInitialSegment :=
+  ⟨fun v ↦ by simp [isInitialSegment, IsInitialSegment]⟩
+
+instance isInitialSegment_definable : ℒ⌢ₛ-relation[M] IsInitialSegment :=
+  isInitialSegment_defined.to_definable
 
 end semantics
 

@@ -2,6 +2,7 @@ module
 
 public import Concatenation.Biteral
 public import Foundation.FirstOrder.LK.Completeness.CounterModel
+public import Foundation.FirstOrder.Tarski.Definability
 
 /-!
 # Semantics of the languages of concatenation
@@ -191,11 +192,13 @@ lemma val_biteral (x : FreeSemigroup Bool) :
     (biteral x : Semiterm ℒ⌢ ξ n).val e ε = ConcatenationStructure.ofFreeSemigroup x := by
   simp [biteral, ConcatenationStructure.ofFreeSemigroup]
 
-@[simp]
-lemma eval_isOneOf {l : List (FreeSemigroup Bool)} {x : M} :
-    M ⊧/![x] (isOneOf l : ConcatenationSemisentence 1) ↔
-      ∃ γ ∈ l, x = ConcatenationStructure.ofFreeSemigroup γ := by
-  simp [isOneOf]
+instance isOneOf_defined {l : List (FreeSemigroup Bool)} :
+    ℒ⌢-predicate[M] (fun x ↦ ∃ γ ∈ l, x = ConcatenationStructure.ofFreeSemigroup γ) via isOneOf l :=
+  ⟨fun v ↦ by simp [isOneOf]⟩
+
+instance isOneOf_definable {l : List (FreeSemigroup Bool)} :
+    ℒ⌢-predicate[M] (fun x ↦ ∃ γ ∈ l, x = ConcatenationStructure.ofFreeSemigroup γ) :=
+  isOneOf_defined.to_definable
 
 end eval
 
@@ -221,12 +224,15 @@ lemma IsSubstring.of_forall_append {P : M → Prop} (hP : ∀ x y, P (x ++ y) �
     (h : IsSubstring x y) (hy : P y) : P x := by
   grind [IsSubstring]
 
-@[simp]
-lemma eval_isSubstring {L : Language} [L.Concat] [L.Eq] [Tarski.Structure L M]
+instance isSubstring_defined {L : Language} [L.Concat] [L.Eq] [Tarski.Structure L M]
     [Tarski.Structure.Concat L M] [Tarski.Structure.Eq L M] :
-    M ⊧/![x, y] (isSubstring : Semisentence L 2) ↔ IsSubstring x y := by
-  have : Nonempty M := ⟨x⟩
-  simp [isSubstring, IsSubstring, exists_or, eq_comm (b := y)]
+    L-relation[M] IsSubstring via isSubstring := ⟨fun v ↦ by
+  have : Nonempty M := ⟨v 0⟩
+  simp [isSubstring, IsSubstring, exists_or, eq_comm (b := v 1)]⟩
+
+instance isSubstring_definable {L : Language} [L.Concat] [L.Eq] [Tarski.Structure L M]
+    [Tarski.Structure.Concat L M] [Tarski.Structure.Eq L M] : L-relation[M] IsSubstring :=
+  isSubstring_defined.to_definable
 
 end isSubstring
 
@@ -237,8 +243,7 @@ variable {M : Type*} [ConcatenationStructure M] {c x y : M}
 @[simp]
 lemma val_substringOperator {v : Fin 2 → M} :
     (substringOperator ℒ⌢).val v ↔ IsSubstring (v 0) (v 1) := by
-  rw [Matrix.fun_eq_vec_two (v := v)]
-  exact eval_isSubstring
+  simp [substringOperator, Semiformula.Operator.val]
 
 /-- `x` is one of the letters `0` and `1`. -/
 def IsAtom (x : M) : Prop := x = 0 ∨ x = 1
@@ -246,8 +251,9 @@ def IsAtom (x : M) : Prop := x = 0 ∨ x = 1
 /-- `x` is one of the letters `0` and `1`. -/
 def isAtom : Semisentence ℒ⌢ 1 := “x. x = !!(op(0).const) ∨ x = !!(op(1).const)”
 
-@[simp]
-lemma eval_isAtom : M ⊧/![x] isAtom ↔ IsAtom x := by simp [isAtom, IsAtom]
+instance isAtom_defined : ℒ⌢-predicate[M] IsAtom via isAtom := ⟨fun v ↦ by simp [isAtom, IsAtom]⟩
+
+instance isAtom_definable : ℒ⌢-predicate[M] IsAtom := isAtom_defined.to_definable
 
 /--
 `x` is a prefix of `y`.
@@ -261,9 +267,10 @@ scoped infix:50 " ◨ " => IsPrefix
 /-- `x` is a prefix of `y`. -/
 def isPrefix : Semisentence ℒ⌢ 2 := “x y. x = y ∨ ∃ v, y = x ⌢ v”
 
-@[simp]
-lemma eval_isPrefix : M ⊧/![x, y] isPrefix ↔ x ◨ y := by
-  simp [isPrefix, IsPrefix]
+instance isPrefix_defined : ℒ⌢-relation[M] IsPrefix via isPrefix :=
+  ⟨fun v ↦ by simp [isPrefix, IsPrefix]⟩
+
+instance isPrefix_definable : ℒ⌢-relation[M] IsPrefix := isPrefix_defined.to_definable
 
 /--
 `x` is a suffix of `y`.
@@ -277,9 +284,10 @@ scoped notation:50 x:51 " ◧ " y:51 => IsSuffix y x
 /-- `x` is a suffix of `y`. -/
 def isSuffix : Semisentence ℒ⌢ 2 := “x y. x = y ∨ ∃ u, y = u ⌢ x”
 
-@[simp]
-lemma eval_isSuffix : M ⊧/![x, y] isSuffix ↔ y ◧ x := by
-  simp [isSuffix, IsSuffix]
+instance isSuffix_defined : ℒ⌢-relation[M] IsSuffix via isSuffix :=
+  ⟨fun v ↦ by simp [isSuffix, IsSuffix]⟩
+
+instance isSuffix_definable : ℒ⌢-relation[M] IsSuffix := isSuffix_defined.to_definable
 
 /--
 `x` is a `c`-tally: every atom that is a substring of `x` is `c`.
@@ -290,9 +298,10 @@ def IsTally (c x : M) : Prop := ∀ y, IsAtom y → IsSubstring y x → y = c
 /-- `x` is a `c`-tally. -/
 def isTally : Semisentence ℒ⌢ 2 := “c x. ∀ y, !isAtom y → !isSubstring y x → y = c”
 
-@[simp]
-lemma eval_isTally : M ⊧/![c, x] isTally ↔ IsTally c x := by
-  simp [isTally, IsTally]
+instance isTally_defined : ℒ⌢-relation[M] IsTally via isTally :=
+  ⟨fun v ↦ by simp [isTally, IsTally]⟩
+
+instance isTally_definable : ℒ⌢-relation[M] IsTally := isTally_defined.to_definable
 
 @[simp]
 lemma isAtom_zero : IsAtom (0 : M) := Or.inl rfl
@@ -465,11 +474,6 @@ lemma val_biteralEmpty (l : List Bool) :
   cases l
   · simp [biteralEmpty, ofList]
   · simp [biteralEmpty, ofList, val_biteral_empty]
-
-@[simp]
-lemma eval_isSubstring_empty :
-    M ⊧/![x, y] (isSubstring : Semisentence ℒ⌢ₑ 2) ↔ IsSubstring x y := by
-  simp [isSubstring, IsSubstring, exists_or, eq_comm (b := y)]
 
 end eval
 

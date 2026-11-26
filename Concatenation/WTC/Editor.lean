@@ -454,16 +454,18 @@ def IsShort (N : ℕ) (x : M) : Prop :=
 /-- `x` is the value of a string of length at most `N + 1`. -/
 noncomputable def isShort (N : ℕ) : Semisentence ℒ⌢ 1 := isOneOf (short N)
 
-@[simp]
-lemma eval_isShort : M ⊧/![x] (isShort N) ↔ IsShort N x := by
-  simp [isShort, IsShort]
+instance isShort_defined : ℒ⌢-predicate[M] (IsShort N) via isShort N :=
+  ⟨fun v ↦ by simp [isShort, IsShort]⟩
+
+instance isShort_definable : ℒ⌢-predicate[M] (IsShort N) := isShort_defined.to_definable
 
 /-- `y` is a left or a right factor of `x`. -/
 def isFactor : Semisentence ℒ⌢ 2 := “y x. ∃ z, x = y ⌢ z ∨ x = z ⌢ y”
 
-@[simp]
-lemma eval_isFactor : M ⊧/![y, x] isFactor ↔ IsFactor y x := by
-  simp [isFactor, IsFactor]
+instance isFactor_defined : ℒ⌢-relation[M] IsFactor via isFactor :=
+  ⟨fun v ↦ by simp [isFactor, IsFactor]⟩
+
+instance isFactor_definable : ℒ⌢-relation[M] IsFactor := isFactor_defined.to_definable
 
 /-- `y` is reached from `x` by passing `k` times to a factor. -/
 def IsFactorAt : ℕ → M → M → Prop
@@ -486,7 +488,10 @@ def notFactorStep (φ : Semisentence ℒ⌢ 2) : Semisentence ℒ⌢ 2 :=
 /-- `y` is not reached from `x` by passing `k` times to a factor. -/
 def notFactorAt (k : ℕ) : Semisentence ℒ⌢ 2 := notFactorStep^[k] “x y. x ≠ y”
 
-lemma eval_notFactorAt (k : ℕ) (x y : M) : M ⊧/![x, y] (notFactorAt k) ↔ ¬IsFactorAt k x y := by
+instance notFactorAt_defined (k : ℕ) :
+    ℒ⌢-relation[M] (fun x y ↦ ¬IsFactorAt k x y) via notFactorAt k := by
+  refine .mk <| .of_vec_two fun x y ↦ ?_
+  change M ⊧/![x, y] (notFactorAt k) ↔ ¬IsFactorAt k x y
   induction k generalizing x y with
   | zero => simp [notFactorAt, IsFactorAt]
   | succ k ih =>
@@ -502,11 +507,14 @@ lemma eval_notFactorAt (k : ℕ) (x y : M) : M ⊧/![x, y] (notFactorAt k) ↔ �
       simpa [hv, ih, IsFactorAt] using this
     grind
 
+instance notFactorAt_definable (k : ℕ) : ℒ⌢-relation[M] (fun x y ↦ ¬IsFactorAt k x y) :=
+  (notFactorAt_defined k).to_definable
+
 /-- Nothing is reached from itself by passing `k + 1` times to a factor. -/
 def acyclic (k : ℕ) : Sentence ℒ⌢ := ∀¹ ∀¹ (“x y. x ≠ y” ⋎ notFactorAt (k + 1))
 
 lemma models_acyclic_iff (k : ℕ) : M↓[ℒ⌢] ⊧ acyclic k ↔ ∀ x : M, ¬IsFactorAt (k + 1) x x := by
-  simp [models_iff, acyclic, eval_notFactorAt]
+  simp [models_iff, acyclic]
   grind
 lemma primrec_acyclic : Primrec acyclic :=
   have hstep : Primrec notFactorStep :=
@@ -922,9 +930,10 @@ def isCodeAppend : Semisentence ℒ⌢ 3 :=
   “z x y. (x = !!(op(1).const) ∧ z = y) ∨ (y = !!(op(1).const) ∧ z = x) ∨
     ∃ u v, x = !!(op(1).const) ⌢ u ∧ y = !!(op(1).const) ⌢ v ∧ z = !!(op(1).const) ⌢ (u ⌢ v)”
 
-@[simp]
-lemma eval_isCodeAppend : M ⊧/![z, x, y] isCodeAppend ↔ IsCodeAppend z x y := by
-  simp [isCodeAppend, IsCodeAppend]
+instance isCodeAppend_defined : ℒ⌢-relation₃[M] IsCodeAppend via isCodeAppend :=
+  ⟨fun v ↦ by simp [isCodeAppend, IsCodeAppend]⟩
+
+instance isCodeAppend_definable : ℒ⌢-relation₃[M] IsCodeAppend := isCodeAppend_defined.to_definable
 
 section
 
@@ -1026,7 +1035,7 @@ lemma struc_eq : Model.struc emptyTranslation M = Tarski.Structure.ofEquiv equiv
       · simp [emptyTranslation, Semiformula.Operator.val]
         rfl
       · have h : M ⊧/![emptyCode (v 0 ++ v 1), emptyCode (v 0), emptyCode (v 1)] isCodeAppend :=
-          eval_isCodeAppend.mpr <| isCodeAppend_emptyCode_iff.mpr rfl
+          (Defined.eval_iff _).mpr <| isCodeAppend_emptyCode_iff.mpr rfl
         change Semiformula.Evalb _ isCodeAppend
         convert h using 2
         funext i

@@ -21,45 +21,49 @@ namespace FFL.FirstOrder.Concatenation
 section matrix
 
 open Language Arithmetic DirectTranslation Matrix.SpecialLinearGroup RingOfDifferences
+open scoped FFL.FirstOrder.Bounding
 
 section
 
-variable {M : Type*} [ORingStructure M] {x y z p q r s p' q' r' s' : M}
+variable {V : Type*} [ORingStructure V] {x y z p q r s p' q' r' s' : V}
 
 /-- The code of the matrix $\begin{pmatrix} p & q \\ r & s \end{pmatrix}$. -/
-def matrixCode (p q r s : M) : M := squarePair (squarePair p q) (squarePair r s)
+def matrixCode (p q r s : V) : V := squarePair (squarePair p q) (squarePair r s)
 
 /-- `x` is the code of the matrix $\begin{pmatrix} p & q \\ r & s \end{pmatrix}$. -/
-def isMatrixCode : ArithmeticSemisentence 5 :=
-  “x p q r s. ∃ u v, !squarePairDef u p q ∧ !squarePairDef v r s ∧ !squarePairDef x u v”
+def isMatrixCodeDef : 𝚺ᴬ₁.Semisentence 5 :=
+  .mkSigma “x p q r s. ∃ u v, !squarePairDef u p q ∧ !squarePairDef v r s ∧ !squarePairDef x u v”
 
-@[simp]
-lemma eval_isMatrixCode : M ⊧/![x, p, q, r, s] isMatrixCode ↔ x = matrixCode p q r s := by
-  simp [isMatrixCode, matrixCode]
+instance matrixCode_defined : 𝚺ᴬ₁-Function₄[V] matrixCode via isMatrixCodeDef := .mk fun v ↦ by
+  simp [isMatrixCodeDef, matrixCode]
+
+instance matrixCode_definable : 𝚺ᴬ₁-Function₄[V] matrixCode := matrixCode_defined.to_definable
 
 /--
 `x` is a string: the code of a matrix of determinant $1$ other than the identity.
 - [Mur24, §5.1, §6.1]
 -/
-def IsMatrixString (x : M) : Prop :=
+def IsMatrixString (x : V) : Prop :=
   x ≠ matrixCode 1 0 0 1 ∧ ∃ p q r s, x = matrixCode p q r s ∧ p * s = q * r + 1
 
 /--
 `x` is a string: the code of a matrix of determinant $1$ other than the identity.
 - [Mur24, §5.1, §6.1]
 -/
-def isMatrixString : ArithmeticSemisentence 1 :=
-  “x. ¬!isMatrixCode x 1 0 0 1 ∧ ∃ p q r s, !isMatrixCode x p q r s ∧ p * s = q * r + 1”
+def isMatrixStringDef : ArithmeticSemisentence 1 :=
+  “x. ¬!isMatrixCodeDef x 1 0 0 1 ∧ ∃ p q r s, !isMatrixCodeDef x p q r s ∧ p * s = q * r + 1”
 
-@[simp]
-lemma eval_isMatrixString : M ⊧/![x] isMatrixString ↔ IsMatrixString x := by
-  simp [isMatrixString, Matrix.comp_vecCons'', IsMatrixString]
+instance isMatrixString_defined : ℒₒᵣ-predicate[V] IsMatrixString via isMatrixStringDef :=
+  ⟨fun v ↦ by simp [isMatrixStringDef, Matrix.comp_vecCons'', IsMatrixString]⟩
+
+instance isMatrixString_definable : ℒₒᵣ-predicate[V] IsMatrixString :=
+  isMatrixString_defined.to_definable
 
 /--
 `z` is the code of the product of the matrices with the codes `x` and `y`.
 - [Mur24, §5.1]
 -/
-def MatrixMulGraph (z x y : M) : Prop :=
+def MatrixMulGraph (z x y : V) : Prop :=
   ∃ p q r s, x = matrixCode p q r s ∧ ∃ p' q' r' s', y = matrixCode p' q' r' s' ∧
     z = matrixCode (p * p' + q * r') (p * q' + q * s') (r * p' + s * r') (r * q' + s * s')
 
@@ -67,15 +71,17 @@ def MatrixMulGraph (z x y : M) : Prop :=
 `z` is the code of the product of the matrices with the codes `x` and `y`.
 - [Mur24, §5.1]
 -/
-def matrixMulGraph : ArithmeticSemisentence 3 :=
-  “z x y. ∃ p q r s, !isMatrixCode x p q r s ∧ ∃ p' q' r' s', !isMatrixCode y p' q' r' s' ∧
-    !isMatrixCode z (p * p' + q * r') (p * q' + q * s') (r * p' + s * r') (r * q' + s * s')”
+def matrixMulGraphDef : 𝚺ᴬ₁.Semisentence 3 := .mkSigma
+  “z x y. ∃ p q r s, !isMatrixCodeDef x p q r s ∧ ∃ p' q' r' s', !isMatrixCodeDef y p' q' r' s' ∧
+    !isMatrixCodeDef z (p * p' + q * r') (p * q' + q * s') (r * p' + s * r') (r * q' + s * s')”
 
-@[simp]
-lemma eval_matrixMulGraph : M ⊧/![z, x, y] matrixMulGraph ↔ MatrixMulGraph z x y := by
-  simp [matrixMulGraph, Matrix.comp_vecCons'', MatrixMulGraph]
+instance matrixMulGraph_defined : 𝚺ᴬ₁-Relation₃[V] MatrixMulGraph via matrixMulGraphDef :=
+  .mk fun v ↦ by simp [matrixMulGraphDef, Matrix.comp_vecCons'', MatrixMulGraph]
 
-variable [M↓[ℒₒᵣ] ⊧* 𝗣𝗔⁻]
+instance matrixMulGraph_definable : 𝚺ᴬ₁-Relation₃[V] MatrixMulGraph :=
+  matrixMulGraph_defined.to_definable
+
+variable [V↓[ℒₒᵣ] ⊧* 𝗣𝗔⁻]
 
 @[simp]
 lemma matrixCode_inj :
@@ -83,23 +89,23 @@ lemma matrixCode_inj :
   simp [matrixCode, and_assoc]
 
 /-- `x` is the code of the matrix `A` over the ring of differences. -/
-def CodesMatrix (x : M) (A : Matrix.SpecialLinearGroup (Fin 2) (RingOfDifferences M)) : Prop :=
-  ∃ p q r s, x = matrixCode p q r s ∧ (A : Matrix (Fin 2) (Fin 2) (RingOfDifferences M)) =
+def CodesMatrix (x : V) (A : Matrix.SpecialLinearGroup (Fin 2) (RingOfDifferences V)) : Prop :=
+  ∃ p q r s, x = matrixCode p q r s ∧ (A : Matrix (Fin 2) (Fin 2) (RingOfDifferences V)) =
     !![.of p, .of q; .of r, .of s]
 
-private lemma of_add (a b : M) : of (a + b) = of a + of b := map_add of a b
+private lemma of_add (a b : V) : of (a + b) = of a + of b := map_add of a b
 
-private lemma of_mul (a b : M) : of (a * b) = of a * of b := map_mul of a b
+private lemma of_mul (a b : V) : of (a * b) = of a * of b := map_mul of a b
 
-variable {A B : Matrix.SpecialLinearGroup (Fin 2) (RingOfDifferences M)}
+variable {A B : Matrix.SpecialLinearGroup (Fin 2) (RingOfDifferences V)}
 
-lemma CodesMatrix.mem_nonneg (h : CodesMatrix x A) : A ∈ nonneg (RingOfDifferences M) := by
+lemma CodesMatrix.mem_nonneg (h : CodesMatrix x A) : A ∈ nonneg (RingOfDifferences V) := by
   obtain ⟨p, q, r, s, rfl, hA⟩ := h
   simp only [mem_nonneg_iff, hA]
   exact Fin.forall_fin_two.mpr ⟨Fin.forall_fin_two.mpr ⟨of_nonneg p, of_nonneg q⟩,
     Fin.forall_fin_two.mpr ⟨of_nonneg r, of_nonneg s⟩⟩
 
-lemma exists_codesMatrix (h : A ∈ nonneg (RingOfDifferences M)) : ∃ x, CodesMatrix x A := by
+lemma exists_codesMatrix (h : A ∈ nonneg (RingOfDifferences V)) : ∃ x, CodesMatrix x A := by
   obtain ⟨p, hp⟩ := nonneg_iff.mp (h 0 0)
   obtain ⟨q, hq⟩ := nonneg_iff.mp (h 0 1)
   obtain ⟨r, hr⟩ := nonneg_iff.mp (h 1 0)
@@ -113,15 +119,15 @@ lemma CodesMatrix.eq_iff (hx : CodesMatrix x A) (hy : CodesMatrix y B) : x = y �
   obtain ⟨p', q', r', s', rfl, hB⟩ := hy
   simp [Matrix.SpecialLinearGroup.ext_iff, Fin.forall_fin_two, hA, hB, and_assoc]
 
-lemma codesMatrix_one : CodesMatrix (matrixCode 1 0 0 1 : M) 1 := by
+lemma codesMatrix_one : CodesMatrix (matrixCode 1 0 0 1 : V) 1 := by
   use 1, 0, 0, 1, rfl
   simp [Matrix.one_fin_two]
 
-lemma codesMatrix_lower : CodesMatrix (matrixCode 1 0 1 1 : M) (lower _) := by
+lemma codesMatrix_lower : CodesMatrix (matrixCode 1 0 1 1 : V) (lower _) := by
   use 1, 0, 1, 1, rfl
   simp [lower]
 
-lemma codesMatrix_upper : CodesMatrix (matrixCode 1 1 0 1 : M) (upper _) := by
+lemma codesMatrix_upper : CodesMatrix (matrixCode 1 1 0 1 : V) (upper _) := by
   use 1, 1, 0, 1, rfl
   simp [upper]
 
@@ -164,10 +170,10 @@ lemma existsUnique_matrixMulGraph (hx : IsMatrixString x) (hy : IsMatrixString y
   use z
   exact ⟨⟨isMatrixString_iff.mpr ⟨_, hz, h⟩, hz⟩, fun w hw ↦ (hw.2.eq_iff hz).mpr rfl⟩
 
-lemma isMatrixString_zero : IsMatrixString (matrixCode 1 0 1 1 : M) :=
+lemma isMatrixString_zero : IsMatrixString (matrixCode 1 0 1 1 : V) :=
   isMatrixString_iff.mpr ⟨_, codesMatrix_lower, lower_ne_one _⟩
 
-lemma isMatrixString_one : IsMatrixString (matrixCode 1 1 0 1 : M) :=
+lemma isMatrixString_one : IsMatrixString (matrixCode 1 1 0 1 : V) :=
   isMatrixString_iff.mpr ⟨_, codesMatrix_upper, upper_ne_one _⟩
 
 end
@@ -180,13 +186,13 @@ product.
 - [Mur24, §5.1, §6.2, Theorem 22]
 -/
 def matrixTranslation : DirectTranslation 𝗣𝗔⁻ ℒ⌢ where
-  domain := ⟨isMatrixString⟩
+  domain := ⟨isMatrixStringDef⟩
   rel R := match R with
     | Concatenation.Rel.eq => Semiformula.Operator.Eq.eq
   func f := match f with
-    | Concatenation.Func.zero => ⟨“z. !isMatrixCode z 1 0 1 1”⟩
-    | Concatenation.Func.one => ⟨“z. !isMatrixCode z 1 1 0 1”⟩
-    | Concatenation.Func.concat => ⟨matrixMulGraph⟩
+    | Concatenation.Func.zero => ⟨“z. !isMatrixCodeDef z 1 0 1 1”⟩
+    | Concatenation.Func.one => ⟨“z. !isMatrixCodeDef z 1 1 0 1”⟩
+    | Concatenation.Func.concat => ⟨matrixMulGraphDef.val⟩
   domain_nonempty := Arithmetic.complete.{0} _ _ fun M _ _ ↦
     (models_domainNonempty_iff _).mpr <| by
       use matrixCode 1 0 1 1
@@ -263,7 +269,8 @@ lemma codesMatrix_val_append (ha : CodesMatrix (a : M) A) (hb : CodesMatrix (b :
   apply (ha.matrixMulGraph_iff hb).mp
   have h := Model.eval_func (π := matrixTranslation) (M := M) Concatenation.Func.concat ![a, b]
   rw [Matrix.fun_eq_vec_two fun i ↦ ((![a, b] : Fin 2 → matrixTranslation.Model M) i : M)] at h
-  simp only [matrixTranslation, Semiformula.Operator.val, Matrix.cons_val, eval_matrixMulGraph] at h
+  simp only [matrixTranslation, Semiformula.Operator.val, Matrix.cons_val,
+    Bounding.HierarchySymbol.Defined.iff] at h
   exact h
 
 lemma eq_iff (ha : CodesMatrix (a : M) A) (hb : CodesMatrix (b : M) B) : a = b ↔ A = B :=

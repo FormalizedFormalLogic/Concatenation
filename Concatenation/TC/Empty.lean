@@ -23,9 +23,10 @@ variable {M : Type} [ConcatenationEmptyStructure M] {x : M}
 /-- `x` is not the empty string. -/
 def isNonempty : Semisentence ℒ⌢ₑ 1 := “x. x ≠ ⋆”
 
-@[simp]
-lemma eval_isNonempty : M ⊧/![x] isNonempty ↔ x ≠ ∅ := by
-  simp [isNonempty]
+instance isNonempty_defined : ℒ⌢ₑ-predicate[M] (· ≠ ∅) via isNonempty :=
+  ⟨fun v ↦ by simp [isNonempty]⟩
+
+instance isNonempty_definable : ℒ⌢ₑ-predicate[M] (· ≠ ∅) := isNonempty_defined.to_definable
 
 /--
 In the models of `T`, the letters are not empty, and the nonempty strings are closed under
@@ -269,9 +270,10 @@ def IsEmptyCode (x : M) : Prop := 1 ◨ x
 -/
 def isEmptyCode : Semisentence ℒ⌢ 1 := “x. !isPrefix !!(op(1).const) x”
 
-@[simp]
-lemma eval_isEmptyCode : M ⊧/![x] isEmptyCode ↔ IsEmptyCode x := by
-  simp [isEmptyCode, IsEmptyCode]
+instance isEmptyCode_defined : ℒ⌢-predicate[M] IsEmptyCode via isEmptyCode :=
+  ⟨fun v ↦ by simp [isEmptyCode, IsEmptyCode]⟩
+
+instance isEmptyCode_definable : ℒ⌢-predicate[M] IsEmptyCode := isEmptyCode_defined.to_definable
 
 /--
 `z` is the code of the concatenation of the strings coded by `x` and `y`.
@@ -286,9 +288,10 @@ def IsCodeAppend (z x y : M) : Prop := (y = 1 ∧ z = x) ∨ ∃ w, y = 1 ++ w �
 def isCodeAppend : Semisentence ℒ⌢ 3 :=
   “z x y. (y = !!(op(1).const) ∧ z = x) ∨ ∃ w, y = !!(op(1).const) ⌢ w ∧ z = x ⌢ w”
 
-@[simp]
-lemma eval_isCodeAppend : M ⊧/![z, x, y] isCodeAppend ↔ IsCodeAppend z x y := by
-  simp [isCodeAppend, IsCodeAppend]
+instance isCodeAppend_defined : ℒ⌢-relation₃[M] IsCodeAppend via isCodeAppend :=
+  ⟨fun v ↦ by simp [isCodeAppend, IsCodeAppend]⟩
+
+instance isCodeAppend_definable : ℒ⌢-relation₃[M] IsCodeAppend := isCodeAppend_defined.to_definable
 
 /-- The code of a string or of the empty string: the string itself after the letter $1$. -/
 def emptyCode : Option M → M
@@ -406,7 +409,7 @@ lemma struc_eq : Model.struc emptyTranslation M = Tarski.Structure.ofEquiv equiv
       · simp [emptyTranslation, Semiformula.Operator.val]
         rfl
       · have h : M ⊧/![emptyCode (v 0 ++ v 1), emptyCode (v 0), emptyCode (v 1)] isCodeAppend :=
-          eval_isCodeAppend.mpr <| isCodeAppend_emptyCode_iff.mpr rfl
+          (Defined.eval_iff _).mpr <| isCodeAppend_emptyCode_iff.mpr rfl
         change Semiformula.Evalb _ isCodeAppend
         convert h using 2
         funext i
@@ -472,10 +475,13 @@ def NonemptySuffixesBeginWithZero (x : M) : Prop := ∀ u v, x = u ++ v → v = 
 def nonemptySuffixesBeginWithZero : Semisentence ℒ⌢ₑ 1 :=
   “x. ∀ u v, x = u ⌢ v → v = ⋆ ∨ ∃ w, v = !!(op(0).const) ⌢ w”
 
-@[simp]
-lemma eval_nonemptySuffixesBeginWithZero :
-    M ⊧/![x] nonemptySuffixesBeginWithZero ↔ NonemptySuffixesBeginWithZero x := by
-  simp [nonemptySuffixesBeginWithZero, NonemptySuffixesBeginWithZero]
+instance nonemptySuffixesBeginWithZero_defined :
+    ℒ⌢ₑ-predicate[M] NonemptySuffixesBeginWithZero via nonemptySuffixesBeginWithZero :=
+  ⟨fun v ↦ by simp [nonemptySuffixesBeginWithZero, NonemptySuffixesBeginWithZero]⟩
+
+instance nonemptySuffixesBeginWithZero_definable :
+    ℒ⌢ₑ-predicate[M] NonemptySuffixesBeginWithZero :=
+  nonemptySuffixesBeginWithZero_defined.to_definable
 
 open Classical in
 /--
@@ -488,9 +494,10 @@ def isShift : Semisentence ℒ⌢ₑ 2 :=
   “y x. (!nonemptySuffixesBeginWithZero x ∧ y = !!(op(0).const) ⌢ x) ∨
     (¬!nonemptySuffixesBeginWithZero x ∧ y = x)”
 
-@[simp]
-lemma eval_isShift : M ⊧/![y, x] isShift ↔ y = shift x := by
-  by_cases h : NonemptySuffixesBeginWithZero x <;> simp [isShift, shift, h]
+instance isShift_defined : ℒ⌢ₑ-function₁[M] shift via isShift := .mk fun v ↦ by
+  by_cases h : NonemptySuffixesBeginWithZero (v 1) <;> simp [isShift, shift, h]
+
+instance isShift_definable : ℒ⌢ₑ-function₁[M] shift := isShift_defined.to_definable
 
 section map
 
@@ -694,10 +701,12 @@ def SuffixesBeginWithZero (x : M) : Prop := ∀ y, x ◧ y → 0 ◨ y
 def suffixesBeginWithZero : Semisentence ℒ⌢ 1 :=
   “x. ∀ y, !isSuffix y x → !isPrefix !!(op(0).const) y”
 
-@[simp]
-lemma eval_suffixesBeginWithZero :
-    M ⊧/![x] suffixesBeginWithZero ↔ SuffixesBeginWithZero x := by
-  simp [suffixesBeginWithZero, SuffixesBeginWithZero]
+instance suffixesBeginWithZero_defined :
+    ℒ⌢-predicate[M] SuffixesBeginWithZero via suffixesBeginWithZero :=
+  ⟨fun v ↦ by simp [suffixesBeginWithZero, SuffixesBeginWithZero]⟩
+
+instance suffixesBeginWithZero_definable : ℒ⌢-predicate[M] SuffixesBeginWithZero :=
+  suffixesBeginWithZero_defined.to_definable
 
 lemma nonemptySuffixesBeginWithZero_some_iff :
     NonemptySuffixesBeginWithZero (some x) ↔ SuffixesBeginWithZero x := by
@@ -721,9 +730,12 @@ def isShiftSome : Semisentence ℒ⌢ 2 :=
   “y x. (!suffixesBeginWithZero x ∧ y = !!(op(0).const) ⌢ x) ∨
     (¬!suffixesBeginWithZero x ∧ y = x)”
 
-@[simp]
-lemma eval_isShiftSome : M ⊧/![y, x] isShiftSome ↔ y = shiftOption (some x) := by
-  by_cases h : SuffixesBeginWithZero x <;> simp [isShiftSome, shiftOption, h]
+instance isShiftSome_defined :
+    ℒ⌢-function₁[M] (fun x ↦ shiftOption (some x)) via isShiftSome := .mk fun v ↦ by
+  by_cases h : SuffixesBeginWithZero (v 1) <;> simp [isShiftSome, shiftOption, h]
+
+instance isShiftSome_definable : ℒ⌢-function₁[M] (fun x ↦ shiftOption (some x)) :=
+  isShiftSome_defined.to_definable
 
 /--
 `z` corresponds under `shiftOption` to the concatenation of the strings corresponding to `x`
@@ -741,9 +753,11 @@ def isShiftAppend : Semisentence ℒ⌢ 3 :=
   “z x y. (x = !!(op(0).const) ∧ z = y) ∨ (y = !!(op(0).const) ∧ z = x) ∨
     ∃ u v, !isShiftSome x u ∧ !isShiftSome y v ∧ !isShiftSome z (u ⌢ v)”
 
-@[simp]
-lemma eval_isShiftAppend : M ⊧/![z, x, y] isShiftAppend ↔ IsShiftAppend z x y := by
-  simp [isShiftAppend, IsShiftAppend]
+instance isShiftAppend_defined : ℒ⌢-relation₃[M] IsShiftAppend via isShiftAppend :=
+  ⟨fun v ↦ by simp [isShiftAppend, IsShiftAppend]⟩
+
+instance isShiftAppend_definable : ℒ⌢-relation₃[M] IsShiftAppend :=
+  isShiftAppend_defined.to_definable
 
 variable [M↓[ℒ⌢] ⊧* 𝗧𝗖]
 
@@ -830,8 +844,7 @@ lemma func_one_val_iff {e : Fin 1 → M} :
 lemma func_concat_val_iff {e : Fin 3 → M} :
     (emptyShiftTranslation.func (Sum.inl Language.Concatenation.Func.concat)).val e ↔
       IsShiftAppend (e 0) (e 1) (e 2) := by
-  rw [← eval_isShiftAppend, ← Matrix.fun_eq_vec_three]
-  rfl
+  exact Defined.eval_iff (φ := isShiftAppend) e
 
 lemma func_empty_val_iff {e : Fin 1 → M} :
     (emptyShiftTranslation.func (Sum.inr <| Language.Constant.Func.const ⟨⟩)).val e ↔ e 0 = 0 := by

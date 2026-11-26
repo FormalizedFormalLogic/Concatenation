@@ -2,6 +2,7 @@ module
 
 public import Concatenation.ToFoundation.Concat
 public import Foundation.FirstOrder.LK.Completeness.CounterModel
+public import Foundation.FirstOrder.Tarski.Definability
 
 /-!
 # The weak theory of sequences $\mathsf{WSeq}$
@@ -276,13 +277,18 @@ def IsPrefix (x y : M) : Prop := ∃ z, x ++ z = y
 /-- `x ◨ y`: `x` is an initial segment of `y`. -/
 scoped infix:50 " ◨ " => IsPrefix
 
-@[simp]
-lemma eval_isPrefix : M ⊧/![x, y] isPrefix ↔ x ◨ y := by simp [isPrefix, IsPrefix]
+instance isPrefix_defined : ℒ⊢-relation[M] IsPrefix via isPrefix :=
+  ⟨fun v ↦ by simp [isPrefix, IsPrefix]⟩
 
-@[simp]
-lemma eval_isOneOf {l : List FiniteSequence} :
-    M ⊧/![x] (isOneOf l) ↔ ∃ s ∈ l, x = s.toStructure := by
-  simp [isOneOf]
+instance isPrefix_definable : ℒ⊢-relation[M] IsPrefix := isPrefix_defined.to_definable
+
+instance isOneOf_defined {l : List FiniteSequence} :
+    ℒ⊢-predicate[M] (fun x ↦ ∃ s ∈ l, x = s.toStructure) via isOneOf l :=
+  ⟨fun v ↦ by simp [isOneOf]⟩
+
+instance isOneOf_definable {l : List FiniteSequence} :
+    ℒ⊢-predicate[M] (fun x ↦ ∃ s ∈ l, x = s.toStructure) :=
+  isOneOf_defined.to_definable
 
 end eval
 

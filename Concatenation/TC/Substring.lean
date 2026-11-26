@@ -226,9 +226,10 @@ def IsBounded (x : M) : Prop :=
 def isBounded : Semisentence ℒ⌢ 1 :=
   “x. !isAtom x ∨ ((∃ c z, !isAtom c ∧ x = c ⌢ z) ∧ (∃ c z, !isAtom c ∧ x = z ⌢ c))”
 
-@[simp]
-lemma eval_isBounded : M ⊧/![x] isBounded ↔ IsBounded x := by
-  simp [isBounded, IsBounded]
+instance isBounded_defined : ℒ⌢-predicate[M] IsBounded via isBounded :=
+  ⟨fun v ↦ by simp [isBounded, IsBounded]⟩
+
+instance isBounded_definable : ℒ⌢-predicate[M] IsBounded := isBounded_defined.to_definable
 
 /--
 Every string is an atom, or begins with an atom and ends with an atom.
@@ -263,9 +264,9 @@ def IsThin (x : M) : Prop := ∀ y, IsSubstring y x → IsBounded y
 -/
 def isThin : Semisentence ℒ⌢ 1 := “x. ∀ y, !isSubstring y x → !isBounded y”
 
-@[simp]
-lemma eval_isThin : M ⊧/![x] isThin ↔ IsThin x := by
-  simp [isThin, IsThin]
+instance isThin_defined : ℒ⌢-predicate[M] IsThin via isThin := ⟨fun v ↦ by simp [isThin, IsThin]⟩
+
+instance isThin_definable : ℒ⌢-predicate[M] IsThin := isThin_defined.to_definable
 
 lemma TCPlus.isBounded [M↓[ℒ⌢] ⊧* 𝗧𝗖⁺] (x : M) : IsBounded x := by
   have := by simpa [models_iff, tc6] using Theory.models M _ (Set.mem_insert tc6 𝗧𝗖)

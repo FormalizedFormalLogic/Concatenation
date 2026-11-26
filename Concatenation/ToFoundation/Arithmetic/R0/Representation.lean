@@ -13,7 +13,7 @@ Every computable function is weakly representable in $\mathsf{R}_0$, through Cob
 
 @[expose] public section
 
-namespace FFL.FirstOrder.Arithmetic.R0
+namespace FFL.FirstOrder.Arithmetic
 
 open ORingStructure
 
@@ -28,6 +28,7 @@ def cobhamComparison (φ : ArithmeticSemisentence 3) : ArithmeticSemisentence 2 
     ∀ z u, !cobhamLE z w → !cobhamLE u w → !φ x z u → y = z”
 
 variable {M : Type*} [ORingStructure M] {φ : ArithmeticSemisentence 3}
+  {A : ArithmeticSemisentence 2}
 
 @[simp]
 lemma eval_cobhamComparison {x y : M} :
@@ -51,6 +52,20 @@ lemma eval_numeral_iff_of_deltaZero (hφ₀ : ℬ[<, ℒₒᵣ].Hierarchy 𝚺 0
     exact absurd h (by simpa [e] using this)
   · intro h
     simpa [e] using bold_sigma_one_completeness' (M := M) hφ₀.of_zero h
+
+lemma eval_numeral_iff_of_deltaZero₂ (hA : ℬ[<, ℒₒᵣ].Hierarchy 𝚺 0 A) (i j : ℕ) :
+    M ⊧/![numeral i, numeral j] A ↔ ℕ ⊧/![i, j] A := by
+  have e : (numeral ∘ ![i, j] : Fin 2 → M) = ![numeral i, numeral j] := by
+    funext x
+    match x with | 0 | 1 => rfl
+  constructor
+  · intro h
+    by_contra h'
+    have := bold_sigma_one_completeness' (M := M) (σ := ∼A) (by simpa using hA.of_zero)
+      (bv := ![i, j]) (by simpa using h')
+    exact absurd h (by simpa [e] using this)
+  · intro h
+    simpa [e] using bold_sigma_one_completeness' (M := M) hA.of_zero h
 
 variable {f : ℕ → ℕ}
 
@@ -133,6 +148,10 @@ lemma eval_pairDef_numeral_iff {p : M} (m n : ℕ) :
     numeral_mul_numeral, numeral_add_numeral]
   grind
 
+@[simp, grind =]
+lemma nat_eval_pairDef {q m n : ℕ} : ℕ ⊧/![q, m, n] pairDef.val ↔ q = Nat.pair m n := by
+  simpa using eval_pairDef_numeral_iff (M := ℕ) (p := q) m n
+
 /-- The formula that represents the computable binary function `f` through the pairing. -/
 noncomputable def cobhamRepresentation₂ (f : ℕ → ℕ → ℕ) : ArithmeticSemisentence 3 :=
   “x y z. ∃ p, !pairDef p x y ∧ !(cobhamRepresentation fun p ↦ f p.unpair.1 p.unpair.2) p z”
@@ -209,4 +228,4 @@ lemma IsValue₂.exists_of_numeral (hf : Computable₂ f) {k : ℕ} (h : IsValue
 
 end value
 
-end FFL.FirstOrder.Arithmetic.R0
+end FFL.FirstOrder.Arithmetic

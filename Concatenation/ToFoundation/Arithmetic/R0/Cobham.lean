@@ -10,7 +10,7 @@ Cobham's order compares every element of a model of $\mathsf{R}_0$ with every nu
 
 @[expose] public section
 
-namespace FFL.FirstOrder.Arithmetic.R0
+namespace FFL.FirstOrder.Arithmetic
 
 open ORingStructure
 
@@ -68,14 +68,20 @@ The strict part of Cobham's order.
 -/
 def cobhamLT : ArithmeticSemisentence 2 := “x y. !cobhamLE x y ∧ x ≠ y”
 
+@[inherit_doc]
+scoped infix:50 " ◃ " => CobhamLT
+
 @[simp]
 lemma eval_cobhamLT : M ⊧/![x, y] cobhamLT ↔ CobhamLT x y := by
   simp [cobhamLT, CobhamLT]
 
+@[simp, grind .]
+lemma cobhamLE_refl (x : M) : x ⊴ x := Or.inl <| Or.inl rfl
+
 variable [M↓[ℒₒᵣ] ⊧* 𝗥₀]
 
 @[simp, grind =]
-lemma numeral_add_one (n : ℕ) : (numeral n : M) + 1 = numeral (n + 1) := by
+lemma numeral_add_one' (n : ℕ) : (numeral n : M) + 1 = numeral (n + 1) := by
   simpa using numeral_add_numeral (M := M) n 1
 
 /--
@@ -151,4 +157,11 @@ lemma cobhamLT_numeral_iff {n : ℕ} : CobhamLT x (numeral n) ↔ x < numeral n 
   have := not_numeral_lt_self (M := M) n
   grind [CobhamLT]
 
-end FFL.FirstOrder.Arithmetic.R0
+lemma cobhamLT_numeral_iff_exists {n : ℕ} : x ◃ numeral n ↔ ∃ i < n, x = numeral i := by
+  simp [cobhamLT_numeral_iff, lt_numeral_iff, Fin.exists_iff]
+
+@[simp, grind =]
+lemma nat_cobhamLE_iff {m n : ℕ} : m ⊴ n ↔ m ≤ n := by
+  simpa using numeral_cobhamLE_numeral_iff (M := ℕ) (k := m) (n := n)
+
+end FFL.FirstOrder.Arithmetic

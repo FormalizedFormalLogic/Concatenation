@@ -740,15 +740,15 @@ lemma weakRepresentation_spec {γ : ArithmeticSemisentence 2} {f : ℕ → ℕ}
   thinRepresentation_spec (transportedRepresentation_spec hγ) n
 
 /--
-`weakRepresentation (Arithmetic.R0.cobhamRepresentation f)` weakly represents the computable
+`weakRepresentation (Arithmetic.cobhamRepresentation f)` weakly represents the computable
 function `f` in $\mathsf{TC}$.
 - [Sve08, §3.3]
 - [Gan09, §3, Theorem 5]
 -/
 theorem weakRepresentation_cobhamRepresentation_spec {f : ℕ → ℕ} (hf : Computable f) (n : ℕ) :
-    𝗧𝗖 ⊢ “∀ y, !(weakRepresentation (Arithmetic.R0.cobhamRepresentation f))
+    𝗧𝗖 ⊢ “∀ y, !(weakRepresentation (Arithmetic.cobhamRepresentation f))
       !!(Rew.bShift (numeralTerm n)) y ↔ y = !!(Rew.bShift (numeralTerm (f n)))” :=
-  weakRepresentation_spec (Arithmetic.R0.cobhamRepresentation_spec hf) n
+  weakRepresentation_spec (Arithmetic.cobhamRepresentation_spec hf) n
 
 end representation
 

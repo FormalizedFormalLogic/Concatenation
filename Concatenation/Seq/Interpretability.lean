@@ -520,9 +520,9 @@ lemma snocGraph_numeral (s t : FiniteSequence) :
     SnocGraph (numeral (s.snoc t).code : M) (numeral s.code) (numeral t.code) := by
   by_cases h : t.code < s.code
   · simp [SnocGraph, FiniteSequence.code, Nat.pair, h, numeral_mul_numeral, numeral_add_numeral,
-      R0.numeral_add_one]
+      numeral_add_one']
   · simp [SnocGraph, FiniteSequence.code, Nat.pair, h, numeral_mul_numeral, numeral_add_numeral,
-      R0.numeral_add_one]
+      numeral_add_one']
 
 lemma concatGraph_numeral (s t : FiniteSequence) :
     ConcatGraph (numeral (s ++ t).code : M) (numeral s.code) (numeral t.code) := by

@@ -1,8 +1,7 @@
 module
 
+public import Concatenation.ToFoundation.Arithmetic.Pairing
 public import Concatenation.ToFoundation.Arithmetic.R0.Cobham
-public import Mathlib.Tactic.Linarith
-public import Mathlib.Tactic.Ring
 
 /-!
 # Definable cuts in models of $\mathsf{R}_0$
@@ -13,67 +12,11 @@ closed under addition and multiplication and on which a definable family of sets
 
 @[expose] public section
 
-namespace FFL.FirstOrder.Arithmetic.R0
+namespace FFL.FirstOrder.Arithmetic.R0.Visser
 
 open ORingStructure
 
 variable {M : Type*} [ORingStructure M] {x y z : M}
-
-section pair
-
-/-- The pairing $(a + b + 1) (a + b + 1) + a$. -/
-def mkPair (a b : M) : M := (a + b + 1) * (a + b + 1) + a
-
-/-- The pairing $(a + b + 1) (a + b + 1) + a$. -/
-def mkPairTerm : ClosedSemiterm ℒₒᵣ 2 := ‘a b. (a + b + 1) * (a + b + 1) + a’
-
-@[simp]
-lemma val_subst_mkPairTerm {n : ℕ} {e : Fin n → M} {f : Empty → M}
-    {t u : ClosedSemiterm ℒₒᵣ n} :
-    (Rew.subst ![t, u] mkPairTerm).val e f = mkPair (t.val e f) (u.val e f) := by
-  simp [mkPairTerm, mkPair]
-
-@[simp, grind =]
-lemma mkPair_inj {a b a' b' : ℕ} : mkPair a b = mkPair a' b' ↔ a = a' ∧ b = b' := by
-  constructor
-  · intro h
-    have : a + b = a' + b' := by
-      simp only [mkPair] at h
-      rcases lt_trichotomy (a + b) (a' + b') with h' | h' | h'
-      · nlinarith
-      · exact h'
-      · nlinarith
-    simp only [mkPair, this] at h
-    omega
-  · rintro ⟨rfl, rfl⟩
-    rfl
-
-@[simp, grind .]
-lemma mkPair_pos (a b : ℕ) : 0 < mkPair a b := by
-  simp [mkPair]
-
-@[simp, grind .]
-lemma left_lt_mkPair (a b : ℕ) : a < mkPair a b := by
-  simp [mkPair]
-
-@[simp, grind .]
-lemma right_lt_mkPair (a b : ℕ) : b < mkPair a b := by
-  simp only [mkPair]
-  nlinarith
-
-@[grind ←]
-lemma mkPair_le_mkPair {a b a' b' : ℕ} (ha : a ≤ a') (hb : b ≤ b') :
-    mkPair a b ≤ mkPair a' b' := by
-  simp only [mkPair]
-  gcongr
-
-@[simp, grind =]
-lemma mkPair_numeral [M↓[ℒₒᵣ] ⊧* 𝗥₀] (a b : ℕ) :
-    mkPair (numeral a : M) (numeral b) = numeral (mkPair a b) := by
-  have h : (1 : M) = numeral 1 := by simp
-  simp only [mkPair, h, numeral_add_numeral, numeral_mul_numeral]
-
-end pair
 
 section isTame
 
@@ -160,9 +103,6 @@ end isTame
 
 section agree
 
-@[inherit_doc]
-scoped infix:50 " ◃ " => CobhamLT
-
 variable {ψ : ArithmeticSemisentence 2} {e i j k m n : M}
 
 /-- The sets defined by `ψ` with the parameters `i` and `j` agree below `m`. -/
@@ -238,9 +178,6 @@ lemma eval_isGood : M ⊧/![x] (isGood φ ψ) ↔ IsGood φ ψ x := by
   simp [isGood, isGood_iff]
 
 variable [M↓[ℒₒᵣ] ⊧* 𝗥₀]
-
-lemma cobhamLT_numeral_iff_exists {n : ℕ} : x ◃ numeral n ↔ ∃ i < n, x = numeral i := by
-  simp [cobhamLT_numeral_iff, lt_numeral_iff, Fin.exists_iff]
 
 lemma agree_numeral_or (n : ℕ) (i j : M) : Agree ψ (numeral n) i j ∨
     ∃ e, e ◃ numeral n ∧ (LeftAt ψ e i j ∨ LeftAt ψ e j i) := by
@@ -391,9 +328,6 @@ def isMulCut (φ : ArithmeticSemisentence 1) (ψ : ArithmeticSemisentence 2) :
 @[simp]
 lemma eval_isMulCut : M ⊧/![x] (isMulCut φ ψ) ↔ IsMulCut φ ψ x := by
   simp [isMulCut, IsMulCut]
-
-@[simp, grind .]
-lemma cobhamLE_refl (x : M) : x ⊴ x := Or.inl <| Or.inl rfl
 
 namespace IsGood
 
@@ -596,7 +530,7 @@ include hφ
 
 lemma isAddCut_one : IsAddCut φ ψ (1 : M) := by
   apply And.intro _ fun y hy ↦ hy.add_one hno
-  have h : (0 : M) + 1 = 1 := by simpa using numeral_add_one (M := M) 0
+  have h : (0 : M) + 1 = 1 := by simpa using numeral_add_one' (M := M) 0
   exact h ▸ (hasPath_zero hφ).add_one hno
 
 lemma isMulCut_numeral (n : ℕ) : IsMulCut φ ψ (numeral n : M) := by
@@ -615,4 +549,4 @@ end
 
 end path
 
-end FFL.FirstOrder.Arithmetic.R0
+end FFL.FirstOrder.Arithmetic.R0.Visser

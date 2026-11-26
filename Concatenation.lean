@@ -19,6 +19,7 @@ public import Concatenation.TC.Empty
 public import Concatenation.TC.Interpretability
 public import Concatenation.TC.Sequence
 public import Concatenation.TC.Substring
+public import Concatenation.ToFoundation.Arithmetic.Pairing
 public import Concatenation.ToFoundation.Arithmetic.PeanoMinus
 public import Concatenation.ToFoundation.Arithmetic.Q
 public import Concatenation.ToFoundation.Arithmetic.R
@@ -36,9 +37,11 @@ public import Concatenation.ToFoundation.Interpretability.Basic
 public import Concatenation.ToFoundation.Interpretability.DefinitionalEquivalence
 public import Concatenation.ToFoundation.Interpretability.LocallyFinitelySatisfiable
 public import Concatenation.ToFoundation.Interpretability.Undecidability
+public import Concatenation.ToFoundation.Naming
 public import Concatenation.ToMathlib.AtomicPairing
 public import Concatenation.ToMathlib.Encodable
 public import Concatenation.ToMathlib.FreeSemigroup
+public import Concatenation.ToMathlib.Nat
 public import Concatenation.ToMathlib.NonnegSpecialLinearGroup
 public import Concatenation.WTC.Arithmetic
 public import Concatenation.WTC.Basic

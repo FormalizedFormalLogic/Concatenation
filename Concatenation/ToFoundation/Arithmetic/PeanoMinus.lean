@@ -57,9 +57,7 @@ lemma squarePair_inj : squarePair x y = squarePair x' y' ↔ x = x' ∧ y = y' :
 
 end FFL.FirstOrder.Arithmetic
 
-namespace FFL.FirstOrder.Arithmetic.RobinsonQ
-
-open DirectTranslation
+namespace FFL.FirstOrder.Arithmetic
 
 variable {M : Type*} [ORingStructure M] {a b c d x y z : M}
 
@@ -298,7 +296,7 @@ protected lemma one : IsAdditive (1 : M) where
 
 end IsAdditive
 
-protected lemma mul_one (hx : 0 + x = x) : x * 1 = x := by
+lemma mul_one_of_zero_add (hx : 0 + x = x) : x * 1 = x := by
   rw [← zero_add_one, Arithmetic.mul_succ, Arithmetic.mul_zero, hx]
 
 namespace IsPremultiplicative
@@ -313,9 +311,9 @@ protected lemma zero : IsPremultiplicative (0 : M) where
 
 protected lemma one : IsPremultiplicative (1 : M) where
   toIsAdditive := .one
-  isAdditive_mul u hu := by rwa [RobinsonQ.mul_one hu.zero_add]
-  mul_add u v hu := by rw [RobinsonQ.mul_one hu.zero_add, Arithmetic.mul_succ]
-  add_mul u v hu hv := by simp only [RobinsonQ.mul_one, (hu.add hv).zero_add, hu.zero_add,
+  isAdditive_mul u hu := by rwa [mul_one_of_zero_add hu.zero_add]
+  mul_add u v hu := by rw [mul_one_of_zero_add hu.zero_add, Arithmetic.mul_succ]
+  add_mul u v hu hv := by simp only [mul_one_of_zero_add, (hu.add hv).zero_add, hu.zero_add,
     hv.zero_add]
   zero_mul := by simp
   one_mul := by simp
@@ -373,9 +371,9 @@ protected lemma zero : IsMultiplicative (0 : M) where
 protected lemma one : IsMultiplicative (1 : M) where
   toIsPremultiplicative := .one
   mul_assoc u v hu hv := by
-    rw [RobinsonQ.mul_one hv.zero_add, RobinsonQ.mul_one (hv.isAdditive_mul u hu).zero_add]
-  mul_comm u hu _ := by rw [RobinsonQ.mul_one hu.zero_add, hu.one_mul]
-  isPremultiplicative_mul u hu := by rwa [RobinsonQ.mul_one hu.zero_add]
+    rw [mul_one_of_zero_add hv.zero_add, mul_one_of_zero_add (hv.isAdditive_mul u hu).zero_add]
+  mul_comm u hu _ := by rw [mul_one_of_zero_add hu.zero_add, hu.one_mul]
+  isPremultiplicative_mul u hu := by rwa [mul_one_of_zero_add hu.zero_add]
 
 protected lemma add (hx : IsMultiplicative x) (hy : IsMultiplicative y) :
     IsMultiplicative (x + y) where
@@ -410,6 +408,10 @@ lemma of_add (hx : IsMultiplicative x) (h : IsMultiplicative (z + x)) : IsMultip
 end IsMultiplicative
 
 end
+
+namespace RobinsonQ
+
+open DirectTranslation
 
 /--
 The translation of the language of arithmetic into $\mathsf{Q}$ on the multiplicative elements:
@@ -505,7 +507,7 @@ protected lemma add_comm : a + b = b + a :=
 protected lemma mul_zero : a * 0 = 0 := Model.ext <| Arithmetic.mul_zero (a : M)
 
 protected lemma mul_one : a * 1 = a :=
-  Model.ext <| RobinsonQ.mul_one (isMultiplicative_val a).zero_add
+  Model.ext <| mul_one_of_zero_add (isMultiplicative_val a).zero_add
 
 protected lemma mul_assoc : a * b * c = a * (b * c) :=
   Model.ext <| (isMultiplicative_val c).mul_assoc a b (isMultiplicative_val a).toIsAdditive
@@ -662,4 +664,6 @@ instance : 𝗤 ⊳ 𝗣𝗔⁻ where
   interpret_theory φ hφ := complete.{0} _ _ fun _ _ _ ↦
     Model.translate_iff.mpr <| models_theory_iff.mp inferInstance φ hφ
 
-end FFL.FirstOrder.Arithmetic.RobinsonQ
+end RobinsonQ
+
+end FFL.FirstOrder.Arithmetic

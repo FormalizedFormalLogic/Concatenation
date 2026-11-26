@@ -4,6 +4,9 @@ public import Concatenation.BT.Basic
 public import Concatenation.Biteral
 public import Concatenation.Coding
 public import Concatenation.D.Basic
+public import Concatenation.DecoratedOrder.Basic
+public import Concatenation.DecoratedOrder.Regular
+public import Concatenation.DecoratedOrder.TallyLength
 public import Concatenation.F.Basic
 public import Concatenation.F.Interpretability
 public import Concatenation.Language
@@ -42,6 +45,7 @@ public import Concatenation.ToMathlib.AtomicPairing
 public import Concatenation.ToMathlib.Encodable
 public import Concatenation.ToMathlib.FreeSemigroup
 public import Concatenation.ToMathlib.Nat
+public import Concatenation.ToMathlib.NonemptyLowerSet
 public import Concatenation.ToMathlib.NonnegSpecialLinearGroup
 public import Concatenation.WTC.Arithmetic
 public import Concatenation.WTC.Basic

@@ -4,6 +4,21 @@
 # The keys are the citation keys used in docstrings, e.g. `- [Grz05, §3]`;
 # see docs/conventions.md. Entries are sorted by key.
 
+CPRUV10:
+  type: Article
+  title: Decorated Linear Order Types and the Theory of Concatenation
+  author:
+  - Čačić, Vedran
+  - Pudlák, Pavel
+  - Restall, Greg
+  - Urquhart, Alasdair
+  - Visser, Albert
+  date: 2010
+  parent:
+    type: Anthology
+    title: Logic Colloquium 2007
+    publisher: Cambridge University Press
+
 Dam17:
   type: Article
   title: From Strings to Sets

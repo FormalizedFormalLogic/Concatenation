@@ -200,6 +200,28 @@ lemma Option.append_none (x : Option M) : x ++ none = x := by cases x <;> rfl
 @[simp]
 lemma Option.some_append_some (x y : M) : (some x ++ some y : Option M) = some (x ++ y) := rfl
 
+/-- The editor axiom passes to the strings of `M` together with an empty string. -/
+lemma Option.editor {x y z w : Option M}
+    (H : ∀ x y z w : M, x ++ y = z ++ w →
+      (x = z ∧ y = w) ∨ ∃ u, (x ++ u = z ∧ y = u ++ w) ∨ (x = z ++ u ∧ u ++ y = w))
+    (h : x ++ y = z ++ w) : ∃ u, (x ++ u = z ∧ y = u ++ w) ∨ (x = z ++ u ∧ u ++ y = w) := by
+  rcases x with _ | x <;> rcases z with _ | z
+  · use none
+    simpa using h
+  · use some z
+    exact Or.inl ⟨by simp, by simpa using h⟩
+  · use some x
+    exact Or.inr ⟨by simp, by simpa using h⟩
+  rcases y with _ | y <;> rcases w with _ | w
+  · use none
+    simpa using h
+  · use some w
+    exact Or.inr ⟨by simpa using h, by simp⟩
+  · use some y
+    exact Or.inl ⟨by simpa using h, by simp⟩
+  · rcases H _ _ _ _ (Option.some.inj h) with ⟨rfl, rfl⟩ | ⟨u, ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩⟩ <;>
+      [use none; use some u; use some u] <;> simp
+
 /--
 The strings of a model of $\mathsf{TC}$ together with an empty string form a model of $\mathsf{TC}$
 with the empty string.
@@ -218,22 +240,7 @@ instance [M↓[ℒ⌢] ⊧* 𝗧𝗖] : (Option M)↓[ℒ⌢ₑ] ⊧* 𝗧𝗖�
   case editor =>
     suffices ∀ x y z w : Option M, x ++ y = z ++ w →
         ∃ u, (x ++ u = z ∧ y = u ++ w) ∨ (x = z ++ u ∧ u ++ y = w) by simpa [models_iff]
-    rintro (_ | x) y (_ | z) w h
-    · use none
-      simpa using h
-    · use some z
-      exact Or.inl ⟨by simp, by simpa using h⟩
-    · use some x
-      exact Or.inr ⟨by simp, by simpa using h⟩
-    rcases y with _ | y <;> rcases w with _ | w
-    · use none
-      simpa using h
-    · use some w
-      exact Or.inr ⟨by simpa using h, by simp⟩
-    · use some y
-      exact Or.inl ⟨by simpa using h, by simp⟩
-    · rcases editor (Option.some.inj h) with ⟨rfl, rfl⟩ | ⟨u, ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩⟩ <;>
-        [use none; use some u; use some u] <;> simp
+    exact fun _ _ _ _ ↦ Option.editor fun _ _ _ _ ↦ Concatenation.editor
   case zeroNeEmpty => simp [models_iff, Option.empty_eq_none, Option.zero_eq_some]
   case oneNeEmpty => simp [models_iff, Option.empty_eq_none, Option.one_eq_some]
   case zeroAtom =>

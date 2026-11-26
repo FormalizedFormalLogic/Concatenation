@@ -4,6 +4,7 @@ public import Concatenation.BT.Basic
 public import Concatenation.Biteral
 public import Concatenation.Coding
 public import Concatenation.D.Basic
+public import Concatenation.D.LeftCancellation
 public import Concatenation.F.Basic
 public import Concatenation.F.Interpretability
 public import Concatenation.Language
@@ -19,6 +20,7 @@ public import Concatenation.TC.Empty
 public import Concatenation.TC.Interpretability
 public import Concatenation.TC.Sequence
 public import Concatenation.TC.Substring
+public import Concatenation.ToFoundation.Arithmetic.IQ
 public import Concatenation.ToFoundation.Arithmetic.Pairing
 public import Concatenation.ToFoundation.Arithmetic.PeanoMinus
 public import Concatenation.ToFoundation.Arithmetic.Q
@@ -36,6 +38,7 @@ public import Concatenation.ToFoundation.Decidability
 public import Concatenation.ToFoundation.Interpretability.Basic
 public import Concatenation.ToFoundation.Interpretability.DefinitionalEquivalence
 public import Concatenation.ToFoundation.Interpretability.LocallyFinitelySatisfiable
+public import Concatenation.ToFoundation.Interpretability.Relative
 public import Concatenation.ToFoundation.Interpretability.Undecidability
 public import Concatenation.ToFoundation.Naming
 public import Concatenation.ToMathlib.AtomicPairing

@@ -298,12 +298,19 @@ def IsSuffix (x y : V) : Prop := x = y ∨ ∃ u, y = u ++ x
 scoped infix:50 " ◧ " => IsSuffix
 
 /-- `x` is a suffix of `y`. -/
-def isSuffix : Semisentence ℒ⌢ 2 := “x y. x = y ∨ ∃ u, y = u ⌢ x”
+def isSuffix {L : Language} [L.Eq] [L.Concat] : Semisentence L 2 := “x y. x = y ∨ ∃ u, y = u ⌢ x”
 
-instance isSuffix_defined : ℒ⌢-relation[V] IsSuffix via isSuffix :=
+section
+
+variable {L : Language} [L.Concat] [L.Eq] [Tarski.Structure L V] [Tarski.Structure.Concat L V]
+  [Tarski.Structure.Eq L V]
+
+instance isSuffix_defined : L-relation[V] IsSuffix via isSuffix :=
   ⟨fun v ↦ by simp [isSuffix, IsSuffix]⟩
 
-instance isSuffix_definable : ℒ⌢-relation[V] IsSuffix := isSuffix_defined.to_definable
+instance isSuffix_definable : L-relation[V] IsSuffix := isSuffix_defined.to_definable
+
+end
 
 /--
 `x` is a `c`-tally: every atom that is a substring of `x` is `c`.

@@ -118,14 +118,6 @@ section
 
 variable {V : Type*} [ConcatenationEmptyStructure V] {x y z w : V}
 
-/-- `x` is a suffix of `y`, in the language with the empty string. -/
-def isSuffixEmpty : Semisentence ℒ⌢ₑ 2 := “x y. x = y ∨ ∃ u, y = u ⌢ x”
-
-instance isSuffixEmpty_defined : ℒ⌢ₑ-relation[V] IsSuffix via isSuffixEmpty :=
-  ⟨fun v ↦ by simp [isSuffixEmpty, IsSuffix]⟩
-
-instance isSuffixEmpty_definable : ℒ⌢ₑ-relation[V] IsSuffix := isSuffixEmpty_defined.to_definable
-
 /--
 `x` is tame: every suffix of a string that ends with `x` is comparable with `x`.
 - [Hor11, §2, Theorem 2.12]
@@ -139,7 +131,7 @@ def IsTame (x : V) : Prop := ∀ u y, y ◧ u ++ x → y ◧ x ∨ x ◧ y
 - [Gan09, §4, Lemma 8]
 -/
 def isTame : Semisentence ℒ⌢ₑ 1 :=
-  “x. ∀ u y, !isSuffixEmpty y (u ⌢ x) → !isSuffixEmpty y x ∨ !isSuffixEmpty x y”
+  “x. ∀ u y, !isSuffix y (u ⌢ x) → !isSuffix y x ∨ !isSuffix x y”
 
 instance isTame_defined : ℒ⌢ₑ-predicate[V] IsTame via isTame := ⟨fun v ↦ by simp [isTame, IsTame]⟩
 
@@ -149,7 +141,7 @@ instance isTame_definable : ℒ⌢ₑ-predicate[V] IsTame := isTame_defined.to_d
 def IsHereditarilyTame (x : V) : Prop := ∀ y, y ◧ x → IsTame y
 
 /-- Every suffix of `x` is tame. -/
-def isHereditarilyTame : Semisentence ℒ⌢ₑ 1 := “x. ∀ y, !isSuffixEmpty y x → !isTame y”
+def isHereditarilyTame : Semisentence ℒ⌢ₑ 1 := “x. ∀ y, !isSuffix y x → !isTame y”
 
 instance isHereditarilyTame_defined : ℒ⌢ₑ-predicate[V] IsHereditarilyTame via isHereditarilyTame :=
   ⟨fun v ↦ by simp [isHereditarilyTame, IsHereditarilyTame]⟩

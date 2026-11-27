@@ -159,9 +159,11 @@ lemma TCISigma.models_of_le {s' : ℕ} [V↓[ℒ⌢ₑ] ⊧* TCISigma s'] (hs : 
 Notation induction for a predicate defined by a prenex $\Sigma_s$ formula with parameters.
 - [HH14, Question 3]
 -/
+@[elab_as_elim]
 lemma TCISigma.notation_induction [V↓[ℒ⌢ₑ] ⊧* TCISigma s] {P : V → Prop}
     (hP : PrenexDefinable ℬₛ 𝚺 s fun v : Fin 1 → V ↦ P (v 0)) (empty : P ∅)
-    (append : ∀ x, P x → P (x ++ 0) ∧ P (x ++ 1)) (x : V) : P x := by
+    (append : ∀ x, P x → P (x ++ 0) ∧ P (x ++ 1)) : ∀ x, P x := by
+  intro x
   have : Nonempty V := ⟨∅⟩
   obtain ⟨e, φ, hφ, H⟩ := hP.exists_eval_iff
   have h := Theory.models (T := TCISigma s) V (IsTCISigmaAxiom.notationInduction φ hφ)
@@ -169,6 +171,90 @@ lemma TCISigma.notation_induction [V↓[ℒ⌢ₑ] ⊧* TCISigma s] {P : V → P
   have H' (y : V) : P y ↔ φ.Eval ![y] e := by simpa using H ![y]
   simp only [H'] at empty append ⊢
   exact h e empty append x
+
+section
+
+variable [V↓[ℒ⌢ₑ] ⊧* TCISigma 1] {c u v w x y z : V}
+
+omit [V↓[ℒ⌢ₑ] ⊧* TCISigma 1] in
+@[simp]
+lemma val_substringOperator_empty {v : Fin 2 → V} :
+    (substringOperator ℒ⌢ₑ).val v ↔ IsSubstring (v 0) (v 1) := by
+  simp [substringOperator, Semiformula.Operator.val]
+
+@[elab_as_elim]
+lemma TCISigma.delta0_induction {P : V → Prop} (hP : 𝚺-[ℬₛ, 0].DefinablePred P) (empty : P ∅)
+    (append : ∀ x, P x → P (x ++ 0) ∧ P (x ++ 1)) : ∀ x, P x :=
+  have : Nonempty V := ⟨∅⟩
+  TCISigma.notation_induction (s := 1) (.of_delta0 hP) empty append
+
+namespace TCISigma
+
+lemma eq_empty_or_eq_append_isAtom (x : V) : x = ∅ ∨ ∃ u c, IsAtom c ∧ x = u ++ c := by
+  have : ∀ x : V, x = ∅ ∨ ∃ u, IsSubstring u x ∧ (x = u ++ 0 ∨ x = u ++ 1) := by
+    apply delta0_induction
+    · exact .mkPolarity (ℬ := ℬₛ) (Γ := 𝚺) (m := 0) “x. x = ⋆ ∨ ∃¹[%(substringOperator _) #0 x]
+        (x = #0 ⌢ !!(op(0).const) ∨ x = #0 ⌢ !!(op(1).const))” (by simp) (fun v ↦ by simp)
+    · simp
+    · exact fun x _ ↦ ⟨.inr ⟨x, by simp⟩, .inr ⟨x, by simp⟩⟩
+  rcases this x with h | ⟨u, -, h | h⟩
+  · exact .inl h
+  · exact .inr ⟨u, 0, by simp, h⟩
+  · exact .inr ⟨u, 1, by simp, h⟩
+
+lemma eq_empty_or_eq_isAtom_append (x : V) : x = ∅ ∨ ∃ c u, IsAtom c ∧ x = c ++ u := by
+  have : ∀ x : V, x = ∅ ∨ ∃ u, IsSubstring u x ∧ (x = 0 ++ u ∨ x = 1 ++ u) := by
+    apply delta0_induction
+    · exact .mkPolarity (ℬ := ℬₛ) (Γ := 𝚺) (m := 0) “x. x = ⋆ ∨ ∃¹[%(substringOperator _) #0 x]
+        (x = !!(op(0).const) ⌢ #0 ∨ x = !!(op(1).const) ⌢ #0)” (by simp) (fun v ↦ by simp)
+    · simp
+    · have H (c : V) (hc : IsAtom c) : ∀ x : V, (x = ∅ ∨ ∃ u, IsSubstring u x ∧ (x = 0 ++ u ∨ x = 1 ++ u)) →
+          ∃ u, IsSubstring u (x ++ c) ∧ (x ++ c = 0 ++ u ∨ x ++ c = 1 ++ u) := by
+        rintro x (rfl | ⟨u, -, rfl | rfl⟩)
+        · rcases hc with rfl | rfl <;> exact ⟨∅, by simp⟩
+        · exact ⟨u ++ c, by simp [TCEmpty.append_assoc]⟩
+        · exact ⟨u ++ c, by simp [TCEmpty.append_assoc]⟩
+      exact fun x ih ↦ ⟨.inr (H 0 (by simp) x ih), .inr (H 1 (by simp) x ih)⟩
+  rcases this x with h | ⟨u, -, h | h⟩
+  · exact .inl h
+  · exact .inr ⟨0, u, by simp, h⟩
+  · exact .inr ⟨1, u, by simp, h⟩
+
+lemma append_right_cancel (h : x ++ z = y ++ z) : x = y := by
+  revert h
+  revert z
+  apply delta0_induction (P := fun z ↦ x ++ z = y ++ z → x = y) _ (by simp)
+  · intro z ih
+    constructor <;> intro h <;> apply ih <;>
+      [exact (TCEmpty.eq_and_eq_of_append_isAtom isAtom_zero isAtom_zero <| by
+        simpa [TCEmpty.append_assoc] using h).1;
+      exact (TCEmpty.eq_and_eq_of_append_isAtom isAtom_one isAtom_one <| by
+        simpa [TCEmpty.append_assoc] using h).1]
+  · exact .mkPolarity (ℬ := ℬₛ) (Γ := 𝚺) (m := 0) “z. &x ⌢ z = &y ⌢ z → &x = &y” (by simp) (fun v ↦ by simp)
+
+lemma eq_empty_of_append_eq_self (h : x ++ w = x) : w = ∅ := by
+  have : ∀ x : V, ∀ w, IsSubstring w x → x ++ w = x → w = ∅ := by
+    apply delta0_induction
+    · exact .mkPolarity (ℬ := ℬₛ) (Γ := 𝚺) (m := 0) “x. ∀¹[%(substringOperator _) #0 x] (x ⌢ #0 = x → #0 = ⋆)”
+        (by simp) (fun v ↦ by simp)
+    · simp
+    · have H : ∀ x c : V, IsAtom c → (∀ w, IsSubstring w x → x ++ w = x → w = ∅) →
+          ∀ w, IsSubstring w (x ++ c) → x ++ c ++ w = x ++ c → w = ∅ := by
+        intro x c hc ih w _ h
+        by_contra hw
+        rcases eq_empty_or_eq_append_isAtom w with rfl | ⟨w', d, hd, rfl⟩
+        · exact hw rfl
+        obtain ⟨h₁, -⟩ := TCEmpty.eq_and_eq_of_append_isAtom (x := x ++ c ++ w') (y := x) hd hc <| by
+          simpa [TCEmpty.append_assoc] using h
+        have h₂ : x ++ (c ++ w') = x := by simpa [TCEmpty.append_assoc] using h₁
+        have h₃ := ih _ (h₂ ▸ isSubstring_append_right x (c ++ w')) h₂
+        exact TCEmpty.isAtom_ne_empty hc (TCEmpty.eq_empty_of_append_eq_empty h₃).1
+      exact fun x ih ↦ ⟨H x 0 isAtom_zero ih, H x 1 isAtom_one ih⟩
+  exact this x w (h ▸ isSubstring_append_right x w) h
+
+end TCISigma
+
+end
 
 end notationInduction
 

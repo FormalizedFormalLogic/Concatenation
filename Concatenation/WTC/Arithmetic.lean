@@ -463,8 +463,7 @@ $\mathsf{WTC}$ interprets $\mathsf{R}_0$.
 -/
 instance : 𝗪𝗧𝗖 ⊳ 𝗥₀ where
   trln := WTC.arithmeticTranslation
-  interpret_theory φ hφ := complete.{0} _ _ fun _ _ _ ↦
-    Model.translate_iff.mpr <| models_theory_iff.mp inferInstance φ hφ
+  interpret_theory _ hφ := complete.{0} _ _ fun _ _ _ ↦ DirectTranslation.models_translate_of_mem hφ
 
 end arithmetic
 
@@ -686,8 +685,8 @@ $\mathsf{R}_0$ interprets the weak theory of concatenation with the letters `α`
 -/
 noncomputable instance : 𝗥₀ ⊳ 𝗪𝗧𝗖[α] where
   trln := codeTranslation α
-  interpret_theory φ hφ := Arithmetic.complete.{0} _ _ fun _ _ _ ↦
-    Model.translate_iff.mpr <| models_theory_iff.mp inferInstance φ hφ
+  interpret_theory _ hφ := Arithmetic.complete.{0} _ _ fun _ _ _ ↦
+    DirectTranslation.models_translate_of_mem hφ
 
 /--
 $\mathsf{R}_0$ interprets $\mathsf{WTC}$.

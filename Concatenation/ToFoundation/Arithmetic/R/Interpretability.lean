@@ -1,6 +1,7 @@
 module
 
 public import AlphaCentauri.Interpretability.Basic
+public import Concatenation.ToFoundation.Interpretability.Basic
 public import Concatenation.ToFoundation.Arithmetic.R
 public import Concatenation.ToFoundation.Arithmetic.R0.Cobham
 public import Concatenation.ToFoundation.Arithmetic.R0.Undecidability
@@ -135,8 +136,7 @@ $\mathsf{R}_0$ interprets $\mathsf{R}$.
 -/
 instance : 𝗥₀ ⊳ 𝗥 where
   trln := R0.cobhamTranslation
-  interpret_theory φ hφ := complete.{0} _ _ fun _ _ _ ↦
-    Model.translate_iff.mpr <| models_theory_iff.mp inferInstance φ hφ
+  interpret_theory _ hφ := complete.{0} _ _ fun _ _ _ ↦ DirectTranslation.models_translate_of_mem hφ
 
 instance : 𝗥 ⊳ 𝗥₀ := DirectInterpretation.ofWeakerThan 𝗥 𝗥₀
 

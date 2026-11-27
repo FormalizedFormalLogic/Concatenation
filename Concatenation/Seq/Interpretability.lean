@@ -381,8 +381,8 @@ end Sequence
 /-- $\mathsf{WSeq}$ interprets $\mathsf{R}_0$. -/
 instance : 𝗪𝗦𝗲𝗾 ⊳ 𝗥₀ where
   trln := Sequence.arithmeticTranslation
-  interpret_theory φ hφ := Sequence.complete.{0} _ _ fun _ _ _ ↦
-    DirectTranslation.Model.translate_iff.mpr <| models_theory_iff.mp inferInstance φ hφ
+  interpret_theory _ hφ := Sequence.complete.{0} _ _ fun _ _ _ ↦
+    DirectTranslation.models_translate_of_mem hφ
 
 namespace FiniteSequence
 
@@ -620,8 +620,8 @@ end Sequence
 /-- $\mathsf{R}_0$ interprets $\mathsf{WSeq}$. -/
 noncomputable instance : 𝗥₀ ⊳ 𝗪𝗦𝗲𝗾 where
   trln := Sequence.codeTranslation
-  interpret_theory φ hφ := Arithmetic.complete.{0} _ _ fun _ _ _ ↦
-    DirectTranslation.Model.translate_iff.mpr <| models_theory_iff.mp inferInstance φ hφ
+  interpret_theory _ hφ := Arithmetic.complete.{0} _ _ fun _ _ _ ↦
+    DirectTranslation.models_translate_of_mem hφ
 
 /--
 $\mathsf{WSeq}$ and $\mathsf{R}$ are mutually interpretable.

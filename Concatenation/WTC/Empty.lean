@@ -469,8 +469,8 @@ $\mathsf{WTC}$ with the empty string interprets $\mathsf{WTC}$ on the nonempty s
 -/
 instance : 𝗪𝗧𝗖ₑ ⊳ 𝗪𝗧𝗖 where
   trln := nonemptyTranslation 𝗪𝗧𝗖ₑ
-  interpret_theory φ hφ := completeEmpty.{0} _ _ fun _ _ _ ↦
-    Model.translate_iff.mpr <| models_theory_iff.mp inferInstance φ hφ
+  interpret_theory _ hφ := completeEmpty.{0} _ _ fun _ _ _ ↦
+    DirectTranslation.models_translate_of_mem hφ
 
 namespace WTC
 
@@ -683,8 +683,7 @@ $\mathsf{WTC}$ interprets $\mathsf{WTC}$ with the empty string.
 -/
 instance : 𝗪𝗧𝗖 ⊳ 𝗪𝗧𝗖ₑ where
   trln := WTC.emptyTranslation
-  interpret_theory φ hφ := complete.{0} _ _ fun _ _ _ ↦
-    Model.translate_iff.mpr <| models_theory_iff.mp inferInstance φ hφ
+  interpret_theory _ hφ := complete.{0} _ _ fun _ _ _ ↦ DirectTranslation.models_translate_of_mem hφ
 
 /--
 $\mathsf{WTC}$ and $\mathsf{WTC}$ with the empty string are mutually interpretable.

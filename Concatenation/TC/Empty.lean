@@ -170,8 +170,8 @@ $\mathsf{TC}$ with the empty string interprets $\mathsf{TC}$ on the nonempty str
 -/
 instance : 𝗧𝗖ₑ ⊳ 𝗧𝗖 where
   trln := nonemptyTranslation 𝗧𝗖ₑ
-  interpret_theory φ hφ := completeEmpty.{0} _ _ fun _ _ _ ↦
-    Model.translate_iff.mpr <| models_theory_iff.mp inferInstance φ hφ
+  interpret_theory _ hφ := completeEmpty.{0} _ _ fun _ _ _ ↦
+    DirectTranslation.models_translate_of_mem hφ
 
 end nonempty
 
@@ -501,8 +501,7 @@ $\mathsf{TC}$ interprets $\mathsf{TC}$ with the empty string.
 -/
 instance : 𝗧𝗖 ⊳ 𝗧𝗖ₑ where
   trln := emptyTranslation 𝗧𝗖
-  interpret_theory φ hφ := complete.{0} _ _ fun _ _ _ ↦
-    Model.translate_iff.mpr <| models_theory_iff.mp inferInstance φ hφ
+  interpret_theory _ hφ := complete.{0} _ _ fun _ _ _ ↦ DirectTranslation.models_translate_of_mem hφ
 
 /--
 $\mathsf{TC}$ and $\mathsf{TC}$ with the empty string are mutually interpretable.
@@ -956,8 +955,8 @@ The interpretation of $\mathsf{TC}$ in $\mathsf{TC}$ with the empty string by `s
 -/
 abbrev shiftInterpretation : 𝗧𝗖ₑ ⊳ 𝗧𝗖 where
   trln := shiftTranslation
-  interpret_theory φ hφ := completeEmpty.{0} _ _ fun _ _ _ ↦
-    Model.translate_iff.mpr <| models_theory_iff.mp inferInstance φ hφ
+  interpret_theory _ hφ := completeEmpty.{0} _ _ fun _ _ _ ↦
+    DirectTranslation.models_translate_of_mem hφ
 
 /--
 The interpretation of $\mathsf{TC}$ with the empty string in $\mathsf{TC}$ by
@@ -965,8 +964,7 @@ The interpretation of $\mathsf{TC}$ with the empty string in $\mathsf{TC}$ by
 -/
 abbrev emptyShiftInterpretation : 𝗧𝗖 ⊳ 𝗧𝗖ₑ where
   trln := emptyShiftTranslation
-  interpret_theory φ hφ := complete.{0} _ _ fun _ _ _ ↦
-    Model.translate_iff.mpr <| models_theory_iff.mp inferInstance φ hφ
+  interpret_theory _ hφ := complete.{0} _ _ fun _ _ _ ↦ DirectTranslation.models_translate_of_mem hφ
 
 section
 

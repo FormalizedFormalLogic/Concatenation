@@ -530,8 +530,7 @@ $\mathsf{TC}^+$ interprets $\mathsf{Q}$.
 -/
 instance : 𝗧𝗖⁺ ⊳ 𝗤 where
   trln := arithmeticTranslation
-  interpret_theory φ hφ := complete.{0} _ _ fun _ _ _ ↦
-    Model.translate_iff.mpr <| models_theory_iff.mp inferInstance φ hφ
+  interpret_theory _ hφ := complete.{0} _ _ fun _ _ _ ↦ DirectTranslation.models_translate_of_mem hφ
 
 /--
 $\mathsf{TC}$ interprets $\mathsf{Q}$.

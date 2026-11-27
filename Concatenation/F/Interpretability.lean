@@ -294,8 +294,8 @@ $\mathsf{F}$ interprets $\mathsf{TC}$ with the empty string on the hereditarily 
 -/
 instance : 𝗙 ⊳ 𝗧𝗖ₑ where
   trln := tameTranslation
-  interpret_theory φ hφ := completeEmpty.{0} _ _ fun _ _ _ ↦
-    Model.translate_iff.mpr <| models_theory_iff.mp inferInstance φ hφ
+  interpret_theory _ hφ := completeEmpty.{0} _ _ fun _ _ _ ↦
+    DirectTranslation.models_translate_of_mem hφ
 
 /--
 `x` can be cancelled on both sides.
@@ -493,8 +493,8 @@ $\mathsf{TC}$ with the empty string interprets $\mathsf{F}$ on the hereditarily 
 -/
 instance : 𝗧𝗖ₑ ⊳ 𝗙 where
   trln := radicalTranslation
-  interpret_theory φ hφ := completeEmpty.{0} _ _ fun _ _ _ ↦
-    Model.translate_iff.mpr <| models_theory_iff.mp inferInstance φ hφ
+  interpret_theory _ hφ := completeEmpty.{0} _ _ fun _ _ _ ↦
+    DirectTranslation.models_translate_of_mem hφ
 
 /--
 $\mathsf{F}$ interprets $\mathsf{TC}$.

@@ -432,8 +432,7 @@ $\mathsf{TC}$ interprets $\mathsf{TC}^+$ on the thin strings.
 -/
 instance : 𝗧𝗖 ⊳ 𝗧𝗖⁺ where
   trln := thinTranslation
-  interpret_theory φ hφ := complete.{0} _ _ fun _ _ _ ↦
-    Model.translate_iff.mpr <| models_theory_iff.mp inferInstance φ hφ
+  interpret_theory _ hφ := complete.{0} _ _ fun _ _ _ ↦ DirectTranslation.models_translate_of_mem hφ
 
 end thin
 

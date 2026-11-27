@@ -1,6 +1,7 @@
 module
 
 public import AlphaCentauri.Interpretability.Basic
+public import Concatenation.ToFoundation.Interpretability.Basic
 public import Foundation.FirstOrder.Arithmetic.Definability.Definable
 public import Foundation.FirstOrder.Arithmetic.PeanoMinus.Basic
 public import Mathlib.Tactic.Ring
@@ -680,8 +681,7 @@ $\mathsf{Q}$ interprets $\mathsf{PA}^-$.
 -/
 instance : 𝗤 ⊳ 𝗣𝗔⁻ where
   trln := multiplicativeTranslation
-  interpret_theory φ hφ := complete.{0} _ _ fun _ _ _ ↦
-    Model.translate_iff.mpr <| models_theory_iff.mp inferInstance φ hφ
+  interpret_theory _ hφ := complete.{0} _ _ fun _ _ _ ↦ DirectTranslation.models_translate_of_mem hφ
 
 end RobinsonQ
 

@@ -365,8 +365,8 @@ $\mathsf{PA}^-$ interprets $\mathsf{TC}$.
 -/
 instance : 𝗣𝗔⁻ ⊳ 𝗧𝗖 where
   trln := matrixTranslation
-  interpret_theory φ hφ := Arithmetic.complete.{0} _ _ fun _ _ _ ↦
-    Model.translate_iff.mpr <| models_theory_iff.mp inferInstance φ hφ
+  interpret_theory _ hφ := Arithmetic.complete.{0} _ _ fun _ _ _ ↦
+    DirectTranslation.models_translate_of_mem hφ
 
 end matrix
 

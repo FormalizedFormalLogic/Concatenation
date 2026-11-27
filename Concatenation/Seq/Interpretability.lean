@@ -16,27 +16,6 @@ $\mathsf{R}_0$ interprets $\mathsf{WSeq}$ with numerals for the sequences.
 
 namespace FFL.FirstOrder
 
-namespace FiniteSequence
-
-/-- The sequence of `n` empty sequences. -/
-def tally : ℕ → FiniteSequence
-  | 0 => nil
-  | n + 1 => (tally n).snoc nil
-
-@[simp]
-lemma tally_append_tally (m : ℕ) : ∀ n, tally m ++ tally n = tally (m + n)
-  | 0 => rfl
-  | n + 1 => by simp [tally, tally_append_tally m n]
-
-lemma tally_injective : Function.Injective tally
-  | 0, 0, _ => rfl
-  | m + 1, n + 1, h => by simpa using tally_injective (FiniteSequence.snoc.inj h).1
-
-@[simp]
-lemma tally_inj {m n : ℕ} : tally m = tally n ↔ m = n := tally_injective.eq_iff
-
-end FiniteSequence
-
 namespace Sequence
 
 open DirectTranslation FiniteSequence SequenceStructure
@@ -381,71 +360,6 @@ instance : 𝗪𝗦𝗲𝗾 ⊳ 𝗥₀ where
   trln := Sequence.arithmeticTranslation
   interpret_theory _ hφ := Sequence.complete.{0} _ _ fun _ _ _ ↦
     DirectTranslation.models_translate_of_mem hφ
-
-namespace FiniteSequence
-
-open Encodable Denumerable
-
-/-- The code of a sequence. -/
-def code : FiniteSequence → ℕ
-  | nil => 0
-  | .snoc s t => Nat.pair t.code s.code + 1
-
-lemma code_injective : Function.Injective code := by
-  intro s
-  induction s with
-  | nil => rintro (_ | _) <;> simp [code]
-  | snoc s t hs ht =>
-    rintro (_ | ⟨s', t'⟩)
-    · simp [code]
-    · simp only [code, Nat.add_right_cancel_iff, Nat.pair_eq_pair, snoc.injEq, and_imp]
-      exact fun h₁ h₂ ↦ ⟨hs h₂, ht h₁⟩
-
-@[simp]
-lemma code_inj {s t : FiniteSequence} : s.code = t.code ↔ s = t := code_injective.eq_iff
-
-lemma code_surjective : Function.Surjective code := by
-  intro n
-  induction n using Nat.strongRec with
-  | ind n ih =>
-    rcases n with _ | n
-    · use nil
-      rfl
-    · obtain ⟨t, ht⟩ := ih _ <| Nat.lt_succ_of_le n.unpair_left_le
-      obtain ⟨s, hs⟩ := ih _ <| Nat.lt_succ_of_le n.unpair_right_le
-      use s.snoc t
-      simp [code, hs, ht]
-
-lemma code_le_code_append_left (s t : FiniteSequence) : s.code ≤ (s ++ t).code := by
-  induction t with
-  | nil => simp
-  | snoc t u ht =>
-    rw [append_snoc, code]
-    exact ht.trans <| (Nat.right_le_pair _ _).trans <| Nat.le_succ _
-
-lemma code_le_code_append_right (s t : FiniteSequence) : t.code ≤ (s ++ t).code := by
-  induction t with
-  | nil => simp [code]
-  | snoc t u ht =>
-    rw [append_snoc, code, code, Nat.add_le_add_iff_right]
-    rcases ht.eq_or_lt with h | h
-    · rw [h]
-    · exact (Nat.pair_lt_pair_right _ h).le
-
-/-- The code of the concatenation of the sequences coded by `m` and `n`. -/
-def appendCode (m n : ℕ) : ℕ := encode (ofNat (List ℕ) n ++ ofNat (List ℕ) m)
-
-@[simp]
-lemma appendCode_code (s t : FiniteSequence) : appendCode s.code t.code = (s ++ t).code := by
-  induction t with
-  | nil => simp [appendCode, code]
-  | snoc t u ht => simpa [appendCode, code] using ht
-
-lemma primrec₂_appendCode : Primrec₂ appendCode :=
-  Primrec.encode.comp <| Primrec.list_append.comp ((Primrec.ofNat _).comp Primrec.snd)
-    ((Primrec.ofNat _).comp Primrec.fst)
-
-end FiniteSequence
 
 namespace Sequence
 

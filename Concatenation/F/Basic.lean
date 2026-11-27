@@ -42,36 +42,36 @@ instance : 𝗘𝗤 ℒ⌢ₑ ⪯ 𝗙 := Entailment.WeakerThan.ofSubset fun φ 
 
 namespace F
 
-variable {M : Type*} [ConcatenationEmptyStructure M] [M↓[ℒ⌢ₑ] ⊧* 𝗙] {x y z : M}
+variable {V : Type*} [ConcatenationEmptyStructure V] [V↓[ℒ⌢ₑ] ⊧* 𝗙] {x y z : V}
 
 @[simp]
-lemma empty_append (x : M) : ∅ ++ x = x := by
-  have := by simpa [models_iff] using Theory.models M _ IsFAxiom.emptyConcat
+lemma empty_append (x : V) : ∅ ++ x = x := by
+  have := by simpa [models_iff] using Theory.models V _ IsFAxiom.emptyConcat
   exact this x
 
 @[simp]
-lemma append_empty (x : M) : x ++ ∅ = x := by
-  have := by simpa [models_iff] using Theory.models M _ IsFAxiom.concatEmpty
+lemma append_empty (x : V) : x ++ ∅ = x := by
+  have := by simpa [models_iff] using Theory.models V _ IsFAxiom.concatEmpty
   exact this x
 
-protected lemma append_assoc (x y z : M) : x ++ y ++ z = x ++ (y ++ z) := by
-  have := by simpa [models_iff] using Theory.models M _ IsFAxiom.concatAssoc
+protected lemma append_assoc (x y z : V) : x ++ y ++ z = x ++ (y ++ z) := by
+  have := by simpa [models_iff] using Theory.models V _ IsFAxiom.concatAssoc
   exact this x y z
 
 protected lemma append_right_cancel (h : x ++ z = y ++ z) : x = y := by
-  have := by simpa [models_iff] using Theory.models M _ IsFAxiom.cancelRight
+  have := by simpa [models_iff] using Theory.models V _ IsFAxiom.cancelRight
   exact this x y z h
 
 protected lemma append_left_cancel (h : z ++ x = z ++ y) : x = y := by
-  have := by simpa [models_iff] using Theory.models M _ IsFAxiom.cancelLeft
+  have := by simpa [models_iff] using Theory.models V _ IsFAxiom.cancelLeft
   exact this x y z h
 
-lemma append_zero_ne_append_one (x y : M) : x ++ 0 ≠ y ++ 1 := by
-  have := by simpa [models_iff] using Theory.models M _ IsFAxiom.concatZeroNeConcatOne
+lemma append_zero_ne_append_one (x y : V) : x ++ 0 ≠ y ++ 1 := by
+  have := by simpa [models_iff] using Theory.models V _ IsFAxiom.concatZeroNeConcatOne
   exact this x y
 
-lemma eq_empty_or_exists_eq_append (x : M) : x = ∅ ∨ ∃ u c, IsAtom c ∧ x = u ++ c := by
-  have := by simpa [models_iff] using Theory.models M _ IsFAxiom.emptyOrConcatLetter
+lemma eq_empty_or_exists_eq_append (x : V) : x = ∅ ∨ ∃ u c, IsAtom c ∧ x = u ++ c := by
+  have := by simpa [models_iff] using Theory.models V _ IsFAxiom.emptyOrConcatLetter
   rcases Classical.em (x = ∅) with h | h
   · exact Or.inl h
   · obtain ⟨u, h | h⟩ := this x h
@@ -79,18 +79,18 @@ lemma eq_empty_or_exists_eq_append (x : M) : x = ∅ ∨ ∃ u c, IsAtom c ∧ x
     · exact Or.inr ⟨u, 1, isAtom_one, h⟩
 
 /-- Two strings ending with letters are equal only if they end with the same letter. -/
-lemma eq_of_append_eq_append {c d : M} (hc : IsAtom c) (hd : IsAtom d) (h : x ++ c = y ++ d) :
+lemma eq_of_append_eq_append {c d : V} (hc : IsAtom c) (hd : IsAtom d) (h : x ++ c = y ++ d) :
     x = y ∧ c = d := by
   rcases hc with rfl | rfl <;> rcases hd with rfl | rfl <;>
     grind [F.append_right_cancel, append_zero_ne_append_one]
 
 @[simp]
-protected lemma zero_ne_one : (0 : M) ≠ 1 := fun h ↦
-  append_zero_ne_append_one (∅ : M) ∅ <| by simpa using h
+protected lemma zero_ne_one : (0 : V) ≠ 1 := fun h ↦
+  append_zero_ne_append_one (∅ : V) ∅ <| by simpa using h
 
-lemma append_isAtom_ne_empty {c : M} (hc : IsAtom c) (x : M) : x ++ c ≠ ∅ := by
+lemma append_isAtom_ne_empty {c : V} (hc : IsAtom c) (x : V) : x ++ c ≠ ∅ := by
   intro h
-  have h₁ (d : M) (hd : IsAtom d) : d = c :=
+  have h₁ (d : V) (hd : IsAtom d) : d = c :=
     (eq_of_append_eq_append hd hc (x := ∅) (y := d ++ x) <| by simp [F.append_assoc, h]).2
   exact F.zero_ne_one ((h₁ 0 isAtom_zero).trans (h₁ 1 isAtom_one).symm)
 

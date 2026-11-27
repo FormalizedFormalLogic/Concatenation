@@ -73,6 +73,76 @@ notation "𝗪𝗧𝗖ₑ" => WTCEmpty
 
 instance : 𝗘𝗤 ℒ⌢ₑ ⪯ 𝗪𝗧𝗖ₑ := Entailment.WeakerThan.ofSubset fun φ hφ ↦ IsWTCEmptyAxiom.equal φ hφ
 
+/--
+Axioms of the weak theory of concatenation with the empty string, without the neutrality of the
+empty string.
+- [HH14, §3.2]
+-/
+inductive IsWTCEmptyMinusUnitAxiom : Sentence ℒ⌢ₑ → Prop
+  | equal : ∀ φ ∈ 𝗘𝗤 ℒ⌢ₑ, IsWTCEmptyMinusUnitAxiom φ
+  | concatAssoc (u : List Bool) : IsWTCEmptyMinusUnitAxiom
+      “∀ x y z, !isSubstring ((x ⌢ y) ⌢ z) !!(biteralEmpty u) ∨
+      !isSubstring (x ⌢ (y ⌢ z)) !!(biteralEmpty u) → (x ⌢ y) ⌢ z = x ⌢ (y ⌢ z)”
+  | editor (u : List Bool) : IsWTCEmptyMinusUnitAxiom
+      “∀ x y s t, x ⌢ y = s ⌢ t ∧ !isSubstring (x ⌢ y) !!(biteralEmpty u) →
+      ∃ w, (x ⌢ w = s ∧ y = w ⌢ t) ∨ (x = s ⌢ w ∧ w ⌢ y = t)”
+  | zeroNeEmpty : IsWTCEmptyMinusUnitAxiom “!!(op(0).const) ≠ ⋆”
+  | zeroAtom : IsWTCEmptyMinusUnitAxiom “∀ x y, x ⌢ y = !!(op(0).const) → x = ⋆ ∨ y = ⋆”
+  | oneNeEmpty : IsWTCEmptyMinusUnitAxiom “!!(op(1).const) ≠ ⋆”
+  | oneAtom : IsWTCEmptyMinusUnitAxiom “∀ x y, x ⌢ y = !!(op(1).const) → x = ⋆ ∨ y = ⋆”
+  | zeroNeOne : IsWTCEmptyMinusUnitAxiom “!!(op(0).const) ≠ !!(op(1).const)”
+
+/--
+The weak theory of concatenation with the empty string, without the neutrality of the empty string.
+- [HH14, §3.2]
+-/
+abbrev WTCEmptyMinusUnit : Theory ℒ⌢ₑ := Set.ofPred IsWTCEmptyMinusUnitAxiom
+
+@[inherit_doc]
+notation "𝗪𝗧𝗖ₑ⁻" => WTCEmptyMinusUnit
+
+instance : 𝗘𝗤 ℒ⌢ₑ ⪯ 𝗪𝗧𝗖ₑ⁻ :=
+  Entailment.WeakerThan.ofSubset fun φ hφ ↦ IsWTCEmptyMinusUnitAxiom.equal φ hφ
+
+/--
+Axioms of $\mathsf{WTC}$ without the empty string and with the unrestricted editor axiom.
+- [HH14, Definition 5, Question 1]
+-/
+inductive IsWTCEditorAxiom : Sentence ℒ⌢ → Prop
+  | wtc : ∀ φ ∈ 𝗪𝗧𝗖, IsWTCEditorAxiom φ
+  | editor : IsWTCEditorAxiom “∀ x y z w, x ⌢ y = z ⌢ w →
+      (x = z ∧ y = w) ∨ ∃ u, (x ⌢ u = z ∧ y = u ⌢ w) ∨ (x = z ⌢ u ∧ u ⌢ y = w)”
+
+/--
+$\mathsf{WTC}$ without the empty string and with the unrestricted editor axiom.
+- [HH14, Definition 5, Question 1]
+-/
+abbrev WTCEditor : Theory ℒ⌢ := Set.ofPred IsWTCEditorAxiom
+
+instance : 𝗪𝗧𝗖 ⪯ WTCEditor := Entailment.WeakerThan.ofSubset IsWTCEditorAxiom.wtc
+
+instance : 𝗘𝗤 ℒ⌢ ⪯ WTCEditor := Entailment.WeakerThan.trans (𝓣 := 𝗪𝗧𝗖) inferInstance inferInstance
+
+/--
+Axioms of $\mathsf{WTC}$ with the empty string and the editor axiom (TC3).
+- [HH14, Definition 1, Question 1]
+-/
+inductive IsWTCEmptyEditorAxiom : Sentence ℒ⌢ₑ → Prop
+  | wtcEmpty : ∀ φ ∈ 𝗪𝗧𝗖ₑ, IsWTCEmptyEditorAxiom φ
+  | editor : IsWTCEmptyEditorAxiom “∀ x y s t, x ⌢ y = s ⌢ t →
+      ∃ w, (x ⌢ w = s ∧ y = w ⌢ t) ∨ (x = s ⌢ w ∧ w ⌢ y = t)”
+
+/--
+$\mathsf{WTC}$ with the empty string and the editor axiom (TC3).
+- [HH14, Definition 1, Question 1]
+-/
+abbrev WTCEmptyEditor : Theory ℒ⌢ₑ := Set.ofPred IsWTCEmptyEditorAxiom
+
+instance : 𝗪𝗧𝗖ₑ ⪯ WTCEmptyEditor := Entailment.WeakerThan.ofSubset IsWTCEmptyEditorAxiom.wtcEmpty
+
+instance : 𝗘𝗤 ℒ⌢ₑ ⪯ WTCEmptyEditor :=
+  Entailment.WeakerThan.trans (𝓣 := 𝗪𝗧𝗖ₑ) inferInstance inferInstance
+
 section letters
 
 open DirectTranslation LetterStructure
@@ -114,42 +184,33 @@ instance : 𝗘𝗤 ℒ⌢[α] ⪯ 𝗪𝗧𝗖[α] :=
 
 section reduct
 
-variable {M : Type*} [Nonempty M] [LetterStructure α M] [M↓[ℒ⌢[α]] ⊧* 𝗪𝗧𝗖[α]] {a b : α}
-
-omit [Nonempty M] [M↓[ℒ⌢[α]] ⊧* 𝗪𝗧𝗖[α]] in
-lemma ofFreeSemigroup_concatenationStructure (u : FreeSemigroup Bool) :
-    let := concatenationStructure (M := M) a b
-    (ConcatenationStructure.ofFreeSemigroup u : M) =
-      stringValue ofLetter ⟨if u.head then b else a, u.tail.map fun i ↦ if i then b else a⟩ := by
-  simp only [ConcatenationStructure.ofFreeSemigroup, stringValue, List.foldl_map,
-    apply_ite ofLetter]
-  rfl
+variable {V : Type*} [Nonempty V] [LetterStructure α V] [V↓[ℒ⌢[α]] ⊧* 𝗪𝗧𝗖[α]] {a b : α}
 
 /-- Two letters of a model of `𝗪𝗧𝗖[α]` give a model of $\mathsf{WTC}$. -/
 lemma models_WTC_concatenationStructure (h : a ≠ b) :
-    let := concatenationStructure (M := M) a b
-    M↓[ℒ⌢] ⊧* 𝗪𝗧𝗖 := by
+    let := concatenationStructure (V := V) a b
+    V↓[ℒ⌢] ⊧* 𝗪𝗧𝗖 := by
   intro c
   constructor
   intro σ hσ
   cases hσ
   case equal hφ =>
-    have : M↓[ℒ⌢] ⊧* 𝗘𝗤 ℒ⌢ := inferInstance
+    have : V↓[ℒ⌢] ⊧* 𝗘𝗤 ℒ⌢ := inferInstance
     exact models_theory_iff.mp this _ hφ
   case concatAssoc u =>
-    have := Theory.models M 𝗪𝗧𝗖[α] <| IsWTCLettersAxiom.concatAssoc
+    have := Theory.models V 𝗪𝗧𝗖[α] <| IsWTCLettersAxiom.concatAssoc
       ⟨if u.head then b else a, u.tail.map fun i ↦ if i then b else a⟩
     simpa [models_iff, ofFreeSemigroup_concatenationStructure] using this
   case editor u =>
-    have := Theory.models M 𝗪𝗧𝗖[α] <| IsWTCLettersAxiom.editor
+    have := Theory.models V 𝗪𝗧𝗖[α] <| IsWTCLettersAxiom.editor
       ⟨if u.head then b else a, u.tail.map fun i ↦ if i then b else a⟩
     simpa [models_iff, ofFreeSemigroup_concatenationStructure] using this
   case concatNeZero =>
-    simpa [models_iff] using! Theory.models M 𝗪𝗧𝗖[α] <| IsWTCLettersAxiom.concatNeLetter a
+    simpa [models_iff] using! Theory.models V 𝗪𝗧𝗖[α] <| IsWTCLettersAxiom.concatNeLetter a
   case concatNeOne =>
-    simpa [models_iff] using! Theory.models M 𝗪𝗧𝗖[α] <| IsWTCLettersAxiom.concatNeLetter b
+    simpa [models_iff] using! Theory.models V 𝗪𝗧𝗖[α] <| IsWTCLettersAxiom.concatNeLetter b
   case zeroNeOne =>
-    simpa [models_iff] using! Theory.models M 𝗪𝗧𝗖[α] <| IsWTCLettersAxiom.letterNeLetter a b h
+    simpa [models_iff] using! Theory.models V 𝗪𝗧𝗖[α] <| IsWTCLettersAxiom.letterNeLetter a b h
 
 end reduct
 
@@ -162,47 +223,47 @@ def lettersTranslation (a b : α) : DirectTranslation 𝗪𝗧𝗖[α] ℒ⌢ wh
     | .zero => ⟨“z. z = !!(letterTerm a)”⟩
     | .one => ⟨“z. z = !!(letterTerm b)”⟩
     | .concat => ⟨“z x y. z = x ⌢ y”⟩
-  domain_nonempty := completeLetters.{0} _ _ fun M _ _ _ ↦
+  domain_nonempty := completeLetters.{0} _ _ fun V _ _ _ ↦
     (models_domainNonempty_iff _).mpr <| by simp [Semiformula.Operator.val]
-  func_defined f := completeLetters.{0} _ _ fun M _ _ _ ↦ (models_funcDefined_iff _ _).mpr <| by
+  func_defined f := completeLetters.{0} _ _ fun V _ _ _ ↦ (models_funcDefined_iff _ _).mpr <| by
     intro e _
     cases f <;> simp [Semiformula.Operator.val, Semiformula.Operator.Eq.sentence_eq]
-  preserve_eq := completeLetters.{0} _ _ fun M _ _ _ ↦ (models_preserveEq_iff _ _).mpr <| by
+  preserve_eq := completeLetters.{0} _ _ fun V _ _ _ ↦ (models_preserveEq_iff _ _).mpr <| by
     simp [Semiformula.Operator.val, Semiformula.Operator.Eq.sentence_eq]
 
 namespace lettersTranslation
 
-variable {M : Type*} [LetterStructure α M] {a b : α}
+variable {V : Type*} [LetterStructure α V] {a b : α}
 
 /-- The domain of the translation is the whole model. -/
-def equiv : M ≃ (lettersTranslation a b).Model M where
+def equiv : V ≃ (lettersTranslation a b).Model V where
   toFun x := ⟨x, by simp [dom_iff, lettersTranslation, Semiformula.Operator.val]⟩
   invFun x := x
   left_inv _ := rfl
   right_inv _ := rfl
 
-variable [Nonempty M] [M↓[ℒ⌢[α]] ⊧* 𝗪𝗧𝗖[α]]
+variable [Nonempty V] [V↓[ℒ⌢[α]] ⊧* 𝗪𝗧𝗖[α]]
 
 /-- The structure of the model of `lettersTranslation` is the one the letters `a` and `b` give. -/
-lemma struc_eq : Model.struc (lettersTranslation a b) M =
-    @Tarski.Structure.ofEquiv ℒ⌢ M (@standardModel M (concatenationStructure a b)) _ equiv :=
-  Tarski.Structure.ext
-    (funext₃ fun k f v ↦ by
-      symm
-      apply Model.func_iff.mpr
-      cases f <;> simp [lettersTranslation, Semiformula.Operator.val] <;> rfl)
-    (funext₃ fun k r v ↦ by
-      cases r
-      exact propext <| (Model.eq_iff v).trans Model.ext_iff)
+lemma struc_eq : Model.struc (lettersTranslation a b) V =
+    @Tarski.Structure.ofEquiv ℒ⌢ V (@standardModel V (concatenationStructure a b)) _ equiv := by
+  apply Tarski.Structure.ext
+  · funext k f v
+    symm
+    apply Model.func_iff.mpr
+    cases f <;> simp [lettersTranslation, Semiformula.Operator.val] <;> rfl
+  · funext k r v
+    cases r
+    exact propext <| (Model.eq_iff v).trans Model.ext_iff
 
 /-- The model of `lettersTranslation` satisfies $\mathsf{WTC}$. -/
-lemma models_WTC (h : a ≠ b) : ((lettersTranslation a b).Model M)↓[ℒ⌢] ⊧* 𝗪𝗧𝗖 := by
+lemma models_WTC (h : a ≠ b) : ((lettersTranslation a b).Model V)↓[ℒ⌢] ⊧* 𝗪𝗧𝗖 := by
   rw [struc_eq]
-  let := concatenationStructure (M := M) a b
-  let := @Tarski.Structure.ofEquiv ℒ⌢ M _ _ (equiv (M := M) (a := a) (b := b))
-  have := Tarski.Structure.ElementaryEquiv.ofEquiv (L := ℒ⌢) (equiv (M := M) (a := a) (b := b))
+  let := concatenationStructure (V := V) a b
+  let := @Tarski.Structure.ofEquiv ℒ⌢ V _ _ (equiv (V := V) (a := a) (b := b))
+  have := Tarski.Structure.ElementaryEquiv.ofEquiv (L := ℒ⌢) (equiv (V := V) (a := a) (b := b))
   exact Tarski.Structure.ElementaryEquiv.modelsTheory.mp <|
-    models_WTC_concatenationStructure (M := M) h
+    models_WTC_concatenationStructure (V := V) h
 
 end lettersTranslation
 
@@ -211,7 +272,8 @@ The weak theory of concatenation with at least two letters interprets $\mathsf{W
 - [Hor11, §3, Theorem 3.18]
 - [Hor12, §4, Theorem 4.13]
 -/
-abbrev WTCLetters.interpretsWTC {a b : α} (h : a ≠ b) : 𝗪𝗧𝗖[α] ⊳ 𝗪𝗧𝗖 where
+@[instance_reducible]
+def WTCLetters.interpretsWTC {a b : α} (h : a ≠ b) : 𝗪𝗧𝗖[α] ⊳ 𝗪𝗧𝗖 where
   trln := lettersTranslation a b
   interpret_theory φ hφ := completeLetters.{0} _ _ fun _ _ _ _ ↦
     Model.translate_iff.mpr <| models_theory_iff.mp (lettersTranslation.models_WTC h) φ hφ

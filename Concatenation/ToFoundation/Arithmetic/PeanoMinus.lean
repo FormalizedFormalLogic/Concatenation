@@ -1,6 +1,8 @@
 module
 
 public import AlphaCentauri.Interpretability.Basic
+public import Concatenation.ToFoundation.Interpretability.Basic
+public import Foundation.FirstOrder.Arithmetic.Definability.Definable
 public import Foundation.FirstOrder.Arithmetic.PeanoMinus.Basic
 public import Mathlib.Tactic.Ring
 
@@ -14,19 +16,22 @@ An injective pairing in $\mathsf{PA}^-$, and the interpretation of $\mathsf{PA}^
 
 namespace FFL.FirstOrder.Arithmetic
 
-variable {M : Type*} [ORingStructure M] {x y x' y' z : M}
+open scoped FFL.FirstOrder.Bounding
+
+variable {V : Type*} [ORingStructure V] {x y x' y' z : V}
 
 /-- The pair $(x + y)^2 + x$ of `x` and `y`. -/
-def squarePair (x y : M) : M := (x + y) * (x + y) + x
+def squarePair (x y : V) : V := (x + y) * (x + y) + x
 
 /-- `z` is the pair $(x + y)^2 + x$ of `x` and `y`. -/
-def isSquarePair : ArithmeticSemisentence 3 := “z x y. z = (x + y) * (x + y) + x”
+def squarePairDef : 𝚺ᴬ₀.Semisentence 3 := .mkSigma “z x y. z = (x + y) * (x + y) + x”
 
-@[simp]
-lemma eval_isSquarePair : M ⊧/![z, x, y] isSquarePair ↔ z = squarePair x y := by
-  simp [isSquarePair, squarePair]
+instance squarePair_defined : 𝚺ᴬ₀-Function₂[V] squarePair via squarePairDef := .mk fun v ↦ by
+  simp [squarePairDef, squarePair]
 
-variable [M↓[ℒₒᵣ] ⊧* 𝗣𝗔⁻]
+instance squarePair_definable : 𝚺ᴬ₀-Function₂[V] squarePair := squarePair_defined.to_definable
+
+variable [V↓[ℒₒᵣ] ⊧* 𝗣𝗔⁻]
 
 private lemma squarePair_lt (h : x + y < x' + y') : squarePair x y < squarePair x' y' := by
   have h₁ : x + y + 1 ≤ x' + y' := by
@@ -59,7 +64,9 @@ end FFL.FirstOrder.Arithmetic
 
 namespace FFL.FirstOrder.Arithmetic
 
-variable {M : Type*} [ORingStructure M] {a b c d x y z : M}
+open scoped FFL.FirstOrder.Bounding
+
+variable {V : Type*} [ORingStructure V] {a b c d x y z : V}
 
 /--
 Addition of `x` on the right is associative, commutes with the successor on the left, has `0` as
@@ -67,7 +74,7 @@ a left unit, and is cancellable.
 - [Mur24, §6, Theorem 24]
 -/
 @[mk_iff]
-structure IsPreadditive (x : M) : Prop where
+structure IsPreadditive (x : V) : Prop where
   add_assoc : ∀ u v, u + v + x = u + (v + x)
   zero_add : 0 + x = x
   add_one_add : ∀ u, u + 1 + x = u + x + 1
@@ -78,20 +85,22 @@ Addition of `x` on the right is associative, commutes with the successor on the 
 a left unit, and is cancellable.
 - [Mur24, §6, Theorem 24]
 -/
-def isPreadditive : ArithmeticSemisentence 1 :=
+def isPreadditiveDef : 𝚷ᴬ₁.Semisentence 1 := .mkPi
   “x. (∀ u v, u + v + x = u + (v + x)) ∧ 0 + x = x ∧ (∀ u, u + 1 + x = u + x + 1) ∧
     (∀ u v, u + x = v + x → u = v)”
 
-@[simp]
-lemma eval_isPreadditive : M ⊧/![x] isPreadditive ↔ IsPreadditive x := by
-  simp [isPreadditive, isPreadditive_iff]
+instance isPreadditive_defined : 𝚷ᴬ₁-Predicate[V] IsPreadditive via isPreadditiveDef :=
+  .mk fun v ↦ by simp [isPreadditiveDef, isPreadditive_iff]
+
+instance isPreadditive_definable : 𝚷ᴬ₁-Predicate[V] IsPreadditive :=
+  isPreadditive_defined.to_definable
 
 /--
 `x` is preadditive, and commutes and is comparable with every preadditive element.
 - [Mur24, §6, Theorem 24]
 -/
 @[mk_iff]
-structure IsAdditive (x : M) : Prop extends IsPreadditive x where
+structure IsAdditive (x : V) : Prop extends IsPreadditive x where
   add_comm : ∀ u, IsPreadditive u → u + x = x + u
   comparable : ∀ u, IsPreadditive u → ∃ z, z + x = u ∨ z + u = x
 
@@ -99,13 +108,14 @@ structure IsAdditive (x : M) : Prop extends IsPreadditive x where
 `x` is preadditive, and commutes and is comparable with every preadditive element.
 - [Mur24, §6, Theorem 24]
 -/
-def isAdditive : ArithmeticSemisentence 1 :=
-  “x. !isPreadditive x ∧ (∀ u, !isPreadditive u → u + x = x + u) ∧
-    (∀ u, !isPreadditive u → ∃ z, z + x = u ∨ z + u = x)”
+def isAdditiveDef : ArithmeticSemisentence 1 :=
+  “x. !isPreadditiveDef x ∧ (∀ u, !isPreadditiveDef u → u + x = x + u) ∧
+    (∀ u, !isPreadditiveDef u → ∃ z, z + x = u ∨ z + u = x)”
 
-@[simp]
-lemma eval_isAdditive : M ⊧/![x] isAdditive ↔ IsAdditive x := by
-  simp [isAdditive, isAdditive_iff]
+instance isAdditive_defined : ℒₒᵣ-predicate[V] IsAdditive via isAdditiveDef :=
+  ⟨fun v ↦ by simp [isAdditiveDef, isAdditive_iff]⟩
+
+instance isAdditive_definable : ℒₒᵣ-predicate[V] IsAdditive := isAdditive_defined.to_definable
 
 /--
 `x` is additive, and multiplication by `x` on the right preserves the additive elements,
@@ -113,7 +123,7 @@ distributes over their sums from both sides, and has `0` and `1` as a left zero 
 - [Mur24, §6, Theorem 24]
 -/
 @[mk_iff]
-structure IsPremultiplicative (x : M) : Prop extends IsAdditive x where
+structure IsPremultiplicative (x : V) : Prop extends IsAdditive x where
   isAdditive_mul : ∀ u, IsAdditive u → IsAdditive (u * x)
   mul_add : ∀ u v, IsAdditive u → u * (v + x) = u * v + u * x
   add_mul : ∀ u v, IsAdditive u → IsAdditive v → (u + v) * x = u * x + v * x
@@ -125,31 +135,37 @@ structure IsPremultiplicative (x : M) : Prop extends IsAdditive x where
 distributes over their sums from both sides, and has `0` and `1` as a left zero and a left unit.
 - [Mur24, §6, Theorem 24]
 -/
-def isPremultiplicative : ArithmeticSemisentence 1 :=
-  “x. !isAdditive x ∧ (∀ u, !isAdditive u → !isAdditive (u * x)) ∧
-    (∀ u v, !isAdditive u → u * (v + x) = u * v + u * x) ∧
-    (∀ u v, !isAdditive u → !isAdditive v → (u + v) * x = u * x + v * x) ∧ 0 * x = 0 ∧ 1 * x = x”
+def isPremultiplicativeDef : ArithmeticSemisentence 1 :=
+  “x. !isAdditiveDef x ∧ (∀ u, !isAdditiveDef u → !isAdditiveDef (u * x)) ∧
+    (∀ u v, !isAdditiveDef u → u * (v + x) = u * v + u * x) ∧
+    (∀ u v, !isAdditiveDef u → !isAdditiveDef v → (u + v) * x = u * x + v * x) ∧
+    0 * x = 0 ∧ 1 * x = x”
 
-@[simp]
-lemma eval_isPremultiplicative : M ⊧/![x] isPremultiplicative ↔ IsPremultiplicative x := by
-  simp [isPremultiplicative, isPremultiplicative_iff]
+instance isPremultiplicative_defined : ℒₒᵣ-predicate[V] IsPremultiplicative
+    via isPremultiplicativeDef :=
+  ⟨fun v ↦ by simp [isPremultiplicativeDef, isPremultiplicative_iff]⟩
+
+instance isPremultiplicative_definable : ℒₒᵣ-predicate[V] IsPremultiplicative :=
+  isPremultiplicative_defined.to_definable
 
 /--
 Multiplication by `x` on the right is associative.
 - [Mur24, §6, Theorem 24]
 -/
-def IsMulAssoc (x : M) : Prop :=
+def IsMulAssoc (x : V) : Prop :=
   ∀ u v, IsAdditive u → IsPremultiplicative v → u * v * x = u * (v * x)
 
 /--
 Multiplication by `x` on the right is associative.
 - [Mur24, §6, Theorem 24]
 -/
-def isMulAssoc : ArithmeticSemisentence 1 :=
-  “x. ∀ u v, !isAdditive u → !isPremultiplicative v → u * v * x = u * (v * x)”
+def isMulAssocDef : ArithmeticSemisentence 1 :=
+  “x. ∀ u v, !isAdditiveDef u → !isPremultiplicativeDef v → u * v * x = u * (v * x)”
 
-@[simp]
-lemma eval_isMulAssoc : M ⊧/![x] isMulAssoc ↔ IsMulAssoc x := by simp [isMulAssoc, IsMulAssoc]
+instance isMulAssoc_defined : ℒₒᵣ-predicate[V] IsMulAssoc via isMulAssocDef :=
+  ⟨fun v ↦ by simp [isMulAssocDef, IsMulAssoc]⟩
+
+instance isMulAssoc_definable : ℒₒᵣ-predicate[V] IsMulAssoc := isMulAssoc_defined.to_definable
 
 /--
 `x` is premultiplicative, and multiplication by `x` on the right is associative and commutative,
@@ -157,7 +173,7 @@ and preserves the premultiplicative elements.
 - [Mur24, §6, Theorem 24]
 -/
 @[mk_iff]
-structure IsMultiplicative (x : M) : Prop extends IsPremultiplicative x where
+structure IsMultiplicative (x : V) : Prop extends IsPremultiplicative x where
   mul_assoc : IsMulAssoc x
   mul_comm : ∀ u, IsPremultiplicative u → IsMulAssoc u → u * x = x * u
   isPremultiplicative_mul : ∀ u, IsPremultiplicative u → IsPremultiplicative (u * x)
@@ -167,29 +183,33 @@ structure IsMultiplicative (x : M) : Prop extends IsPremultiplicative x where
 and preserves the premultiplicative elements.
 - [Mur24, §6, Theorem 24]
 -/
-def isMultiplicative : ArithmeticSemisentence 1 :=
-  “x. !isPremultiplicative x ∧ !isMulAssoc x ∧
-    (∀ u, !isPremultiplicative u → !isMulAssoc u → u * x = x * u) ∧
-    (∀ u, !isPremultiplicative u → !isPremultiplicative (u * x))”
+def isMultiplicativeDef : ArithmeticSemisentence 1 :=
+  “x. !isPremultiplicativeDef x ∧ !isMulAssocDef x ∧
+    (∀ u, !isPremultiplicativeDef u → !isMulAssocDef u → u * x = x * u) ∧
+    (∀ u, !isPremultiplicativeDef u → !isPremultiplicativeDef (u * x))”
 
-@[simp]
-lemma eval_isMultiplicative : M ⊧/![x] isMultiplicative ↔ IsMultiplicative x := by
-  simp [isMultiplicative, isMultiplicative_iff]
+instance isMultiplicative_defined : ℒₒᵣ-predicate[V] IsMultiplicative via isMultiplicativeDef :=
+  ⟨fun v ↦ by simp [isMultiplicativeDef, isMultiplicative_iff]⟩
 
-/--
-`y` is the sum of a successor and `x`.
-- [Mur24, §6, Theorem 24]
--/
-def LeftLT (x y : M) : Prop := ∃ z, z + 1 + x = y
+instance isMultiplicative_definable : ℒₒᵣ-predicate[V] IsMultiplicative :=
+  isMultiplicative_defined.to_definable
 
 /--
 `y` is the sum of a successor and `x`.
 - [Mur24, §6, Theorem 24]
 -/
-def leftLT : ArithmeticSemisentence 2 := “x y. ∃ z, z + 1 + x = y”
+def LeftLT (x y : V) : Prop := ∃ z, z + 1 + x = y
 
-@[simp]
-lemma eval_leftLT : M ⊧/![x, y] leftLT ↔ LeftLT x y := by simp [leftLT, LeftLT]
+/--
+`y` is the sum of a successor and `x`.
+- [Mur24, §6, Theorem 24]
+-/
+def leftLTDef : 𝚺ᴬ₁.Semisentence 2 := .mkSigma “x y. ∃ z, z + 1 + x = y”
+
+instance leftLT_defined : 𝚺ᴬ₁-Relation[V] LeftLT via leftLTDef := .mk fun v ↦ by
+  simp [leftLTDef, LeftLT]
+
+instance leftLT_definable : 𝚺ᴬ₁-Relation[V] LeftLT := leftLT_defined.to_definable
 
 namespace IsPreadditive
 
@@ -237,7 +257,7 @@ lemma of_add (hx : IsAdditive x) (h : IsAdditive (z + x)) : IsAdditive z where
     · use w
       exact Or.inr <| hx.add_right_cancel _ _ <| by rw [hx.add_assoc, hw]
 
-lemma add_add_add_comm (hb : IsPreadditive b) (hc : IsAdditive c) (hd : IsPreadditive d) (a : M) :
+lemma add_add_add_comm (hb : IsPreadditive b) (hc : IsAdditive c) (hd : IsPreadditive d) (a : V) :
     a + b + (c + d) = a + c + (b + d) := by
   rw [← hd.add_assoc, hc.add_assoc, hc.add_comm b hb, ← hb.add_assoc, hd.add_assoc]
 
@@ -260,13 +280,13 @@ protected lemma IsMultiplicative.mul (hx : IsMultiplicative x) (hy : IsMultiplic
 
 section
 
-variable [M↓[ℒₒᵣ] ⊧* 𝗤]
+variable [V↓[ℒₒᵣ] ⊧* 𝗤]
 
 namespace IsPreadditive
 
-protected lemma zero : IsPreadditive (0 : M) := by constructor <;> simp
+protected lemma zero : IsPreadditive (0 : V) := by constructor <;> simp
 
-protected lemma one : IsPreadditive (1 : M) where
+protected lemma one : IsPreadditive (1 : V) where
   add_assoc u v := (Arithmetic.add_succ u v).symm
   zero_add := zero_add_one
   add_one_add _ := rfl
@@ -276,14 +296,14 @@ end IsPreadditive
 
 namespace IsAdditive
 
-protected lemma zero : IsAdditive (0 : M) where
+protected lemma zero : IsAdditive (0 : V) where
   toIsPreadditive := .zero
   add_comm u hu := by rw [hu.zero_add, Arithmetic.add_zero]
   comparable u _ := by
     use u
     simp
 
-protected lemma one : IsAdditive (1 : M) where
+protected lemma one : IsAdditive (1 : V) where
   toIsPreadditive := .one
   add_comm u hu := by
     nth_rw 2 [← zero_add_one]
@@ -301,7 +321,7 @@ lemma mul_one_of_zero_add (hx : 0 + x = x) : x * 1 = x := by
 
 namespace IsPremultiplicative
 
-protected lemma zero : IsPremultiplicative (0 : M) where
+protected lemma zero : IsPremultiplicative (0 : V) where
   toIsAdditive := .zero
   isAdditive_mul u _ := by simpa using IsAdditive.zero
   mul_add u v _ := by simp
@@ -309,7 +329,7 @@ protected lemma zero : IsPremultiplicative (0 : M) where
   zero_mul := by simp
   one_mul := by simp
 
-protected lemma one : IsPremultiplicative (1 : M) where
+protected lemma one : IsPremultiplicative (1 : V) where
   toIsAdditive := .one
   isAdditive_mul u hu := by rwa [mul_one_of_zero_add hu.zero_add]
   mul_add u v hu := by rw [mul_one_of_zero_add hu.zero_add, Arithmetic.mul_succ]
@@ -362,13 +382,13 @@ end IsPremultiplicative
 
 namespace IsMultiplicative
 
-protected lemma zero : IsMultiplicative (0 : M) where
+protected lemma zero : IsMultiplicative (0 : V) where
   toIsPremultiplicative := .zero
   mul_assoc u v _ _ := by simp
   mul_comm u hu _ := by simp [hu.zero_mul]
   isPremultiplicative_mul u _ := by simpa using IsPremultiplicative.zero
 
-protected lemma one : IsMultiplicative (1 : M) where
+protected lemma one : IsMultiplicative (1 : V) where
   toIsPremultiplicative := .one
   mul_assoc u v hu hv := by
     rw [mul_one_of_zero_add hv.zero_add, mul_one_of_zero_add (hv.isAdditive_mul u hu).zero_add]
@@ -419,60 +439,61 @@ The translation of the language of arithmetic into $\mathsf{Q}$ on the multiplic
 - [Mur24, §6, Theorem 24]
 -/
 def multiplicativeTranslation : DirectTranslation 𝗤 ℒₒᵣ where
-  domain := ⟨isMultiplicative⟩
+  domain := ⟨isMultiplicativeDef⟩
   rel
     | .eq => ⟨“x y. x = y”⟩
-    | .lt => ⟨leftLT⟩
+    | .lt => ⟨leftLTDef⟩
   func f := ⟨“z. z = !!(Semiterm.func f (#·.succ))”⟩
-  domain_nonempty := complete.{0} _ _ fun M _ _ ↦ (models_domainNonempty_iff _).mpr <| by
+  domain_nonempty := complete.{0} _ _ fun V _ _ ↦ (models_domainNonempty_iff _).mpr <| by
     use 0
     simpa [Semiformula.Operator.val] using IsMultiplicative.zero
-  func_defined f := complete.{0} _ _ fun M _ _ ↦ (models_funcDefined_iff _ _).mpr <| by
+  func_defined f := complete.{0} _ _ fun V _ _ ↦ (models_funcDefined_iff _ _).mpr <| by
     intro e he
     have he (i) : IsMultiplicative (e i) := by simpa [Semiformula.Operator.val] using he i
     cases f
-    · suffices ∃! y : M, IsMultiplicative y ∧ y = 0 by
+    · suffices ∃! y : V, IsMultiplicative y ∧ y = 0 by
         simpa [Semiformula.Operator.val, Semiformula.Operator.Eq.sentence_eq]
       use 0
       simp [IsMultiplicative.zero]
-    · suffices ∃! y : M, IsMultiplicative y ∧ y = 1 by
+    · suffices ∃! y : V, IsMultiplicative y ∧ y = 1 by
         simpa [Semiformula.Operator.val, Semiformula.Operator.Eq.sentence_eq]
       use 1
       simp [IsMultiplicative.one]
-    · suffices ∃! y : M, IsMultiplicative y ∧ y = e 0 + e 1 by
+    · suffices ∃! y : V, IsMultiplicative y ∧ y = e 0 + e 1 by
         simpa [Semiformula.Operator.val, Semiformula.Operator.Eq.sentence_eq]
       use e 0 + e 1
       simp [(he 0).add (he 1)]
-    · suffices ∃! y : M, IsMultiplicative y ∧ y = e 0 * e 1 by
+    · suffices ∃! y : V, IsMultiplicative y ∧ y = e 0 * e 1 by
         simpa [Semiformula.Operator.val, Semiformula.Operator.Eq.sentence_eq]
       use e 0 * e 1
       simp [(he 0).mul (he 1)]
-  preserve_eq := complete.{0} _ _ fun M _ _ ↦ (models_preserveEq_iff _ _).mpr <| by
+  preserve_eq := complete.{0} _ _ fun V _ _ ↦ (models_preserveEq_iff _ _).mpr <| by
     simp [Semiformula.Operator.val, Semiformula.Operator.Eq.sentence_eq]
 
 @[simp]
-lemma multiplicativeTranslation_dom_iff : multiplicativeTranslation.Dom x ↔ IsMultiplicative x := by
-  simp [dom_iff, multiplicativeTranslation, Semiformula.Operator.val]
+lemma multiplicativeTranslation.dom_iff :
+    multiplicativeTranslation.Dom x ↔ IsMultiplicative x := by
+  simp [DirectTranslation.dom_iff, multiplicativeTranslation, Semiformula.Operator.val]
 
-lemma multiplicativeTranslation.isMultiplicative_val (a : multiplicativeTranslation.Model M) :
-    IsMultiplicative (a : M) := multiplicativeTranslation_dom_iff.mp a.dom
+lemma multiplicativeTranslation.isMultiplicative_val (a : multiplicativeTranslation.Model V) :
+    IsMultiplicative (a : V) := multiplicativeTranslation.dom_iff.mp a.dom
 
 section model
 
-variable [M↓[ℒₒᵣ] ⊧* 𝗤]
+variable [V↓[ℒₒᵣ] ⊧* 𝗤]
 
 namespace multiplicativeTranslation
 
-/-- The operations of `M` and `LeftLT` restricted to the multiplicative elements. -/
-abbrev oRingStructure : ORingStructure (multiplicativeTranslation.Model M) where
+/-- The operations of `V` and `LeftLT` restricted to the multiplicative elements. -/
+abbrev oRingStructure : ORingStructure (multiplicativeTranslation.Model V) where
   zero := ⟨0, by simpa using IsMultiplicative.zero⟩
   one := ⟨1, by simpa using IsMultiplicative.one⟩
   add a b := ⟨a + b, by simpa using (isMultiplicative_val a).add (isMultiplicative_val b)⟩
   mul a b := ⟨a * b, by simpa using (isMultiplicative_val a).mul (isMultiplicative_val b)⟩
-  lt a b := LeftLT (a : M) b
+  lt a b := LeftLT (a : V) b
 
 /-- The structure of the model of `multiplicativeTranslation` is the one of `oRingStructure`. -/
-lemma struc_eq : Model.struc multiplicativeTranslation M = @standardModel _ oRingStructure :=
+lemma struc_eq : Model.struc multiplicativeTranslation V = @standardModel _ oRingStructure :=
   Tarski.Structure.ext
     (funext₃ fun k f v ↦ by
       symm
@@ -483,16 +504,16 @@ lemma struc_eq : Model.struc multiplicativeTranslation M = @standardModel _ oRin
     (funext₃ fun k r v ↦ by
       cases r
       · exact propext <| Model.eq_iff v
-      · change (multiplicativeTranslation.rel .lt).val (fun i ↦ (v i : M)) =
-          LeftLT (v 0 : M) (v 1)
-        rw [Matrix.fun_eq_vec_two (fun i ↦ (v i : M))]
+      · change (multiplicativeTranslation.rel .lt).val (fun i ↦ (v i : V)) =
+          LeftLT (v 0 : V) (v 1)
+        rw [Matrix.fun_eq_vec_two (fun i ↦ (v i : V))]
         simp [multiplicativeTranslation, Semiformula.Operator.val])
 
 section
 
 attribute [local instance] oRingStructure
 
-variable (a b c : multiplicativeTranslation.Model M)
+variable (a b c : multiplicativeTranslation.Model V)
 
 protected lemma add_zero : a + 0 = a := Model.ext Arithmetic.add_zero
 
@@ -504,7 +525,7 @@ protected lemma add_assoc : a + b + c = a + (b + c) :=
 protected lemma add_comm : a + b = b + a :=
   Model.ext <| (isMultiplicative_val b).add_comm a (isMultiplicative_val a).toIsPreadditive
 
-protected lemma mul_zero : a * 0 = 0 := Model.ext <| Arithmetic.mul_zero (a : M)
+protected lemma mul_zero : a * 0 = 0 := Model.ext <| Arithmetic.mul_zero (a : V)
 
 protected lemma mul_one : a * 1 = a :=
   Model.ext <| mul_one_of_zero_add (isMultiplicative_val a).zero_add
@@ -526,14 +547,14 @@ protected lemma add_mul : (a + b) * c = a * c + b * c :=
 
 variable {a b c}
 
-/-- An element of `M` is in the model if its sum with an element of the model is. -/
-lemma exists_val_eq {z : M} (h : z + a = b) : ∃ c : multiplicativeTranslation.Model M, c = z := by
-  use ⟨z, multiplicativeTranslation_dom_iff.mpr <| (isMultiplicative_val a).of_add <|
+/-- An element of `V` is in the model if its sum with an element of the model is. -/
+lemma exists_val_eq {z : V} (h : z + a = b) : ∃ c : multiplicativeTranslation.Model V, c = z := by
+  use ⟨z, multiplicativeTranslation.dom_iff.mpr <| (isMultiplicative_val a).of_add <|
     h ▸ isMultiplicative_val b⟩
 
-lemma eq_zero_or_exists_eq_add_one (a : multiplicativeTranslation.Model M) :
+lemma eq_zero_or_exists_eq_add_one (a : multiplicativeTranslation.Model V) :
     a = 0 ∨ ∃ b, a = b + 1 := by
-  rcases zero_or_succ (a : M) with h | ⟨z, h⟩
+  rcases zero_or_succ (a : V) with h | ⟨z, h⟩
   · exact Or.inl <| Model.ext h
   · obtain ⟨b, rfl⟩ := exists_val_eq (a := 1) h.symm
     right
@@ -571,7 +592,7 @@ lemma one_le_of_zero_lt (h : 0 < a) : 1 = a ∨ 1 < a := by
   rw [multiplicativeTranslation.add_zero] at hc
   exact eq_or_lt_of_add_eq hc
 
-lemma add_lt_add (h : a < b) (c : multiplicativeTranslation.Model M) : a + c < b + c := by
+lemma add_lt_add (h : a < b) (c : multiplicativeTranslation.Model V) : a + c < b + c := by
   obtain ⟨d, rfl⟩ := lt_iff.mp h
   apply lt_iff.mpr
   use d
@@ -586,7 +607,7 @@ lemma mul_lt_mul (h : a < b) (hc : 0 < c) : a * c < b * c := by
     multiplicativeTranslation.mul_add (d + 1), multiplicativeTranslation.mul_one,
     multiplicativeTranslation.add_assoc _ d]
 
-lemma lt_irrefl (a : multiplicativeTranslation.Model M) : ¬a < a := by
+lemma lt_irrefl (a : multiplicativeTranslation.Model V) : ¬a < a := by
   rintro ⟨z, h⟩
   exact Arithmetic.succ_ne_zero z <| (isMultiplicative_val a).add_right_cancel _ _ <|
     h.trans (isMultiplicative_val a).zero_add.symm
@@ -598,7 +619,7 @@ lemma lt_trans (hab : a < b) (hbc : b < c) : a < c := by
   use e + 1 + d
   rw [multiplicativeTranslation.add_assoc (e + 1) d, multiplicativeTranslation.add_assoc]
 
-lemma lt_tri (a b : multiplicativeTranslation.Model M) : a < b ∨ a = b ∨ b < a := by
+lemma lt_tri (a b : multiplicativeTranslation.Model V) : a < b ∨ a = b ∨ b < a := by
   obtain ⟨z, h | h⟩ :=
     (isMultiplicative_val a).comparable b (isMultiplicative_val b).toIsPreadditive
   all_goals
@@ -612,44 +633,44 @@ end
 The multiplicative elements of a model of $\mathsf{Q}$ form a model of $\mathsf{PA}^-$.
 - [Mur24, §6, Theorem 24]
 -/
-instance : (multiplicativeTranslation.Model M)↓[ℒₒᵣ] ⊧* 𝗣𝗔⁻ := by
+instance : (multiplicativeTranslation.Model V)↓[ℒₒᵣ] ⊧* 𝗣𝗔⁻ := by
   rw [struc_eq]
-  let := oRingStructure (M := M)
+  let := oRingStructure (V := V)
   constructor
   intro σ hσ
   cases hσ
   case equal hφ => exact models_theory_iff.mp inferInstance _ hφ
-  case addZero => simpa [models_iff] using multiplicativeTranslation.add_zero (M := M)
-  case addAssoc => simpa [models_iff] using multiplicativeTranslation.add_assoc (M := M)
-  case addComm => simpa [models_iff] using multiplicativeTranslation.add_comm (M := M)
+  case addZero => simpa [models_iff] using multiplicativeTranslation.add_zero (V := V)
+  case addAssoc => simpa [models_iff] using multiplicativeTranslation.add_assoc (V := V)
+  case addComm => simpa [models_iff] using multiplicativeTranslation.add_comm (V := V)
   case addEqOfLt =>
     simpa [models_iff, Semiformula.eval_bexsLTSucc] using
-      fun a b ↦ exists_add_eq_of_lt (M := M) (a := a) (b := b)
+      fun a b ↦ exists_add_eq_of_lt (V := V) (a := a) (b := b)
   case zeroLe =>
     simpa [models_iff, Semiformula.Operator.LE.sentence_eq, Semiformula.Operator.val,
       Semiformula.Operator.Eq.sentence_eq, Semiformula.Operator.LT.sentence_eq] using
-      fun a : multiplicativeTranslation.Model M ↦
+      fun a : multiplicativeTranslation.Model V ↦
         eq_or_lt_of_add_eq (multiplicativeTranslation.add_zero a)
   case zeroLtOne =>
     simpa [models_iff] using
-      lt_iff.mpr ⟨0, Model.ext <| Arithmetic.add_zero.trans <| zero_add_one (M := M)⟩
+      lt_iff.mpr ⟨0, Model.ext <| Arithmetic.add_zero.trans <| zero_add_one (M := V)⟩
   case oneLeOfZeroLt =>
     simpa [models_iff, Semiformula.Operator.LE.sentence_eq, Semiformula.Operator.val,
       Semiformula.Operator.Eq.sentence_eq, Semiformula.Operator.LT.sentence_eq] using
-      fun a ↦ one_le_of_zero_lt (M := M) (a := a)
+      fun a ↦ one_le_of_zero_lt (V := V) (a := a)
   case addLtAdd =>
-    simpa [models_iff] using fun a b c h ↦ add_lt_add (M := M) (a := a) (b := b) h c
-  case mulZero => simpa [models_iff] using multiplicativeTranslation.mul_zero (M := M)
-  case mulOne => simpa [models_iff] using multiplicativeTranslation.mul_one (M := M)
-  case mulAssoc => simpa [models_iff] using multiplicativeTranslation.mul_assoc (M := M)
-  case mulComm => simpa [models_iff] using multiplicativeTranslation.mul_comm (M := M)
+    simpa [models_iff] using fun a b c h ↦ add_lt_add (V := V) (a := a) (b := b) h c
+  case mulZero => simpa [models_iff] using multiplicativeTranslation.mul_zero (V := V)
+  case mulOne => simpa [models_iff] using multiplicativeTranslation.mul_one (V := V)
+  case mulAssoc => simpa [models_iff] using multiplicativeTranslation.mul_assoc (V := V)
+  case mulComm => simpa [models_iff] using multiplicativeTranslation.mul_comm (V := V)
   case mulLtMul =>
-    simpa [models_iff] using fun a b c ↦ mul_lt_mul (M := M) (a := a) (b := b) (c := c)
-  case distr => simpa [models_iff] using multiplicativeTranslation.mul_add (M := M)
-  case ltIrrefl => simpa [models_iff] using lt_irrefl (M := M)
+    simpa [models_iff] using fun a b c ↦ mul_lt_mul (V := V) (a := a) (b := b) (c := c)
+  case distr => simpa [models_iff] using multiplicativeTranslation.mul_add (V := V)
+  case ltIrrefl => simpa [models_iff] using lt_irrefl (V := V)
   case ltTrans =>
-    simpa [models_iff] using fun a b c ↦ lt_trans (M := M) (a := a) (b := b) (c := c)
-  case ltTri => simpa [models_iff] using lt_tri (M := M)
+    simpa [models_iff] using fun a b c ↦ lt_trans (V := V) (a := a) (b := b) (c := c)
+  case ltTri => simpa [models_iff] using lt_tri (V := V)
 
 end multiplicativeTranslation
 
@@ -661,8 +682,7 @@ $\mathsf{Q}$ interprets $\mathsf{PA}^-$.
 -/
 instance : 𝗤 ⊳ 𝗣𝗔⁻ where
   trln := multiplicativeTranslation
-  interpret_theory φ hφ := complete.{0} _ _ fun _ _ _ ↦
-    Model.translate_iff.mpr <| models_theory_iff.mp inferInstance φ hφ
+  interpret_theory _ hφ := complete.{0} _ _ fun _ _ _ ↦ DirectTranslation.models_translate_of_mem hφ
 
 end RobinsonQ
 

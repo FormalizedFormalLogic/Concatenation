@@ -25,7 +25,7 @@ section
 variable {V : Type*} [ORingStructure V] [V↓[ℒₒᵣ] ⊧* 𝗜𝚺₁] {ι : ℕ → Type*}
   [∀ k, Encodable (ι k)] [Finite ((k : ℕ) × ι k)]
 
-lemma exists_nth_pair_encode_eq (g : (k : ℕ) → ι k → V) :
+private lemma exists_nth_pair_encode_eq (g : (k : ℕ) → ι k → V) :
     ∃ w : V, ∀ k (i : ι k), w.[⟪(k : V), (Encodable.encode i : V)⟫] = g k i := by
   let c : (k : ℕ) × ι k → ℕ := fun x ↦ Nat.pair x.1 (Encodable.encode x.2)
   have hc : Function.Injective c := by
@@ -45,7 +45,7 @@ end
 variable {V : Type*} [ORingStructure V] [V↓[ℒₒᵣ] ⊧* 𝗜𝚺₁] {L₁ L₂ : Language} [L₁.Encodable]
   [L₁.LORDefinable] [L₁.Eq] [L₂.Encodable] [L₂.Eq] [L₂.Finite] {T : Theory L₁} [𝗘𝗤 _ ⪯ T]
 
-lemma exists_isTableOf (π : DirectTranslation T L₂) : ∃ tbl : V, IsTableOf π tbl := by
+private lemma exists_isTableOf (π : DirectTranslation T L₂) : ∃ tbl : V, IsTableOf π tbl := by
   have : Fintype ((k : ℕ) × L₂.Func k) := Language.Finite.func
   have : Fintype ((k : ℕ) × L₂.Rel k) := Language.Finite.rel
   obtain ⟨r, hr⟩ := exists_nth_pair_encode_eq fun k (R : L₂.Rel k) ↦ (⌜(π.rel R).sentence⌝ : V)
@@ -99,10 +99,6 @@ abbrev interpretPullback : T ⊳ π.pullback where
 
 lemma provable_pullback_iff : π.pullback ⊢ σ ↔ T ⊢ π σ :=
   ⟨π.interpretPullback.sound, fun h ↦ Entailment.by_axm h⟩
-
-lemma theory_pullback : Theory.theory π.pullback = π.pullback := by
-  ext
-  simp [provable_pullback_iff]
 
 instance : U ⪯ π.pullback := Entailment.weakerThan_iff.mpr fun h ↦ Entailment.by_axm (π.sound h)
 

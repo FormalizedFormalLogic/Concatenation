@@ -332,10 +332,8 @@ variable {a b : arithmeticTranslation.Model V}
 lemma val_add : ((a + b : arithmeticTranslation.Model V) : V) = (a : V) ++ (b : V) := rfl
 
 lemma val_mul_eq_iff : ((a * b : arithmeticTranslation.Model V) : V) = z ↔ MulGraph z a b := by
-  have h := Model.eval_func (π := arithmeticTranslation) (M := V) Language.ORing.Func.mul ![a, b]
-  rw [Matrix.fun_eq_vec_two fun i ↦ ((![a, b] : Fin 2 → arithmeticTranslation.Model V) i : V)] at h
-  simp only [arithmeticTranslation, Semiformula.Operator.val, Matrix.cons_val,
-    Defined.eval_iff] at h
+  have h : MulGraph ((a * b : arithmeticTranslation.Model V) : V) a b :=
+    Model.rel_func_of_defined (φ := mulGraph) (f := Language.ORing.Func.mul) rfl a b
   exact ⟨fun e ↦ e ▸ h, (existsUnique_mulGraph _ _).unique h⟩
 
 @[simp]

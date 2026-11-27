@@ -300,20 +300,12 @@ lemma val_zero : ((0 : arithmeticTranslation.Model V) : V) = 0 := rfl
 lemma val_one : ((1 : arithmeticTranslation.Model V) : V) = 1 := rfl
 
 lemma addGraph_val_add (a b : arithmeticTranslation.Model V) :
-    AddGraph ((a + b : arithmeticTranslation.Model V) : V) a b := by
-  have h := Model.eval_func (π := arithmeticTranslation) (M := V) Language.ORing.Func.add ![a, b]
-  rw [Matrix.fun_eq_vec_two fun i ↦ ((![a, b] : Fin 2 → arithmeticTranslation.Model V) i : V)] at h
-  simp only [arithmeticTranslation, Semiformula.Operator.val, Matrix.cons_val,
-    Defined.eval_iff] at h
-  exact h
+    AddGraph ((a + b : arithmeticTranslation.Model V) : V) a b :=
+  Model.rel_func_of_defined (φ := addGraph) (f := Language.ORing.Func.add) rfl a b
 
 lemma mulGraph_val_mul (a b : arithmeticTranslation.Model V) :
-    MulGraph ((a * b : arithmeticTranslation.Model V) : V) a b := by
-  have h := Model.eval_func (π := arithmeticTranslation) (M := V) Language.ORing.Func.mul ![a, b]
-  rw [Matrix.fun_eq_vec_two fun i ↦ ((![a, b] : Fin 2 → arithmeticTranslation.Model V) i : V)] at h
-  simp only [arithmeticTranslation, Semiformula.Operator.val, Matrix.cons_val,
-    Defined.eval_iff] at h
-  exact h
+    MulGraph ((a * b : arithmeticTranslation.Model V) : V) a b :=
+  Model.rel_func_of_defined (φ := mulGraph) (f := Language.ORing.Func.mul) rfl a b
 
 lemma val_add_eq_iff : ((a + b : arithmeticTranslation.Model V) : V) = z ↔ AddGraph z a b :=
   ⟨fun h ↦ h ▸ addGraph_val_add a b, (addGraph_val_add a b).unique⟩

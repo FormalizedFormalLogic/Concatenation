@@ -235,6 +235,9 @@ section model
 
 variable {L : Language} [L.Encodable] {V : Type*} [Nonempty V] [Tarski.Structure L V]
 
+/-- The code of the equality symbol of `L`. -/
+abbrev eqCode (L : Language) [L.Encodable] [L.Eq] : ℕ := encode (Language.Eq.eq : L.Rel 2)
+
 /--
 The facts of the certificate of level `j` that `val` gives; `B` is the bound on the numbers that
 occur in them.
@@ -266,7 +269,7 @@ structure IsModelCode (L : Language) [L.Encodable] [L.Eq] {V : Type*} [Nonempty 
     [Tarski.Structure L V] (val : ℕ → V) (j B c : ℕ) : Prop where
   lt : B < c
   le : j + 4 ≤ B
-  eq_le : mkPair 2 (encode (Language.Eq.eq : L.Rel 2)) ≤ B
+  eq_le : mkPair 2 (eqCode L) ≤ B
   canonical_le {a : ℕ} : IsCanonical val a → a ≤ B
   env_le {n s : ℕ} : n ≤ j + 3 → IsEnv val n s → s ≤ B
   mkPair_le {a b : ℕ} : a ≤ j → b ≤ j → mkPair a b ≤ B
@@ -279,7 +282,7 @@ lemma exists_isModelCode [Finite V] (val : ℕ → V) (j : ℕ) : ∃ B c, IsMod
   obtain ⟨D, hD⟩ := exists_isCanonical_le val
   obtain ⟨C, hC⟩ := exists_isEnv_le val (j + 3)
   obtain ⟨B, hB⟩ : ∃ B, B = D + C + (j + 4) + mkPair j j +
-    mkPair 2 (encode (Language.Eq.eq : L.Rel 2)) := ⟨_, rfl⟩
+    mkPair 2 (eqCode L) := ⟨_, rfl⟩
   use B
   obtain ⟨c, hc⟩ : ∃ c : ℕ, ∀ e : ℕ, e ∈ c ↔ ∃ k x y z, x ≤ B ∧ y ≤ B ∧ z ≤ B ∧
       ModelFact L val j B k x y z ∧ e = mkPair k (mkPair x (mkPair y z)) := by
@@ -351,7 +354,7 @@ lemma values {v n s d k : ℕ} (hv : v ≤ j) (hn : n ≤ j + 3) (hs : IsEnv val
 
 lemma isCertificate₁ [Tarski.Structure.Eq L V] {A : ArithmeticSemisentence 2}
     (hA : ∀ p ≤ j, ∀ w ≤ j, ℕ ⊧/![p, w] A → ∃ σ : Sentence L, encode σ = p ∧ V↓[L] ⊧ σ) :
-    IsCertificate₁ A (encode (Language.Eq.eq : L.Rel 2)) c j := by
+    IsCertificate₁ A (eqCode L) c j := by
   have hjB := H.le
   have hBc := H.lt
   have hnum (n : ℕ) : (ORingStructure.numeral n : ℕ) = n := by simp
@@ -386,7 +389,7 @@ lemma isCertificate₁ [Tarski.Structure.Eq L V] {A : ArithmeticSemisentence 2}
       obtain rfl : ![a, b] = v := envCode_injective <| hv.symm.trans hd
       exact ha.eq hb <| by simpa using h
     · rintro rfl
-      rw [hnum 2, hnum (encode (Language.Eq.eq : L.Rel 2))]
+      rw [hnum 2, hnum (eqCode L)]
       exact H.fact.mpr ⟨H.eq_le,
         H.env_le (n := 2) (by omega) ⟨![a, a], by simp [Fin.forall_fin_two, ha], hv⟩,
         Nat.zero_le _, 2, Language.Eq.eq, ![a, a], rfl, hv, by simp, rfl⟩
@@ -545,7 +548,7 @@ end IsModelCode
 
 lemma exists_isCertificate [Tarski.Structure.Eq L V] [Finite V] (A : ArithmeticSemisentence 2)
     (j : ℕ) (hA : ∀ p ≤ j, ∀ w ≤ j, ℕ ⊧/![p, w] A → ∃ σ : Sentence L, encode σ = p ∧ V↓[L] ⊧ σ) :
-    ∃ c : ℕ, IsCertificate A (encode (Language.Eq.eq : L.Rel 2)) c j := by
+    ∃ c : ℕ, IsCertificate A (eqCode L) c j := by
   obtain ⟨val, hval⟩ := exists_isNaming L V
   obtain ⟨B, c, H⟩ := exists_isModelCode (L := L) val j
   exact ⟨c, H.isCertificate₁ hA, H.isCertificate₂ hval, H.isCertificate₃ hval⟩

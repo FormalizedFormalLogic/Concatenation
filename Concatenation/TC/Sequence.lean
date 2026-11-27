@@ -82,13 +82,16 @@ instance mem_definable : ℒ⌢-relation[V] Mem := mem_defined.to_definable
 `z` is a sequence of ordered pairs.
 - [Gan09, §1, Definition 1(e)]
 -/
-def IsPairSeq (z : V) : Prop := IsSeq z ∧ ∀ y, Mem y z → IsPair y
+@[mk_iff]
+structure IsPairSeq (z : V) : Prop where
+  isSeq : IsSeq z
+  isPair : ∀ y, Mem y z → IsPair y
 
 /-- `z` is a sequence of ordered pairs. -/
 def isPairSeq : Semisentence ℒ⌢ 1 := “z. !isSeq z ∧ ∀ y, !mem y z → !isPair y”
 
 instance isPairSeq_defined : ℒ⌢-predicate[V] IsPairSeq via isPairSeq :=
-  ⟨fun v ↦ by simp [isPairSeq, IsPairSeq]⟩
+  ⟨fun v ↦ by simp [isPairSeq, isPairSeq_iff]⟩
 
 instance isPairSeq_definable : ℒ⌢-predicate[V] IsPairSeq := isPairSeq_defined.to_definable
 
@@ -158,8 +161,6 @@ instance isMulSeq_defined : ℒ⌢-relation₃[V] IsMulSeq via isMulSeq :=
   ⟨fun v ↦ by simp [isMulSeq, isMulSeq_iff, pairOf]⟩
 
 instance isMulSeq_definable : ℒ⌢-relation₃[V] IsMulSeq := isMulSeq_defined.to_definable
-
-lemma IsPairSeq.isSeq (h : IsPairSeq z) : IsSeq z := h.1
 
 end definitions
 
@@ -244,15 +245,6 @@ and `x = y`.
 lemma tally_separation (hx : IsTally 1 x) (hy : IsTally 1 y) (hz : z ◧ 0)
     (hz' : z' ◧ 0) (h : z ++ x = z' ++ y) : z = z' ∧ x = y :=
   tally_separation_of_ne isAtom_zero Concatenation.zero_ne_one hx hy hz hz' h
-
-/--
-If `x` and `y` are `0`-tallies and `z`, `z'` end with `1`, then `z ++ x = z' ++ y` implies `z = z'`
-and `x = y`.
-- [Gan09, §3, Lemma 7]
--/
-lemma tally_separation' (hx : IsTally 0 x) (hy : IsTally 0 y) (hz : z ◧ 1)
-    (hz' : z' ◧ 1) (h : z ++ x = z' ++ y) : z = z' ∧ x = y :=
-  tally_separation_of_ne isAtom_one Concatenation.zero_ne_one.symm hx hy hz hz' h
 
 /--
 The pairing of `1`-tallies is injective.
@@ -525,7 +517,7 @@ lemma isSeq_zero_zero_append_pairOf : IsSeq (0 ++ 0 ++ pairOf a b ++ 0 ++ 0) := 
     · exact eq_zero_or_eq_zero_zero_of_isSubstring_pairOf ha hb ht h
 
 lemma isPairSeq_zero_zero_append_pairOf : IsPairSeq (0 ++ 0 ++ pairOf a b ++ 0 ++ 0) := by
-  apply And.intro <| isSeq_zero_zero_append_pairOf ha hb
+  apply IsPairSeq.mk <| isSeq_zero_zero_append_pairOf ha hb
   rintro v ⟨-, -, h⟩
   rw [show 0 ++ 0 ++ pairOf a b ++ 0 ++ 0 = 0 ++ 0 ++ (pairOf a b ++ 0 ++ 0) by
     simp [Concatenation.append_assoc]] at h
@@ -550,7 +542,7 @@ lemma isPairSeq_zero_zero_append_pairOf : IsPairSeq (0 ++ 0 ++ pairOf a b ++ 0 +
       simpa only [Concatenation.append_assoc] using h
 
 lemma isPairSeq_append_pairOf (hr : IsPairSeq r) : IsPairSeq (r ++ pairOf a b ++ 0 ++ 0) := by
-  apply And.intro <| isSeq_append_pairOf ha hb hr.isSeq
+  apply IsPairSeq.mk <| isSeq_append_pairOf ha hb hr.isSeq
   rintro v ⟨-, hv, h⟩
   simp only [Concatenation.append_assoc r] at h
   rcases isSubstring_append_pairOf_cases ha hb h with h | ⟨z₁, hz₁, h⟩
@@ -646,10 +638,6 @@ lemma IsMulSeq.isLast_extend (hr : IsMulSeq x y r) :
     IsLast (pairOf (w ++ x) (y ++ 1)) (r ++ pairOf (w ++ x) (y ++ 1) ++ 0 ++ 0) :=
   isLast_append hr.isPairSeq.isSeq.isSuffix_zero_zero
 
-lemma IsMulSeq.isLast_unique (hr : IsMulSeq x y r) (hw : IsTally 1 w) (hw' : IsTally 1 w')
-    (h : IsLast (pairOf w y) r) (h' : IsLast (pairOf w' y) r) : w = w' :=
-  (h.pairOf_inj hw hr.isTally_right hw' hr.isTally_right h').1
-
 /--
 Every multiplication sequence for `x` and `y 1` is `r (w x) 0 (y 1) 0 0` for some multiplication
 sequence `r` for `x` and `y` with last member `(w, y)`.
@@ -726,19 +714,7 @@ theorem existsUnique_isMulSeq_succ_iff (hx : IsTally 1 x) : (∃! r, IsMulSeq x 
     intro s hs
     obtain ⟨r', w', hw', hr', hl', rfl⟩ := hs.restrict
     obtain rfl := huniq _ hr'
-    rw [hr.isLast_unique hw' hw hl' hl]
-
-/--
-If there is exactly one multiplication sequence for `x` and `y`, with last member `(w, y)`, then the
-last member of a multiplication sequence for `x` and `y 1` is `(w x, y 1)`.
-- [Gan09, §3, Theorem 4]
--/
-lemma IsMulSeq.isLast_of_existsUnique (h : ∃! r, IsMulSeq x y r) (hr : IsMulSeq x y r)
-    (hw : IsTally 1 w) (hlast : IsLast (pairOf w y) r) (hs : IsMulSeq x (y ++ 1) s) :
-    IsLast (pairOf (w ++ x) (y ++ 1)) s := by
-  obtain rfl := ((existsUnique_isMulSeq_succ_iff hr.isTally_left).mpr h).unique hs
-    (hr.extend hw hlast)
-  exact hr.isLast_extend
+    rw [(hl'.pairOf_inj hw' hr.isTally_right hw hr.isTally_right hl).1]
 
 end mulSeq
 

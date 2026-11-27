@@ -91,9 +91,6 @@ lemma isTally_self (hc : IsAtom c) : IsTally c c := fun _ _ h ↦ hc.eq_of_isSub
 lemma not_isTally_one_zero : ¬IsTally (1 : V) 0 := fun h ↦
   Concatenation.zero_ne_one <| h 0 isAtom_zero (IsSubstring.refl _)
 
-lemma not_isTally_zero_one : ¬IsTally (0 : V) 1 := fun h ↦
-  Concatenation.zero_ne_one (h 1 isAtom_one (IsSubstring.refl _)).symm
-
 lemma isTally_one_one : IsTally (1 : V) 1 := isTally_self isAtom_one
 
 lemma IsTally.of_isSubstring (hx : IsTally c x) (h : IsSubstring y x) : IsTally c y :=
@@ -202,12 +199,6 @@ lemma TC.infinite_of_models (V : Type*) [ConcatenationStructure V] [V↓[ℒ⌢]
       (fun _ _ ↦ isAtom_zero.append_right_cancel : (· ++ (0 : V)).Injective) 0
     zero_ne_append x 0 hx.symm
 
-theorem TC.not_hasFiniteModel : ¬(𝗧𝗖 : ConcatenationTheory).HasFiniteModel := by
-  intro h
-  obtain ⟨V, _, _, s, _, hV⟩ := h.exists_eq
-  obtain ⟨c, rfl⟩ := exists_eq_standardModel V s
-  exact not_finite_iff_infinite.mpr (TC.infinite_of_models V) inferInstance
-
 section thin
 
 variable {V : Type*} [ConcatenationStructure V] {x y : V}
@@ -235,22 +226,21 @@ instance isBounded_definable : ℒ⌢-predicate[V] IsBounded := isBounded_define
 Every string is an atom, or begins with an atom and ends with an atom.
 - [Gan09, §3]
 -/
-def tc6 : ConcatenationSentence := “∀ x, !isBounded x”
+def allIsBounded : ConcatenationSentence := “∀ x, !isBounded x”
 
 /--
 $\mathsf{TC}$ with the axiom that every string is an atom, or begins with an atom and ends with
 an atom.
 - [Gan09, §3]
 -/
-abbrev TCPlus : ConcatenationTheory := insert tc6 𝗧𝗖
+abbrev TCPlus : ConcatenationTheory := insert allIsBounded 𝗧𝗖
 
 @[inherit_doc]
 notation "𝗧𝗖⁺" => TCPlus
 
 instance : 𝗧𝗖 ⪯ 𝗧𝗖⁺ := Entailment.WeakerThan.ofSubset <| Set.subset_insert _ _
 
-instance : 𝗘𝗤 ℒ⌢ ⪯ 𝗧𝗖⁺ :=
-  Entailment.WeakerThan.ofSubset fun φ hφ ↦ Set.mem_insert_of_mem _ <| IsTCAxiom.equal φ hφ
+instance : 𝗘𝗤 ℒ⌢ ⪯ 𝗧𝗖⁺ := (inferInstance : 𝗘𝗤 ℒ⌢ ⪯ 𝗧𝗖).trans inferInstance
 
 /--
 `x` is thin: every substring of `x` is an atom, or begins with an atom and ends with an atom.
@@ -269,11 +259,12 @@ instance isThin_defined : ℒ⌢-predicate[V] IsThin via isThin := ⟨fun v ↦ 
 instance isThin_definable : ℒ⌢-predicate[V] IsThin := isThin_defined.to_definable
 
 lemma TCPlus.isBounded [V↓[ℒ⌢] ⊧* 𝗧𝗖⁺] (x : V) : IsBounded x := by
-  have := by simpa [models_iff, tc6] using Theory.models V _ (Set.mem_insert tc6 𝗧𝗖)
+  have := by
+    simpa [models_iff, allIsBounded] using Theory.models V _ (Set.mem_insert allIsBounded 𝗧𝗖)
   exact this x
 
 instance [V↓[ℒ⌢] ⊧* 𝗧𝗖⁺] : V↓[ℒ⌢] ⊧* 𝗧𝗖 :=
-  models_of_ss (U := 𝗧𝗖⁺) inferInstance <| Set.subset_insert _ _
+  models_of_subtheory (U := 𝗧𝗖⁺) inferInstance
 
 lemma IsAtom.isBounded (h : IsAtom x) : IsBounded x := Or.inl h
 
@@ -321,7 +312,7 @@ instance : (FreeSemigroup Bool)↓[ℒ⌢] ⊧* 𝗧𝗖⁺ := by
     | ih1 b => exact (isAtom_of b).isBounded
     | ih2 b x hb hx => exact hb.append hx
   have hT : (FreeSemigroup Bool)↓[ℒ⌢] ⊧* 𝗧𝗖 := inferInstance
-  simpa [models_iff, tc6] using ⟨h, fun φ hφ ↦ models_theory_iff.mp hT φ hφ⟩
+  simpa [models_iff, allIsBounded] using ⟨h, fun φ hφ ↦ models_theory_iff.mp hT φ hφ⟩
 
 /--
 The translation of $\mathsf{TC}$ into itself relativized to the thin strings.
@@ -354,8 +345,8 @@ def thinTranslation : DirectTranslation 𝗧𝗖 ℒ⌢ where
     simp [Semiformula.Operator.val]
 
 @[simp]
-lemma thinTranslation_dom_iff : thinTranslation.Dom x ↔ IsThin x := by
-  simp [dom_iff, thinTranslation, Semiformula.Operator.val]
+lemma thinTranslation.dom_iff : thinTranslation.Dom x ↔ IsThin x := by
+  simp [DirectTranslation.dom_iff, thinTranslation, Semiformula.Operator.val]
 
 section model
 
@@ -367,7 +358,7 @@ abbrev thinTranslation.concatenationStructure :
   zero := ⟨0, by simpa using isThin_zero⟩
   one := ⟨1, by simpa using isThin_one⟩
   append x y := ⟨x ++ y, by
-    simpa using (thinTranslation_dom_iff.mp x.dom).append (thinTranslation_dom_iff.mp y.dom)⟩
+    simpa using (thinTranslation.dom_iff.mp x.dom).append (thinTranslation.dom_iff.mp y.dom)⟩
 
 /--
 The structure of the model of `thinTranslation` is the standard one of the letters and the
@@ -400,7 +391,7 @@ lemma one_eq_mk : (1 : thinTranslation.Model V) = ⟨1, by simpa using isThin_on
 
 @[simp]
 lemma mk_append_mk : (⟨x, hx⟩ ++ ⟨y, hy⟩ : thinTranslation.Model V) = ⟨x ++ y, by
-    simpa using (thinTranslation_dom_iff.mp hx).append (thinTranslation_dom_iff.mp hy)⟩ := rfl
+    simpa using (thinTranslation.dom_iff.mp hx).append (thinTranslation.dom_iff.mp hy)⟩ := rfl
 
 @[simp]
 lemma isAtom_mk : IsAtom (⟨x, hx⟩ : thinTranslation.Model V) ↔ IsAtom x := by simp [IsAtom]
@@ -419,7 +410,7 @@ instance : (thinTranslation.Model V)↓[ℒ⌢] ⊧* 𝗧𝗖⁺ := by
   constructor
   intro σ hσ
   rcases hσ with rfl | hσ
-  · simpa [models_iff, tc6, Model.forall_iff, Model.exists_iff, IsBounded] using
+  · simpa [models_iff, allIsBounded, Model.forall_iff, Model.exists_iff, IsBounded] using
       fun (x : V) (hx : IsThin x) ↦ hx.isBounded.imp id fun ⟨⟨c, z, hc, h⟩, ⟨c', z', hc', h'⟩⟩ ↦
         ⟨⟨c, hc, hc.isThin, z, hx.of_isSubstring <| by simp [h], h⟩,
           ⟨c', hc', hc'.isThin, z', hx.of_isSubstring <| by simp [h'], h'⟩⟩

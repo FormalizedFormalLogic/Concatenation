@@ -88,7 +88,8 @@ protected lemma one_ne_zero : (1 : V) ≠ 0 := Concatenation.zero_ne_one.symm
 
 end TC
 
-instance : (FreeSemigroup Bool)↓[ℒ⌢] ⊧* 𝗧𝗖 := ⟨by
+instance : (FreeSemigroup Bool)↓[ℒ⌢] ⊧* 𝗧𝗖 := by
+  constructor
   intro σ h
   cases h
   case equal hφ =>
@@ -98,7 +99,7 @@ instance : (FreeSemigroup Bool)↓[ℒ⌢] ⊧* 𝗧𝗖 := ⟨by
   case editor => simpa [models_iff] using fun x y z w ↦ FreeSemigroup.mul_eq_mul_iff.mp
   case zeroNeConcat => simpa [models_iff, zero_eq_of_false] using FreeSemigroup.of_ne_mul false
   case oneNeConcat => simpa [models_iff, one_eq_of_true] using FreeSemigroup.of_ne_mul true
-  case zeroNeOne => simp [models_iff, zero_eq_of_false, one_eq_of_true, FreeSemigroup.of]⟩
+  case zeroNeOne => simp [models_iff, zero_eq_of_false, one_eq_of_true, FreeSemigroup.of]
 
 instance : Entailment.Consistent 𝗧𝗖 :=
   let : (FreeSemigroup Bool)↓[ℒ⌢] ⊧* 𝗧𝗖 := inferInstance

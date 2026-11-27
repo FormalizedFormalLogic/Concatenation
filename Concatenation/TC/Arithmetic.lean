@@ -243,11 +243,11 @@ def arithmeticTranslation : DirectTranslation 𝗧𝗖⁺ ℒₒᵣ where
     simp [Semiformula.Operator.val, Semiformula.Operator.Eq.sentence_eq]
 
 @[simp]
-lemma arithmeticTranslation_dom_iff : arithmeticTranslation.Dom x ↔ IsNumber x := by
-  simp [dom_iff, arithmeticTranslation, Semiformula.Operator.val]
+lemma arithmeticTranslation.dom_iff : arithmeticTranslation.Dom x ↔ IsNumber x := by
+  simp [DirectTranslation.dom_iff, arithmeticTranslation, Semiformula.Operator.val]
 
 lemma arithmeticTranslation.isNumber_val (a : arithmeticTranslation.Model V) : IsNumber (a : V) :=
-  arithmeticTranslation_dom_iff.mp a.dom
+  arithmeticTranslation.dom_iff.mp a.dom
 
 section model
 
@@ -257,8 +257,8 @@ namespace arithmeticTranslation
 
 /-- The constants, the operations and the order of the numbers of a model of $\mathsf{TC}^+$. -/
 noncomputable abbrev oRingStructure : ORingStructure (arithmeticTranslation.Model V) where
-  zero := ⟨0, arithmeticTranslation_dom_iff.mpr isNumber_zero⟩
-  one := ⟨1, arithmeticTranslation_dom_iff.mpr isNumber_one⟩
+  zero := ⟨0, arithmeticTranslation.dom_iff.mpr isNumber_zero⟩
+  one := ⟨1, arithmeticTranslation.dom_iff.mpr isNumber_one⟩
   add a b := Tarski.Structure.func (L := ℒₒᵣ) Language.ORing.Func.add ![a, b]
   mul a b := Tarski.Structure.func (L := ℒₒᵣ) Language.ORing.Func.mul ![a, b]
   lt a b := LtGraph (a : V) b
@@ -438,7 +438,7 @@ lemma eq_zero_or_exists_eq_add_one (a : arithmeticTranslation.Model V) :
     · use 0
       rw [arithmeticTranslation.zero_add]
       exact Model.ext ha'
-    · use ⟨x, arithmeticTranslation_dom_iff.mpr hx.isNumber⟩
+    · use ⟨x, arithmeticTranslation.dom_iff.mpr hx.isNumber⟩
       apply Model.ext
       rw [val_add_of_isTally hx isTally_one_one]
       exact ha'
@@ -487,7 +487,7 @@ lemma lt_iff : a < b ↔ ∃ c, a + (c + 1) = b := by
   change LtGraph (a : V) b ↔ _
   constructor
   · rintro ⟨c, hc, d, hd, h⟩
-    have hc' : arithmeticTranslation.Dom c := arithmeticTranslation_dom_iff.mpr hc
+    have hc' : arithmeticTranslation.Dom c := arithmeticTranslation.dom_iff.mpr hc
     use ⟨c, hc'⟩
     apply Model.ext
     rw [val_add_eq_iff, (val_add_eq_iff (a := ⟨c, hc'⟩) (b := 1)).mpr hd]
@@ -657,7 +657,7 @@ lemma eval_transportedRepresentation (hγ : ∀ n, 𝗥₀ ⊢ “∀ y, !γ ↑
     V ⊧/![tallyOf n, y] (transportedRepresentation γ) ↔ y = tallyOf (f n) := by
   by_cases hy : IsNumber y
   · let a : arithmeticTranslation.Model V := (Semiterm.Operator.numeral ℒₒᵣ n).val ![]
-    let b : arithmeticTranslation.Model V := ⟨y, arithmeticTranslation_dom_iff.mpr hy⟩
+    let b : arithmeticTranslation.Model V := ⟨y, arithmeticTranslation.dom_iff.mpr hy⟩
     have h : ∀ c : arithmeticTranslation.Model V, (arithmeticTranslation.Model V) ⊧/![a, c] γ ↔
         c = (Semiterm.Operator.numeral ℒₒᵣ (f n)).val ![] := by
       simpa [models_iff] using
@@ -709,7 +709,7 @@ lemma eval_thinRepresentation
     V ⊧/![tallyOf n, y] (thinRepresentation γ) ↔ y = tallyOf (f n) := by
   by_cases hy : IsThin y
   · let a : thinTranslation.Model V := (numeralTerm n).val ![] Empty.elim
-    let b : thinTranslation.Model V := ⟨y, thinTranslation_dom_iff.mpr hy⟩
+    let b : thinTranslation.Model V := ⟨y, thinTranslation.dom_iff.mpr hy⟩
     have h : ∀ c : thinTranslation.Model V, (thinTranslation.Model V) ⊧/![a, c] γ ↔
         c = (numeralTerm (f n)).val ![] Empty.elim := by
       simpa [models_iff] using

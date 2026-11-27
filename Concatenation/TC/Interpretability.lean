@@ -31,11 +31,11 @@ variable {V : Type*} [ORingStructure V] {x y z p q r s p' q' r' s' : V}
 def matrixCode (p q r s : V) : V := squarePair (squarePair p q) (squarePair r s)
 
 /-- `x` is the code of the matrix $\begin{pmatrix} p & q \\ r & s \end{pmatrix}$. -/
-def isMatrixCodeDef : 𝚺ᴬ₁.Semisentence 5 :=
+def matrixCodeDef : 𝚺ᴬ₁.Semisentence 5 :=
   .mkSigma “x p q r s. ∃ u v, !squarePairDef u p q ∧ !squarePairDef v r s ∧ !squarePairDef x u v”
 
-instance matrixCode_defined : 𝚺ᴬ₁-Function₄[V] matrixCode via isMatrixCodeDef := .mk fun v ↦ by
-  simp [isMatrixCodeDef, matrixCode]
+instance matrixCode_defined : 𝚺ᴬ₁-Function₄[V] matrixCode via matrixCodeDef := .mk fun v ↦ by
+  simp [matrixCodeDef, matrixCode]
 
 instance matrixCode_definable : 𝚺ᴬ₁-Function₄[V] matrixCode := matrixCode_defined.to_definable
 
@@ -51,7 +51,7 @@ def IsMatrixString (x : V) : Prop :=
 - [Mur24, §5.1, §6.1]
 -/
 def isMatrixStringDef : ArithmeticSemisentence 1 :=
-  “x. ¬!isMatrixCodeDef x 1 0 0 1 ∧ ∃ p q r s, !isMatrixCodeDef x p q r s ∧ p * s = q * r + 1”
+  “x. ¬!matrixCodeDef x 1 0 0 1 ∧ ∃ p q r s, !matrixCodeDef x p q r s ∧ p * s = q * r + 1”
 
 instance isMatrixString_defined : ℒₒᵣ-predicate[V] IsMatrixString via isMatrixStringDef :=
   ⟨fun v ↦ by simp [isMatrixStringDef, Matrix.comp_vecCons'', IsMatrixString]⟩
@@ -72,8 +72,8 @@ def MatrixMulGraph (z x y : V) : Prop :=
 - [Mur24, §5.1]
 -/
 def matrixMulGraphDef : 𝚺ᴬ₁.Semisentence 3 := .mkSigma
-  “z x y. ∃ p q r s, !isMatrixCodeDef x p q r s ∧ ∃ p' q' r' s', !isMatrixCodeDef y p' q' r' s' ∧
-    !isMatrixCodeDef z (p * p' + q * r') (p * q' + q * s') (r * p' + s * r') (r * q' + s * s')”
+  “z x y. ∃ p q r s, !matrixCodeDef x p q r s ∧ ∃ p' q' r' s', !matrixCodeDef y p' q' r' s' ∧
+    !matrixCodeDef z (p * p' + q * r') (p * q' + q * s') (r * p' + s * r') (r * q' + s * s')”
 
 instance matrixMulGraph_defined : 𝚺ᴬ₁-Relation₃[V] MatrixMulGraph via matrixMulGraphDef :=
   .mk fun v ↦ by simp [matrixMulGraphDef, Matrix.comp_vecCons'', MatrixMulGraph]
@@ -190,8 +190,8 @@ def matrixTranslation : DirectTranslation 𝗣𝗔⁻ ℒ⌢ where
   rel R := match R with
     | Concatenation.Rel.eq => Semiformula.Operator.Eq.eq
   func f := match f with
-    | Concatenation.Func.zero => ⟨“z. !isMatrixCodeDef z 1 0 1 1”⟩
-    | Concatenation.Func.one => ⟨“z. !isMatrixCodeDef z 1 1 0 1”⟩
+    | Concatenation.Func.zero => ⟨“z. !matrixCodeDef z 1 0 1 1”⟩
+    | Concatenation.Func.one => ⟨“z. !matrixCodeDef z 1 1 0 1”⟩
     | Concatenation.Func.concat => ⟨matrixMulGraphDef.val⟩
   domain_nonempty := Arithmetic.complete.{0} _ _ fun V _ _ ↦
     (models_domainNonempty_iff _).mpr <| by

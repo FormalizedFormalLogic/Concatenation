@@ -494,10 +494,10 @@ def isShift : Semisentence ℒ⌢ₑ 2 :=
   “y x. (!nonemptySuffixesBeginWithZero x ∧ y = !!(op(0).const) ⌢ x) ∨
     (¬!nonemptySuffixesBeginWithZero x ∧ y = x)”
 
-instance isShift_defined : ℒ⌢ₑ-function₁[V] shift via isShift := .mk fun v ↦ by
+instance shift_defined : ℒ⌢ₑ-function₁[V] shift via isShift := .mk fun v ↦ by
   by_cases h : NonemptySuffixesBeginWithZero (v 1) <;> simp [isShift, shift, h]
 
-instance isShift_definable : ℒ⌢ₑ-function₁[V] shift := isShift_defined.to_definable
+instance shift_definable : ℒ⌢ₑ-function₁[V] shift := shift_defined.to_definable
 
 section map
 
@@ -730,12 +730,12 @@ def isShiftSome : Semisentence ℒ⌢ 2 :=
   “y x. (!suffixesBeginWithZero x ∧ y = !!(op(0).const) ⌢ x) ∨
     (¬!suffixesBeginWithZero x ∧ y = x)”
 
-instance isShiftSome_defined :
+instance shiftOption_some_defined :
     ℒ⌢-function₁[V] (fun x ↦ shiftOption (some x)) via isShiftSome := .mk fun v ↦ by
   by_cases h : SuffixesBeginWithZero (v 1) <;> simp [isShiftSome, shiftOption, h]
 
-instance isShiftSome_definable : ℒ⌢-function₁[V] (fun x ↦ shiftOption (some x)) :=
-  isShiftSome_defined.to_definable
+instance shiftOption_some_definable : ℒ⌢-function₁[V] (fun x ↦ shiftOption (some x)) :=
+  shiftOption_some_defined.to_definable
 
 /--
 `z` corresponds under `shiftOption` to the concatenation of the strings corresponding to `x`
@@ -841,11 +841,6 @@ lemma func_one_val_iff {e : Fin 1 → V} :
       e 0 = shiftOption (some 1) := by
   simp [emptyShiftTranslation, Semiformula.Operator.val]
 
-lemma func_concat_val_iff {e : Fin 3 → V} :
-    (emptyShiftTranslation.func (Sum.inl Language.Concatenation.Func.concat)).val e ↔
-      IsShiftAppend (e 0) (e 1) (e 2) := by
-  exact Defined.eval_iff (φ := isShiftAppend) e
-
 lemma func_empty_val_iff {e : Fin 1 → V} :
     (emptyShiftTranslation.func (Sum.inr <| Language.Constant.Func.const ⟨⟩)).val e ↔ e 0 = 0 := by
   simp [emptyShiftTranslation, Semiformula.Operator.val, Semiformula.Operator.Eq.sentence_eq]
@@ -878,7 +873,7 @@ lemma struc_eq :
       · exact func_zero_val_iff.mpr rfl
       · exact func_one_val_iff.mpr rfl
       · have h : equiv.symm (equiv (v 0)) ++ equiv.symm (equiv (v 1)) = v 0 ++ v 1 := by simp
-        exact func_concat_val_iff.mpr <| isShiftAppend_shiftOption_iff.mpr <|
+        exact (Defined.eval_iff (φ := isShiftAppend) _).mpr <| isShiftAppend_shiftOption_iff.mpr <|
           congrArg shiftOption h
       · exact func_empty_val_iff.mpr rfl)
     (funext₃ fun k r v ↦ by
@@ -1024,7 +1019,7 @@ lemma shiftTranslation.func_val_iff {V : Type} [ConcatenationEmptyStructure V]
   · exact emptyShiftTranslation.func_one_val_iff.trans <| h optionEquiv_one
   · obtain ⟨x, hx⟩ := shiftOptionEquiv.surjective (e 1)
     obtain ⟨y, hy⟩ := shiftOptionEquiv.surjective (e 2)
-    apply emptyShiftTranslation.func_concat_val_iff.trans
+    apply (Defined.eval_iff (φ := isShiftAppend) _).trans
     rw [← hx, ← hy]
     apply isShiftAppend_shiftOption_iff.trans <| h _
     rw [optionEquiv_append, ← val_shiftOption_eq, ← val_shiftOption_eq]
@@ -1036,7 +1031,7 @@ open DirectInterpretation in
 $\mathsf{TC}$ and $\mathsf{TC}$ with the empty string are definitionally equivalent.
 - [Vis09, Appendix A]
 -/
-def tcDefinitionalEquivalence : DefinitionalEquivalence 𝗧𝗖 𝗧𝗖ₑ where
+def TC.definitionalEquivalenceEmpty : DefinitionalEquivalence 𝗧𝗖 𝗧𝗖ₑ where
   r := emptyShiftInterpretation
   l := shiftInterpretation
   equivalent_id_left := {

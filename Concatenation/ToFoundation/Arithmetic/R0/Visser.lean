@@ -28,7 +28,7 @@ section stage
 @[mk_iff]
 structure IsStage (A : 𝚺ᴬ₀.Semisentence 2) (E : ℕ) (j c : V) : Prop where
   isCertificate : IsCertificate A E c j
-  eq_of_le : ∀ d, d ⊴ c → IsCertificate A E d j → d = c
+  eq_of_le : ∀ d, d ≤ᶜ c → IsCertificate A E d j → d = c
 
 /-- `c` is the least certificate of level `j`. -/
 def isStageDef (A : 𝚺ᴬ₀.Semisentence 2) (E : ℕ) : ArithmeticSemisentence 2 := “j c.
@@ -44,7 +44,7 @@ instance isStage_definable : ℒₒᵣ-relation[V] (IsStage A E) := isStage_defi
 structure HasStage (A : 𝚺ᴬ₀.Semisentence 2) (E : ℕ) (j : V) : Prop where
   exists_isStage : ∃ c, IsStage A E j c
   unique : ∀ c, IsStage A E j c → ∀ d, IsStage A E j d → c = d
-  lt : ∀ c, IsStage A E j c → ∀ x, x ⊴ j → x < c
+  lt : ∀ c, IsStage A E j c → ∀ x, x ≤ᶜ j → x < c
 
 /-- `j` has a unique least certificate, which bounds the elements up to `j`. -/
 def hasStageDef (A : 𝚺ᴬ₀.Semisentence 2) (E : ℕ) : ArithmeticSemisentence 1 := “j.
@@ -73,7 +73,8 @@ variable [V↓[ℒₒᵣ] ⊧* 𝗥₀]
 
 lemma isCertificate_numeral_iff (i j : ℕ) :
     IsCertificate A E (numeral i : V) (numeral j) ↔ IsCertificate A E i j := by
-  simpa [Matrix.comp_vecCons'] using eval_numeral_iff_nat (V := V) (isCertificateDef A E) ![i, j]
+  simpa [Matrix.comp_vecCons'] using
+    R0.models_iff_of_Sigma0 (M := V) (isCertificateDef A E).sigma_prop (bv := ![i, j])
 
 private lemma hasStage_numeral {j : ℕ} (h : ∃ c : ℕ, IsCertificate A E c j) :
     HasStage A E (numeral j : V) := by
@@ -154,10 +155,10 @@ structure IsApproximable (A : 𝚺ᴬ₀.Semisentence 2) (E : ℕ) (P : V → Pr
   num (n : ℕ) : P (numeral n)
   pair (x y : V) : P x → P y → P (mkPair x y)
   approx (s : List V) : (∀ x ∈ s, P x) → ∃ (c j : V) (Q : V → Prop), IsCertificate A E c j ∧
-    (∀ x ∈ s, Q x) ∧ (∀ x a, Q x → a ⊴ x → Q a) ∧ (∀ a, Q a → P a) ∧
-    (∀ x a y, P x → P y → Q (mkPair x y) → a ⊴ x → Q (mkPair a y)) ∧
+    (∀ x ∈ s, Q x) ∧ (∀ x a, Q x → a ≤ᶜ x → Q a) ∧ (∀ a, Q a → P a) ∧
+    (∀ x a y, P x → P y → Q (mkPair x y) → a ≤ᶜ x → Q (mkPair a y)) ∧
     (∀ n : ℕ, Q (numeral n) →
-      numeral n < c ∧ numeral n ⊴ j) ∧
+      numeral n < c ∧ numeral n ≤ᶜ j) ∧
     ∀ k ≤ 9, ∀ x y z, Q x → Q y → Q z → (F k x y z ↔ HasFact c (numeral k) x y z)
 
 variable [V↓[ℒₒᵣ] ⊧* 𝗥₀]
@@ -174,7 +175,7 @@ lemma isApproximable_holds (h : ∀ j : ℕ, ∃ c : ℕ, IsCertificate A E c j)
     obtain ⟨m, hm⟩ := hm
     have stage : HasStage A E m := hm.1.pred m <| cobhamLE_refl m
     obtain ⟨c, hc⟩ := stage.exists_isStage
-    have hle (n : ℕ) : numeral n ⊴ m := hm.2 _ <| isGood_numeral hP n
+    have hle (n : ℕ) : numeral n ≤ᶜ m := hm.2 _ <| isGood_numeral hP n
     use c, m, fun _ ↦ True
     have holds (k x y z : V) :
         Holds (HasStage A E) (MemStage A E) (IsStage A E) k x y z ↔ HasFact c k x y z := by
@@ -205,7 +206,7 @@ lemma isApproximable_holds (h : ∀ j : ℕ, ∃ c : ℕ, IsCertificate A E c j)
     · exact fun x y hx hy ↦ small.mpr <| (small.mp hx).mkPair hm hP (small.mp hy)
     intro s hs
     obtain ⟨b, hb, hsb⟩ :
-        ∃ b : V, IsMulCut (HasStage A E) (MemStage A E) b ∧ ∀ x ∈ s, x ⊴ b := by
+        ∃ b : V, IsMulCut (HasStage A E) (MemStage A E) b ∧ ∀ x ∈ s, x ≤ᶜ b := by
       clear holds
       induction s with
       | nil => exact ⟨_, num 0, by simp⟩
@@ -223,8 +224,8 @@ lemma isApproximable_holds (h : ∀ j : ℕ, ∃ c : ℕ, IsCertificate A E c j)
     obtain ⟨j, hj, hbj, hjB⟩ := HasPath.exists_memLimit_iff (hB.1.1.add_one hm) hb.isGood
     have stage : HasStage A E j := hj.pred j <| cobhamLE_refl j
     obtain ⟨c, hc⟩ := stage.exists_isStage
-    have lt {x : V} (hx : x ⊴ b) : x < c := stage.lt c hc x <| hj.tame.trans b x hx hbj
-    use c, j, (· ⊴ b)
+    have lt {x : V} (hx : x ≤ᶜ b) : x < c := stage.lt c hc x <| hj.tame.trans b x hx hbj
+    use c, j, (· ≤ᶜ b)
     and_intros
     · exact hc.isCertificate
     · exact hsb
@@ -234,9 +235,9 @@ lemma isApproximable_holds (h : ∀ j : ℕ, ∃ c : ℕ, IsCertificate A E c j)
         (le (small.mp hx) (small.mp hy) ha <| cobhamLE_refl y) hxy
     · exact fun n hn ↦ ⟨lt hn, hj.tame.trans b _ hn hbj⟩
     · intro k hk x y z hx hy hz
-      have hk : (numeral k : V) ⊴ numeral 9 := numeral_cobhamLE_numeral_iff.mpr hk
+      have hk : (numeral k : V) ≤ᶜ numeral 9 := numeral_cobhamLE_numeral_iff.mpr hk
       have hle := le (num 9) hB₂ hk <| le hb hB₁ hx <| le hb hb hy hz
-      have hlt : mkPair (numeral k) (mkPair x (mkPair y z)) ◃
+      have hlt : mkPair (numeral k) (mkPair x (mkPair y z)) <ᶜ
           mkPair (numeral 9) (mkPair b (mkPair b b)) + 1 := by
         apply hB.isGood.lt_add_one_iff.mpr
         by_cases e : mkPair (numeral k) (mkPair x (mkPair y z)) =
@@ -339,7 +340,8 @@ lemma ax {w : ℕ} (hp : ℕ ⊧/![p, w] A.val) :
   simp only [List.forall_mem_cons] at hl
   obtain ⟨v₀, v₁, v₂, -⟩ := hl
   exact (hF 4 (by simp) _ _ _ v₁ v₀ v₀).mpr <| hc.ax _ (hn _ v₁).1 _ (hn _ v₂).1 (hn _ v₁).2
-    (hn _ v₂).2 <| by simpa [Matrix.comp_vecCons'] using (eval_numeral_iff_nat A ![p, w]).mpr hp
+    (hn _ v₂).2 <| by simpa [Matrix.comp_vecCons'] using
+      (R0.models_iff_of_Sigma0 A.sigma_prop (bv := ![p, w])).mpr hp
 
 lemma bvar_zero (hs : P s) (ha : P a) (hns : F 3 (numeral n) s 0) (hda : F 2 a 0 0) :
     F 5 (numeral (Nat.pair 0 0 + 1)) (mkPair a s) a := by

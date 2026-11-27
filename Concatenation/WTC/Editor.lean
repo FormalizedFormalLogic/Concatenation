@@ -617,7 +617,7 @@ private lemma eventually_models_of_finite {F : Theory ℒ⌢} (hF : F ⊆ WTCEdi
 
 /-- No finite part of $\mathsf{WTC}$ with the editor axiom is essentially undecidable. -/
 theorem not_essentiallyUndecidable_of_finite {F : Theory ℒ⌢} (hF : F ⊆ WTCEditor)
-    (hfin : F.Finite) : ¬F.EssentiallyUndecidable :=
+    (hfin : F.Finite) : ¬Entailment.EssentiallyUndecidable F fun _ ↦ True :=
   let ⟨N, _⟩ := (eventually_models_of_finite hF hfin).exists
   Theory.not_essentiallyUndecidable_of_models (Pairing N) (Pairing.decidable_theory N)
 

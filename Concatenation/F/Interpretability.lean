@@ -415,7 +415,7 @@ $\mathsf{F}$ is essentially undecidable.
 - [Hor11, §2, Theorem 2.12]
 - [Gan09, §4]
 -/
-instance : 𝗙.EssentiallyUndecidable :=
+instance : Entailment.EssentiallyUndecidable 𝗙 fun _ ↦ True :=
   DirectInterpretation.essentiallyUndecidable (inferInstance : 𝗙 ⊳ 𝗧𝗖)
 
 end FFL.FirstOrder.Concatenation

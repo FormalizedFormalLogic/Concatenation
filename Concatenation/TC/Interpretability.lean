@@ -388,14 +388,15 @@ instance : 𝗤 ⋈ 𝗧𝗖 := ⟨inferInstance, inferInstance⟩
 $\mathsf{TC}$ is essentially undecidable.
 - [GZ08, Theorem 16]
 -/
-instance : (𝗧𝗖 : ConcatenationTheory).EssentiallyUndecidable :=
+instance : Entailment.EssentiallyUndecidable (𝗧𝗖 : ConcatenationTheory) fun _ ↦ True :=
   DirectInterpretation.essentiallyUndecidable (inferInstance : 𝗧𝗖 ⊳ 𝗤)
 
 /--
 $\mathsf{TC}$ is undecidable.
 - [GZ08, Theorem 16]
 -/
-theorem TC.undecidable : Entailment.Undecidable 𝗧𝗖 := Theory.EssentiallyUndecidable.undecidable 𝗧𝗖
+theorem TC.undecidable : Entailment.Undecidable 𝗧𝗖 :=
+  Entailment.EssentiallyUndecidable.undecidable (P := fun _ ↦ True) 𝗧𝗖 trivial
 
 theorem _root_.FFL.FirstOrder.Arithmetic.R0.notInterprets_TC : 𝗥₀ ⋫ 𝗧𝗖 :=
   Arithmetic.R0.notInterprets_Q.of_right (inferInstance : 𝗧𝗖 ⊳ 𝗤)

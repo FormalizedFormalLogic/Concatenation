@@ -1,7 +1,7 @@
 module
 
 public import Concatenation.TC.Interpretability
-public import Concatenation.ToFoundation.Arithmetic.R0.Undecidability
+public import Foundation.FirstOrder.Arithmetic.R0.Undecidability
 public import Concatenation.ToFoundation.Arithmetic.R0.Visser
 public import Concatenation.ToFoundation.Interpretability.Undecidability
 public import Concatenation.ToMathlib.FreeSemigroup
@@ -705,7 +705,7 @@ $\mathsf{WTC}$ is essentially undecidable.
 - [Hor11, §3, Corollary 3.17]
 - [Hor12, §4, Corollary 4.11]
 -/
-instance : (𝗪𝗧𝗖 : ConcatenationTheory).EssentiallyUndecidable :=
+instance : Entailment.EssentiallyUndecidable (𝗪𝗧𝗖 : ConcatenationTheory) fun _ ↦ True :=
   DirectInterpretation.essentiallyUndecidable (inferInstance : 𝗪𝗧𝗖 ⊳ 𝗥₀)
 
 instance {α : Type} [Nonempty α] : (FreeSemigroup α)↓[ℒ⌢[α]] ⊧* 𝗪𝗧𝗖[α] :=
@@ -726,7 +726,7 @@ $\mathsf{WTC}$ is undecidable.
 - [Hor11, §3, Corollary 3.17]
 -/
 theorem WTC.undecidable : Entailment.Undecidable 𝗪𝗧𝗖 :=
-  Theory.EssentiallyUndecidable.undecidable 𝗪𝗧𝗖
+  Entailment.EssentiallyUndecidable.undecidable (P := fun _ ↦ True) 𝗪𝗧𝗖 trivial
 
 section letters
 
@@ -773,7 +773,8 @@ For every $n \ge 2$, $\mathsf{WTC}_n$ is essentially undecidable.
 - [Hor11, §3, Corollary 3.17, Theorem 3.18]
 - [Hor12, §4, Corollary 4.11, Theorem 4.13]
 -/
-theorem WTCLetters.essentiallyUndecidable (hn : 2 ≤ n) : 𝗪𝗧𝗖[Fin n].EssentiallyUndecidable :=
+theorem WTCLetters.essentiallyUndecidable (hn : 2 ≤ n) :
+    Entailment.EssentiallyUndecidable 𝗪𝗧𝗖[Fin n] fun _ ↦ True :=
   have : Nontrivial (Fin n) := Fin.nontrivial_iff_two_le.mpr hn
   DirectInterpretation.essentiallyUndecidable (inferInstance : 𝗪𝗧𝗖[Fin n] ⋈ 𝗥₀).r
 
@@ -785,7 +786,7 @@ For every $n \ge 2$, $\mathsf{WTC}_n$ is undecidable.
 theorem WTCLetters.undecidable (hn : 2 ≤ n) : Entailment.Undecidable 𝗪𝗧𝗖[Fin n] :=
   have := essentiallyUndecidable hn
   have : Nonempty (Fin n) := ⟨⟨0, by lia⟩⟩
-  Theory.EssentiallyUndecidable.undecidable 𝗪𝗧𝗖[Fin n]
+  Entailment.EssentiallyUndecidable.undecidable (P := fun _ ↦ True) 𝗪𝗧𝗖[Fin n] trivial
 
 end letters
 

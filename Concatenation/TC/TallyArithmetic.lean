@@ -352,6 +352,76 @@ lemma induction {P : TallyNumber V → Prop} (φ : Semiformula ℒₒᵣ ℕ 1)
   exact InductionScheme.succ_induction (C := ℬ[<, ℒₒᵣ].PrenexHierarchy 𝚺 1)
     ⟨e, ψ, hψ, fun x ↦ (hP x).trans (H _ _ _)⟩ zero succ
 
+variable {a b c : TallyNumber V}
+
+protected lemma add_zero (a : TallyNumber V) : a + 0 = a := ext_iff'.mpr <| by simp
+
+protected lemma add_assoc (a b c : TallyNumber V) : a + b + c = a + (b + c) :=
+  ext_iff'.mpr <| by simp [TCEmpty.append_assoc]
+
+protected lemma add_comm (a b : TallyNumber V) : a + b = b + a :=
+  ext_iff'.mpr <| by simpa using TCISigma.append_comm a.2 b.2
+
+lemma ne_zero_iff : a ≠ 0 ↔ a.1 ≠ ∅ := by simp [ext_iff']
+
+lemma exists_add_eq_of_lt (h : a < b) : ∃ c < b + 1, a + c = b := by
+  obtain ⟨z, hz, hb⟩ := h
+  have tz : IsTally 1 z := TCEmpty.isTally_of_isSubstring b.2 (hb ▸ isSubstring_append_right _ _)
+  refine ⟨⟨z, tz⟩, ⟨a.1 ++ 1, fun h ↦ TCEmpty.one_ne_empty
+    (TCEmpty.eq_empty_of_append_eq_empty h).2, ?_⟩, ext_iff'.mpr hb.symm⟩
+  simp [hb, ← TCEmpty.append_assoc, TCISigma.append_comm a.2 tz]
+
+lemma zero_le (a : TallyNumber V) : 0 = a ∨ 0 < a := by
+  by_cases h : a.1 = ∅
+  · exact .inl (ext_iff'.mpr h.symm)
+  · exact .inr ⟨a.1, h, by simp⟩
+
+lemma zero_lt_one : (0 : TallyNumber V) < 1 := ⟨1, TCEmpty.one_ne_empty, by simp⟩
+
+lemma one_le_of_zero_lt (h : 0 < a) : 1 = a ∨ 1 < a := by
+  obtain ⟨z, hz, ha⟩ := h
+  simp only [val_zero, TCEmpty.empty_append] at ha
+  obtain ⟨x, tx, hx⟩ := TCISigma.eq_append_one_of_ne_empty a.2 (ha ▸ hz)
+  by_cases hx' : x = ∅
+  · exact .inl (ext_iff'.mpr (by simp [hx, hx']))
+  · exact .inr ⟨x, hx', by simp [hx, TCISigma.append_comm tx TCEmpty.isTally_one]⟩
+
+lemma add_lt_add (h : a < b) (c : TallyNumber V) : a + c < b + c := by
+  obtain ⟨z, hz, hb⟩ := h
+  have tz : IsTally 1 z := TCEmpty.isTally_of_isSubstring b.2 (hb ▸ isSubstring_append_right _ _)
+  exact ⟨z, hz, by simp [hb, TCEmpty.append_assoc, TCISigma.append_comm tz c.2]⟩
+
+lemma lt_irrefl (a : TallyNumber V) : ¬a < a := fun ⟨_, hz, h⟩ ↦
+  hz (TCISigma.eq_empty_of_append_eq_self h.symm)
+
+lemma lt_trans (hab : a < b) (hbc : b < c) : a < c := by
+  obtain ⟨z, hz, hb⟩ := hab
+  obtain ⟨z', -, hc⟩ := hbc
+  exact ⟨z ++ z', fun h ↦ hz (TCEmpty.eq_empty_of_append_eq_empty h).1,
+    by simp [hc, hb, TCEmpty.append_assoc]⟩
+
+lemma lt_tri (a b : TallyNumber V) : a < b ∨ a = b ∨ b < a := by
+  rcases TCISigma.exists_append_eq_or_exists_append_eq a.2 b.2 with ⟨z, h⟩ | ⟨z, h⟩
+  · by_cases hz : z = ∅
+    · exact .inr <| .inl <| ext_iff'.mpr (by simpa [hz] using h)
+    · exact .inl ⟨z, hz, h.symm⟩
+  · by_cases hz : z = ∅
+    · exact .inr <| .inl <| ext_iff'.mpr (by simpa [hz] using h.symm)
+    · exact .inr <| .inr ⟨z, hz, h.symm⟩
+
+protected lemma mul_zero (a : TallyNumber V) : a * 0 = 0 :=
+  ext_iff'.mpr <| val_mul_eq_iff.mpr (isTallyMul_empty a.2)
+
+protected lemma zero_mul (a : TallyNumber V) : 0 * a = 0 :=
+  ext_iff'.mpr <| val_mul_eq_iff.mpr ⟨∅, by simp, a.2, by simp, .inl ⟨.inl rfl, rfl⟩⟩
+
+lemma mul_add_one (a b : TallyNumber V) : a * (b + 1) = a * b + a :=
+  ext_iff'.mpr <| val_mul_eq_iff.mpr (isTallyMul_val_mul a b).append_one
+
+protected lemma mul_one (a : TallyNumber V) : a * 1 = a := by
+  simpa [TallyNumber.mul_zero, TallyNumber.add_comm 0, TallyNumber.add_zero,
+    show (0 : TallyNumber V) + 1 = 1 from ext_iff'.mpr (by simp)] using mul_add_one a 0
+
 end TallyNumber
 
 end induction

@@ -613,7 +613,7 @@ noncomputable def codeTranslation : DirectTranslation 𝗥₀ ℒ⌢[α] where
     simp [Semiformula.Operator.val, Semiformula.Operator.Eq.sentence_eq]
 
 @[simp]
-lemma codeTranslation_dom (x : V) : (codeTranslation α).Dom x := by
+lemma codeTranslation.dom (x : V) : (codeTranslation α).Dom x := by
   simp [dom_iff, codeTranslation, Semiformula.Operator.val]
 
 namespace codeTranslation

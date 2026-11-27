@@ -44,7 +44,7 @@ section model
 variable {V : Type*} [ORingStructure V]
 
 @[simp]
-lemma cobhamTranslation_dom (x : V) : cobhamTranslation.Dom x := by
+lemma cobhamTranslation.dom (x : V) : cobhamTranslation.Dom x := by
   simp [dom_iff, cobhamTranslation, Semiformula.Operator.val]
 
 namespace cobhamTranslation

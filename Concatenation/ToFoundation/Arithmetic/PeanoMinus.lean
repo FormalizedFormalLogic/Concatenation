@@ -471,11 +471,12 @@ def multiplicativeTranslation : DirectTranslation 𝗤 ℒₒᵣ where
     simp [Semiformula.Operator.val, Semiformula.Operator.Eq.sentence_eq]
 
 @[simp]
-lemma multiplicativeTranslation_dom_iff : multiplicativeTranslation.Dom x ↔ IsMultiplicative x := by
-  simp [dom_iff, multiplicativeTranslation, Semiformula.Operator.val]
+lemma multiplicativeTranslation.dom_iff :
+    multiplicativeTranslation.Dom x ↔ IsMultiplicative x := by
+  simp [DirectTranslation.dom_iff, multiplicativeTranslation, Semiformula.Operator.val]
 
 lemma multiplicativeTranslation.isMultiplicative_val (a : multiplicativeTranslation.Model V) :
-    IsMultiplicative (a : V) := multiplicativeTranslation_dom_iff.mp a.dom
+    IsMultiplicative (a : V) := multiplicativeTranslation.dom_iff.mp a.dom
 
 section model
 
@@ -548,7 +549,7 @@ variable {a b c}
 
 /-- An element of `V` is in the model if its sum with an element of the model is. -/
 lemma exists_val_eq {z : V} (h : z + a = b) : ∃ c : multiplicativeTranslation.Model V, c = z := by
-  use ⟨z, multiplicativeTranslation_dom_iff.mpr <| (isMultiplicative_val a).of_add <|
+  use ⟨z, multiplicativeTranslation.dom_iff.mpr <| (isMultiplicative_val a).of_add <|
     h ▸ isMultiplicative_val b⟩
 
 lemma eq_zero_or_exists_eq_add_one (a : multiplicativeTranslation.Model V) :

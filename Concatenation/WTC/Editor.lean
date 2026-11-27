@@ -767,43 +767,6 @@ end WTCEditor
 
 open ConcatenationStructure ConcatenationEmptyStructure DirectTranslation
 
-section option
-
-variable {V : Type*} [ConcatenationStructure V] {x y : V}
-
-private lemma Option.ofList_cons (b : Bool) (l : List Bool) :
-    (ofList (b :: l) : Option V) = some (ofFreeSemigroup ⟨b, l⟩) := by
-  suffices ∀ (l : List Bool) (x : V),
-      l.foldl (fun m b ↦ m ++ if b then 1 else 0) (some x) =
-        some (l.foldl (fun m b ↦ m ++ if b then 1 else 0) x) by
-    rw [ofFreeSemigroup, FreeSemigroup.stringValue, ← this]
-    cases b <;> rfl
-  intro l
-  induction l with
-  | nil => simp
-  | cons b l ih =>
-    intro x
-    rw [List.foldl_cons, List.foldl_cons, ← ih]
-    cases b <;> rfl
-
-@[simp]
-lemma Option.not_isSubstring_none : ¬IsSubstring (some x) (none : Option V) := by
-  rintro (h | ⟨u, h⟩ | ⟨v, h⟩ | ⟨u, v, h⟩ | ⟨u, v, h⟩)
-  · simp at h
-  · cases u <;> simp at h
-  · cases v <;> simp at h
-  all_goals cases u <;> cases v <;> simp at h
-
-lemma Option.isSubstring_of_some (h : IsSubstring (some x) (some y)) : IsSubstring x y := by
-  rcases h with h | ⟨u, h⟩ | ⟨v, h⟩ | ⟨u, v, h⟩ | ⟨u, v, h⟩
-  · simp at h
-    grind [IsSubstring]
-  · cases u <;> simp at h <;> grind [IsSubstring]
-  · cases v <;> simp at h <;> grind [IsSubstring]
-  all_goals cases u <;> cases v <;> simp at h <;> grind [IsSubstring]
-
-end option
-
 namespace WTCEditor
 
 section models
@@ -867,155 +830,29 @@ end models
 
 section code
 
-variable {V : Type} [ConcatenationStructure V] {x y z : V}
+variable {V : Type} [ConcatenationStructure V]
 
-/-- `z` is the code of the concatenation of the strings coded by `x` and `y`. -/
-def IsCodeAppend (z x y : V) : Prop :=
-  (x = 1 ∧ z = y) ∨ (y = 1 ∧ z = x) ∨ ∃ u v, x = 1 ++ u ∧ y = 1 ++ v ∧ z = 1 ++ (u ++ v)
-
-/-- `z` is the code of the concatenation of the strings coded by `x` and `y`. -/
-def isCodeAppend : Semisentence ℒ⌢ 3 :=
-  “z x y. (x = !!(op(1).const) ∧ z = y) ∨ (y = !!(op(1).const) ∧ z = x) ∨
-    ∃ u v, x = !!(op(1).const) ⌢ u ∧ y = !!(op(1).const) ⌢ v ∧ z = !!(op(1).const) ⌢ (u ⌢ v)”
-
-instance isCodeAppend_defined : ℒ⌢-relation₃[V] IsCodeAppend via isCodeAppend :=
-  ⟨fun v ↦ by simp [isCodeAppend, IsCodeAppend]⟩
-
-instance isCodeAppend_definable : ℒ⌢-relation₃[V] IsCodeAppend := isCodeAppend_defined.to_definable
-
-section
-
-variable [V↓[ℒ⌢] ⊧* WTCEditor]
-
-lemma one_append_cancel (h : 1 ++ x = 1 ++ y) : x = y := by
-  rcases editor h with ⟨-, h⟩ | ⟨u, ⟨h, -⟩ | ⟨h, -⟩⟩
-  · exact h
-  · exact (WTC.append_ne_one 1 u h).elim
-  · exact (WTC.append_ne_one 1 u h.symm).elim
-
-lemma emptyCode_injective : Function.Injective (emptyCode (V := V)) := by
-  rintro (_ | x) (_ | y) h
-  · rfl
-  · exact (WTC.append_ne_one 1 y h.symm).elim
-  · exact (WTC.append_ne_one 1 x h).elim
-  · exact congrArg some <| one_append_cancel h
-
-lemma isCodeAppend_emptyCode_iff {x y : Option V} :
-    IsCodeAppend z (emptyCode x) (emptyCode y) ↔ z = emptyCode (x ++ y) := by
-  have h (x y : V) : 1 ++ x = 1 ++ y ↔ x = y := ⟨one_append_cancel, congrArg _⟩
-  have h' (x : V) : 1 ≠ 1 ++ x := fun h ↦ WTC.append_ne_one 1 x h.symm
-  rcases x with _ | x <;> rcases y with _ | y <;>
-    simp [IsCodeAppend, emptyCode, h, h', WTC.append_ne_one]
-
-end
-
-/--
-The translation of the language with the empty string into $\mathsf{WTC}$ with the editor axiom that
-codes a string by the string itself after the letter $1$, and the empty string by the letter $1$.
--/
-def emptyTranslation : DirectTranslation WTCEditor ℒ⌢ₑ where
-  domain := ⟨isEmptyCode⟩
-  rel
-    | Sum.inl Language.Concatenation.Rel.eq => ⟨“x y. x = y”⟩
-  func
-    | Sum.inl Language.Concatenation.Func.zero => ⟨“z. z = !!(op(1).const) ⌢ !!(op(0).const)”⟩
-    | Sum.inl Language.Concatenation.Func.one => ⟨“z. z = !!(op(1).const) ⌢ !!(op(1).const)”⟩
-    | Sum.inl Language.Concatenation.Func.concat => ⟨isCodeAppend⟩
-    | Sum.inr (Language.Constant.Func.const _) => ⟨“z. z = !!(op(1).const)”⟩
-  domain_nonempty := complete.{0} _ _ fun V _ _ ↦ (models_domainNonempty_iff _).mpr <| by
-    use emptyCode none
-    simp [Semiformula.Operator.val]
-  func_defined f := complete.{0} _ _ fun V _ _ ↦ (models_funcDefined_iff _ _).mpr <| by
-    intro e he
-    have he (i) : IsEmptyCode (e i) := by simpa [Semiformula.Operator.val] using he i
-    rcases f with (_ | _ | _) | ⟨⟨⟩⟩
-    · suffices ∃! y : V, IsEmptyCode y ∧ y = emptyCode (some 0) by
-        simpa [Semiformula.Operator.val]
-      use emptyCode (some 0)
-      simp
-    · suffices ∃! y : V, IsEmptyCode y ∧ y = emptyCode (some 1) by
-        simpa [Semiformula.Operator.val]
-      use emptyCode (some 1)
-      simp
-    · suffices ∃! y : V, IsEmptyCode y ∧ IsCodeAppend y (e 0) (e 1) by
-        simpa [Semiformula.Operator.val]
-      obtain ⟨x, hx⟩ := isEmptyCode_iff.mp (he 0)
-      obtain ⟨y, hy⟩ := isEmptyCode_iff.mp (he 1)
-      simp only [← hx, ← hy, isCodeAppend_emptyCode_iff]
-      use emptyCode (x ++ y)
-      simp
-    · suffices ∃! y : V, IsEmptyCode y ∧ y = emptyCode none by
-        simpa [Semiformula.Operator.val]
-      use emptyCode none
-      simp
-  preserve_eq := complete.{0} _ _ fun V _ _ ↦ (models_preserveEq_iff _ _).mpr <| by
-    exact fun _ _ _ _ ↦ Iff.rfl
-
-namespace emptyTranslation
-
-@[simp]
-lemma dom_iff : emptyTranslation.Dom x ↔ IsEmptyCode x := by
-  simp [DirectTranslation.dom_iff, emptyTranslation, Semiformula.Operator.val]
-
-variable [V↓[ℒ⌢] ⊧* WTCEditor]
-
-/-- The bijection of the strings of `V` and the empty string with their codes. -/
-noncomputable def equiv : Option V ≃ emptyTranslation.Model V :=
-  Equiv.ofBijective (fun x ↦ ⟨emptyCode x, by simp⟩) <| by
-    constructor
-    · exact fun x y h ↦ emptyCode_injective <| congrArg Model.val h
-    · intro x
-      obtain ⟨y, hy⟩ := isEmptyCode_iff.mp <| dom_iff.mp x.dom
-      exact ⟨y, Model.ext hy⟩
-
-@[simp]
-lemma val_equiv (x : Option V) : (equiv x : V) = emptyCode x := rfl
-
-lemma struc_eq : Model.struc emptyTranslation V = Tarski.Structure.ofEquiv equiv := by
-  apply Tarski.Structure.ext
-  · funext k f v
-    symm
-    apply Model.func_iff.mpr
-    obtain ⟨v, rfl⟩ : ∃ w, v = equiv ∘ w := ⟨equiv.symm ∘ v, by simp [← Function.comp_assoc]⟩
-    rcases f with (_ | _ | _) | ⟨⟨⟩⟩
-    · simp [emptyTranslation, Semiformula.Operator.val]
-      rfl
-    · simp [emptyTranslation, Semiformula.Operator.val]
-      rfl
-    · have h : V ⊧/![emptyCode (v 0 ++ v 1), emptyCode (v 0), emptyCode (v 1)] isCodeAppend :=
-        (Defined.eval_iff _).mpr <| isCodeAppend_emptyCode_iff.mpr rfl
-      change Semiformula.Evalb _ isCodeAppend
-      convert h using 2
-      funext i
-      match i with
-      | 0 =>
-        change emptyCode (equiv.symm (equiv (v 0)) ++ equiv.symm (equiv (v 1))) = _
-        simp
-      | 1 | 2 => rfl
-    · simp [emptyTranslation, Semiformula.Operator.val]
-      rfl
-  · funext k r v
-    rcases r with ⟨⟨⟩⟩ | ⟨⟨⟩⟩
-    exact propext <| (Model.eq_iff v).trans equiv.symm.apply_eq_iff_eq.symm
-
-end emptyTranslation
+instance : OneCancellable WTCEditor where
+  append_ne_one _ _ _ := WTC.append_ne_one
+  one_append_cancel _ _ _ x y h := by
+    rcases editor h with ⟨-, h⟩ | ⟨u, ⟨h, -⟩ | ⟨h, -⟩⟩
+    · exact h
+    · exact (WTC.append_ne_one 1 u h).elim
+    · exact (WTC.append_ne_one 1 u h.symm).elim
 
 /--
 The codes of the strings of a model of $\mathsf{WTC}$ with the editor axiom and of the empty string
 form a model of $\mathsf{WTC}$ with the empty string and the editor axiom.
 -/
-instance [V↓[ℒ⌢] ⊧* WTCEditor] : (emptyTranslation.Model V)↓[ℒ⌢ₑ] ⊧* WTCEmptyEditor := by
-  have : Option V ≡ₑ[ℒ⌢ₑ] emptyTranslation.Model V := by
-    rw [emptyTranslation.struc_eq]
-    exact Tarski.Structure.ElementaryEquiv.ofEquiv emptyTranslation.equiv
-  exact (Tarski.Structure.ElementaryEquiv.modelsTheory (M₁ := Option V)).mp inferInstance
+instance [V↓[ℒ⌢] ⊧* WTCEditor] : ((emptyTranslation WTCEditor).Model V)↓[ℒ⌢ₑ] ⊧* WTCEmptyEditor :=
+  emptyTranslation.models_of_option inferInstance
 
 /--
 $\mathsf{WTC}$ with the editor axiom interprets $\mathsf{WTC}$ with the empty string and the editor
 axiom.
 -/
 instance : WTCEditor ⊳ WTCEmptyEditor where
-  trln := emptyTranslation
+  trln := emptyTranslation WTCEditor
   interpret_theory φ hφ := complete.{0} _ _ fun _ _ _ ↦
     Model.translate_iff.mpr <| models_theory_iff.mp inferInstance φ hφ
 

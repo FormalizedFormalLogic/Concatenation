@@ -9,6 +9,7 @@ public import Concatenation.F.Interpretability
 public import Concatenation.Language
 public import Concatenation.OpenProblem
 public import Concatenation.OpenProblem.Attribute
+public import Concatenation.OpenProblems.BoundedFragments
 public import Concatenation.QT.Basic
 public import Concatenation.Semantics.Basic
 public import Concatenation.Seq.Basic
@@ -19,6 +20,7 @@ public import Concatenation.TC.Empty
 public import Concatenation.TC.Interpretability
 public import Concatenation.TC.Sequence
 public import Concatenation.TC.Substring
+public import Concatenation.ToFoundation.AddCoding
 public import Concatenation.ToFoundation.Arithmetic.Pairing
 public import Concatenation.ToFoundation.Arithmetic.PeanoMinus
 public import Concatenation.ToFoundation.Arithmetic.Q

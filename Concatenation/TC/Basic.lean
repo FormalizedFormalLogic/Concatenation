@@ -235,6 +235,18 @@ lemma eq_empty_of_append_isAtom (h : IsAtom (x ++ y)) : x = ∅ ∨ y = ∅ := b
   · have := by simpa [models_iff] using Theory.models V _ IsTCEmptyAxiom.oneAtom
     exact this x y h
 
+lemma eq_empty_of_append_eq_right (hx : IsAtom x) (h : y ++ x = x) : y = ∅ :=
+  (eq_empty_of_append_isAtom <| h.symm ▸ hx).resolve_right <| isAtom_ne_empty hx
+
+lemma eq_empty_of_append_eq_left (hx : IsAtom x) (h : x ++ y = x) : y = ∅ :=
+  (eq_empty_of_append_isAtom <| h.symm ▸ hx).resolve_left <| isAtom_ne_empty hx
+
+lemma append_zero_ne_append_one (x y : V) : x ++ 0 ≠ y ++ 1 := by
+  intro h
+  obtain ⟨u, ⟨-, h⟩ | ⟨-, h⟩⟩ := editor h
+  · rcases eq_empty_of_append_isAtom (h ▸ isAtom_zero) with rfl | h' <;> simp_all
+  · rcases eq_empty_of_append_isAtom (h ▸ isAtom_one) with rfl | h' <;> simp_all
+
 lemma eq_empty_of_append_eq_empty (h : x ++ y = ∅) : x = ∅ ∧ y = ∅ := by
   suffices x = ∅ from ⟨this, by simpa [this] using h⟩
   have h₁ : 1 ++ x = ∅ ∨ y = ∅ :=

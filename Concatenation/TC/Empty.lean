@@ -580,11 +580,9 @@ variable [V↓[ℒ⌢ₑ] ⊧* 𝗧𝗖ₑ]
 namespace TCEmpty
 
 lemma zero_append_cancel (h : 0 ++ x = 0 ++ y) : x = y := by
-  have hu {u : V} (hu : 0 ++ u = 0) : u = ∅ :=
-    (eq_empty_of_append_isAtom <| hu.symm ▸ isAtom_zero).resolve_left zero_ne_empty
   obtain ⟨u, ⟨h₁, h₂⟩ | ⟨h₁, h₂⟩⟩ := editor h
-  · simpa [hu h₁] using h₂
-  · simpa [hu h₁.symm] using h₂
+  · simpa [eq_empty_of_append_eq_left isAtom_zero h₁] using h₂
+  · simpa [eq_empty_of_append_eq_left isAtom_zero h₁.symm] using h₂
 
 end TCEmpty
 

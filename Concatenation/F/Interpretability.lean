@@ -360,12 +360,6 @@ lemma isRadical_empty : IsRadical (∅ : V) where
   right := by simp
   left := by simp
 
-lemma eq_empty_of_append_eq_right (hx : IsAtom x) (h : y ++ x = x) : y = ∅ :=
-  (eq_empty_of_append_isAtom <| h.symm ▸ hx).resolve_right <| isAtom_ne_empty hx
-
-lemma eq_empty_of_append_eq_left (hx : IsAtom x) (h : x ++ y = x) : y = ∅ :=
-  (eq_empty_of_append_isAtom <| h.symm ▸ hx).resolve_left <| isAtom_ne_empty hx
-
 lemma isRadical_of_isAtom (hx : IsAtom x) : IsRadical x where
   right h := by
     obtain ⟨u, ⟨rfl, h'⟩ | ⟨rfl, h'⟩⟩ := editor h
@@ -429,12 +423,6 @@ lemma isConcatenationClosed_isHereditarilyRadical :
   empty := by simpa using isHereditarilyRadical_empty
   append hx hy := by
     simpa using isHereditarilyRadical_append (by simpa using hx) (by simpa using hy)
-
-lemma append_zero_ne_append_one (x y : V) : x ++ 0 ≠ y ++ 1 := by
-  intro h
-  obtain ⟨u, ⟨-, h⟩ | ⟨-, h⟩⟩ := editor h
-  · rcases eq_empty_of_append_isAtom (h ▸ isAtom_zero) with rfl | h' <;> simp_all
-  · rcases eq_empty_of_append_isAtom (h ▸ isAtom_one) with rfl | h' <;> simp_all
 
 end TCEmpty
 

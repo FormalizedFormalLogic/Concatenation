@@ -154,6 +154,13 @@ Mur22:
     title: Archive for Mathematical Logic
     volume: 61
 
+Mur23:
+  type: Thesis
+  title: Papers on Weak First-Order Theories and Decidability Problems
+  author: Murwanashyaka, Juvenal
+  date: 2023
+  organization: University of Oslo
+
 Mur24:
   type: Article
   title: Weak essentially undecidable theories of concatenation, part II

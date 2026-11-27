@@ -4,6 +4,8 @@ public import AlphaCentauri.Interpretability.Basic
 public import Concatenation.Seq.Basic
 public import Concatenation.ToFoundation.Arithmetic.R
 public import Concatenation.ToFoundation.Arithmetic.R0.Representation
+public import Concatenation.ToFoundation.Sequential
+import Concatenation.OpenProblem
 
 /-!
 # Mutual interpretability of $\mathsf{WSeq}$ and $\mathsf{R}_0$
@@ -623,5 +625,15 @@ $\mathsf{WSeq}$ and $\mathsf{R}$ are mutually interpretable.
 -/
 noncomputable instance : 𝗪𝗦𝗲𝗾 ⋈ 𝗥 :=
   MutualDirectInterpretation.trans (T₂ := 𝗥₀) ⟨inferInstance, inferInstance⟩ inferInstance
+
+namespace Sequence
+
+/--
+Is $\mathsf{Seq}^*$ sequential?
+- [KM24, §4.2, Problem 10]
+-/
+open_problem SeqStar_sequential := Theory.Sequential 𝗦𝗲𝗾⋆
+
+end Sequence
 
 end FFL.FirstOrder

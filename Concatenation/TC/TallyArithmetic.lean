@@ -46,6 +46,14 @@ variable {a b c : TallyNumber V}
 omit [V↓[ℒ⌢ₑ] ⊧* TCISigma 1] in
 lemma ext_iff' : a = b ↔ a.1 = b.1 := Subtype.ext_iff
 
+omit [V↓[ℒ⌢ₑ] ⊧* TCISigma 1] in
+lemma exists_iff {P : TallyNumber V → Prop} : (∃ a, P a) ↔ ∃ x, ∃ hx : IsTally 1 x, P ⟨x, hx⟩ :=
+  Subtype.exists
+
+omit [V↓[ℒ⌢ₑ] ⊧* TCISigma 1] in
+lemma forall_iff {P : TallyNumber V → Prop} : (∀ a, P a) ↔ ∀ x, ∀ hx : IsTally 1 x, P ⟨x, hx⟩ :=
+  Subtype.forall
+
 @[simp]
 lemma val_zero : (0 : TallyNumber V).1 = ∅ := rfl
 
@@ -233,6 +241,70 @@ lemma exists_prenexDefinable_of_closure {φ : Semiformula ℒₒᵣ ξ k} (hφ :
       exact ⟨_, (HG v _).mpr rfl, x.1,
         cast (congrArg Q (Matrix.fun_vecCons_apply Subtype.val x v)) ((HQ (x :> v)).mpr h),
         hx'.1, hx'.2⟩
+
+/--
+A prenex arithmetic formula of the level `s + 1` has a prenex definition of the same class and level
+on the tallies.
+- [HH14, Question 3]
+-/
+lemma exists_prenexDefinable_of_prenex (Γ : Polarity) (s : ℕ)
+    (φ : ℬ[<, ℒₒᵣ].Prenex Γ (s + 1) ξ k) (f : ξ → TallyNumber V) :
+    ∃ Q : (Fin k → V) → Prop, PrenexDefinable ℬₛ Γ (s + 1) Q ∧
+      ∀ v : Fin k → TallyNumber V, (Q fun i ↦ (v i).1) ↔ φ.val.Eval v f := by
+  have : Nonempty V := ⟨∅⟩
+  have hT : 𝚺-[ℬₛ, 0].Definable fun w : Fin (k + 1) → V ↦ IsTally 1 (w 0) :=
+    isTally_one_definable.retraction ![0]
+  have hcons (x : TallyNumber V) (v : Fin k → TallyNumber V) :
+      (fun i ↦ ((x :> v) i).1) = x.1 :> fun i ↦ (v i).1 :=
+    Matrix.fun_vecCons_apply Subtype.val x v
+  induction s generalizing k Γ with
+  | zero =>
+    rcases Γ
+    · have hθ : ℬ[<, ℒₒᵣ].Closure φ.sigmaInv.val :=
+        Hierarchy.zero_iff_bounded.mp φ.sigmaInv.val_hierarchy
+      obtain ⟨Q, hQ, HQ⟩ := exists_prenexDefinable_of_closure hθ f
+      refine ⟨fun w ↦ ∃ x, Q (x :> w) ∧ IsTally 1 x,
+        PrenexDefinable.exs_Sigma1 (hQ.and_delta0 hT), fun v ↦ ?_⟩
+      rw [φ.models_sigmaInv, TallyNumber.exists_iff]
+      refine exists_congr fun x ↦ ⟨fun ⟨h, hx⟩ ↦ ⟨hx, ?_⟩, fun ⟨hx, h⟩ ↦ ⟨?_, hx⟩⟩
+      · exact (HQ (⟨x, hx⟩ :> v)).mp (cast (congrArg Q (hcons ⟨x, hx⟩ v).symm) h)
+      · exact cast (congrArg Q (hcons ⟨x, hx⟩ v)) ((HQ (⟨x, hx⟩ :> v)).mpr h)
+    · have hθ : ℬ[<, ℒₒᵣ].Closure (∼φ.piInv.val) :=
+        (Hierarchy.zero_iff_bounded.mp φ.piInv.val_hierarchy).neg
+      obtain ⟨Q, hQ, HQ⟩ := exists_prenexDefinable_of_closure hθ f
+      refine ⟨fun w ↦ ∀ x, ¬Q (x :> w) ∨ ¬IsTally 1 x,
+        PrenexDefinable.all_Pi1 (hQ.not.or_delta0 hT.not_zero), fun v ↦ ?_⟩
+      rw [φ.models_piInv, TallyNumber.forall_iff]
+      refine forall_congr' fun x ↦ ⟨fun h hx ↦ ?_, fun h ↦ ?_⟩
+      · have := (h.resolve_right (not_not.mpr hx))
+        rw [← hcons ⟨x, hx⟩ v, HQ] at this
+        simpa using this
+      · by_cases hx : IsTally 1 x
+        · left
+          rw [← hcons ⟨x, hx⟩ v, HQ]
+          simpa using h hx
+        · exact .inr hx
+  | succ s ih =>
+    rcases Γ
+    · obtain ⟨Q, hQ, HQ⟩ := ih 𝚷 φ.sigmaInv (isTally_one_definable.retraction ![0])
+        fun x v ↦ Matrix.fun_vecCons_apply _ x v
+      refine ⟨fun w ↦ ∃ x, Q (x :> w) ∧ IsTally 1 x, PrenexDefinable.exs (hQ.and_delta0 hT),
+        fun v ↦ ?_⟩
+      rw [φ.models_sigmaInv, TallyNumber.exists_iff]
+      refine exists_congr fun x ↦ ⟨fun ⟨h, hx⟩ ↦ ⟨hx, ?_⟩, fun ⟨hx, h⟩ ↦ ⟨?_, hx⟩⟩
+      · exact (HQ (⟨x, hx⟩ :> v)).mp (cast (congrArg Q (hcons ⟨x, hx⟩ v).symm) h)
+      · exact cast (congrArg Q (hcons ⟨x, hx⟩ v)) ((HQ (⟨x, hx⟩ :> v)).mpr h)
+    · obtain ⟨Q, hQ, HQ⟩ := ih 𝚺 φ.piInv (isTally_one_definable.retraction ![0])
+        fun x v ↦ Matrix.fun_vecCons_apply _ x v
+      refine ⟨fun w ↦ ∀ x, Q (x :> w) ∨ ¬IsTally 1 x,
+        PrenexDefinable.all (hQ.or_delta0 hT.not_zero), fun v ↦ ?_⟩
+      rw [φ.models_piInv, TallyNumber.forall_iff]
+      refine forall_congr' fun x ↦ ⟨fun h hx ↦ ?_, fun h ↦ ?_⟩
+      · exact (HQ (⟨x, hx⟩ :> v)).mp
+          (cast (congrArg Q (hcons ⟨x, hx⟩ v).symm) (h.resolve_right (not_not.mpr hx)))
+      · by_cases hx : IsTally 1 x
+        · exact .inl <| cast (congrArg Q (hcons ⟨x, hx⟩ v)) ((HQ (⟨x, hx⟩ :> v)).mpr (h hx))
+        · exact .inr hx
 
 end definability
 

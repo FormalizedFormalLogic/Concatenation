@@ -2,6 +2,7 @@ module
 
 public import Concatenation.ToFoundation.Arithmetic.R0.Undecidability
 public import Concatenation.ToFoundation.Interpretability.LocallyFinitelySatisfiable
+public import Concatenation.ToMathlib.Infinite
 public import Foundation.FirstOrder.Arithmetic.Q.Basic
 
 /-!
@@ -33,9 +34,7 @@ lemma finite : (𝗤 : ArithmeticTheory).Finite := by
 lemma finiteAxiomatizable : FiniteAxiomatizable 𝗤 := .of_finite finite
 
 lemma infinite_of_models (V : Type*) [ORingStructure V] [V↓[ℒₒᵣ] ⊧* 𝗤] : Infinite V :=
-  not_finite_iff_infinite.mp fun _ ↦
-    let ⟨x, hx⟩ := Finite.surjective_of_injective (fun _ _ ↦ succ_inj : (· + (1 : V)).Injective) 0
-    Arithmetic.succ_ne_zero x hx
+  .of_injective_of_forall_ne (f := (· + (1 : V))) (fun _ _ ↦ succ_inj) Arithmetic.succ_ne_zero
 
 /--
 $\mathsf{Q}$ has no finite models.

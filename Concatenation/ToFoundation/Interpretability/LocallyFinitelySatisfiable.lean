@@ -3,6 +3,7 @@ module
 public import AlphaCentauri.Interpretability.Basic
 public import AlphaCentauri.ToFoundation.FirstOrder.Axiomatizability
 public import Concatenation.ToFoundation.Interpretability.Basic
+public import Concatenation.ToFoundation.Theory
 
 /-!
 # Locally finitely satisfiable theories
@@ -21,26 +22,12 @@ namespace Theory
 
 variable {L : Language} {T U : Theory L}
 
-/-- `T` has a finite model. -/
-def HasFiniteModel (T : Theory L) : Prop :=
-  ∃ (V : Type) (_ : Nonempty V) (_ : Finite V) (_ : Tarski.Structure L V), V↓[L] ⊧* T
-
 /--
 `T` is locally finitely satisfiable: every finite subset of `T` has a finite model.
 - [Hor11, §3]
 - [Hor12, §1]
 -/
 def LocallyFinitelySatisfiable (T : Theory L) : Prop := ∀ F ⊆ T, F.Finite → F.HasFiniteModel
-
-/-- A finite model can be taken to interpret the equality symbol as equality. -/
-lemma HasFiniteModel.exists_eq [L.Eq] [𝗘𝗤 L ⪯ T] (h : T.HasFiniteModel) :
-    ∃ (V : Type) (_ : Nonempty V) (_ : Finite V) (_ : Tarski.Structure L V)
-      (_ : Tarski.Structure.Eq L V), V↓[L] ⊧* T := by
-  obtain ⟨V, hV, hf, s, hT⟩ := h
-  have : V↓[L] ⊧* 𝗘𝗤 L := models_of_subtheory hT
-  exact ⟨Tarski.Structure.Eq.QuotEq L V, inferInstance,
-    inferInstanceAs (Finite (Quotient (Tarski.Structure.Eq.eqvSetoid L V))), inferInstance,
-    inferInstance, (Tarski.Structure.Eq.QuotEq.elementaryEquiv L V).modelsTheory.mpr hT⟩
 
 /--
 A theory each of whose axioms holds in all but finitely many of the finite structures `V 0`,
@@ -52,19 +39,6 @@ lemma LocallyFinitelySatisfiable.of_eventually (V : ℕ → Type) [∀ n, Nonemp
   intro F hF hfin
   obtain ⟨n, hn⟩ := ((Filter.eventually_all_finite hfin).mpr fun σ hσ ↦ h σ (hF hσ)).exists
   exact ⟨V n, inferInstance, inferInstance, inferInstance, models_theory_iff.mpr hn⟩
-
-/-- Finitely many theorems of `T` follow from finitely many axioms of `T`. -/
-lemma exists_finite_subset_weakerThan (hU : U.Finite) (h : U ⪯ T) :
-    ∃ F ⊆ T, F.Finite ∧ U ⪯ F := by
-  have (σ : U) : ∃ F : Theory L, F ⊆ T ∧ F.Finite ∧ F ⊢ σ.val :=
-    let ⟨F, hF, hfin, hσ⟩ := Compact.finite_provable (h.pbl <| by_axm σ.prop)
-    ⟨F, hF, by simpa using hfin, hσ⟩
-  choose F hF hfin hσ using this
-  have := hU.to_subtype
-  use ⋃ σ, F σ
-  exact ⟨Set.iUnion_subset hF, Set.finite_iUnion hfin,
-    WeakerThan.ofAxm! fun {σ} hσU ↦
-      Axiomatized.weakening (Set.subset_iUnion F ⟨σ, hσU⟩) (hσ ⟨σ, hσU⟩)⟩
 
 end Theory
 

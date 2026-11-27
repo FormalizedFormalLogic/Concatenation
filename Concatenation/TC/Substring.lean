@@ -3,6 +3,7 @@ module
 public import AlphaCentauri.Interpretability.Basic
 public import Concatenation.TC.Basic
 public import Concatenation.ToFoundation.Interpretability.LocallyFinitelySatisfiable
+public import Concatenation.ToMathlib.Infinite
 
 /-!
 # Substrings in models of $\mathsf{TC}$
@@ -194,10 +195,8 @@ lemma IsPrefix.of_append_left_isAtom (hc : IsAtom c) (h : c ++ x ◨ c ++ y) : x
 end substring
 
 lemma TC.infinite_of_models (V : Type*) [ConcatenationStructure V] [V↓[ℒ⌢] ⊧* 𝗧𝗖] : Infinite V :=
-  not_finite_iff_infinite.mp fun _ ↦
-    let ⟨x, hx⟩ := Finite.surjective_of_injective
-      (fun _ _ ↦ isAtom_zero.append_right_cancel : (· ++ (0 : V)).Injective) 0
-    zero_ne_append x 0 hx.symm
+  .of_injective_of_forall_ne (f := (· ++ (0 : V))) (fun _ _ ↦ isAtom_zero.append_right_cancel)
+    fun x h ↦ zero_ne_append x 0 h.symm
 
 section thin
 

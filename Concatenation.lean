@@ -41,9 +41,11 @@ public import Concatenation.ToFoundation.Interpretability.DefinitionalEquivalenc
 public import Concatenation.ToFoundation.Interpretability.LocallyFinitelySatisfiable
 public import Concatenation.ToFoundation.Interpretability.Undecidability
 public import Concatenation.ToFoundation.Naming
+public import Concatenation.ToFoundation.Theory
 public import Concatenation.ToMathlib.AtomicPairing
 public import Concatenation.ToMathlib.Encodable
 public import Concatenation.ToMathlib.FreeSemigroup
+public import Concatenation.ToMathlib.Infinite
 public import Concatenation.ToMathlib.NonnegSpecialLinearGroup
 public import Concatenation.WTC.Arithmetic
 public import Concatenation.WTC.Basic

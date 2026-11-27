@@ -2,6 +2,7 @@ module
 
 public import Concatenation.TC.Empty
 public import Concatenation.ToFoundation.PrenexDefinable
+public import Concatenation.ToMathlib.VecCons
 
 /-!
 # Notation induction
@@ -551,6 +552,33 @@ lemma collection {θ : V → V → Prop}
         exact ⟨w, TCEmpty.isSubstring_append_right_of hw w₁, hθw⟩
       · exact ⟨w₁, isSubstring_append_right W w₁, hw₁⟩
   exact (H b hb).resolve_right (not_not.mpr (IsSubstring.refl b))
+
+/--
+A $\Sigma_1$ relation universally quantified over the substrings of a tally is $\Sigma_1$ on the
+tallies.
+-/
+lemma exists_prenexDefinable_ball {k : ℕ} {P : (Fin (k + 2) → V) → Prop}
+    (hP : PrenexDefinable ℬₛ 𝚺 1 P) :
+    ∃ Q : (Fin (k + 1) → V) → Prop, PrenexDefinable ℬₛ 𝚺 1 Q ∧
+      ∀ u, IsTally 1 (u 0) → (Q u ↔ ∀ x, IsSubstring x (u 0) → P (x :> u)) := by
+  have : Nonempty V := ⟨∅⟩
+  obtain ⟨D, hD, H⟩ := PrenexDefinable.sigma_succ_iff.mp hP
+  have hD := PrenexDefinable.zero_iff.mp hD
+  have hM : 𝚺-[ℬₛ, 0].Definable fun z : Fin (k + 2) → V ↦
+      ∀ x, IsSubstring x (z 1) → ∃ w, IsSubstring w (z 0) ∧ D (w :> x :> fun i ↦ z i.succ) := by
+    apply ball_substring _ #1
+    apply bexs_substring _ #1
+    exact (hD.retraction (0 :> 1 :> fun i ↦ i.succ.succ.succ)).of_iff fun z ↦ by
+      simp [Matrix.fun_vecCons_apply]
+  refine ⟨_, PrenexDefinable.sigma_succ_iff.mpr ⟨_, PrenexDefinable.zero_iff.mpr hM,
+    fun u ↦ Iff.rfl⟩, fun u hu ↦ ⟨?_, fun h ↦ ?_⟩⟩
+  · rintro ⟨W, hW⟩ x hx
+    obtain ⟨w, -, hw⟩ := hW x (by simpa using hx)
+    exact (H _).mpr ⟨w, by simpa using hw⟩
+  · obtain ⟨W, hW⟩ := collection (θ := fun x w ↦ D (w :> x :> u))
+      ((hD.retractiont (#1 :> #0 :> fun i ↦ &(u i))).of_iff fun v ↦ by
+        simp [Matrix.fun_vecCons_apply]) hu fun x hx ↦ (H _).mp (h x hx)
+    exact ⟨W, fun x hx ↦ by simpa using hW x (by simpa using hx)⟩
 
 end TCISigma
 

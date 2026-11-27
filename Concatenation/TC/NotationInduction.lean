@@ -126,6 +126,47 @@ end TCEmpty
 
 end TCEmpty
 
+section definitions
+
+local notation "ℬₛ" => substringBounding ℒ⌢ₑ
+
+variable {V : Type*} [ConcatenationEmptyStructure V]
+
+@[simp]
+lemma val_substringOperator_empty {v : Fin 2 → V} :
+    (substringOperator ℒ⌢ₑ).val v ↔ IsSubstring (v 0) (v 1) := by
+  simp [substringOperator, Semiformula.Operator.val]
+
+/-- `x` is a `1`-tally: no substring of `x` is the letter `0`. -/
+def isTallyOneDef : 𝚺-[ℬₛ, 0].Semisentence 1 :=
+  .mkSigma “x. ∀¹[%(substringOperator _) #0 x] #0 ≠ !!(op(0).const)”
+
+instance isTally_one_defined [V↓[ℒ⌢ₑ] ⊧* 𝗧𝗖ₑ] :
+    𝚺-[ℬₛ, 0]-Predicate[V] (IsTally 1) via isTallyOneDef :=
+  .mk fun v ↦ by simp [isTallyOneDef, TCEmpty.isTally_one_iff]
+
+instance isTally_one_definable [V↓[ℒ⌢ₑ] ⊧* 𝗧𝗖ₑ] : 𝚺-[ℬₛ, 0]-Predicate[V] (IsTally 1) :=
+  isTally_one_defined.to_definable
+
+/-- `x` is a proper prefix of `y`: `y` is `x` followed by a nonempty string. -/
+def IsProperPrefix (x y : V) : Prop := ∃ z, z ≠ ∅ ∧ y = x ++ z
+
+/-- `x` is a proper prefix of `y`. -/
+def isProperPrefixDef : 𝚺-[ℬₛ, 0].Semisentence 2 :=
+  .mkSigma “x y. ∃¹[%(substringOperator _) #0 y] (#0 ≠ ⋆ ∧ y = x ⌢ #0)”
+
+instance isProperPrefix_defined :
+    𝚺-[ℬₛ, 0]-Relation[V] IsProperPrefix via isProperPrefixDef :=
+  .mk fun v ↦ by
+    simp only [isProperPrefixDef, IsProperPrefix, HierarchySymbol.Semiformula.val_mkSigma]
+    simp
+    exact ⟨fun ⟨z, _, h⟩ ↦ ⟨z, h⟩, fun ⟨z, h₁, h₂⟩ ↦ ⟨z, h₂ ▸ isSubstring_append_right _ _, h₁, h₂⟩⟩
+
+instance isProperPrefix_definable : 𝚺-[ℬₛ, 0]-Relation[V] IsProperPrefix :=
+  isProperPrefix_defined.to_definable
+
+end definitions
+
 section notationInduction
 
 local notation "ℬₛ" => substringBounding ℒ⌢ₑ
@@ -175,12 +216,6 @@ lemma TCISigma.notation_induction [V↓[ℒ⌢ₑ] ⊧* TCISigma s] {P : V → P
 section
 
 variable [V↓[ℒ⌢ₑ] ⊧* TCISigma 1] {c u v w x y z : V}
-
-omit [V↓[ℒ⌢ₑ] ⊧* TCISigma 1] in
-@[simp]
-lemma val_substringOperator_empty {v : Fin 2 → V} :
-    (substringOperator ℒ⌢ₑ).val v ↔ IsSubstring (v 0) (v 1) := by
-  simp [substringOperator, Semiformula.Operator.val]
 
 @[elab_as_elim]
 lemma TCISigma.delta0_induction {P : V → Prop} (hP : 𝚺-[ℬₛ, 0].DefinablePred P) (empty : P ∅)
@@ -251,6 +286,91 @@ lemma eq_empty_of_append_eq_self (h : x ++ w = x) : w = ∅ := by
         exact TCEmpty.isAtom_ne_empty hc (TCEmpty.eq_empty_of_append_eq_empty h₃).1
       exact fun x ih ↦ ⟨H x 0 isAtom_zero ih, H x 1 isAtom_one ih⟩
   exact this x w (h ▸ isSubstring_append_right x w) h
+
+lemma one_append_eq_append_one (hx : IsTally 1 x) : 1 ++ x = x ++ 1 := by
+  revert x
+  apply delta0_induction (P := fun x ↦ IsTally 1 x → 1 ++ x = x ++ 1)
+  · exact .mkPolarity (ℬ := ℬₛ) (Γ := 𝚺) (m := 0)
+      “x. !(Rewriting.emb isTallyOneDef.val) x → !!(op(1).const) ⌢ x = x ⌢ !!(op(1).const)”
+      (by simp) (fun v ↦ by simp)
+  · simp
+  · intro x ih
+    refine ⟨fun h ↦ absurd h (TCEmpty.not_isTally_one_append_zero x), fun h ↦ ?_⟩
+    rw [← TCEmpty.append_assoc, ih (TCEmpty.isTally_append_iff.mp h).1]
+
+lemma append_comm (hx : IsTally 1 x) (hy : IsTally 1 y) : x ++ y = y ++ x := by
+  revert y
+  apply delta0_induction (P := fun y ↦ IsTally 1 y → x ++ y = y ++ x)
+  · exact .mkPolarity (ℬ := ℬₛ) (Γ := 𝚺) (m := 0)
+      “y. !(Rewriting.emb isTallyOneDef.val) y → &x ⌢ y = y ⌢ &x” (by simp) (fun v ↦ by simp)
+  · simp
+  · intro y ih
+    refine ⟨fun h ↦ absurd h (TCEmpty.not_isTally_one_append_zero y), fun h ↦ ?_⟩
+    rw [← TCEmpty.append_assoc, ih (TCEmpty.isTally_append_iff.mp h).1, TCEmpty.append_assoc,
+      ← one_append_eq_append_one hx, TCEmpty.append_assoc]
+
+lemma eq_append_one_of_ne_empty (hx : IsTally 1 x) (h : x ≠ ∅) :
+    ∃ x', IsTally 1 x' ∧ x = x' ++ 1 := by
+  rcases eq_empty_or_eq_append_isAtom x with rfl | ⟨u, c, hc, rfl⟩
+  · exact absurd rfl h
+  · obtain ⟨hu, hc'⟩ := TCEmpty.isTally_append_iff.mp hx
+    obtain rfl : c = 1 := hc' c hc (IsSubstring.refl c)
+    exact ⟨u, hu, rfl⟩
+
+lemma exists_append_eq_or_exists_append_eq (hx : IsTally 1 x) (hy : IsTally 1 y) :
+    (∃ z, x ++ z = y) ∨ ∃ z, y ++ z = x := by
+  have : ∀ y : V, IsTally 1 y →
+      (∃ z, IsSubstring z y ∧ x ++ z = y) ∨ ∃ z, IsSubstring z x ∧ y ++ z = x := by
+    apply delta0_induction
+    · exact .mkPolarity (ℬ := ℬₛ) (Γ := 𝚺) (m := 0)
+        “y. !(Rewriting.emb isTallyOneDef.val) y →
+          (∃¹[%(substringOperator _) #0 y] &x ⌢ #0 = y) ∨
+          (∃¹[%(substringOperator _) #0 &x] y ⌢ #0 = &x)” (by simp) (fun v ↦ by simp)
+    · exact fun _ ↦ .inr ⟨x, IsSubstring.refl x, by simp⟩
+    · intro y ih
+      refine ⟨fun h ↦ absurd h (TCEmpty.not_isTally_one_append_zero y), fun h ↦ ?_⟩
+      have hy := (TCEmpty.isTally_append_iff.mp h).1
+      rcases ih hy with ⟨z, -, rfl⟩ | ⟨z, hz, rfl⟩
+      · exact .inl ⟨z ++ 1, by simp [TCEmpty.append_assoc], by simp [TCEmpty.append_assoc]⟩
+      · by_cases hz' : z = ∅
+        · subst hz'
+          exact .inl ⟨1, by simp, by simp⟩
+        · obtain ⟨z', -, rfl⟩ := eq_append_one_of_ne_empty
+            (TCEmpty.isTally_of_isSubstring hx hz) hz'
+          refine .inr ⟨z', TCEmpty.isSubstring_append_left_of (by simp) y, ?_⟩
+          rw [TCEmpty.append_assoc, one_append_eq_append_one
+            (TCEmpty.isTally_of_isSubstring hx (TCEmpty.isSubstring_trans (by simp) hz))]
+  rcases this y hy with ⟨z, -, h⟩ | ⟨z, -, h⟩
+  exacts [.inl ⟨z, h⟩, .inr ⟨z, h⟩]
+
+lemma exists_append_eq_of_isSubstring (hy : IsTally 1 y) (h : IsSubstring u y) :
+    IsTally 1 u ∧ ∃ l, IsTally 1 l ∧ u ++ l = y := by
+  obtain ⟨k, l, rfl⟩ := TCEmpty.isSubstring_iff.mp h
+  obtain ⟨hku, hl⟩ := TCEmpty.isTally_append_iff.mp hy
+  obtain ⟨hk, hu⟩ := TCEmpty.isTally_append_iff.mp hku
+  refine ⟨hu, k ++ l, TCEmpty.isTally_append hk hl, ?_⟩
+  rw [← TCEmpty.append_assoc, append_comm hu hk]
+
+lemma isSubstring_and_ne_iff (hy : IsTally 1 y) :
+    IsSubstring u y ∧ u ≠ y ↔ IsTally 1 u ∧ IsProperPrefix u y := by
+  constructor
+  · rintro ⟨h, hne⟩
+    obtain ⟨hu, l, -, rfl⟩ := exists_append_eq_of_isSubstring hy h
+    refine ⟨hu, l, fun hl ↦ hne ?_, rfl⟩
+    simp [hl]
+  · rintro ⟨-, z, hz, rfl⟩
+    exact ⟨by simp, fun h ↦ hz (eq_empty_of_append_eq_self h.symm)⟩
+
+lemma isSubstring_append_one_cases (hy : IsTally 1 (y ++ 1)) (h : IsSubstring u (y ++ 1)) :
+    IsSubstring u y ∨ u = y ++ 1 := by
+  obtain ⟨-, l, hl, h⟩ := exists_append_eq_of_isSubstring hy h
+  by_cases hl' : l = ∅
+  · subst hl'
+    exact .inr (by simpa using h)
+  · obtain ⟨l', -, rfl⟩ := eq_append_one_of_ne_empty hl hl'
+    have : u ++ l' = y := (TCEmpty.eq_and_eq_of_append_isAtom isAtom_one isAtom_one <| by
+      simpa [TCEmpty.append_assoc] using h).1
+    exact .inl (this ▸ isSubstring_append_left u l')
 
 end TCISigma
 

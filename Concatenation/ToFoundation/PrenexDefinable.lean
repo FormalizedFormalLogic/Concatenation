@@ -26,6 +26,12 @@ def PrenexDefinable (ℬ : Bounding L) (Γ : Polarity) (s : ℕ) {k : ℕ} (P : 
     Prop :=
   ∃ φ : ℬ.Prenex Γ s V k, IsDefinedByWithParam P φ.val
 
+/-- A bounded formula without free variables stays bounded when embedded. -/
+@[simp]
+lemma hierarchy_emb_zero {ξ : Type*} (φ : 𝚺-[ℬ, 0].Semisentence k) :
+    ℬ.Hierarchy Γ s (Rewriting.emb φ.val : Semiformula L ξ k) :=
+  Hierarchy.of_zero (φ.sigma_prop.rew _)
+
 namespace PrenexDefinable
 
 lemma of_iff (h : ℬ.PrenexDefinable Γ s Q) (H : ∀ v, P v ↔ Q v) : ℬ.PrenexDefinable Γ s P := by
@@ -123,7 +129,8 @@ lemma or_delta0 (h : ℬ.PrenexDefinable Γ s P) (hQ : 𝚺-[ℬ, 0].Definable Q
     · obtain ⟨R, hR, H⟩ := sigma_succ_iff.mp h
       exact sigma_succ_iff.mpr ⟨_, ih hR (hQ.retraction Fin.succ), fun v ↦ by simp [H, exists_or]⟩
     · obtain ⟨R, hR, H⟩ := pi_succ_iff.mp h
-      exact pi_succ_iff.mpr ⟨_, ih hR (hQ.retraction Fin.succ), fun v ↦ by simp [H, forall_or_right]⟩
+      exact pi_succ_iff.mpr
+        ⟨_, ih hR (hQ.retraction Fin.succ), fun v ↦ by simp [H, forall_or_right]⟩
 
 /-- The parameters of a prenex definition can be read as free variables indexed by `ℕ`. -/
 lemma exists_eval_iff (h : ℬ.PrenexDefinable Γ s P) :

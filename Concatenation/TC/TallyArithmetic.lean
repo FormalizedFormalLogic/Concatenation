@@ -602,7 +602,8 @@ lemma struc_eq : Model.struc (tallyTranslation n) V = Tarski.Structure.ofEquiv e
       rfl
     · simp [tallyTranslation, Semiformula.Operator.val]
       rfl
-    · simp [tallyTranslation, Semiformula.Operator.val]
+    · simp only [Semiformula.Operator.val, tallyTranslation, Fin.isValue, Function.comp_apply,
+        Defined.eval_iff, Matrix.cons_val_one, Matrix.cons_app_two, Matrix.cons_val_zero]
       exact TallyNumber.isTallyMul_val_mul (v 0) (v 1)
   · funext k r v
     cases r
@@ -615,7 +616,8 @@ lemma struc_eq : Model.struc (tallyTranslation n) V = Tarski.Structure.ofEquiv e
 end tallyTranslation
 
 /--
-The tallies of a model of $\Sigma_{n+1}\text{-}\mathsf{TCI}$ form a model of $\mathsf{I}\Sigma_{n+1}$.
+The tallies of a model of $\Sigma_{n+1}\text{-}\mathsf{TCI}$ form a model of
+$\mathsf{I}\Sigma_{n+1}$.
 - [HH14, Question 3]
 -/
 instance {V : Type*} [ConcatenationEmptyStructure V] [V↓[ℒ⌢ₑ] ⊧* TCISigma (n + 1)] :
@@ -632,7 +634,7 @@ instance {V : Type*} [ConcatenationEmptyStructure V] [V↓[ℒ⌢ₑ] ⊧* TCISi
 $\Sigma_{n+1}\text{-}\mathsf{TCI}$ interprets $\mathsf{I}\Sigma_{n+1}$.
 - [HH14, Question 3]
 -/
-instance : TCISigma (n + 1) ⊳ 𝗜𝚺 (n + 1) where
+instance tallyInterpretation : TCISigma (n + 1) ⊳ 𝗜𝚺 (n + 1) where
   trln := tallyTranslation n
   interpret_theory _ hφ := completeEmpty.{0} _ _ fun _ _ _ ↦
     DirectTranslation.models_translate_of_mem hφ

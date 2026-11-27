@@ -370,8 +370,8 @@ namespace NonemptyPart
 variable {x y z r : NonemptyPart V}
 
 lemma isSeq_iff_isSeqₑ : IsSeq r ↔ IsSeqₑ r.1 := by
-  simp only [Concatenation.isSeq_iff, IsSeqₑ, isPrefix_iff, isSuffix_iff, isTally_iff, isSubstring_iff,
-    ext_iff', val_append, val_zero, forall_iff]
+  simp only [Concatenation.isSeq_iff, IsSeqₑ, isPrefix_iff, isSuffix_iff, isTally_iff,
+    isSubstring_iff, ext_iff', val_append, val_zero, forall_iff]
   exact and_congr Iff.rfl <| and_congr Iff.rfl
     ⟨fun h t ht hn hT ↦ h t hn hT ht, fun h t hn hT ht ↦ h t ht hn hT⟩
 
@@ -383,8 +383,8 @@ lemma isSubstring_of_memₑ {y r : V} (h : Memₑ y r) : IsSubstring y r :=
     (isSubstring_append_append (0 ++ 0) y 0) 0) h.2.2
 
 lemma isPairSeq_iff_isPairSeqₑ : IsPairSeq r ↔ IsPairSeqₑ r.1 := by
-  simp only [Concatenation.isPairSeq_iff, IsPairSeqₑ, isSeq_iff_isSeqₑ, mem_iff_memₑ, IsPair, isTally_iff, ext_iff',
-    val_pairOf, val_one, forall_iff, exists_iff]
+  simp only [Concatenation.isPairSeq_iff, IsPairSeqₑ, isSeq_iff_isSeqₑ, mem_iff_memₑ, IsPair,
+    isTally_iff, ext_iff', val_pairOf, val_one, forall_iff, exists_iff]
   refine and_congr Iff.rfl ⟨fun h y hyr hy hm ↦ ?_, fun h y hy hm ↦ ?_⟩
   · obtain ⟨a, ha, b, hb, hta, htb, rfl⟩ := h y hy hm
     exact ⟨a, TCEmpty.isSubstring_append_right_of (isSubstring_append_left a 0) b, b,

@@ -159,8 +159,8 @@ def isProperPrefixDef : 𝚺-[ℬₛ, 0].Semisentence 2 :=
 instance isProperPrefix_defined :
     𝚺-[ℬₛ, 0]-Relation[V] IsProperPrefix via isProperPrefixDef :=
   .mk fun v ↦ by
-    simp only [isProperPrefixDef, IsProperPrefix, HierarchySymbol.Semiformula.val_mkSigma]
-    simp
+    suffices (∃ z, IsSubstring z (v 1) ∧ z ≠ ∅ ∧ v 1 = v 0 ++ z) ↔ ∃ z, z ≠ ∅ ∧ v 1 = v 0 ++ z by
+      simpa [isProperPrefixDef, IsProperPrefix]
     exact ⟨fun ⟨z, _, h⟩ ↦ ⟨z, h⟩, fun ⟨z, h₁, h₂⟩ ↦ ⟨z, h₂ ▸ isSubstring_append_right _ _, h₁, h₂⟩⟩
 
 instance isProperPrefix_definable : 𝚺-[ℬₛ, 0]-Relation[V] IsProperPrefix :=
@@ -266,8 +266,13 @@ lemma TCISigma.models_of_le {s' : ℕ} [V↓[ℒ⌢ₑ] ⊧* TCISigma s'] (hs : 
   rcases hσ with ⟨φ, hφ⟩ | ⟨φ, hφ⟩
   · exact models_theory_iff.mp inferInstance _ hφ
   · obtain ⟨ψ, hψ, H⟩ := hφ.exists_eval_iff_of_le hs
-    have h := Theory.models (T := TCISigma s') V (IsTCISigmaAxiom.notationInduction ψ hψ)
-    simp [models_iff, notationInduction, Semiformula.eval_substs] at h ⊢
+    have h : ∀ f : ℕ → V, ψ.Eval ![∅] f →
+        (∀ x, ψ.Eval ![x] f → ψ.Eval ![x ++ 0] f ∧ ψ.Eval ![x ++ 1] f) → ∀ x, ψ.Eval ![x] f := by
+      simpa [models_iff, notationInduction, Semiformula.eval_substs] using
+        Theory.models (T := TCISigma s') V (IsTCISigmaAxiom.notationInduction ψ hψ)
+    suffices ∀ f : ℕ → V, φ.Eval ![∅] f →
+        (∀ x, φ.Eval ![x] f → φ.Eval ![x ++ 0] f ∧ φ.Eval ![x ++ 1] f) → ∀ x, φ.Eval ![x] f by
+      simpa [models_iff, notationInduction, Semiformula.eval_substs] using this
     intro f h₀ h₁ x
     have H' (y : V) := H V ![y] f
     exact (H' x).mpr <| h f ((H' ∅).mp h₀) (fun y hy ↦ by
@@ -284,8 +289,10 @@ lemma TCISigma.notation_induction [V↓[ℒ⌢ₑ] ⊧* TCISigma s] {P : V → P
   intro x
   have : Nonempty V := ⟨∅⟩
   obtain ⟨e, φ, hφ, H⟩ := hP.exists_eval_iff
-  have h := Theory.models (T := TCISigma s) V (IsTCISigmaAxiom.notationInduction φ hφ)
-  simp [models_iff, notationInduction, Semiformula.eval_substs] at h
+  have h : ∀ f : ℕ → V, φ.Eval ![∅] f →
+      (∀ x, φ.Eval ![x] f → φ.Eval ![x ++ 0] f ∧ φ.Eval ![x ++ 1] f) → ∀ x, φ.Eval ![x] f := by
+    simpa [models_iff, notationInduction, Semiformula.eval_substs] using
+      Theory.models (T := TCISigma s) V (IsTCISigmaAxiom.notationInduction φ hφ)
   have H' (y : V) : P y ↔ φ.Eval ![y] e := by simpa using H ![y]
   simp only [H'] at empty append ⊢
   exact h e empty append x
@@ -320,7 +327,8 @@ lemma eq_empty_or_eq_isAtom_append (x : V) : x = ∅ ∨ ∃ c u, IsAtom c ∧ x
     · exact .mkPolarity (ℬ := ℬₛ) (Γ := 𝚺) (m := 0) “x. x = ⋆ ∨ ∃¹[%(substringOperator _) #0 x]
         (x = !!(op(0).const) ⌢ #0 ∨ x = !!(op(1).const) ⌢ #0)” (by simp) (fun v ↦ by simp)
     · simp
-    · have H (c : V) (hc : IsAtom c) : ∀ x : V, (x = ∅ ∨ ∃ u, IsSubstring u x ∧ (x = 0 ++ u ∨ x = 1 ++ u)) →
+    · have H (c : V) (hc : IsAtom c) : ∀ x : V,
+          (x = ∅ ∨ ∃ u, IsSubstring u x ∧ (x = 0 ++ u ∨ x = 1 ++ u)) →
           ∃ u, IsSubstring u (x ++ c) ∧ (x ++ c = 0 ++ u ∨ x ++ c = 1 ++ u) := by
         rintro x (rfl | ⟨u, -, rfl | rfl⟩)
         · rcases hc with rfl | rfl <;> exact ⟨∅, by simp⟩
@@ -342,12 +350,14 @@ lemma append_right_cancel (h : x ++ z = y ++ z) : x = y := by
         simpa [TCEmpty.append_assoc] using h).1;
       exact (TCEmpty.eq_and_eq_of_append_isAtom isAtom_one isAtom_one <| by
         simpa [TCEmpty.append_assoc] using h).1]
-  · exact .mkPolarity (ℬ := ℬₛ) (Γ := 𝚺) (m := 0) “z. &x ⌢ z = &y ⌢ z → &x = &y” (by simp) (fun v ↦ by simp)
+  · exact .mkPolarity (ℬ := ℬₛ) (Γ := 𝚺) (m := 0) “z. &x ⌢ z = &y ⌢ z → &x = &y” (by simp)
+      (fun v ↦ by simp)
 
 lemma eq_empty_of_append_eq_self (h : x ++ w = x) : w = ∅ := by
   have : ∀ x : V, ∀ w, IsSubstring w x → x ++ w = x → w = ∅ := by
     apply delta0_induction
-    · exact .mkPolarity (ℬ := ℬₛ) (Γ := 𝚺) (m := 0) “x. ∀¹[%(substringOperator _) #0 x] (x ⌢ #0 = x → #0 = ⋆)”
+    · exact .mkPolarity (ℬ := ℬₛ) (Γ := 𝚺) (m := 0)
+        “x. ∀¹[%(substringOperator _) #0 x] (x ⌢ #0 = x → #0 = ⋆)”
         (by simp) (fun v ↦ by simp)
     · simp
     · have H : ∀ x c : V, IsAtom c → (∀ w, IsSubstring w x → x ++ w = x → w = ∅) →
@@ -356,7 +366,8 @@ lemma eq_empty_of_append_eq_self (h : x ++ w = x) : w = ∅ := by
         by_contra hw
         rcases eq_empty_or_eq_append_isAtom w with rfl | ⟨w', d, hd, rfl⟩
         · exact hw rfl
-        obtain ⟨h₁, -⟩ := TCEmpty.eq_and_eq_of_append_isAtom (x := x ++ c ++ w') (y := x) hd hc <| by
+        obtain ⟨h₁, -⟩ :=
+            TCEmpty.eq_and_eq_of_append_isAtom (x := x ++ c ++ w') (y := x) hd hc <| by
           simpa [TCEmpty.append_assoc] using h
         have h₂ : x ++ (c ++ w') = x := by simpa [TCEmpty.append_assoc] using h₁
         have h₃ := ih _ (h₂ ▸ isSubstring_append_right x (c ++ w')) h₂

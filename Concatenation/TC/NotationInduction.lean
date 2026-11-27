@@ -195,9 +195,8 @@ lemma definable_isSubstring_term (t u : Semiterm ℒ⌢ₑ V k) :
     u).of_iff fun v ↦ by simp
 
 /--
-The class of relations with a $\Sigma_1$ definition with parameters is closed under unbounded
-existential quantification, by quantifying over a string containing both witnesses.
-- [HH14, §2]
+The relations with a prenex $\Sigma_1$ definition with parameters are closed under unbounded
+existential quantification.
 -/
 lemma PrenexDefinable.exs_Sigma1 {Q : (Fin (k + 1) → V) → Prop}
     (hQ : PrenexDefinable ℬₛ 𝚺 1 Q) : PrenexDefinable ℬₛ 𝚺 1 fun v ↦ ∃ x, Q (x :> v) := by
@@ -255,8 +254,10 @@ lemma TCISigma.models_TCEmpty (s : ℕ) [V↓[ℒ⌢ₑ] ⊧* TCISigma s] : V↓
 
 instance [V↓[ℒ⌢ₑ] ⊧* TCISigma 1] : V↓[ℒ⌢ₑ] ⊧* 𝗧𝗖ₑ := TCISigma.models_TCEmpty 1
 
-/-- The models of $\Sigma_{s'}\text{-}\mathsf{TCI}$ are models of $\Sigma_s\text{-}\mathsf{TCI}$
-for `s ≤ s'`. -/
+/--
+The models of $\Sigma_{s'}\text{-}\mathsf{TCI}$ are models of $\Sigma_s\text{-}\mathsf{TCI}$ for
+`s ≤ s'`.
+-/
 lemma TCISigma.models_of_le {s' : ℕ} [V↓[ℒ⌢ₑ] ⊧* TCISigma s'] (hs : s ≤ s') :
     V↓[ℒ⌢ₑ] ⊧* TCISigma s := by
   have : V↓[ℒ⌢ₑ] ⊧* 𝗧𝗖ₑ := TCISigma.models_TCEmpty s'

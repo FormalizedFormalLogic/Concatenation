@@ -20,19 +20,16 @@ variable {L : Language} {ℬ : Bounding L} {V : Type*} [Tarski.Structure L V]
 /--
 `P` is defined, with parameters, by a prenex formula of the class `Γ` and the level `s` whose
 matrix is bounded by `ℬ`.
-- [HP98, §I.2(a)]
 -/
 def PrenexDefinable (ℬ : Bounding L) (Γ : Polarity) (s : ℕ) {k : ℕ} (P : (Fin k → V) → Prop) :
     Prop :=
   ∃ φ : ℬ.Prenex Γ s V k, IsDefinedByWithParam P φ.val
 
-/-- A bounded formula without free variables stays bounded when embedded. -/
 @[simp]
 lemma hierarchy_emb_zero {ξ : Type*} (φ : 𝚺-[ℬ, 0].Semisentence k) :
     ℬ.Hierarchy Γ s (Rewriting.emb φ.val : Semiformula L ξ k) :=
   Hierarchy.of_zero (φ.sigma_prop.rew _)
 
-/-- A bounded formula stays bounded under substitution. -/
 @[simp]
 lemma hierarchy_substs_zero {ξ : Type*} {m : ℕ} (φ : 𝚺-[ℬ, 0].Semiformula ξ k)
     (v : Fin k → Semiterm L ξ m) : ℬ.Hierarchy Γ s (φ.val ⇜ v) :=
@@ -97,27 +94,6 @@ lemma zero_iff : ℬ.PrenexDefinable Γ 0 P ↔ 𝚺-[ℬ, 0].Definable P := by
   · rintro ⟨φ, h⟩
     exact .mkPolarity (Γ := 𝚺) φ.val (Hierarchy.zero_iff.mp φ.val_hierarchy) fun v ↦ (h v).symm
   · exact of_delta0
-
-lemma succ (h : ℬ.PrenexDefinable Γ s P) : ℬ.PrenexDefinable Γ (s + 1) P := by
-  obtain ⟨φ, h⟩ := h
-  exact ⟨φ.succ, fun v ↦ (φ.models_succ v).trans (h v)⟩
-
-lemma of_le (h : ℬ.PrenexDefinable Γ s P) {s' : ℕ} (hs : s ≤ s') :
-    ℬ.PrenexDefinable Γ s' P := by
-  induction s', hs using Nat.le_induction with
-  | base => exact h
-  | succ _ _ ih => exact ih.succ
-
-lemma altUp (h : ℬ.PrenexDefinable Γ s P) : ℬ.PrenexDefinable Γ.alt (s + 1) P := by
-  obtain ⟨φ, h⟩ := h
-  exact ⟨φ.altUp, fun v ↦ (φ.models_altUp v).trans (h v)⟩
-
-lemma of_lt (h : ℬ.PrenexDefinable Γ s P) (Γ' : Polarity) {s' : ℕ} (hs : s < s') :
-    ℬ.PrenexDefinable Γ' s' P := by
-  obtain rfl | rfl : Γ' = Γ ∨ Γ' = Γ.alt := by rcases Γ <;> rcases Γ' <;> simp
-  · exact h.of_le hs.le
-  · obtain ⟨t, rfl⟩ : ∃ t, s' = t + 1 := ⟨s' - 1, by omega⟩
-    exact (h.of_le <| Nat.le_of_lt_succ hs).altUp
 
 lemma and_delta0 (h : ℬ.PrenexDefinable Γ s P) (hQ : 𝚺-[ℬ, 0].Definable Q) :
     ℬ.PrenexDefinable Γ s fun v ↦ P v ∧ Q v := by

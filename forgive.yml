@@ -34,3 +34,6 @@ declaration:
   FFL.FirstOrder.Concatenation.TCISigma.interpretationISigma0:
     forgive:
       - FFL.FirstOrder.Arithmetic.ISigma0.interpretationInQ
+  FFL.FirstOrder.Concatenation.TCISigma_mutuallyInterpretable_ISigma:
+    forgive:
+      - FFL.FirstOrder.Arithmetic.ISigma0.interpretationInQ

@@ -4,7 +4,6 @@ public import Concatenation.TC.Interpretability
 public import Concatenation.ToFoundation.Arithmetic.Q
 public import Concatenation.ToFoundation.Interpretability.DefinitionalEquivalence
 public import Foundation.FirstOrder.Arithmetic.Schemata
-import Concatenation.OpenProblem
 
 /-!
 # $\mathsf{TC}$ with and without the empty string
@@ -1150,12 +1149,6 @@ instance (n : ℕ) : 𝗧𝗖ₑ ⪯ TCISigma n := Entailment.WeakerThan.ofSubse
 
 instance (n : ℕ) : 𝗘𝗤 ℒ⌢ₑ ⪯ TCISigma n :=
   Entailment.WeakerThan.trans (𝓣 := 𝗧𝗖ₑ) inferInstance inferInstance
-
-/--
-Are $\Sigma_n\text{-}\mathsf{TCI}$ and $\mathsf{I}\Sigma_n$ mutually interpretable for each $n$?
-- [HH14, Question 3]
--/
-open_problem TCISigma_mutuallyInterpretable_ISigma := ∀ n : ℕ, Nonempty (TCISigma n ⋈ 𝗜𝚺 n)
 
 /--
 $\Sigma_0\text{-}\mathsf{TCI}$ interprets $\mathsf{I}\Sigma_0$.

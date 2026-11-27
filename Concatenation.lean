@@ -19,6 +19,7 @@ public import Concatenation.TC.Arithmetic
 public import Concatenation.TC.Basic
 public import Concatenation.TC.Empty
 public import Concatenation.TC.ISigma
+public import Concatenation.TC.InductionInterpretability
 public import Concatenation.TC.Interpretability
 public import Concatenation.TC.NotationInduction
 public import Concatenation.TC.Sequence

@@ -67,40 +67,36 @@ def isInitialSegment : Semisentence ℒ⌢ₛ 2 :=
 
 section semantics
 
-variable {M : Type*} [ConcatenationStructure M] {x y : M}
+variable {V : Type*} [ConcatenationStructure V] {x y : V}
 
 open scoped Classical in
 /--
 The successor of a string.
 - [Dam17, §1]
 -/
-noncomputable def succ (x : M) : M := if x = 0 then 1 else x ++ 1
+noncomputable def succ (x : V) : V := if x = 0 then 1 else x ++ 1
 
-noncomputable instance : Tarski.Structure (Language.ofFunc Language.SuccessorFunc) M :=
+noncomputable instance : Tarski.Structure (Language.ofFunc Language.SuccessorFunc) V :=
   Tarski.Structure.ofFunc Language.SuccessorFunc fun {_} f ↦
     match f with
     | .succ => fun v ↦ succ (v 0)
 
-instance : Tarski.Structure.Eq ℒ⌢ₛ M := ⟨fun _ _ ↦ Iff.rfl⟩
+instance : Tarski.Structure.Eq ℒ⌢ₛ V := ⟨fun _ _ ↦ Iff.rfl⟩
 
-instance : Tarski.Structure.Zero ℒ⌢ₛ M := ⟨rfl⟩
+instance : Tarski.Structure.Zero ℒ⌢ₛ V := ⟨rfl⟩
 
-instance : Tarski.Structure.One ℒ⌢ₛ M := ⟨rfl⟩
+instance : Tarski.Structure.One ℒ⌢ₛ V := ⟨rfl⟩
 
-instance : Tarski.Structure.Concat ℒ⌢ₛ M := ⟨fun _ _ ↦ rfl⟩
-
-@[simp]
-lemma val_successor {e : Fin 1 → M} {ε : Empty → M} : successor.val e ε = succ (e 0) := rfl
-
-/--
-`x` is an initial segment of `y`: `x` is $0$ and `y` is not, or `y` extends `x`.
-- [Dam17, §1]
--/
-def IsInitialSegment (x y : M) : Prop := (x = 0 ∧ y ≠ 0) ∨ ∃ z, x ++ z = y
+instance : Tarski.Structure.Concat ℒ⌢ₛ V := ⟨fun _ _ ↦ rfl⟩
 
 @[simp]
-lemma eval_isInitialSegment : M ⊧/![x, y] isInitialSegment ↔ IsInitialSegment x y := by
-  simp [isInitialSegment, IsInitialSegment]
+lemma val_successor {e : Fin 1 → V} {ε : Empty → V} : successor.val e ε = succ (e 0) := rfl
+
+instance isInitialSegment_defined : ℒ⌢ₛ-relation[V] IsInitialSegment via isInitialSegment :=
+  ⟨fun v ↦ by simp [isInitialSegment, IsInitialSegment, eq_comm (b := v 1)]⟩
+
+instance isInitialSegment_definable : ℒ⌢ₛ-relation[V] IsInitialSegment :=
+  isInitialSegment_defined.to_definable
 
 end semantics
 
@@ -159,14 +155,14 @@ lemma append_letter_inj {b c : Bool} : x ++ letter b = y ++ letter c ↔ x = y �
     simp [append_def, append, ← FreeSemigroup.toList_inj, Stream'.cons_injective2.eq_iff,
       and_left_comm, and_comm]
 
-lemma exists_letter_append (x : EndedWord) :
+private lemma exists_letter_append (x : EndedWord) :
     (∃ b, x = letter b) ∨ ∃ y b, letter b ++ y = x := by
   rcases x with ⟨b, _ | ⟨c, l⟩⟩ | ⟨u, v⟩
   · left; use b; rfl
   · right; use word ⟨c, l⟩, b; rfl
   · right; use ends u.tail v, u.head; simp [append_def, append]
 
-lemma exists_append_letter (x : EndedWord) :
+private lemma exists_append_letter (x : EndedWord) :
     (∃ b, x = letter b) ∨ ∃ y b, y ++ letter b = x := by
   rcases x with x | ⟨u, v⟩
   · rcases List.eq_nil_or_concat x.toList with h | ⟨l, b, h⟩
@@ -177,7 +173,7 @@ lemma exists_append_letter (x : EndedWord) :
         simp [append_def, append, ← FreeSemigroup.toList_inj, h]
   · right; use ends u v.tail, v.head; simp [append_def, append]
 
-lemma letter_or_letter_append_and_append_letter (x : EndedWord) :
+private lemma letter_or_letter_append_and_append_letter (x : EndedWord) :
     x = letter false ∨ x = letter true ∨
       ((∃ y, letter false ++ y = x ∨ letter true ++ y = x) ∧
       ∃ z, z ++ letter false = x ∨ z ++ letter true = x) := by
@@ -186,21 +182,20 @@ lemma letter_or_letter_append_and_append_letter (x : EndedWord) :
   simp only [Bool.exists_bool] at h₁ h₂
   grind
 
-instance : EndedWord↓[ℒ⌢ₛ] ⊧* 𝗤𝗧⁺ := ⟨by
+instance : EndedWord↓[ℒ⌢ₛ] ⊧* 𝗤𝗧⁺ := by
+  constructor
   intro σ h
   cases h
   case equal hφ =>
     have : EndedWord↓[ℒ⌢ₛ] ⊧* 𝗘𝗤 ℒ⌢ₛ := inferInstance
     exact models_theory_iff.mp this _ hφ
   case concatAssoc => simpa [models_iff] using EndedWord.append_assoc
-  case concatNeLetter => simp [models_iff, zero_eq, one_eq]
-  case letterCancel => simp [models_iff, zero_eq, one_eq]
-  case letterNe => simp [models_iff, zero_eq, one_eq]
   case cases =>
     simpa [models_iff, zero_eq, one_eq] using letter_or_letter_append_and_append_letter
   case successor =>
     simp [models_iff, Semiterm.val_substs, succ]
-    grind⟩
+    grind
+  all_goals simp [models_iff, zero_eq, one_eq]
 
 end EndedWord
 
@@ -215,7 +210,6 @@ theorem unprovable_isInitialSegment_irrefl : 𝗤𝗧⁺ ⊬ “∀ x, ¬!isInit
   use .ends (.const true) (.const true)
   right
   use EndedWord.letter true
-  simpa [EndedWord.append_def, EndedWord.append] using
-    (Stream'.const_eq true).symm
+  simpa [EndedWord.append_def, EndedWord.append] using Stream'.const_eq true
 
 end FFL.FirstOrder.Concatenation

@@ -20,23 +20,24 @@ open DirectTranslation
 
 section nonempty
 
-variable {M : Type} [ConcatenationEmptyStructure M] {x : M}
+variable {V : Type} [ConcatenationEmptyStructure V] {x : V}
 
 /-- `x` is not the empty string. -/
 def isNonempty : Semisentence ℒ⌢ₑ 1 := “x. x ≠ ⋆”
 
-@[simp]
-lemma eval_isNonempty : M ⊧/![x] isNonempty ↔ x ≠ ∅ := by
-  simp [isNonempty]
+instance isNonempty_defined : ℒ⌢ₑ-predicate[V] (· ≠ ∅) via isNonempty :=
+  ⟨fun v ↦ by simp [isNonempty]⟩
+
+instance isNonempty_definable : ℒ⌢ₑ-predicate[V] (· ≠ ∅) := isNonempty_defined.to_definable
 
 /--
 In the models of `T`, the letters are not empty, and the nonempty strings are closed under
 concatenation.
 -/
 class NonemptyClosed (T : Theory ℒ⌢ₑ) : Prop where
-  zero_ne_empty (M : Type) [ConcatenationEmptyStructure M] [M↓[ℒ⌢ₑ] ⊧* T] : (0 : M) ≠ ∅
-  one_ne_empty (M : Type) [ConcatenationEmptyStructure M] [M↓[ℒ⌢ₑ] ⊧* T] : (1 : M) ≠ ∅
-  append_ne_empty (M : Type) [ConcatenationEmptyStructure M] [M↓[ℒ⌢ₑ] ⊧* T] {x y : M}
+  zero_ne_empty (V : Type) [ConcatenationEmptyStructure V] [V↓[ℒ⌢ₑ] ⊧* T] : (0 : V) ≠ ∅
+  one_ne_empty (V : Type) [ConcatenationEmptyStructure V] [V↓[ℒ⌢ₑ] ⊧* T] : (1 : V) ≠ ∅
+  append_ne_empty (V : Type) [ConcatenationEmptyStructure V] [V↓[ℒ⌢ₑ] ⊧* T] {x y : V}
     (hx : x ≠ ∅) : x ++ y ≠ ∅
 
 instance : NonemptyClosed 𝗧𝗖ₑ where
@@ -60,23 +61,23 @@ def nonemptyTranslation : DirectTranslation T ℒ⌢ where
     | Language.Concatenation.Func.zero => ⟨“z. z = !!(op(0).const)”⟩
     | Language.Concatenation.Func.one => ⟨“z. z = !!(op(1).const)”⟩
     | Language.Concatenation.Func.concat => ⟨“z x y. z = x ⌢ y”⟩
-  domain_nonempty := completeEmpty.{0} _ _ fun M _ _ ↦ (models_domainNonempty_iff _).mpr <| by
+  domain_nonempty := completeEmpty.{0} _ _ fun V _ _ ↦ (models_domainNonempty_iff _).mpr <| by
     use 0
-    simpa [Semiformula.Operator.val] using NonemptyClosed.zero_ne_empty T M
-  func_defined f := completeEmpty.{0} _ _ fun M _ _ ↦ (models_funcDefined_iff _ _).mpr <| by
+    simpa [Semiformula.Operator.val] using NonemptyClosed.zero_ne_empty T V
+  func_defined f := completeEmpty.{0} _ _ fun V _ _ ↦ (models_funcDefined_iff _ _).mpr <| by
     intro e he
     have he (i) : e i ≠ ∅ := by simpa [Semiformula.Operator.val] using he i
     cases f
-    · suffices ∃! y : M, y ≠ ∅ ∧ y = 0 by simpa [Semiformula.Operator.val]
+    · suffices ∃! y : V, y ≠ ∅ ∧ y = 0 by simpa [Semiformula.Operator.val]
       use 0
-      simpa using NonemptyClosed.zero_ne_empty T M
-    · suffices ∃! y : M, y ≠ ∅ ∧ y = 1 by simpa [Semiformula.Operator.val]
+      simpa using NonemptyClosed.zero_ne_empty T V
+    · suffices ∃! y : V, y ≠ ∅ ∧ y = 1 by simpa [Semiformula.Operator.val]
       use 1
-      simpa using NonemptyClosed.one_ne_empty T M
-    · suffices ∃! y : M, y ≠ ∅ ∧ y = e 0 ++ e 1 by simpa [Semiformula.Operator.val]
+      simpa using NonemptyClosed.one_ne_empty T V
+    · suffices ∃! y : V, y ≠ ∅ ∧ y = e 0 ++ e 1 by simpa [Semiformula.Operator.val]
       use e 0 ++ e 1
-      simpa using NonemptyClosed.append_ne_empty (T := T) M (he 0)
-  preserve_eq := completeEmpty.{0} _ _ fun M _ _ ↦ (models_preserveEq_iff _ _).mpr <| by
+      simpa using NonemptyClosed.append_ne_empty (T := T) V (he 0)
+  preserve_eq := completeEmpty.{0} _ _ fun V _ _ ↦ (models_preserveEq_iff _ _).mpr <| by
     exact fun _ _ _ _ ↦ Iff.rfl
 
 namespace nonemptyTranslation
@@ -87,22 +88,22 @@ variable {T}
 lemma dom_iff : (nonemptyTranslation T).Dom x ↔ x ≠ ∅ := by
   simp [DirectTranslation.dom_iff, nonemptyTranslation, Semiformula.Operator.val]
 
-variable [M↓[ℒ⌢ₑ] ⊧* T]
+variable [V↓[ℒ⌢ₑ] ⊧* T]
 
-variable (M T) in
-/-- The letters and the concatenation of `M` restricted to the nonempty strings. -/
-abbrev concatenationStructure : ConcatenationStructure ((nonemptyTranslation T).Model M) where
-  zero := ⟨0, dom_iff.mpr <| NonemptyClosed.zero_ne_empty T M⟩
-  one := ⟨1, dom_iff.mpr <| NonemptyClosed.one_ne_empty T M⟩
+variable (V T) in
+/-- The letters and the concatenation of `V` restricted to the nonempty strings. -/
+abbrev concatenationStructure : ConcatenationStructure ((nonemptyTranslation T).Model V) where
+  zero := ⟨0, dom_iff.mpr <| NonemptyClosed.zero_ne_empty T V⟩
+  one := ⟨1, dom_iff.mpr <| NonemptyClosed.one_ne_empty T V⟩
   append x y := ⟨x ++ y, dom_iff.mpr <|
-    NonemptyClosed.append_ne_empty (T := T) M <| dom_iff.mp x.dom⟩
+    NonemptyClosed.append_ne_empty (T := T) V <| dom_iff.mp x.dom⟩
 
 /--
 The structure of the model of `nonemptyTranslation` is the standard one of the letters and the
 concatenation restricted to the nonempty strings.
 -/
 lemma struc_eq :
-    Model.struc (nonemptyTranslation T) M = @standardModel _ (concatenationStructure M T) :=
+    Model.struc (nonemptyTranslation T) V = @standardModel _ (concatenationStructure V T) :=
   Tarski.Structure.ext
     (funext₃ fun k f v ↦ by
       symm
@@ -116,19 +117,19 @@ section
 
 attribute [local instance] concatenationStructure
 
-variable {x y : M} {hx : (nonemptyTranslation T).Dom x} {hy : (nonemptyTranslation T).Dom y}
+variable {x y : V} {hx : (nonemptyTranslation T).Dom x} {hy : (nonemptyTranslation T).Dom y}
 
 @[simp]
-lemma zero_eq_mk : (0 : (nonemptyTranslation T).Model M) =
-    ⟨0, dom_iff.mpr <| NonemptyClosed.zero_ne_empty T M⟩ := rfl
+lemma zero_eq_mk : (0 : (nonemptyTranslation T).Model V) =
+    ⟨0, dom_iff.mpr <| NonemptyClosed.zero_ne_empty T V⟩ := rfl
 
 @[simp]
-lemma one_eq_mk : (1 : (nonemptyTranslation T).Model M) =
-    ⟨1, dom_iff.mpr <| NonemptyClosed.one_ne_empty T M⟩ := rfl
+lemma one_eq_mk : (1 : (nonemptyTranslation T).Model V) =
+    ⟨1, dom_iff.mpr <| NonemptyClosed.one_ne_empty T V⟩ := rfl
 
 @[simp]
-lemma mk_append_mk : (⟨x, hx⟩ ++ ⟨y, hy⟩ : (nonemptyTranslation T).Model M) =
-    ⟨x ++ y, dom_iff.mpr <| NonemptyClosed.append_ne_empty (T := T) M <| dom_iff.mp hx⟩ := rfl
+lemma mk_append_mk : (⟨x, hx⟩ ++ ⟨y, hy⟩ : (nonemptyTranslation T).Model V) =
+    ⟨x ++ y, dom_iff.mpr <| NonemptyClosed.append_ne_empty (T := T) V <| dom_iff.mp hx⟩ := rfl
 
 end
 
@@ -139,15 +140,15 @@ The nonempty strings of a model of $\mathsf{TC}$ with the empty string form a mo
 $\mathsf{TC}$.
 - [Vis09, Appendix A]
 -/
-instance [M↓[ℒ⌢ₑ] ⊧* 𝗧𝗖ₑ] : ((nonemptyTranslation 𝗧𝗖ₑ).Model M)↓[ℒ⌢] ⊧* 𝗧𝗖 := by
+instance [V↓[ℒ⌢ₑ] ⊧* 𝗧𝗖ₑ] : ((nonemptyTranslation 𝗧𝗖ₑ).Model V)↓[ℒ⌢] ⊧* 𝗧𝗖 := by
   rw [nonemptyTranslation.struc_eq]
-  let := nonemptyTranslation.concatenationStructure M 𝗧𝗖ₑ
+  let := nonemptyTranslation.concatenationStructure V 𝗧𝗖ₑ
   constructor
   intro σ hσ
   cases hσ
   case equal hφ => exact models_theory_iff.mp inferInstance _ hφ
   case editor =>
-    suffices ∀ x y z w : M, x ++ y = z ++ w → (x = z ∧ y = w) ∨
+    suffices ∀ x y z w : V, x ++ y = z ++ w → (x = z ∧ y = w) ∨
         ∃ u, u ≠ ∅ ∧ ((x ++ u = z ∧ y = u ++ w) ∨ (x = z ++ u ∧ u ++ y = w)) by
       simpa [models_iff, Model.forall_iff, Model.exists_iff] using
         fun x _ y _ z _ w _ ↦ this x y z w
@@ -157,10 +158,10 @@ instance [M↓[ℒ⌢ₑ] ⊧* 𝗧𝗖ₑ] : ((nonemptyTranslation 𝗧𝗖ₑ)
     · exact .inl <| by simpa using hu
     · exact .inr ⟨u, hu', hu⟩
   case zeroNeConcat =>
-    simpa [models_iff, Model.forall_iff] using fun (x : M) (hx : x ≠ ∅) (y : M) (hy : y ≠ ∅)
+    simpa [models_iff, Model.forall_iff] using fun (x : V) (hx : x ≠ ∅) (y : V) (hy : y ≠ ∅)
       (h : 0 = x ++ y) ↦ (TCEmpty.eq_empty_of_append_isAtom <| by simp [← h]).elim hx hy
   case oneNeConcat =>
-    simpa [models_iff, Model.forall_iff] using fun (x : M) (hx : x ≠ ∅) (y : M) (hy : y ≠ ∅)
+    simpa [models_iff, Model.forall_iff] using fun (x : V) (hx : x ≠ ∅) (y : V) (hy : y ≠ ∅)
       (h : 1 = x ++ y) ↦ (TCEmpty.eq_empty_of_append_isAtom <| by simp [← h]).elim hx hy
   all_goals simp [models_iff, Model.forall_iff, TCEmpty.append_assoc]
 
@@ -171,43 +172,98 @@ $\mathsf{TC}$ with the empty string interprets $\mathsf{TC}$ on the nonempty str
 -/
 instance : 𝗧𝗖ₑ ⊳ 𝗧𝗖 where
   trln := nonemptyTranslation 𝗧𝗖ₑ
-  interpret_theory φ hφ := completeEmpty.{0} _ _ fun _ _ _ ↦
-    Model.translate_iff.mpr <| models_theory_iff.mp inferInstance φ hφ
+  interpret_theory _ hφ := completeEmpty.{0} _ _ fun _ _ _ ↦
+    DirectTranslation.models_translate_of_mem hφ
 
 end nonempty
 
 section option
 
-variable {M : Type*} [ConcatenationStructure M]
+open ConcatenationStructure ConcatenationEmptyStructure
 
-/-- The strings of `M` together with an empty string. -/
-instance : ConcatenationEmptyStructure (Option M) where
+variable {V : Type*} [ConcatenationStructure V] {x y : V}
+
+/-- The strings of `V` together with an empty string. -/
+instance : ConcatenationEmptyStructure (Option V) where
   zero := some 0
   one := some 1
   append := Option.merge (· ++ ·)
   emptyCollection := none
 
-lemma Option.zero_eq_some : (0 : Option M) = some 0 := rfl
+lemma Option.zero_eq_some : (0 : Option V) = some 0 := rfl
 
-lemma Option.one_eq_some : (1 : Option M) = some 1 := rfl
+lemma Option.one_eq_some : (1 : Option V) = some 1 := rfl
 
-lemma Option.empty_eq_none : (∅ : Option M) = none := rfl
-
-@[simp]
-lemma Option.none_append (x : Option M) : none ++ x = x := by cases x <;> rfl
+lemma Option.empty_eq_none : (∅ : Option V) = none := rfl
 
 @[simp]
-lemma Option.append_none (x : Option M) : x ++ none = x := by cases x <;> rfl
+lemma Option.none_append (x : Option V) : none ++ x = x := by cases x <;> rfl
 
 @[simp]
-lemma Option.some_append_some (x y : M) : (some x ++ some y : Option M) = some (x ++ y) := rfl
+lemma Option.append_none (x : Option V) : x ++ none = x := by cases x <;> rfl
+
+@[simp]
+lemma Option.some_append_some (x y : V) : (some x ++ some y : Option V) = some (x ++ y) := rfl
+
+/-- The editor axiom passes to the strings of `V` together with an empty string. -/
+lemma Option.editor {x y z w : Option V}
+    (H : ∀ x y z w : V, x ++ y = z ++ w →
+      (x = z ∧ y = w) ∨ ∃ u, (x ++ u = z ∧ y = u ++ w) ∨ (x = z ++ u ∧ u ++ y = w))
+    (h : x ++ y = z ++ w) : ∃ u, (x ++ u = z ∧ y = u ++ w) ∨ (x = z ++ u ∧ u ++ y = w) := by
+  rcases x with _ | x <;> rcases z with _ | z
+  · use none
+    simpa using h
+  · use some z
+    exact Or.inl ⟨by simp, by simpa using h⟩
+  · use some x
+    exact Or.inr ⟨by simp, by simpa using h⟩
+  rcases y with _ | y <;> rcases w with _ | w
+  · use none
+    simpa using h
+  · use some w
+    exact Or.inr ⟨by simpa using h, by simp⟩
+  · use some y
+    exact Or.inl ⟨by simpa using h, by simp⟩
+  · rcases H _ _ _ _ (Option.some.inj h) with ⟨rfl, rfl⟩ | ⟨u, ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩⟩ <;>
+      [use none; use some u; use some u] <;> simp
+
+lemma Option.ofList_cons (b : Bool) (l : List Bool) :
+    (ofList (b :: l) : Option V) = some (ofFreeSemigroup ⟨b, l⟩) := by
+  suffices ∀ (l : List Bool) (x : V),
+      l.foldl (fun m b ↦ m ++ if b then 1 else 0) (some x) =
+        some (l.foldl (fun m b ↦ m ++ if b then 1 else 0) x) by
+    rw [ofFreeSemigroup, FreeSemigroup.stringValue, ← this]
+    cases b <;> rfl
+  intro l
+  induction l with
+  | nil => simp
+  | cons b l ih =>
+    intro x
+    rw [List.foldl_cons, List.foldl_cons, ← ih]
+    cases b <;> rfl
+
+@[simp]
+lemma Option.not_isSubstring_none : ¬IsSubstring (some x) (none : Option V) := by
+  rintro (h | ⟨u, h⟩ | ⟨v, h⟩ | ⟨u, v, h⟩ | ⟨u, v, h⟩)
+  · simp at h
+  · cases u <;> simp at h
+  · cases v <;> simp at h
+  all_goals cases u <;> cases v <;> simp at h
+
+lemma Option.isSubstring_of_some (h : IsSubstring (some x) (some y)) : IsSubstring x y := by
+  rcases h with h | ⟨u, h⟩ | ⟨v, h⟩ | ⟨u, v, h⟩ | ⟨u, v, h⟩
+  · simp at h
+    grind [IsSubstring]
+  · cases u <;> simp at h <;> grind [IsSubstring]
+  · cases v <;> simp at h <;> grind [IsSubstring]
+  all_goals cases u <;> cases v <;> simp at h <;> grind [IsSubstring]
 
 /--
 The strings of a model of $\mathsf{TC}$ together with an empty string form a model of $\mathsf{TC}$
 with the empty string.
 - [Vis09, Appendix A]
 -/
-instance [M↓[ℒ⌢] ⊧* 𝗧𝗖] : (Option M)↓[ℒ⌢ₑ] ⊧* 𝗧𝗖ₑ := by
+instance [V↓[ℒ⌢] ⊧* 𝗧𝗖] : (Option V)↓[ℒ⌢ₑ] ⊧* 𝗧𝗖ₑ := by
   constructor
   intro σ hσ
   cases hσ
@@ -215,34 +271,19 @@ instance [M↓[ℒ⌢] ⊧* 𝗧𝗖] : (Option M)↓[ℒ⌢ₑ] ⊧* 𝗧𝗖�
   case emptyConcat => simp [models_iff, Option.empty_eq_none]
   case concatEmpty => simp [models_iff, Option.empty_eq_none]
   case concatAssoc =>
-    suffices ∀ x y z : Option M, x ++ y ++ z = x ++ (y ++ z) by simpa [models_iff]
+    suffices ∀ x y z : Option V, x ++ y ++ z = x ++ (y ++ z) by simpa [models_iff]
     rintro (_ | x) (_ | y) (_ | z) <;> simp [Concatenation.append_assoc]
   case editor =>
-    suffices ∀ x y z w : Option M, x ++ y = z ++ w →
+    suffices ∀ x y z w : Option V, x ++ y = z ++ w →
         ∃ u, (x ++ u = z ∧ y = u ++ w) ∨ (x = z ++ u ∧ u ++ y = w) by simpa [models_iff]
-    rintro (_ | x) y (_ | z) w h
-    · use none
-      simpa using h
-    · use some z
-      exact Or.inl ⟨by simp, by simpa using h⟩
-    · use some x
-      exact Or.inr ⟨by simp, by simpa using h⟩
-    rcases y with _ | y <;> rcases w with _ | w
-    · use none
-      simpa using h
-    · use some w
-      exact Or.inr ⟨by simpa using h, by simp⟩
-    · use some y
-      exact Or.inl ⟨by simpa using h, by simp⟩
-    · rcases editor (Option.some.inj h) with ⟨rfl, rfl⟩ | ⟨u, ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩⟩ <;>
-        [use none; use some u; use some u] <;> simp
+    exact fun _ _ _ _ ↦ Option.editor fun _ _ _ _ ↦ Concatenation.editor
   case zeroNeEmpty => simp [models_iff, Option.empty_eq_none, Option.zero_eq_some]
   case oneNeEmpty => simp [models_iff, Option.empty_eq_none, Option.one_eq_some]
   case zeroAtom =>
-    suffices ∀ x y : Option M, x ++ y = 0 → x = ∅ ∨ y = ∅ by simpa [models_iff]
+    suffices ∀ x y : Option V, x ++ y = 0 → x = ∅ ∨ y = ∅ by simpa [models_iff]
     rintro (_ | x) (_ | y) h <;> simp_all [Option.empty_eq_none, Option.zero_eq_some]
   case oneAtom =>
-    suffices ∀ x y : Option M, x ++ y = 1 → x = ∅ ∨ y = ∅ by simpa [models_iff]
+    suffices ∀ x y : Option V, x ++ y = 1 → x = ∅ ∨ y = ∅ by simpa [models_iff]
     rintro (_ | x) (_ | y) h <;> simp_all [Option.empty_eq_none, Option.one_eq_some]
   case zeroNeOne => simp [models_iff, Option.zero_eq_some, Option.one_eq_some]
 
@@ -250,13 +291,13 @@ end option
 
 section code
 
-variable {M : Type} [ConcatenationStructure M] {x y z : M}
+variable {V : Type} [ConcatenationStructure V] {x y z : V}
 
 /--
 `x` is the letter $1$ or begins with it.
 - [HH14, Theorem 3]
 -/
-def IsEmptyCode (x : M) : Prop := 1 ◨ x
+def IsEmptyCode (x : V) : Prop := 1 ◨ x
 
 /--
 `x` is the letter $1$ or begins with it.
@@ -264,34 +305,38 @@ def IsEmptyCode (x : M) : Prop := 1 ◨ x
 -/
 def isEmptyCode : Semisentence ℒ⌢ 1 := “x. !isPrefix !!(op(1).const) x”
 
-@[simp]
-lemma eval_isEmptyCode : M ⊧/![x] isEmptyCode ↔ IsEmptyCode x := by
-  simp [isEmptyCode, IsEmptyCode]
+instance isEmptyCode_defined : ℒ⌢-predicate[V] IsEmptyCode via isEmptyCode :=
+  ⟨fun v ↦ by simp [isEmptyCode, IsEmptyCode]⟩
+
+instance isEmptyCode_definable : ℒ⌢-predicate[V] IsEmptyCode := isEmptyCode_defined.to_definable
 
 /--
 `z` is the code of the concatenation of the strings coded by `x` and `y`.
 - [HH14, Theorem 3]
 -/
-def IsCodeAppend (z x y : M) : Prop := (y = 1 ∧ z = x) ∨ ∃ w, y = 1 ++ w ∧ z = x ++ w
+def IsCodeAppend (z x y : V) : Prop :=
+  (x = 1 ∧ z = y) ∨ (y = 1 ∧ z = x) ∨ ∃ u v, x = 1 ++ u ∧ y = 1 ++ v ∧ z = 1 ++ (u ++ v)
 
 /--
 `z` is the code of the concatenation of the strings coded by `x` and `y`.
 - [HH14, Theorem 3]
 -/
 def isCodeAppend : Semisentence ℒ⌢ 3 :=
-  “z x y. (y = !!(op(1).const) ∧ z = x) ∨ ∃ w, y = !!(op(1).const) ⌢ w ∧ z = x ⌢ w”
+  “z x y. (x = !!(op(1).const) ∧ z = y) ∨ (y = !!(op(1).const) ∧ z = x) ∨
+    ∃ u v, x = !!(op(1).const) ⌢ u ∧ y = !!(op(1).const) ⌢ v ∧ z = !!(op(1).const) ⌢ (u ⌢ v)”
 
-@[simp]
-lemma eval_isCodeAppend : M ⊧/![z, x, y] isCodeAppend ↔ IsCodeAppend z x y := by
-  simp [isCodeAppend, IsCodeAppend]
+instance isCodeAppend_defined : ℒ⌢-relation₃[V] IsCodeAppend via isCodeAppend :=
+  ⟨fun v ↦ by simp [isCodeAppend, IsCodeAppend]⟩
+
+instance isCodeAppend_definable : ℒ⌢-relation₃[V] IsCodeAppend := isCodeAppend_defined.to_definable
 
 /-- The code of a string or of the empty string: the string itself after the letter $1$. -/
-def emptyCode : Option M → M
+def emptyCode : Option V → V
   | none => 1
   | some x => 1 ++ x
 
 @[simp]
-lemma isEmptyCode_emptyCode (x : Option M) : IsEmptyCode (emptyCode x) := by
+lemma isEmptyCode_emptyCode (x : Option V) : IsEmptyCode (emptyCode x) := by
   cases x <;> simp [IsEmptyCode, emptyCode]
 
 lemma isEmptyCode_iff : IsEmptyCode x ↔ ∃ y, emptyCode y = x := by
@@ -302,119 +347,144 @@ lemma isEmptyCode_iff : IsEmptyCode x ↔ ∃ y, emptyCode y = x := by
   · rintro ⟨y, rfl⟩
     simp
 
-section TC
+/--
+In the models of `T`, the letter $1$ is not a concatenation, and can be cancelled on the left.
+-/
+class OneCancellable (T : Theory ℒ⌢) : Prop where
+  append_ne_one (V : Type) [ConcatenationStructure V] [V↓[ℒ⌢] ⊧* T] (x y : V) : x ++ y ≠ 1
+  one_append_cancel (V : Type) [ConcatenationStructure V] [V↓[ℒ⌢] ⊧* T] {x y : V}
+    (h : 1 ++ x = 1 ++ y) : x = y
 
-variable [M↓[ℒ⌢] ⊧* 𝗧𝗖]
+instance : OneCancellable 𝗧𝗖 where
+  append_ne_one _ _ _ := Concatenation.append_ne_one
+  one_append_cancel _ _ _ _ _ := isAtom_one.append_left_cancel
 
-lemma emptyCode_injective : Function.Injective (emptyCode (M := M)) := by
+variable (T : Theory ℒ⌢) [OneCancellable T]
+
+section
+
+variable [V↓[ℒ⌢] ⊧* T]
+
+include T
+
+lemma emptyCode_injective : Function.Injective (emptyCode (V := V)) := by
   rintro (_ | x) (_ | y) h
   · rfl
-  · exact (one_ne_append 1 y h).elim
-  · exact (one_ne_append 1 x h.symm).elim
-  · exact congrArg some <| isAtom_one.append_left_cancel h
+  · exact (OneCancellable.append_ne_one T V 1 y h.symm).elim
+  · exact (OneCancellable.append_ne_one T V 1 x h).elim
+  · exact congrArg some <| OneCancellable.one_append_cancel T V h
 
-lemma isCodeAppend_emptyCode_iff {x y : Option M} :
+lemma isCodeAppend_emptyCode_iff {x y : Option V} :
     IsCodeAppend z (emptyCode x) (emptyCode y) ↔ z = emptyCode (x ++ y) := by
-  rcases y with _ | y
-  · simp [IsCodeAppend, emptyCode]
-  · have h (w : M) : 1 ++ y = 1 ++ w ↔ y = w := ⟨isAtom_one.append_left_cancel, congrArg _⟩
-    rcases x with _ | x <;>
-      simp [IsCodeAppend, emptyCode, (one_ne_append 1 y).symm, h, Concatenation.append_assoc]
+  have h (x y : V) : 1 ++ x = 1 ++ y ↔ x = y :=
+    ⟨OneCancellable.one_append_cancel T V, congrArg _⟩
+  have h' (x : V) : 1 ≠ 1 ++ x := fun h ↦ OneCancellable.append_ne_one T V 1 x h.symm
+  rcases x with _ | x <;> rcases y with _ | y <;>
+    simp [IsCodeAppend, emptyCode, h, h', OneCancellable.append_ne_one T V]
 
-end TC
+end
+
+variable [𝗘𝗤 ℒ⌢ ⪯ T]
 
 /--
-The translation of $\mathsf{TC}$ with the empty string into $\mathsf{TC}$ that codes a string by
-the string itself after the letter $1$, and the empty string by the letter $1$.
+The translation of the language with the empty string into `T` that codes a string by the string
+itself after the letter $1$, and the empty string by the letter $1$.
 - [HH14, Theorem 3]
 - [Vis09, Appendix A]
 -/
-def emptyTranslation : DirectTranslation 𝗧𝗖 ℒ⌢ₑ where
+def emptyTranslation : DirectTranslation T ℒ⌢ₑ where
   domain := ⟨isEmptyCode⟩
   rel
     | Sum.inl Language.Concatenation.Rel.eq => ⟨“x y. x = y”⟩
   func
-    | Sum.inl Language.Concatenation.Func.zero =>
-      ⟨“z. z = !!(op(1).const) ⌢ !!(op(0).const)”⟩
-    | Sum.inl Language.Concatenation.Func.one =>
-      ⟨“z. z = !!(op(1).const) ⌢ !!(op(1).const)”⟩
+    | Sum.inl Language.Concatenation.Func.zero => ⟨“z. z = !!(op(1).const) ⌢ !!(op(0).const)”⟩
+    | Sum.inl Language.Concatenation.Func.one => ⟨“z. z = !!(op(1).const) ⌢ !!(op(1).const)”⟩
     | Sum.inl Language.Concatenation.Func.concat => ⟨isCodeAppend⟩
     | Sum.inr (Language.Constant.Func.const _) => ⟨“z. z = !!(op(1).const)”⟩
-  domain_nonempty := complete.{0} _ _ fun M _ _ ↦ (models_domainNonempty_iff _).mpr <| by
+  domain_nonempty := complete.{0} _ _ fun V _ _ ↦ (models_domainNonempty_iff _).mpr <| by
     use emptyCode none
     simp [Semiformula.Operator.val]
-  func_defined f := complete.{0} _ _ fun M _ _ ↦ (models_funcDefined_iff _ _).mpr <| by
+  func_defined f := complete.{0} _ _ fun V _ _ ↦ (models_funcDefined_iff _ _).mpr <| by
     intro e he
     have he (i) : IsEmptyCode (e i) := by simpa [Semiformula.Operator.val] using he i
     rcases f with (_ | _ | _) | ⟨⟨⟩⟩
-    · suffices ∃! y : M, IsEmptyCode y ∧ y = emptyCode (some 0) by
+    · suffices ∃! y : V, IsEmptyCode y ∧ y = emptyCode (some 0) by
         simpa [Semiformula.Operator.val]
       use emptyCode (some 0)
       simp
-    · suffices ∃! y : M, IsEmptyCode y ∧ y = emptyCode (some 1) by
+    · suffices ∃! y : V, IsEmptyCode y ∧ y = emptyCode (some 1) by
         simpa [Semiformula.Operator.val]
       use emptyCode (some 1)
       simp
-    · suffices ∃! y : M, IsEmptyCode y ∧ IsCodeAppend y (e 0) (e 1) by
+    · suffices ∃! y : V, IsEmptyCode y ∧ IsCodeAppend y (e 0) (e 1) by
         simpa [Semiformula.Operator.val]
       obtain ⟨x, hx⟩ := isEmptyCode_iff.mp (he 0)
       obtain ⟨y, hy⟩ := isEmptyCode_iff.mp (he 1)
-      simp only [← hx, ← hy, isCodeAppend_emptyCode_iff]
+      simp only [← hx, ← hy, isCodeAppend_emptyCode_iff T]
       use emptyCode (x ++ y)
       simp
-    · suffices ∃! y : M, IsEmptyCode y ∧ y = emptyCode none by
+    · suffices ∃! y : V, IsEmptyCode y ∧ y = emptyCode none by
         simpa [Semiformula.Operator.val]
       use emptyCode none
       simp
-  preserve_eq := complete.{0} _ _ fun M _ _ ↦ (models_preserveEq_iff _ _).mpr <| by
+  preserve_eq := complete.{0} _ _ fun V _ _ ↦ (models_preserveEq_iff _ _).mpr <| by
     exact fun _ _ _ _ ↦ Iff.rfl
 
 namespace emptyTranslation
 
+variable {T}
+
 @[simp]
-lemma dom_iff : emptyTranslation.Dom x ↔ IsEmptyCode x := by
+lemma dom_iff : (emptyTranslation T).Dom x ↔ IsEmptyCode x := by
   simp [DirectTranslation.dom_iff, emptyTranslation, Semiformula.Operator.val]
 
-variable [M↓[ℒ⌢] ⊧* 𝗧𝗖]
+variable [V↓[ℒ⌢] ⊧* T]
 
-/-- The bijection of the strings of `M` and the empty string with their codes. -/
-noncomputable def equiv : Option M ≃ emptyTranslation.Model M :=
+/-- The bijection of the strings of `V` and the empty string with their codes. -/
+noncomputable def equiv : Option V ≃ (emptyTranslation T).Model V :=
   Equiv.ofBijective (fun x ↦ ⟨emptyCode x, by simp⟩) <| by
     constructor
-    · exact fun x y h ↦ emptyCode_injective <| congrArg Model.val h
+    · exact fun x y h ↦ emptyCode_injective T <| congrArg Model.val h
     · intro x
       obtain ⟨y, hy⟩ := isEmptyCode_iff.mp <| dom_iff.mp x.dom
       exact ⟨y, Model.ext hy⟩
 
 @[simp]
-lemma val_equiv (x : Option M) : (equiv x : M) = emptyCode x := rfl
+lemma val_equiv (x : Option V) : (equiv (T := T) x : V) = emptyCode x := rfl
 
-lemma struc_eq : Model.struc emptyTranslation M = Tarski.Structure.ofEquiv equiv :=
-  Tarski.Structure.ext
-    (funext₃ fun k f v ↦ by
-      symm
-      apply Model.func_iff.mpr
-      obtain ⟨v, rfl⟩ : ∃ w, v = equiv ∘ w := ⟨equiv.symm ∘ v, by simp [← Function.comp_assoc]⟩
-      rcases f with (_ | _ | _) | ⟨⟨⟩⟩
-      · simp [emptyTranslation, Semiformula.Operator.val]
-        rfl
-      · simp [emptyTranslation, Semiformula.Operator.val]
-        rfl
-      · have h : M ⊧/![emptyCode (v 0 ++ v 1), emptyCode (v 0), emptyCode (v 1)] isCodeAppend :=
-          eval_isCodeAppend.mpr <| isCodeAppend_emptyCode_iff.mpr rfl
-        change Semiformula.Evalb _ isCodeAppend
-        convert h using 2
-        funext i
-        match i with
-        | 0 =>
-          change emptyCode (equiv.symm (equiv (v 0)) ++ equiv.symm (equiv (v 1))) = _
-          simp
-        | 1 | 2 => rfl
-      · simp [emptyTranslation, Semiformula.Operator.val]
-        rfl)
-    (funext₃ fun k r v ↦ by
-      rcases r with ⟨⟨⟩⟩ | ⟨⟨⟩⟩
-      exact propext <| (Model.eq_iff v).trans equiv.symm.apply_eq_iff_eq.symm)
+lemma struc_eq :
+    Model.struc (emptyTranslation T) V = Tarski.Structure.ofEquiv (equiv (T := T)) := by
+  apply Tarski.Structure.ext
+  · funext k f v
+    symm
+    apply Model.func_iff.mpr
+    obtain ⟨v, rfl⟩ : ∃ w, v = equiv ∘ w := ⟨equiv.symm ∘ v, by simp [← Function.comp_assoc]⟩
+    rcases f with (_ | _ | _) | ⟨⟨⟩⟩
+    · simp [emptyTranslation, Semiformula.Operator.val]
+      rfl
+    · simp [emptyTranslation, Semiformula.Operator.val]
+      rfl
+    · simp only [emptyTranslation, Semiformula.Operator.val, Function.comp_apply]
+      simp only [Defined.eval_iff]
+      exact (isCodeAppend_emptyCode_iff T).mpr <| by
+        change emptyCode (equiv.symm (equiv (v 0)) ++ equiv.symm (equiv (v 1))) = _
+        simp
+    · simp [emptyTranslation, Semiformula.Operator.val]
+      rfl
+  · funext k r v
+    rcases r with ⟨⟨⟩⟩ | ⟨⟨⟩⟩
+    exact propext <| (Model.eq_iff v).trans equiv.symm.apply_eq_iff_eq.symm
+
+/--
+The codes of the strings and of the empty string satisfy what the strings together with an empty
+string satisfy.
+-/
+lemma models_of_option {U : Theory ℒ⌢ₑ} (h : (Option V)↓[ℒ⌢ₑ] ⊧* U) :
+    ((emptyTranslation T).Model V)↓[ℒ⌢ₑ] ⊧* U := by
+  have : Option V ≡ₑ[ℒ⌢ₑ] (emptyTranslation T).Model V := by
+    rw [struc_eq]
+    exact Tarski.Structure.ElementaryEquiv.ofEquiv equiv
+  exact (Tarski.Structure.ElementaryEquiv.modelsTheory (M₁ := Option V)).mp h
 
 end emptyTranslation
 
@@ -423,11 +493,8 @@ The codes of the strings of a model of $\mathsf{TC}$ and of the empty string for
 $\mathsf{TC}$ with the empty string.
 - [HH14, Theorem 3]
 -/
-instance [M↓[ℒ⌢] ⊧* 𝗧𝗖] : (emptyTranslation.Model M)↓[ℒ⌢ₑ] ⊧* 𝗧𝗖ₑ := by
-  have : Option M ≡ₑ[ℒ⌢ₑ] emptyTranslation.Model M := by
-    rw [emptyTranslation.struc_eq]
-    exact Tarski.Structure.ElementaryEquiv.ofEquiv emptyTranslation.equiv
-  exact (Tarski.Structure.ElementaryEquiv.modelsTheory (M₁ := Option M)).mp inferInstance
+instance [V↓[ℒ⌢] ⊧* 𝗧𝗖] : ((emptyTranslation 𝗧𝗖).Model V)↓[ℒ⌢ₑ] ⊧* 𝗧𝗖ₑ :=
+  emptyTranslation.models_of_option inferInstance
 
 /--
 $\mathsf{TC}$ interprets $\mathsf{TC}$ with the empty string.
@@ -435,9 +502,8 @@ $\mathsf{TC}$ interprets $\mathsf{TC}$ with the empty string.
 - [Vis09, Appendix A]
 -/
 instance : 𝗧𝗖 ⊳ 𝗧𝗖ₑ where
-  trln := emptyTranslation
-  interpret_theory φ hφ := complete.{0} _ _ fun _ _ _ ↦
-    Model.translate_iff.mpr <| models_theory_iff.mp inferInstance φ hφ
+  trln := emptyTranslation 𝗧𝗖
+  interpret_theory _ hφ := complete.{0} _ _ fun _ _ _ ↦ DirectTranslation.models_translate_of_mem hφ
 
 /--
 $\mathsf{TC}$ and $\mathsf{TC}$ with the empty string are mutually interpretable.
@@ -458,38 +524,42 @@ end code
 
 section empty
 
-variable {M : Type*} [ConcatenationEmptyStructure M] {x y z : M}
+variable {V : Type*} [ConcatenationEmptyStructure V] {x y z : V}
 
 /-- Every nonempty suffix of `x` begins with the letter $0$. -/
-def NonemptySuffixesBeginWithZero (x : M) : Prop := ∀ u v, x = u ++ v → v = ∅ ∨ ∃ w, v = 0 ++ w
+def NonemptySuffixesBeginWithZero (x : V) : Prop := ∀ u v, x = u ++ v → v = ∅ ∨ ∃ w, v = 0 ++ w
 
 /-- Every nonempty suffix of `x` begins with the letter $0$. -/
 def nonemptySuffixesBeginWithZero : Semisentence ℒ⌢ₑ 1 :=
   “x. ∀ u v, x = u ⌢ v → v = ⋆ ∨ ∃ w, v = !!(op(0).const) ⌢ w”
 
-@[simp]
-lemma eval_nonemptySuffixesBeginWithZero :
-    M ⊧/![x] nonemptySuffixesBeginWithZero ↔ NonemptySuffixesBeginWithZero x := by
-  simp [nonemptySuffixesBeginWithZero, NonemptySuffixesBeginWithZero]
+instance nonemptySuffixesBeginWithZero_defined :
+    ℒ⌢ₑ-predicate[V] NonemptySuffixesBeginWithZero via nonemptySuffixesBeginWithZero :=
+  ⟨fun v ↦ by simp [nonemptySuffixesBeginWithZero, NonemptySuffixesBeginWithZero]⟩
+
+instance nonemptySuffixesBeginWithZero_definable :
+    ℒ⌢ₑ-predicate[V] NonemptySuffixesBeginWithZero :=
+  nonemptySuffixesBeginWithZero_defined.to_definable
 
 open Classical in
 /--
 The string `0 ++ x` if every nonempty suffix of `x` begins with the letter $0$, and `x` otherwise.
 -/
-noncomputable def shift (x : M) : M := if NonemptySuffixesBeginWithZero x then 0 ++ x else x
+noncomputable def shift (x : V) : V := if NonemptySuffixesBeginWithZero x then 0 ++ x else x
 
 /-- `y` is `shift x`. -/
 def isShift : Semisentence ℒ⌢ₑ 2 :=
   “y x. (!nonemptySuffixesBeginWithZero x ∧ y = !!(op(0).const) ⌢ x) ∨
     (¬!nonemptySuffixesBeginWithZero x ∧ y = x)”
 
-@[simp]
-lemma eval_isShift : M ⊧/![y, x] isShift ↔ y = shift x := by
-  by_cases h : NonemptySuffixesBeginWithZero x <;> simp [isShift, shift, h]
+instance shift_defined : ℒ⌢ₑ-function₁[V] shift via isShift := .mk fun v ↦ by
+  by_cases h : NonemptySuffixesBeginWithZero (v 1) <;> simp [isShift, shift, h]
+
+instance shift_definable : ℒ⌢ₑ-function₁[V] shift := shift_defined.to_definable
 
 section map
 
-variable {N : Type*} [ConcatenationEmptyStructure N] (g : M ≃ N) (zero : g 0 = 0)
+variable {W : Type*} [ConcatenationEmptyStructure W] (g : V ≃ W) (zero : g 0 = 0)
     (append : ∀ x y, g (x ++ y) = g x ++ g y) (empty : g ∅ = ∅)
 
 include zero append empty
@@ -499,7 +569,7 @@ lemma nonemptySuffixesBeginWithZero_map_iff :
   simp [NonemptySuffixesBeginWithZero, g.surjective.forall, g.surjective.exists, ← zero,
     ← append, ← empty]
 
-lemma shift_map (x : M) : shift (g x) = g (shift x) := by
+lemma shift_map (x : V) : shift (g x) = g (shift x) := by
   by_cases h : NonemptySuffixesBeginWithZero x <;>
     simp [shift, nonemptySuffixesBeginWithZero_map_iff g zero append empty, h, zero, append]
 
@@ -507,20 +577,18 @@ end map
 
 section TCEmpty
 
-variable [M↓[ℒ⌢ₑ] ⊧* 𝗧𝗖ₑ]
+variable [V↓[ℒ⌢ₑ] ⊧* 𝗧𝗖ₑ]
 
 namespace TCEmpty
 
 lemma zero_append_cancel (h : 0 ++ x = 0 ++ y) : x = y := by
-  have hu {u : M} (hu : 0 ++ u = 0) : u = ∅ :=
-    (eq_empty_of_append_isAtom <| hu.symm ▸ isAtom_zero).resolve_left zero_ne_empty
   obtain ⟨u, ⟨h₁, h₂⟩ | ⟨h₁, h₂⟩⟩ := editor h
-  · simpa [hu h₁] using h₂
-  · simpa [hu h₁.symm] using h₂
+  · simpa [eq_empty_of_append_eq_left isAtom_zero h₁] using h₂
+  · simpa [eq_empty_of_append_eq_left isAtom_zero h₁.symm] using h₂
 
 end TCEmpty
 
-lemma nonemptySuffixesBeginWithZero_empty : NonemptySuffixesBeginWithZero (∅ : M) :=
+lemma nonemptySuffixesBeginWithZero_empty : NonemptySuffixesBeginWithZero (∅ : V) :=
   fun _ _ h ↦ Or.inl (TCEmpty.eq_empty_of_append_eq_empty h.symm).2
 
 lemma nonemptySuffixesBeginWithZero_zero_append_iff :
@@ -536,7 +604,7 @@ lemma nonemptySuffixesBeginWithZero_zero_append_iff :
         simp [show w = 0 by simpa using hw.symm]
       · simpa using h ∅ x (by simp)
 
-lemma shift_injective : Function.Injective (shift (M := M)) := by
+lemma shift_injective : Function.Injective (shift (V := V)) := by
   intro x y h
   by_cases hx : NonemptySuffixesBeginWithZero x <;>
     by_cases hy : NonemptySuffixesBeginWithZero y <;>
@@ -563,7 +631,7 @@ lemma exists_shift_eq_iff : (∃ x, shift x = y) ↔ y ≠ ∅ := by
       simp [shift, h]
 
 @[simp]
-lemma shift_ne_empty (x : M) : shift x ≠ ∅ := exists_shift_eq_iff.mp ⟨x, rfl⟩
+lemma shift_ne_empty (x : V) : shift x ≠ ∅ := exists_shift_eq_iff.mp ⟨x, rfl⟩
 
 lemma existsUnique_eq_shift (hy : y ≠ ∅) : ∃! x, y = shift x := by
   obtain ⟨x, rfl⟩ := exists_shift_eq_iff.mpr hy
@@ -576,7 +644,7 @@ end empty
 
 section shiftTranslation
 
-variable {M : Type} [ConcatenationEmptyStructure M]
+variable {V : Type} [ConcatenationEmptyStructure V]
 
 /--
 The unrelativized translation of $\mathsf{TC}$ into $\mathsf{TC}$ with the empty string that reads
@@ -591,43 +659,43 @@ def shiftTranslation : DirectTranslation 𝗧𝗖ₑ ℒ⌢ where
     | Language.Concatenation.Func.one => ⟨“z. !isShift !!(op(1).const) z”⟩
     | Language.Concatenation.Func.concat =>
       ⟨“z x y. ∃ u v, !isShift u x ∧ !isShift v y ∧ !isShift (u ⌢ v) z”⟩
-  domain_nonempty := completeEmpty.{0} _ _ fun M _ _ ↦ (models_domainNonempty_iff _).mpr <| by
+  domain_nonempty := completeEmpty.{0} _ _ fun V _ _ ↦ (models_domainNonempty_iff _).mpr <| by
     simp [Semiformula.Operator.val]
-  func_defined f := completeEmpty.{0} _ _ fun M _ _ ↦ (models_funcDefined_iff _ _).mpr <| by
+  func_defined f := completeEmpty.{0} _ _ fun V _ _ ↦ (models_funcDefined_iff _ _).mpr <| by
     intro e _
     cases f
-    · simpa [Semiformula.Operator.val] using existsUnique_eq_shift (M := M) TCEmpty.zero_ne_empty
-    · simpa [Semiformula.Operator.val] using existsUnique_eq_shift (M := M) TCEmpty.one_ne_empty
+    · simpa [Semiformula.Operator.val] using existsUnique_eq_shift (V := V) TCEmpty.zero_ne_empty
+    · simpa [Semiformula.Operator.val] using existsUnique_eq_shift (V := V) TCEmpty.one_ne_empty
     · simpa [Semiformula.Operator.val] using existsUnique_eq_shift
         (y := shift (e 0) ++ shift (e 1)) fun h ↦
           shift_ne_empty _ (TCEmpty.eq_empty_of_append_eq_empty h).1
-  preserve_eq := completeEmpty.{0} _ _ fun M _ _ ↦ (models_preserveEq_iff _ _).mpr <| by
+  preserve_eq := completeEmpty.{0} _ _ fun V _ _ ↦ (models_preserveEq_iff _ _).mpr <| by
     exact fun _ _ _ _ ↦ Iff.rfl
 
 namespace shiftTranslation
 
 @[simp]
-lemma dom {M : Type*} [Tarski.Structure ℒ⌢ₑ M] (x : M) : shiftTranslation.Dom x := by
+lemma dom {V : Type*} [Tarski.Structure ℒ⌢ₑ V] (x : V) : shiftTranslation.Dom x := by
   simp [DirectTranslation.dom_iff, shiftTranslation, Semiformula.Operator.val]
 
-lemma func_zero_val_iff {e : Fin 1 → M} :
+lemma func_zero_val_iff {e : Fin 1 → V} :
     (shiftTranslation.func Language.Concatenation.Func.zero).val e ↔ 0 = shift (e 0) := by
   simp [shiftTranslation, Semiformula.Operator.val]
 
-lemma func_one_val_iff {e : Fin 1 → M} :
+lemma func_one_val_iff {e : Fin 1 → V} :
     (shiftTranslation.func Language.Concatenation.Func.one).val e ↔ 1 = shift (e 0) := by
   simp [shiftTranslation, Semiformula.Operator.val]
 
-lemma func_concat_val_iff {e : Fin 3 → M} :
+lemma func_concat_val_iff {e : Fin 3 → V} :
     (shiftTranslation.func Language.Concatenation.Func.concat).val e ↔
       shift (e 1) ++ shift (e 2) = shift (e 0) := by
   simp [shiftTranslation, Semiformula.Operator.val]
 
-variable [M↓[ℒ⌢ₑ] ⊧* 𝗧𝗖ₑ]
+variable [V↓[ℒ⌢ₑ] ⊧* 𝗧𝗖ₑ]
 
-/-- The bijection of the strings of `M` with the nonempty ones. -/
-noncomputable def equiv : shiftTranslation.Model M ≃ (nonemptyTranslation 𝗧𝗖ₑ).Model M :=
-  Equiv.ofBijective (fun x ↦ ⟨shift (x : M), by simp⟩) <| by
+/-- The bijection of the strings of `V` with the nonempty ones. -/
+noncomputable def equiv : shiftTranslation.Model V ≃ (nonemptyTranslation 𝗧𝗖ₑ).Model V :=
+  Equiv.ofBijective (fun x ↦ ⟨shift (x : V), by simp⟩) <| by
     constructor
     · exact fun x y h ↦ Model.ext <| shift_injective <| congrArg Model.val h
     · intro y
@@ -635,22 +703,22 @@ noncomputable def equiv : shiftTranslation.Model M ≃ (nonemptyTranslation 𝗧
       exact ⟨⟨x, dom x⟩, Model.ext hx⟩
 
 @[simp]
-lemma val_equiv (x : shiftTranslation.Model M) : (equiv x : M) = shift (x : M) := rfl
+lemma val_equiv (x : shiftTranslation.Model V) : (equiv x : V) = shift (x : V) := rfl
 
-lemma shift_equiv_symm (y : (nonemptyTranslation 𝗧𝗖ₑ).Model M) :
-    shift ((equiv.symm y : _) : M) = y := by
+lemma shift_equiv_symm (y : (nonemptyTranslation 𝗧𝗖ₑ).Model V) :
+    shift ((equiv.symm y : _) : V) = y := by
   rw [← val_equiv, Equiv.apply_symm_apply]
 
 /-- The letters and the concatenation of the nonempty strings transported to all strings. -/
-noncomputable abbrev concatenationStructure : ConcatenationStructure (shiftTranslation.Model M) :=
-  let := nonemptyTranslation.concatenationStructure M 𝗧𝗖ₑ
+noncomputable abbrev concatenationStructure : ConcatenationStructure (shiftTranslation.Model V) :=
+  let := nonemptyTranslation.concatenationStructure V 𝗧𝗖ₑ
   .ofEquiv equiv
 
 lemma struc_eq :
-    Model.struc shiftTranslation M = @standardModel _ concatenationStructure :=
+    Model.struc shiftTranslation V = @standardModel _ concatenationStructure :=
   Tarski.Structure.ext
     (funext₃ fun k f v ↦ by
-      let := nonemptyTranslation.concatenationStructure M 𝗧𝗖ₑ
+      let := nonemptyTranslation.concatenationStructure V 𝗧𝗖ₑ
       symm
       apply Model.func_iff.mpr
       cases f
@@ -667,36 +735,38 @@ end shiftTranslation
 The strings of a model of $\mathsf{TC}$ with the empty string, read as its nonempty strings, form a
 model of $\mathsf{TC}$.
 -/
-instance [M↓[ℒ⌢ₑ] ⊧* 𝗧𝗖ₑ] : (shiftTranslation.Model M)↓[ℒ⌢] ⊧* 𝗧𝗖 := by
-  have : (nonemptyTranslation 𝗧𝗖ₑ).Model M ≡ₑ[ℒ⌢] shiftTranslation.Model M := by
+instance [V↓[ℒ⌢ₑ] ⊧* 𝗧𝗖ₑ] : (shiftTranslation.Model V)↓[ℒ⌢] ⊧* 𝗧𝗖 := by
+  have : (nonemptyTranslation 𝗧𝗖ₑ).Model V ≡ₑ[ℒ⌢] shiftTranslation.Model V := by
     rw [shiftTranslation.struc_eq,
-      @standardModel_ofEquiv _ (nonemptyTranslation.concatenationStructure M 𝗧𝗖ₑ),
+      @standardModel_ofEquiv _ (nonemptyTranslation.concatenationStructure V 𝗧𝗖ₑ),
       ← nonemptyTranslation.struc_eq]
     exact Tarski.Structure.ElementaryEquiv.ofEquiv _
   exact (Tarski.Structure.ElementaryEquiv.modelsTheory
-    (M₁ := (nonemptyTranslation 𝗧𝗖ₑ).Model M)).mp inferInstance
+    (M₁ := (nonemptyTranslation 𝗧𝗖ₑ).Model V)).mp inferInstance
 
 end shiftTranslation
 
 section option
 
-variable {M : Type*} [ConcatenationStructure M] {x y z : M}
+variable {V : Type*} [ConcatenationStructure V] {x y z : V}
 
 /-- Every suffix of `x` begins with the letter $0$. -/
-def SuffixesBeginWithZero (x : M) : Prop := ∀ y, x ◧ y → 0 ◨ y
+def SuffixesBeginWithZero (x : V) : Prop := ∀ y, x ◧ y → 0 ◨ y
 
 /-- Every suffix of `x` begins with the letter $0$. -/
 def suffixesBeginWithZero : Semisentence ℒ⌢ 1 :=
   “x. ∀ y, !isSuffix y x → !isPrefix !!(op(0).const) y”
 
-@[simp]
-lemma eval_suffixesBeginWithZero :
-    M ⊧/![x] suffixesBeginWithZero ↔ SuffixesBeginWithZero x := by
-  simp [suffixesBeginWithZero, SuffixesBeginWithZero]
+instance suffixesBeginWithZero_defined :
+    ℒ⌢-predicate[V] SuffixesBeginWithZero via suffixesBeginWithZero :=
+  ⟨fun v ↦ by simp [suffixesBeginWithZero, SuffixesBeginWithZero]⟩
+
+instance suffixesBeginWithZero_definable : ℒ⌢-predicate[V] SuffixesBeginWithZero :=
+  suffixesBeginWithZero_defined.to_definable
 
 lemma nonemptySuffixesBeginWithZero_some_iff :
     NonemptySuffixesBeginWithZero (some x) ↔ SuffixesBeginWithZero x := by
-  have h (y : M) : (∃ w : Option M, some y = 0 ++ w) ↔ 0 ◨ y := by
+  have h (y : V) : (∃ w : Option V, some y = 0 ++ w) ↔ 0 ◨ y := by
     simp [Option.exists, Option.zero_eq_some, IsPrefix, eq_comm (a := y)]
   simp only [NonemptySuffixesBeginWithZero, SuffixesBeginWithZero, Option.forall, h,
     Option.empty_eq_none]
@@ -707,7 +777,7 @@ open Classical in
 The letter $0$ for the empty string; for a string `x`, the string `0 ++ x` if every suffix of `x`
 begins with the letter $0$, and `x` otherwise.
 -/
-noncomputable def shiftOption : Option M → M
+noncomputable def shiftOption : Option V → V
   | none => 0
   | some x => if SuffixesBeginWithZero x then 0 ++ x else x
 
@@ -716,15 +786,18 @@ def isShiftSome : Semisentence ℒ⌢ 2 :=
   “y x. (!suffixesBeginWithZero x ∧ y = !!(op(0).const) ⌢ x) ∨
     (¬!suffixesBeginWithZero x ∧ y = x)”
 
-@[simp]
-lemma eval_isShiftSome : M ⊧/![y, x] isShiftSome ↔ y = shiftOption (some x) := by
-  by_cases h : SuffixesBeginWithZero x <;> simp [isShiftSome, shiftOption, h]
+instance shiftOption_some_defined :
+    ℒ⌢-function₁[V] (fun x ↦ shiftOption (some x)) via isShiftSome := .mk fun v ↦ by
+  by_cases h : SuffixesBeginWithZero (v 1) <;> simp [isShiftSome, shiftOption, h]
+
+instance shiftOption_some_definable : ℒ⌢-function₁[V] (fun x ↦ shiftOption (some x)) :=
+  shiftOption_some_defined.to_definable
 
 /--
 `z` corresponds under `shiftOption` to the concatenation of the strings corresponding to `x`
 and `y`.
 -/
-def IsShiftAppend (z x y : M) : Prop :=
+def IsShiftAppend (z x y : V) : Prop :=
   (x = 0 ∧ z = y) ∨ (y = 0 ∧ z = x) ∨
     ∃ u v, x = shiftOption (some u) ∧ y = shiftOption (some v) ∧ z = shiftOption (some (u ++ v))
 
@@ -736,21 +809,23 @@ def isShiftAppend : Semisentence ℒ⌢ 3 :=
   “z x y. (x = !!(op(0).const) ∧ z = y) ∨ (y = !!(op(0).const) ∧ z = x) ∨
     ∃ u v, !isShiftSome x u ∧ !isShiftSome y v ∧ !isShiftSome z (u ⌢ v)”
 
-@[simp]
-lemma eval_isShiftAppend : M ⊧/![z, x, y] isShiftAppend ↔ IsShiftAppend z x y := by
-  simp [isShiftAppend, IsShiftAppend]
+instance isShiftAppend_defined : ℒ⌢-relation₃[V] IsShiftAppend via isShiftAppend :=
+  ⟨fun v ↦ by simp [isShiftAppend, IsShiftAppend]⟩
 
-variable [M↓[ℒ⌢] ⊧* 𝗧𝗖]
+instance isShiftAppend_definable : ℒ⌢-relation₃[V] IsShiftAppend :=
+  isShiftAppend_defined.to_definable
 
-lemma some_shiftOption (x : Option M) : some (shiftOption x) = shift x := by
+variable [V↓[ℒ⌢] ⊧* 𝗧𝗖]
+
+lemma some_shiftOption (x : Option V) : some (shiftOption x) = shift x := by
   rcases x with _ | x
   · rw [← Option.empty_eq_none, shift, ite_eq_left nonemptySuffixesBeginWithZero_empty]
     simp [Option.empty_eq_none, Option.zero_eq_some, shiftOption]
   · by_cases h : SuffixesBeginWithZero x <;>
       simp [shift, shiftOption, nonemptySuffixesBeginWithZero_some_iff, h, Option.zero_eq_some]
 
-/-- The bijection of the strings of `M` and the empty string with the strings of `M`. -/
-noncomputable def shiftOptionEquiv : Option M ≃ M :=
+/-- The bijection of the strings of `V` and the empty string with the strings of `V`. -/
+noncomputable def shiftOptionEquiv : Option V ≃ V :=
   Equiv.ofBijective shiftOption <| by
     constructor
     · intro x y h
@@ -762,21 +837,21 @@ noncomputable def shiftOptionEquiv : Option M ≃ M :=
       rwa [← some_shiftOption, Option.some_inj] at hx
 
 @[simp]
-lemma shiftOptionEquiv_apply (x : Option M) : shiftOptionEquiv x = shiftOption x := rfl
+lemma shiftOptionEquiv_apply (x : Option V) : shiftOptionEquiv x = shiftOption x := rfl
 
-lemma shiftOption_inj {x y : Option M} : shiftOption x = shiftOption y ↔ x = y :=
+lemma shiftOption_inj {x y : Option V} : shiftOption x = shiftOption y ↔ x = y :=
   shiftOptionEquiv.apply_eq_iff_eq
 
-lemma isShiftAppend_shiftOption_iff {x y : Option M} :
+lemma isShiftAppend_shiftOption_iff {x y : Option V} :
     IsShiftAppend z (shiftOption x) (shiftOption y) ↔ z = shiftOption (x ++ y) := by
   rcases x with _ | x <;> rcases y with _ | y <;>
-    simp [IsShiftAppend, shiftOption_inj, show (0 : M) = shiftOption none from rfl]
+    simp [IsShiftAppend, shiftOption_inj, show (0 : V) = shiftOption none from rfl]
 
 end option
 
 section emptyShiftTranslation
 
-variable {M : Type} [ConcatenationStructure M]
+variable {V : Type} [ConcatenationStructure V]
 
 /--
 The unrelativized translation of $\mathsf{TC}$ with the empty string into $\mathsf{TC}$ that reads
@@ -791,9 +866,9 @@ def emptyShiftTranslation : DirectTranslation 𝗧𝗖 ℒ⌢ₑ where
     | Sum.inl Language.Concatenation.Func.one => ⟨“z. !isShiftSome z !!(op(1).const)”⟩
     | Sum.inl Language.Concatenation.Func.concat => ⟨isShiftAppend⟩
     | Sum.inr (Language.Constant.Func.const _) => ⟨“z. z = !!(op(0).const)”⟩
-  domain_nonempty := complete.{0} _ _ fun M _ _ ↦ (models_domainNonempty_iff _).mpr <| by
+  domain_nonempty := complete.{0} _ _ fun V _ _ ↦ (models_domainNonempty_iff _).mpr <| by
     simp [Semiformula.Operator.val]
-  func_defined f := complete.{0} _ _ fun M _ _ ↦ (models_funcDefined_iff _ _).mpr <| by
+  func_defined f := complete.{0} _ _ fun V _ _ ↦ (models_funcDefined_iff _ _).mpr <| by
     intro e _
     rcases f with (_ | _ | _) | ⟨⟨⟩⟩
     · simp [Semiformula.Operator.val]
@@ -803,54 +878,48 @@ def emptyShiftTranslation : DirectTranslation 𝗧𝗖 ℒ⌢ₑ where
       obtain ⟨y, rfl⟩ := shiftOptionEquiv.surjective y
       simp [Semiformula.Operator.val, isShiftAppend_shiftOption_iff]
     · simp [Semiformula.Operator.val, Semiformula.Operator.Eq.sentence_eq]
-  preserve_eq := complete.{0} _ _ fun M _ _ ↦ (models_preserveEq_iff _ _).mpr <| by
+  preserve_eq := complete.{0} _ _ fun V _ _ ↦ (models_preserveEq_iff _ _).mpr <| by
     exact fun _ _ _ _ ↦ Iff.rfl
 
 namespace emptyShiftTranslation
 
 @[simp]
-lemma dom {M : Type*} [Tarski.Structure ℒ⌢ M] (x : M) : emptyShiftTranslation.Dom x := by
+lemma dom {V : Type*} [Tarski.Structure ℒ⌢ V] (x : V) : emptyShiftTranslation.Dom x := by
   simp [DirectTranslation.dom_iff, emptyShiftTranslation, Semiformula.Operator.val]
 
-lemma func_zero_val_iff {e : Fin 1 → M} :
+lemma func_zero_val_iff {e : Fin 1 → V} :
     (emptyShiftTranslation.func (Sum.inl Language.Concatenation.Func.zero)).val e ↔
       e 0 = shiftOption (some 0) := by
   simp [emptyShiftTranslation, Semiformula.Operator.val]
 
-lemma func_one_val_iff {e : Fin 1 → M} :
+lemma func_one_val_iff {e : Fin 1 → V} :
     (emptyShiftTranslation.func (Sum.inl Language.Concatenation.Func.one)).val e ↔
       e 0 = shiftOption (some 1) := by
   simp [emptyShiftTranslation, Semiformula.Operator.val]
 
-lemma func_concat_val_iff {e : Fin 3 → M} :
-    (emptyShiftTranslation.func (Sum.inl Language.Concatenation.Func.concat)).val e ↔
-      IsShiftAppend (e 0) (e 1) (e 2) := by
-  rw [← eval_isShiftAppend, ← Matrix.fun_eq_vec_three]
-  rfl
-
-lemma func_empty_val_iff {e : Fin 1 → M} :
+lemma func_empty_val_iff {e : Fin 1 → V} :
     (emptyShiftTranslation.func (Sum.inr <| Language.Constant.Func.const ⟨⟩)).val e ↔ e 0 = 0 := by
   simp [emptyShiftTranslation, Semiformula.Operator.val, Semiformula.Operator.Eq.sentence_eq]
 
-variable [M↓[ℒ⌢] ⊧* 𝗧𝗖]
+variable [V↓[ℒ⌢] ⊧* 𝗧𝗖]
 
-/-- The bijection of the strings of `M` and the empty string with the strings of `M`. -/
-noncomputable def equiv : Option M ≃ emptyShiftTranslation.Model M :=
+/-- The bijection of the strings of `V` and the empty string with the strings of `V`. -/
+noncomputable def equiv : Option V ≃ emptyShiftTranslation.Model V :=
   shiftOptionEquiv.trans
     { toFun x := ⟨x, dom x⟩
       invFun x := x }
 
 @[simp]
-lemma val_equiv (x : Option M) : (equiv x : M) = shiftOption x := rfl
+lemma val_equiv (x : Option V) : (equiv x : V) = shiftOption x := rfl
 
 /--
-The letters, the concatenation and the empty string of `Option M` transported to the strings of `M`.
+The letters, the concatenation and the empty string of `Option V` transported to the strings of `V`.
 -/
 noncomputable abbrev concatenationEmptyStructure :
-    ConcatenationEmptyStructure (emptyShiftTranslation.Model M) := .ofEquiv equiv.symm
+    ConcatenationEmptyStructure (emptyShiftTranslation.Model V) := .ofEquiv equiv.symm
 
 lemma struc_eq :
-    Model.struc emptyShiftTranslation M = @standardModelEmpty _ concatenationEmptyStructure :=
+    Model.struc emptyShiftTranslation V = @standardModelEmpty _ concatenationEmptyStructure :=
   Tarski.Structure.ext
     (funext₃ fun k f v ↦ by
       symm
@@ -860,7 +929,7 @@ lemma struc_eq :
       · exact func_zero_val_iff.mpr rfl
       · exact func_one_val_iff.mpr rfl
       · have h : equiv.symm (equiv (v 0)) ++ equiv.symm (equiv (v 1)) = v 0 ++ v 1 := by simp
-        exact func_concat_val_iff.mpr <| isShiftAppend_shiftOption_iff.mpr <|
+        exact (Defined.eval_iff (φ := isShiftAppend) _).mpr <| isShiftAppend_shiftOption_iff.mpr <|
           congrArg shiftOption h
       · exact func_empty_val_iff.mpr rfl)
     (funext₃ fun k r v ↦ by
@@ -873,11 +942,11 @@ end emptyShiftTranslation
 The strings of a model of $\mathsf{TC}$, read as its strings and the empty string, form a model of
 $\mathsf{TC}$ with the empty string.
 -/
-instance [M↓[ℒ⌢] ⊧* 𝗧𝗖] : (emptyShiftTranslation.Model M)↓[ℒ⌢ₑ] ⊧* 𝗧𝗖ₑ := by
-  have : Option M ≡ₑ[ℒ⌢ₑ] emptyShiftTranslation.Model M := by
+instance [V↓[ℒ⌢] ⊧* 𝗧𝗖] : (emptyShiftTranslation.Model V)↓[ℒ⌢ₑ] ⊧* 𝗧𝗖ₑ := by
+  have : Option V ≡ₑ[ℒ⌢ₑ] emptyShiftTranslation.Model V := by
     rw [emptyShiftTranslation.struc_eq, standardModelEmpty_ofEquiv]
     exact Tarski.Structure.ElementaryEquiv.ofEquiv _
-  exact (Tarski.Structure.ElementaryEquiv.modelsTheory (M₁ := Option M)).mp inferInstance
+  exact (Tarski.Structure.ElementaryEquiv.modelsTheory (M₁ := Option V)).mp inferInstance
 
 end emptyShiftTranslation
 
@@ -886,8 +955,8 @@ The interpretation of $\mathsf{TC}$ in $\mathsf{TC}$ with the empty string by `s
 -/
 abbrev shiftInterpretation : 𝗧𝗖ₑ ⊳ 𝗧𝗖 where
   trln := shiftTranslation
-  interpret_theory φ hφ := completeEmpty.{0} _ _ fun _ _ _ ↦
-    Model.translate_iff.mpr <| models_theory_iff.mp inferInstance φ hφ
+  interpret_theory _ hφ := completeEmpty.{0} _ _ fun _ _ _ ↦
+    DirectTranslation.models_translate_of_mem hφ
 
 /--
 The interpretation of $\mathsf{TC}$ with the empty string in $\mathsf{TC}$ by
@@ -895,18 +964,17 @@ The interpretation of $\mathsf{TC}$ with the empty string in $\mathsf{TC}$ by
 -/
 abbrev emptyShiftInterpretation : 𝗧𝗖 ⊳ 𝗧𝗖ₑ where
   trln := emptyShiftTranslation
-  interpret_theory φ hφ := complete.{0} _ _ fun _ _ _ ↦
-    Model.translate_iff.mpr <| models_theory_iff.mp inferInstance φ hφ
+  interpret_theory _ hφ := complete.{0} _ _ fun _ _ _ ↦ DirectTranslation.models_translate_of_mem hφ
 
 section
 
-variable {M : Type} [ConcatenationStructure M] [M↓[ℒ⌢] ⊧* 𝗧𝗖]
+variable {V : Type} [ConcatenationStructure V] [V↓[ℒ⌢] ⊧* 𝗧𝗖]
 
-lemma emptyShiftTranslation.shift_eq (x : emptyShiftTranslation.Model M) :
-    @shift _ concatenationEmptyStructure x = equiv (some (x : M)) := by
-  let := concatenationEmptyStructure (M := M)
+lemma emptyShiftTranslation.shift_eq (x : emptyShiftTranslation.Model V) :
+    @shift _ concatenationEmptyStructure x = equiv (some (x : V)) := by
+  let := concatenationEmptyStructure (V := V)
   obtain ⟨x, rfl⟩ := equiv.surjective x
-  rw [shift_map equiv (rfl : equiv (0 : Option M) = 0) (fun x y ↦ ?_) (rfl : equiv ∅ = ∅),
+  rw [shift_map equiv (rfl : equiv (0 : Option V) = 0) (fun x y ↦ ?_) (rfl : equiv ∅ = ∅),
     ← some_shiftOption, val_equiv]
   change _ = equiv (equiv.symm (equiv x) ++ equiv.symm (equiv y))
   simp
@@ -915,16 +983,16 @@ end
 
 section
 
-variable {M : Type} [ConcatenationEmptyStructure M] [M↓[ℒ⌢ₑ] ⊧* 𝗧𝗖ₑ]
+variable {V : Type} [ConcatenationEmptyStructure V] [V↓[ℒ⌢ₑ] ⊧* 𝗧𝗖ₑ]
 
 namespace shiftTranslation
 
 /--
 The bijection of the strings of the model of `shiftTranslation` and the empty string with the
-strings of `M`.
+strings of `V`.
 -/
-noncomputable def optionEquiv : Option (shiftTranslation.Model M) ≃ M :=
-  Equiv.ofBijective (fun x ↦ x.elim ∅ fun x ↦ shift (x : M)) <| by
+noncomputable def optionEquiv : Option (shiftTranslation.Model V) ≃ V :=
+  Equiv.ofBijective (fun x ↦ x.elim ∅ fun x ↦ shift (x : V)) <| by
     constructor
     · rintro (_ | x) (_ | y) h
       · rfl
@@ -938,31 +1006,31 @@ noncomputable def optionEquiv : Option (shiftTranslation.Model M) ≃ M :=
         exact ⟨some ⟨x, dom x⟩, hx⟩
 
 lemma optionEquiv_zero :
-    let := concatenationStructure (M := M)
-    optionEquiv (0 : Option (shiftTranslation.Model M)) = 0 :=
-  shift_equiv_symm (nonemptyTranslation.concatenationStructure M 𝗧𝗖ₑ).toZero.zero
+    let := concatenationStructure (V := V)
+    optionEquiv (0 : Option (shiftTranslation.Model V)) = 0 :=
+  shift_equiv_symm (nonemptyTranslation.concatenationStructure V 𝗧𝗖ₑ).toZero.zero
 
 lemma optionEquiv_one :
-    let := concatenationStructure (M := M)
-    optionEquiv (1 : Option (shiftTranslation.Model M)) = 1 :=
-  shift_equiv_symm (nonemptyTranslation.concatenationStructure M 𝗧𝗖ₑ).toOne.one
+    let := concatenationStructure (V := V)
+    optionEquiv (1 : Option (shiftTranslation.Model V)) = 1 :=
+  shift_equiv_symm (nonemptyTranslation.concatenationStructure V 𝗧𝗖ₑ).toOne.one
 
-lemma optionEquiv_append (x y : Option (shiftTranslation.Model M)) :
-    let := concatenationStructure (M := M)
+lemma optionEquiv_append (x y : Option (shiftTranslation.Model V)) :
+    let := concatenationStructure (V := V)
     optionEquiv (x ++ y) = optionEquiv x ++ optionEquiv y := by
   rcases x with _ | x <;> rcases y with _ | y
   · exact (TCEmpty.empty_append _).symm
   · exact (TCEmpty.empty_append _).symm
   · exact (TCEmpty.append_empty _).symm
   · exact shift_equiv_symm <|
-      (nonemptyTranslation.concatenationStructure M 𝗧𝗖ₑ).toAppend.append (equiv x) (equiv y)
+      (nonemptyTranslation.concatenationStructure V 𝗧𝗖ₑ).toAppend.append (equiv x) (equiv y)
 
-lemma val_shiftOption_eq (x : Option (shiftTranslation.Model M)) :
-    ((@shiftOption _ concatenationStructure x : shiftTranslation.Model M) : M) =
+lemma val_shiftOption_eq (x : Option (shiftTranslation.Model V)) :
+    ((@shiftOption _ concatenationStructure x : shiftTranslation.Model V) : V) =
       optionEquiv x := by
-  let := concatenationStructure (M := M)
+  let := concatenationStructure (V := V)
   apply shift_injective
-  have : (shiftTranslation.Model M)↓[ℒ⌢] ⊧* 𝗧𝗖 := by
+  have : (shiftTranslation.Model V)↓[ℒ⌢] ⊧* 𝗧𝗖 := by
     rw [← struc_eq]
     infer_instance
   rw [shift_map optionEquiv optionEquiv_zero optionEquiv_append rfl, ← some_shiftOption]
@@ -972,45 +1040,45 @@ end shiftTranslation
 
 end
 
-lemma emptyShiftTranslation.func_val_iff {M : Type} [ConcatenationStructure M] [M↓[ℒ⌢] ⊧* 𝗧𝗖]
-    {k} (f : (ℒ⌢).Func k) (e : Fin (k + 1) → emptyShiftTranslation.Model M) :
+lemma emptyShiftTranslation.func_val_iff {V : Type} [ConcatenationStructure V] [V↓[ℒ⌢] ⊧* 𝗧𝗖]
+    {k} (f : (ℒ⌢).Func k) (e : Fin (k + 1) → emptyShiftTranslation.Model V) :
     (shiftTranslation.func f).val e ↔
-      ((DirectTranslation.id 𝗧𝗖).func f).val fun i ↦ (e i : M) := by
+      ((DirectTranslation.id 𝗧𝗖).func f).val fun i ↦ (e i : V) := by
   rw [id_func_val_iff, struc_eq]
-  let := concatenationEmptyStructure (M := M)
-  have h {x : M} {y z : emptyShiftTranslation.Model M} (hz : z = equiv (some x)) :
-      z = shift y ↔ (y : M) = x := by
+  let := concatenationEmptyStructure (V := V)
+  have h {x : V} {y z : emptyShiftTranslation.Model V} (hz : z = equiv (some x)) :
+      z = shift y ↔ (y : V) = x := by
     simp [hz, shift_eq, eq_comm]
   cases f
   · exact shiftTranslation.func_zero_val_iff.trans <| h rfl
   · exact shiftTranslation.func_one_val_iff.trans <| h rfl
   · apply shiftTranslation.func_concat_val_iff.trans <| h _
     rw [shift_eq, shift_eq]
-    have h (x y : M) :
+    have h (x y : V) :
         equiv.symm (equiv (some x)) ++ equiv.symm (equiv (some y)) = some (x ++ y) := by simp
     exact congrArg equiv <| h (e 1) (e 2)
 
-lemma shiftTranslation.func_val_iff {M : Type} [ConcatenationEmptyStructure M]
-    [M↓[ℒ⌢ₑ] ⊧* 𝗧𝗖ₑ] {k} (f : (ℒ⌢ₑ).Func k) (e : Fin (k + 1) → shiftTranslation.Model M) :
+lemma shiftTranslation.func_val_iff {V : Type} [ConcatenationEmptyStructure V]
+    [V↓[ℒ⌢ₑ] ⊧* 𝗧𝗖ₑ] {k} (f : (ℒ⌢ₑ).Func k) (e : Fin (k + 1) → shiftTranslation.Model V) :
     (emptyShiftTranslation.func f).val e ↔
-      ((DirectTranslation.id 𝗧𝗖ₑ).func f).val fun i ↦ (e i : M) := by
+      ((DirectTranslation.id 𝗧𝗖ₑ).func f).val fun i ↦ (e i : V) := by
   rw [id_func_val_iff]
-  have : (shiftTranslation.Model M)↓[ℒ⌢] ⊧* 𝗧𝗖 := inferInstance
+  have : (shiftTranslation.Model V)↓[ℒ⌢] ⊧* 𝗧𝗖 := inferInstance
   rw [struc_eq] at this ⊢
-  let := concatenationStructure (M := M)
-  have h {x : shiftTranslation.Model M} {y : Option (shiftTranslation.Model M)} {z : M}
-      (hz : optionEquiv y = z) : x = shiftOption y ↔ (x : M) = z := by
+  let := concatenationStructure (V := V)
+  have h {x : shiftTranslation.Model V} {y : Option (shiftTranslation.Model V)} {z : V}
+      (hz : optionEquiv y = z) : x = shiftOption y ↔ (x : V) = z := by
     rw [← hz, ← val_shiftOption_eq, Model.val_inj_iff]
   rcases f with (_ | _ | _) | ⟨⟨⟩⟩
   · exact emptyShiftTranslation.func_zero_val_iff.trans <| h optionEquiv_zero
   · exact emptyShiftTranslation.func_one_val_iff.trans <| h optionEquiv_one
   · obtain ⟨x, hx⟩ := shiftOptionEquiv.surjective (e 1)
     obtain ⟨y, hy⟩ := shiftOptionEquiv.surjective (e 2)
-    apply emptyShiftTranslation.func_concat_val_iff.trans
+    apply (Defined.eval_iff (φ := isShiftAppend) _).trans
     rw [← hx, ← hy]
     apply isShiftAppend_shiftOption_iff.trans <| h _
     rw [optionEquiv_append, ← val_shiftOption_eq, ← val_shiftOption_eq]
-    exact congrArg₂ (fun a b : shiftTranslation.Model M ↦ (a : M) ++ (b : M)) hx hy
+    exact congrArg₂ (fun a b : shiftTranslation.Model V ↦ (a : V) ++ (b : V)) hx hy
   · exact emptyShiftTranslation.func_empty_val_iff.trans <| h (y := none) rfl
 
 open DirectInterpretation in
@@ -1018,37 +1086,37 @@ open DirectInterpretation in
 $\mathsf{TC}$ and $\mathsf{TC}$ with the empty string are definitionally equivalent.
 - [Vis09, Appendix A]
 -/
-def tcDefinitionalEquivalence : DefinitionalEquivalence 𝗧𝗖 𝗧𝗖ₑ where
+def TC.definitionalEquivalenceEmpty : DefinitionalEquivalence 𝗧𝗖 𝗧𝗖ₑ where
   r := emptyShiftInterpretation
   l := shiftInterpretation
   equivalent_id_left := {
-    domain := complete.{0} _ _ fun M _ _ ↦ models_domainIff_iff.mpr fun x ↦ iff_of_true
+    domain := complete.{0} _ _ fun V _ _ ↦ models_domainIff_iff.mpr fun x ↦ iff_of_true
       ((compDirectTranslation_Dom_iff shiftTranslation emptyShiftInterpretation).mpr
         ⟨⟨⟨x, emptyShiftTranslation.dom x⟩, shiftTranslation.dom _⟩, rfl⟩) (id_Dom x)
-    rel R := complete.{0} _ _ fun M _ _ ↦ models_operatorIff_iff.mpr fun e _ ↦ by
-      let e' (i) : emptyShiftTranslation.Model M := ⟨e i, emptyShiftTranslation.dom _⟩
+    rel R := complete.{0} _ _ fun V _ _ ↦ models_operatorIff_iff.mpr fun e _ ↦ by
+      let e' (i) : emptyShiftTranslation.Model V := ⟨e i, emptyShiftTranslation.dom _⟩
       apply (translateOperator_val_iff emptyShiftInterpretation (shiftTranslation.rel R) e').trans
       apply Iff.trans _ id_rel_val_iff.symm
       cases R
       change Semiformula.Evalb e' “x y. x = y” ↔ e 0 = e 1
       simp [e']
-    func f := complete.{0} _ _ fun M _ _ ↦ models_operatorIff_iff.mpr fun e _ ↦
-      let e' (i) : emptyShiftTranslation.Model M := ⟨e i, emptyShiftTranslation.dom _⟩
+    func f := complete.{0} _ _ fun V _ _ ↦ models_operatorIff_iff.mpr fun e _ ↦
+      let e' (i) : emptyShiftTranslation.Model V := ⟨e i, emptyShiftTranslation.dom _⟩
       (translateOperator_val_iff emptyShiftInterpretation _ e').trans <|
         emptyShiftTranslation.func_val_iff f e' }
   equivalent_id_right := {
-    domain := completeEmpty.{0} _ _ fun M _ _ ↦ models_domainIff_iff.mpr fun x ↦ iff_of_true
+    domain := completeEmpty.{0} _ _ fun V _ _ ↦ models_domainIff_iff.mpr fun x ↦ iff_of_true
       ((compDirectTranslation_Dom_iff emptyShiftTranslation shiftInterpretation).mpr
         ⟨⟨⟨x, shiftTranslation.dom x⟩, emptyShiftTranslation.dom _⟩, rfl⟩) (id_Dom x)
-    rel R := completeEmpty.{0} _ _ fun M _ _ ↦ models_operatorIff_iff.mpr fun e _ ↦ by
-      let e' (i) : shiftTranslation.Model M := ⟨e i, shiftTranslation.dom _⟩
+    rel R := completeEmpty.{0} _ _ fun V _ _ ↦ models_operatorIff_iff.mpr fun e _ ↦ by
+      let e' (i) : shiftTranslation.Model V := ⟨e i, shiftTranslation.dom _⟩
       apply (translateOperator_val_iff shiftInterpretation (emptyShiftTranslation.rel R) e').trans
       apply Iff.trans _ id_rel_val_iff.symm
       rcases R with ⟨⟨⟩⟩ | ⟨⟨⟩⟩
       change Semiformula.Evalb e' “x y. x = y” ↔ e 0 = e 1
       simp [e']
-    func f := completeEmpty.{0} _ _ fun M _ _ ↦ models_operatorIff_iff.mpr fun e _ ↦
-      let e' (i) : shiftTranslation.Model M := ⟨e i, shiftTranslation.dom _⟩
+    func f := completeEmpty.{0} _ _ fun V _ _ ↦ models_operatorIff_iff.mpr fun e _ ↦
+      let e' (i) : shiftTranslation.Model V := ⟨e i, shiftTranslation.dom _⟩
       (translateOperator_val_iff shiftInterpretation _ e').trans <|
         shiftTranslation.func_val_iff f e' }
 

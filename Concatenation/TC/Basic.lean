@@ -6,7 +6,8 @@ public import Concatenation.Semantics.Basic
 /-!
 # The theory of concatenation $\mathsf{TC}$
 
-The axioms of $\mathsf{TC}$, without and with the empty string, and their first consequences.
+The axioms of $\mathsf{TC}$, without and with the empty string, and of $\mathsf{TC}^+$, and their
+first consequences.
 -/
 
 @[expose] public section
@@ -52,43 +53,44 @@ lemma TC.finiteAxiomatizable : FiniteAxiomatizable 𝗧𝗖 := .of_finite TC.fin
 
 section TC
 
-variable {M : Type*} [ConcatenationStructure M] [M↓[ℒ⌢] ⊧* 𝗧𝗖]
+variable {V : Type*} [ConcatenationStructure V] [V↓[ℒ⌢] ⊧* 𝗧𝗖]
 
-protected lemma append_assoc (a b c : M) : a ++ b ++ c = a ++ (b ++ c) := by
-  have := by simpa [models_iff] using Theory.models M _ IsTCAxiom.concatAssoc
+protected lemma append_assoc (a b c : V) : a ++ b ++ c = a ++ (b ++ c) := by
+  have := by simpa [models_iff] using Theory.models V _ IsTCAxiom.concatAssoc
   exact (this a b c).symm
 
-lemma editor {a b c d : M} (h : a ++ b = c ++ d) :
+lemma editor {a b c d : V} (h : a ++ b = c ++ d) :
     (a = c ∧ b = d) ∨ ∃ u, (a ++ u = c ∧ b = u ++ d) ∨ (a = c ++ u ∧ u ++ b = d) := by
-  have := by simpa [models_iff] using Theory.models M _ IsTCAxiom.editor
+  have := by simpa [models_iff] using Theory.models V _ IsTCAxiom.editor
   exact this a b c d h
 
 @[simp]
-lemma zero_ne_append (a b : M) : 0 ≠ a ++ b := by
-  have := by simpa [models_iff] using Theory.models M _ IsTCAxiom.zeroNeConcat
+lemma zero_ne_append (a b : V) : 0 ≠ a ++ b := by
+  have := by simpa [models_iff] using Theory.models V _ IsTCAxiom.zeroNeConcat
   exact this a b
 
 @[simp]
-lemma one_ne_append (a b : M) : 1 ≠ a ++ b := by
-  have := by simpa [models_iff] using Theory.models M _ IsTCAxiom.oneNeConcat
+lemma one_ne_append (a b : V) : 1 ≠ a ++ b := by
+  have := by simpa [models_iff] using Theory.models V _ IsTCAxiom.oneNeConcat
   exact this a b
 
 @[simp]
-protected lemma zero_ne_one : (0 : M) ≠ 1 := by
-  simpa [models_iff] using Theory.models M _ IsTCAxiom.zeroNeOne
+protected lemma zero_ne_one : (0 : V) ≠ 1 := by
+  simpa [models_iff] using Theory.models V _ IsTCAxiom.zeroNeOne
 
 @[simp]
-protected lemma append_ne_zero (a b : M) : a ++ b ≠ 0 := (zero_ne_append a b).symm
+protected lemma append_ne_zero (a b : V) : a ++ b ≠ 0 := (zero_ne_append a b).symm
 
 @[simp]
-protected lemma append_ne_one (a b : M) : a ++ b ≠ 1 := (one_ne_append a b).symm
+protected lemma append_ne_one (a b : V) : a ++ b ≠ 1 := (one_ne_append a b).symm
 
 @[simp]
-protected lemma one_ne_zero : (1 : M) ≠ 0 := Concatenation.zero_ne_one.symm
+protected lemma one_ne_zero : (1 : V) ≠ 0 := Concatenation.zero_ne_one.symm
 
 end TC
 
-instance : (FreeSemigroup Bool)↓[ℒ⌢] ⊧* 𝗧𝗖 := ⟨by
+instance : (FreeSemigroup Bool)↓[ℒ⌢] ⊧* 𝗧𝗖 := by
+  constructor
   intro σ h
   cases h
   case equal hφ =>
@@ -98,11 +100,56 @@ instance : (FreeSemigroup Bool)↓[ℒ⌢] ⊧* 𝗧𝗖 := ⟨by
   case editor => simpa [models_iff] using fun x y z w ↦ FreeSemigroup.mul_eq_mul_iff.mp
   case zeroNeConcat => simpa [models_iff, zero_eq_of_false] using FreeSemigroup.of_ne_mul false
   case oneNeConcat => simpa [models_iff, one_eq_of_true] using FreeSemigroup.of_ne_mul true
-  case zeroNeOne => simp [models_iff, zero_eq_of_false, one_eq_of_true, FreeSemigroup.of]⟩
+  case zeroNeOne => simp [models_iff, zero_eq_of_false, one_eq_of_true, FreeSemigroup.of]
 
 instance : Entailment.Consistent 𝗧𝗖 :=
   let : (FreeSemigroup Bool)↓[ℒ⌢] ⊧* 𝗧𝗖 := inferInstance
   Sound.consistent_of_satisfiable ⟨_, this⟩
+
+section bounded
+
+variable {V : Type*} [ConcatenationStructure V]
+
+/--
+`x` is an atom, or begins with an atom and ends with an atom.
+- [Gan09, §3]
+-/
+def IsBounded (x : V) : Prop :=
+  IsAtom x ∨ ((∃ c z, IsAtom c ∧ x = c ++ z) ∧ ∃ c z, IsAtom c ∧ x = z ++ c)
+
+/--
+`x` is an atom, or begins with an atom and ends with an atom.
+- [Gan09, §3]
+-/
+def isBounded : Semisentence ℒ⌢ 1 :=
+  “x. !isAtom x ∨ ((∃ c z, !isAtom c ∧ x = c ⌢ z) ∧ (∃ c z, !isAtom c ∧ x = z ⌢ c))”
+
+instance isBounded_defined : ℒ⌢-predicate[V] IsBounded via isBounded :=
+  ⟨fun v ↦ by simp [isBounded, IsBounded]⟩
+
+instance isBounded_definable : ℒ⌢-predicate[V] IsBounded := isBounded_defined.to_definable
+
+/--
+Every string is an atom, or begins with an atom and ends with an atom.
+- [Gan09, §3]
+-/
+def allIsBounded : ConcatenationSentence := “∀ x, !isBounded x”
+
+/--
+$\mathsf{TC}$ with the axiom that every string is an atom, or begins with an atom and ends with
+an atom.
+- [Gan09, §3]
+-/
+abbrev TCPlus : ConcatenationTheory := insert allIsBounded 𝗧𝗖
+
+@[inherit_doc]
+notation "𝗧𝗖⁺" => TCPlus
+
+instance : 𝗧𝗖 ⪯ 𝗧𝗖⁺ := Entailment.WeakerThan.ofSubset <| Set.subset_insert _ _
+
+instance : 𝗘𝗤 ℒ⌢ ⪯ 𝗧𝗖⁺ := (inferInstance : 𝗘𝗤 ℒ⌢ ⪯ 𝗧𝗖).trans inferInstance
+
+end bounded
 
 /--
 Axioms of the theory of concatenation with the empty string.
@@ -136,66 +183,78 @@ instance : 𝗘𝗤 ℒ⌢ₑ ⪯ 𝗧𝗖ₑ := Entailment.WeakerThan.ofSubset 
 
 namespace TCEmpty
 
-variable {M : Type*} [ConcatenationEmptyStructure M] [M↓[ℒ⌢ₑ] ⊧* 𝗧𝗖ₑ] {x y z w : M}
+variable {V : Type*} [ConcatenationEmptyStructure V] [V↓[ℒ⌢ₑ] ⊧* 𝗧𝗖ₑ] {x y z w : V}
 
 @[simp]
-lemma empty_append (x : M) : ∅ ++ x = x := by
-  have := by simpa [models_iff] using Theory.models M _ IsTCEmptyAxiom.emptyConcat
+lemma empty_append (x : V) : ∅ ++ x = x := by
+  have := by simpa [models_iff] using Theory.models V _ IsTCEmptyAxiom.emptyConcat
   exact this x
 
 @[simp]
-lemma append_empty (x : M) : x ++ ∅ = x := by
-  have := by simpa [models_iff] using Theory.models M _ IsTCEmptyAxiom.concatEmpty
+lemma append_empty (x : V) : x ++ ∅ = x := by
+  have := by simpa [models_iff] using Theory.models V _ IsTCEmptyAxiom.concatEmpty
   exact this x
 
-protected lemma append_assoc (x y z : M) : x ++ y ++ z = x ++ (y ++ z) := by
-  have := by simpa [models_iff] using Theory.models M _ IsTCEmptyAxiom.concatAssoc
+protected lemma append_assoc (x y z : V) : x ++ y ++ z = x ++ (y ++ z) := by
+  have := by simpa [models_iff] using Theory.models V _ IsTCEmptyAxiom.concatAssoc
   exact this x y z
 
 lemma editor (h : x ++ y = z ++ w) :
     ∃ u, (x ++ u = z ∧ y = u ++ w) ∨ (x = z ++ u ∧ u ++ y = w) := by
-  have := by simpa [models_iff] using Theory.models M _ IsTCEmptyAxiom.editor
+  have := by simpa [models_iff] using Theory.models V _ IsTCEmptyAxiom.editor
   exact this x y z w h
 
 @[simp]
-lemma zero_ne_empty : (0 : M) ≠ ∅ := by
-  simpa [models_iff] using Theory.models M _ IsTCEmptyAxiom.zeroNeEmpty
+lemma zero_ne_empty : (0 : V) ≠ ∅ := by
+  simpa [models_iff] using Theory.models V _ IsTCEmptyAxiom.zeroNeEmpty
 
 @[simp]
-lemma one_ne_empty : (1 : M) ≠ ∅ := by
-  simpa [models_iff] using Theory.models M _ IsTCEmptyAxiom.oneNeEmpty
+lemma one_ne_empty : (1 : V) ≠ ∅ := by
+  simpa [models_iff] using Theory.models V _ IsTCEmptyAxiom.oneNeEmpty
 
 @[simp]
-protected lemma zero_ne_one : (0 : M) ≠ 1 := by
-  simpa [models_iff] using Theory.models M _ IsTCEmptyAxiom.zeroNeOne
+protected lemma zero_ne_one : (0 : V) ≠ 1 := by
+  simpa [models_iff] using Theory.models V _ IsTCEmptyAxiom.zeroNeOne
 
 @[simp]
-lemma empty_ne_zero : (∅ : M) ≠ 0 := zero_ne_empty.symm
+lemma empty_ne_zero : (∅ : V) ≠ 0 := zero_ne_empty.symm
 
 @[simp]
-lemma empty_ne_one : (∅ : M) ≠ 1 := one_ne_empty.symm
+lemma empty_ne_one : (∅ : V) ≠ 1 := one_ne_empty.symm
 
 @[simp]
-protected lemma one_ne_zero : (1 : M) ≠ 0 := TCEmpty.zero_ne_one.symm
+protected lemma one_ne_zero : (1 : V) ≠ 0 := TCEmpty.zero_ne_one.symm
 
 lemma isAtom_ne_empty (h : IsAtom x) : x ≠ ∅ := by
   rcases h with rfl | rfl <;> simp
 
 lemma eq_empty_of_append_isAtom (h : IsAtom (x ++ y)) : x = ∅ ∨ y = ∅ := by
   rcases h with h | h
-  · have := by simpa [models_iff] using Theory.models M _ IsTCEmptyAxiom.zeroAtom
+  · have := by simpa [models_iff] using Theory.models V _ IsTCEmptyAxiom.zeroAtom
     exact this x y h
-  · have := by simpa [models_iff] using Theory.models M _ IsTCEmptyAxiom.oneAtom
+  · have := by simpa [models_iff] using Theory.models V _ IsTCEmptyAxiom.oneAtom
     exact this x y h
+
+lemma eq_empty_of_append_eq_right (hx : IsAtom x) (h : y ++ x = x) : y = ∅ :=
+  (eq_empty_of_append_isAtom <| h.symm ▸ hx).resolve_right <| isAtom_ne_empty hx
+
+lemma eq_empty_of_append_eq_left (hx : IsAtom x) (h : x ++ y = x) : y = ∅ :=
+  (eq_empty_of_append_isAtom <| h.symm ▸ hx).resolve_left <| isAtom_ne_empty hx
+
+lemma append_zero_ne_append_one (x y : V) : x ++ 0 ≠ y ++ 1 := by
+  intro h
+  obtain ⟨u, ⟨-, h⟩ | ⟨-, h⟩⟩ := editor h
+  · rcases eq_empty_of_append_isAtom (h ▸ isAtom_zero) with rfl | h' <;> simp_all
+  · rcases eq_empty_of_append_isAtom (h ▸ isAtom_one) with rfl | h' <;> simp_all
 
 lemma eq_empty_of_append_eq_empty (h : x ++ y = ∅) : x = ∅ ∧ y = ∅ := by
   suffices x = ∅ from ⟨this, by simpa [this] using h⟩
   have h₁ : 1 ++ x = ∅ ∨ y = ∅ :=
     eq_empty_of_append_isAtom <| by simp [TCEmpty.append_assoc, h]
   rcases h₁ with h₁ | rfl
-  · have h₂ : (1 : M) = ∅ ∨ x ++ 0 = ∅ := eq_empty_of_append_isAtom <| by
+  · have h₂ : (1 : V) = ∅ ∨ x ++ 0 = ∅ := eq_empty_of_append_isAtom <| by
       simp [← TCEmpty.append_assoc, h₁]
-    have h₃ : (1 : M) ++ (x ++ 0) = 0 := by simp [← TCEmpty.append_assoc, h₁]
+    have h₃ : (1 : V) ++ (x ++ 0) = 0 := by simp [← TCEmpty.append_assoc, h₁]
     simp [h₂.resolve_left one_ne_empty] at h₃
   · simpa using h
 

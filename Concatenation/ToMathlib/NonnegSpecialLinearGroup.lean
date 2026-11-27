@@ -63,8 +63,8 @@ lemma eq_one_of_apply_eq_zero (hA : A ∈ nonneg R) (h₁ : A 0 1 = 0) (h₂ : A
   fin_cases i <;> fin_cases j <;> simp [h₁, h₂, h₃, h₄]
 
 include hR in
-lemma eq_one_of_mul_apply_eq_zero (hA : A ∈ nonneg R) (hB : B ∈ nonneg R) (h₁ : (A * B) 0 1 = 0)
-    (h₂ : (A * B) 1 0 = 0) : A = 1 := by
+private lemma eq_one_of_mul_apply_eq_zero (hA : A ∈ nonneg R) (hB : B ∈ nonneg R)
+    (h₁ : (A * B) 0 1 = 0) (h₂ : (A * B) 1 0 = 0) : A = 1 := by
   obtain ⟨hA₀, hA₁⟩ := pos_of_mem_nonneg hA
   obtain ⟨hB₀, hB₁⟩ := pos_of_mem_nonneg hB
   simp only [coe_mul, Matrix.mul_apply, Fin.sum_univ_two] at h₁ h₂

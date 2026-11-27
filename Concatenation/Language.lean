@@ -1,6 +1,7 @@
 module
 
 public import Concatenation.ToFoundation.Concat
+public import Concatenation.ToFoundation.Language
 
 /-!
 # Language of the theory of concatenation
@@ -68,10 +69,6 @@ instance (k) : Encodable (Concatenation.Rel k) where
     | _, _ => none
   encodek x := by rcases x; simp
 
-instance : (ℒ⌢).DecidableEq := ⟨fun _ ↦ inferInstance, fun _ ↦ inferInstance⟩
-
-instance : (ℒ⌢).Encodable := ⟨fun _ ↦ inferInstance, fun _ ↦ inferInstance⟩
-
 instance : (ℒ⌢).Finite where
   func := ⟨{⟨0, .zero⟩, ⟨0, .one⟩, ⟨2, .concat⟩}, by rintro ⟨_, _ | _ | _⟩ <;> simp⟩
   rel := ⟨{⟨2, .eq⟩}, by rintro ⟨_, _ | _⟩; simp⟩
@@ -118,8 +115,6 @@ instance [Encodable α] (k) : Encodable (ConcatenationLettersFunc α k) where
     | 2, 0 => some .concat
     | _, _ => none
   encodek x := by rcases x <;> simp
-
-instance [Encodable α] : (ℒ⌢[α]).Encodable := ⟨fun _ ↦ inferInstance, fun _ ↦ inferInstance⟩
 
 instance : (ℒ⌢[α]).Concat := ⟨.concat⟩
 
@@ -191,30 +186,6 @@ section
 
 variable (k : ℕ)
 
-instance : DecidableEq (Constant.Func PUnit.{1} k) := fun a b ↦ by
-  rcases a; rcases b; exact .isTrue rfl
-
-instance : Encodable (Constant.Func PUnit.{1} k) where
-  encode _ := 0
-  decode e :=
-    match k, e with
-    | 0, 0 => some (.const ⟨⟩)
-    | _, _ => none
-  encodek x := by rcases x; simp
-
-instance : DecidableEq ((ℒ⌢ₑ).Func k) :=
-  inferInstanceAs (DecidableEq (Concatenation.Func k ⊕ Constant.Func PUnit k))
-
-instance : DecidableEq ((ℒ⌢ₑ).Rel k) :=
-  inferInstanceAs (DecidableEq (Concatenation.Rel k ⊕ PEmpty))
-
-instance : Encodable ((ℒ⌢ₑ).Func k) :=
-  inferInstanceAs (Encodable (Concatenation.Func k ⊕ Constant.Func PUnit k))
-
-instance : Encodable ((ℒ⌢ₑ).Rel k) := inferInstanceAs (Encodable (Concatenation.Rel k ⊕ PEmpty))
-
-instance : (ℒ⌢ₑ).Encodable := ⟨fun _ ↦ inferInstance, fun _ ↦ inferInstance⟩
-
 instance : (ℒ⌢ₑ).Finite where
   func :=
     have : DecidableEq ((k : ℕ) × (ℒ⌢ₑ).Func k) := inferInstance
@@ -225,24 +196,11 @@ instance : (ℒ⌢ₑ).Finite where
     { elems := {⟨2, Sum.inl Concatenation.Rel.eq⟩}
       complete := by rintro ⟨_, (_ | _) | ⟨⟨⟩⟩⟩; simp }
 
-instance : DecidableEq ((ℒ⌢⊑).Func k) :=
-  inferInstanceAs (DecidableEq (Concatenation.Func k ⊕ Empty))
-
-instance : DecidableEq ((ℒ⌢⊑).Rel k) :=
-  inferInstanceAs (DecidableEq (Concatenation.Rel k ⊕ PrefixRel k))
-
-instance : Encodable ((ℒ⌢⊑).Func k) := inferInstanceAs (Encodable (Concatenation.Func k ⊕ Empty))
-
-instance : Encodable ((ℒ⌢⊑).Rel k) :=
-  inferInstanceAs (Encodable (Concatenation.Rel k ⊕ PrefixRel k))
-
 end
 
 end Language
 
 abbrev ConcatenationTheory := Theory ℒ⌢
-
-abbrev ConcatenationSemisentence (n : ℕ) := Semisentence ℒ⌢ n
 
 abbrev ConcatenationSentence := Sentence ℒ⌢
 

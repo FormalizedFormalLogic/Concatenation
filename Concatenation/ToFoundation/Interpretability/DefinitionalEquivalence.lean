@@ -29,25 +29,25 @@ structure Equivalent (π ρ : DirectTranslation T L₂) : Prop where
 
 section
 
-variable {M : Type*} [Nonempty M] [Tarski.Structure L₁ M] {D D' : Semiformula.Operator L₁ 1}
+variable {V : Type*} [Nonempty V] [Tarski.Structure L₁ V] {D D' : Semiformula.Operator L₁ 1}
 
 omit [L₁.Eq] in
-lemma models_domainIff_iff : M↓[L₁] ⊧ “∀ x, %D x ↔ %D' x” ↔ ∀ x : M, D.val ![x] ↔ D'.val ![x] := by
+lemma models_domainIff_iff : V↓[L₁] ⊧ “∀ x, %D x ↔ %D' x” ↔ ∀ x : V, D.val ![x] ↔ D'.val ![x] := by
   simp [models_iff]
 
 omit [L₁.Eq] in
 lemma models_operatorIff_iff {k} {O O' : Semiformula.Operator L₁ k} :
-    M↓[L₁] ⊧ ∀¹* “(⋀ i, %D #(i : Fin k)) → (%O ⋯ ↔ %O' ⋯)” ↔
-      ∀ e : Fin k → M, (∀ i, D.val ![e i]) → (O.val e ↔ O'.val e) := by
+    V↓[L₁] ⊧ ∀¹* “(⋀ i, %D #(i : Fin k)) → (%O ⋯ ↔ %O' ⋯)” ↔
+      ∀ e : Fin k → V, (∀ i, D.val ![e i]) → (O.val e ↔ O'.val e) := by
   simp [models_iff, Function.comp_def, Matrix.constant_eq_singleton]
 
-omit [Nonempty M] in
-lemma id_rel_val_iff {k} {R : L₁.Rel k} {e : Fin k → M} :
+omit [Nonempty V] in
+lemma id_rel_val_iff {k} {R : L₁.Rel k} {e : Fin k → V} :
     ((DirectTranslation.id T).rel R).val e ↔ Tarski.Structure.rel R e := by
   simp [id_rel_def, Semiformula.Operator.val, Semiformula.eval_rel, Function.comp_def]
 
-omit [Nonempty M] in
-lemma id_func_val_iff [Tarski.Structure.Eq L₁ M] {k} {f : L₁.Func k} {e : Fin (k + 1) → M} :
+omit [Nonempty V] in
+lemma id_func_val_iff [Tarski.Structure.Eq L₁ V] {k} {f : L₁.Func k} {e : Fin (k + 1) → V} :
     ((DirectTranslation.id T).func f).val e ↔ e 0 = Tarski.Structure.func f fun i ↦ e i.succ := by
   simp [id_func_def, Semiformula.Operator.val, Semiformula.Operator.Eq.sentence_eq,
     Semiformula.eval_rel, Function.comp_def]
@@ -83,8 +83,8 @@ variable (π : DefinitionalEquivalence T U)
 
 /-- The interpretations of a definitional equivalence are unrelativized. -/
 lemma provable_domain : T ⊢ “∀ x, %(π.r.trln.domain) x” :=
-  Theory.Proof.complete_on_eq_models.{_, 0} _ fun M _ _ _ hT ↦ by
-    suffices ∀ x : M, π.r.trln.Dom x by simpa [models_iff] using! this
+  Theory.Proof.complete_on_eq_models.{_, 0} _ fun V _ _ _ hT ↦ by
+    suffices ∀ x : V, π.r.trln.Dom x by simpa [models_iff] using! this
     intro x
     have h := models_domainIff_iff.mp (models_of_provable hT π.equivalent_id_left.domain) x
     obtain ⟨z, rfl⟩ := (compDirectTranslation_Dom_iff π.l.trln π.r).mp <| h.mpr <| id_Dom x
@@ -96,28 +96,28 @@ is provably equivalent to itself.
 -/
 theorem provable_translate_translate {n} (φ : Semisentence L₁ n) :
     T ⊢ ∀¹* (π.r.translate (π.l.translate φ) 🡘 φ) :=
-  Theory.Proof.complete_on_eq_models.{_, 0} _ fun M _ _ _ hT ↦ by
-    suffices ∀ e : Fin n → M, M ⊧/e (π.r.translate (π.l.translate φ)) ↔ M ⊧/e φ by
+  Theory.Proof.complete_on_eq_models.{_, 0} _ fun V _ _ _ hT ↦ by
+    suffices ∀ e : Fin n → V, V ⊧/e (π.r.translate (π.l.translate φ)) ↔ V ⊧/e φ by
       simpa [models_iff] using this
     intro e
-    have : (π.r.Model M)↓[L₂] ⊧* U := π.r.model_models_theory hT
+    have : (π.r.Model V)↓[L₂] ⊧* U := π.r.model_models_theory hT
     let ρ := π.l.comp π.r
     have h := π.equivalent_id_left
-    have hD (x : M) : ρ.trln.Dom x ↔ (DirectTranslation.id T).Dom x :=
+    have hD (x : V) : ρ.trln.Dom x ↔ (DirectTranslation.id T).Dom x :=
       models_domainIff_iff.mp (models_of_provable hT h.domain) x
     choose z hz using fun i ↦ (compDirectTranslation_Dom_iff π.l.trln π.r).mp <|
       (hD <| e i).mpr <| id_Dom <| e i
-    have he : e = fun i ↦ ((z i : π.r.Model M) : M) := funext hz
-    let e' (i) : ρ.Model M := ⟨e i, (hD _).mpr <| id_Dom _⟩
-    let e'' (i) : (DirectTranslation.id T).Model M := ⟨e i, id_Dom _⟩
+    have he : e = fun i ↦ ((z i : π.r.Model V) : V) := funext hz
+    let e' (i) : ρ.Model V := ⟨e i, (hD _).mpr <| id_Dom _⟩
+    let e'' (i) : (DirectTranslation.id T).Model V := ⟨e i, id_Dom _⟩
     calc
-      _ ↔ (π.l.Model (π.r.Model M)) ⊧/z φ := by
+      _ ↔ (π.l.Model (π.r.Model V)) ⊧/z φ := by
         rw [he]
         exact Model.evalb_translate_iff.trans Model.evalb_translate_iff
-      _ ↔ (ρ.Model M) ⊧/e' φ :=
+      _ ↔ (ρ.Model V) ⊧/e' φ :=
         (eval_compDirectTranslation_Model_equiv π.l.trln π.r (fun x ↦ x.elim) hz).symm
-      _ ↔ M ⊧/e (ρ.trln.translate φ) := Model.evalb_translate_iff.symm
-      _ ↔ M ⊧/e ((DirectTranslation.id T).translate φ) := by
+      _ ↔ V ⊧/e (ρ.trln.translate φ) := Model.evalb_translate_iff.symm
+      _ ↔ V ⊧/e ((DirectTranslation.id T).translate φ) := by
         apply eval_translate_congr
         · intro x
           rw [Matrix.fun_eq_vec_one (v := x)]
@@ -126,10 +126,10 @@ theorem provable_translate_translate {n} (φ : Semisentence L₁ n) :
             fun i ↦ (hD _).mpr <| id_Dom _
         · exact fun f x ↦ models_operatorIff_iff.mp (models_of_provable hT <| h.func f) x
             fun i ↦ (hD _).mpr <| id_Dom _
-      _ ↔ ((DirectTranslation.id T).Model M) ⊧/e'' φ :=
+      _ ↔ ((DirectTranslation.id T).Model V) ⊧/e'' φ :=
         (Model.evalb_translate_iff (e := e'')).trans Iff.rfl
-      _ ↔ M ⊧/e φ :=
-        id_models_iff.trans <| iff_of_eq <| congrArg (fun ε ↦ Eval (M := M) e ε φ) <|
+      _ ↔ V ⊧/e φ :=
+        id_models_iff.trans <| iff_of_eq <| congrArg (fun ε ↦ Eval (M := V) e ε φ) <|
           funext fun x ↦ x.elim
 
 end DefinitionalEquivalence

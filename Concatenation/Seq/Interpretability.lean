@@ -2,7 +2,7 @@ module
 
 public import AlphaCentauri.Interpretability.Basic
 public import Concatenation.Seq.Basic
-public import Concatenation.ToFoundation.Arithmetic.R
+public import Concatenation.ToFoundation.Arithmetic.R.Interpretability
 public import Concatenation.ToFoundation.Arithmetic.R0.Representation
 
 /-!
@@ -16,53 +16,34 @@ $\mathsf{R}_0$ interprets $\mathsf{WSeq}$ with numerals for the sequences.
 
 namespace FFL.FirstOrder
 
-namespace FiniteSequence
-
-/-- The sequence of `n` empty sequences. -/
-def tally : ℕ → FiniteSequence
-  | 0 => nil
-  | n + 1 => (tally n).snoc nil
-
-@[simp]
-lemma tally_append_tally (m : ℕ) : ∀ n, tally m ++ tally n = tally (m + n)
-  | 0 => rfl
-  | n + 1 => by simp [tally, tally_append_tally m n]
-
-lemma tally_injective : Function.Injective tally
-  | 0, 0, _ => rfl
-  | m + 1, n + 1, h => by simpa using tally_injective (FiniteSequence.snoc.inj h).1
-
-@[simp]
-lemma tally_inj {m n : ℕ} : tally m = tally n ↔ m = n := tally_injective.eq_iff
-
-end FiniteSequence
-
 namespace Sequence
 
 open DirectTranslation FiniteSequence SequenceStructure
 
 section definitions
 
-variable {M : Type*} [SequenceStructure M] {u v w x y z : M}
+variable {V : Type*} [SequenceStructure V] {u v w x y z : V}
 
 /-- The pair of `u` and `v` is an entry of `w`. -/
-def IsEntry (u v w : M) : Prop := ∃ s, s ◨ w ∧ snoc s (snoc (snoc ∅ u) v) ◨ w
+def IsEntry (u v w : V) : Prop := ∃ s, IsPrefix s w ∧ IsPrefix (snoc s (snoc (snoc ∅ u) v)) w
 
 /-- The pair of `u` and `v` is an entry of `w`. -/
 def isEntry : Semisentence ℒ⊢ 3 :=
   “u v w. ∃ s, !isPrefix s w ∧ !isPrefix (s ⊢ ((⋆ ⊢ u) ⊢ v)) w”
 
-@[simp]
-lemma eval_isEntry : M ⊧/![u, v, w] isEntry ↔ IsEntry u v w := by simp [isEntry, IsEntry]
+instance isEntry_defined : ℒ⊢-relation₃[V] IsEntry via isEntry :=
+  ⟨fun v ↦ by simp [isEntry, IsEntry]⟩
+
+instance isEntry_definable : ℒ⊢-relation₃[V] IsEntry := isEntry_defined.to_definable
 
 /--
 `w` is a multiplication table for `x`, up to the pair of `z` and `y`: each pair of initial segments
 of `z` and of `y` that is an entry of `w` is $(0, 0)$ or is $(u + x, v + 1)$ for such a pair
 $(u, v)$.
 -/
-def IsMulTable (x y z w : M) : Prop := ∀ u' v', u' ◨ z → v' ◨ y → IsEntry u' v' w →
+def IsMulTable (x y z w : V) : Prop := ∀ u' v', IsPrefix u' z → IsPrefix v' y → IsEntry u' v' w →
   (u' = ∅ ∧ v' = ∅) ∨
-    ∃ u v, u ◨ z ∧ v ◨ y ∧ u' = u ++ x ∧ v' = v ++ snoc ∅ ∅ ∧ IsEntry u v w
+    ∃ u v, IsPrefix u z ∧ IsPrefix v y ∧ u' = u ++ x ∧ v' = v ++ snoc ∅ ∅ ∧ IsEntry u v w
 
 /--
 `w` is a multiplication table for `x`, up to the pair of `z` and `y`: each pair of initial segments
@@ -74,41 +55,48 @@ def isMulTable : Semisentence ℒ⊢ 4 :=
     (u' = ⋆ ∧ v' = ⋆) ∨
       ∃ u v, !isPrefix u z ∧ !isPrefix v y ∧ u' = u ⌢ x ∧ v' = v ⌢ (⋆ ⊢ ⋆) ∧ !isEntry u v w”
 
-@[simp]
-lemma eval_isMulTable : M ⊧/![x, y, z, w] isMulTable ↔ IsMulTable x y z w := by
-  simp [isMulTable, IsMulTable]
+instance isMulTable_defined : ℒ⊢-relation₄[V] IsMulTable via isMulTable :=
+  ⟨fun v ↦ by simp [isMulTable, IsMulTable]⟩
+
+instance isMulTable_definable : ℒ⊢-relation₄[V] IsMulTable := isMulTable_defined.to_definable
 
 /-- `z` is a product of `x` and `y`, read off a multiplication table. -/
-def IsProduct (z x y : M) : Prop := z ◨ z ∧ ∃ w, IsMulTable x y z w ∧ IsEntry z y w
+def IsProduct (z x y : V) : Prop := IsPrefix z z ∧ ∃ w, IsMulTable x y z w ∧ IsEntry z y w
 
 /-- `z` is a product of `x` and `y`, read off a multiplication table. -/
 def isProduct : Semisentence ℒ⊢ 3 :=
   “z x y. !isPrefix z z ∧ ∃ w, !isMulTable x y z w ∧ !isEntry z y w”
 
-@[simp]
-lemma eval_isProduct : M ⊧/![z, x, y] isProduct ↔ IsProduct z x y := by simp [isProduct, IsProduct]
+instance isProduct_defined : ℒ⊢-relation₃[V] IsProduct via isProduct :=
+  ⟨fun v ↦ by simp [isProduct, IsProduct]⟩
+
+instance isProduct_definable : ℒ⊢-relation₃[V] IsProduct := isProduct_defined.to_definable
 
 /-- `z` is the product of `x` and `y` if there is exactly one, and `∅` otherwise. -/
-def MulGraph (z x y : M) : Prop :=
+def MulGraph (z x y : V) : Prop :=
   ((∃! r, IsProduct r x y) ∧ IsProduct z x y) ∨ (¬(∃! r, IsProduct r x y) ∧ z = ∅)
 
 /-- `z` is the product of `x` and `y` if there is exactly one, and `∅` otherwise. -/
 def mulGraph : Semisentence ℒ⊢ 3 :=
   “z x y. ((∃! r, !isProduct r x y) ∧ !isProduct z x y) ∨ (¬(∃! r, !isProduct r x y) ∧ z = ⋆)”
 
-@[simp]
-lemma eval_mulGraph : M ⊧/![z, x, y] mulGraph ↔ MulGraph z x y := by simp [mulGraph, MulGraph]
+instance mulGraph_defined : ℒ⊢-relation₃[V] MulGraph via mulGraph :=
+  ⟨fun v ↦ by simp [mulGraph, MulGraph]⟩
+
+instance mulGraph_definable : ℒ⊢-relation₃[V] MulGraph := mulGraph_defined.to_definable
 
 /-- `x` is less than `y`: a proper initial segment of `y`. -/
-def LtGraph (x y : M) : Prop := x ◨ y ∧ x ≠ y
+def LtGraph (x y : V) : Prop := IsPrefix x y ∧ x ≠ y
 
 /-- `x` is less than `y`: a proper initial segment of `y`. -/
 def ltGraph : Semisentence ℒ⊢ 2 := “x y. !isPrefix x y ∧ x ≠ y”
 
-@[simp]
-lemma eval_ltGraph : M ⊧/![x, y] ltGraph ↔ LtGraph x y := by simp [ltGraph, LtGraph]
+instance ltGraph_defined : ℒ⊢-relation[V] LtGraph via ltGraph :=
+  ⟨fun v ↦ by simp [ltGraph, LtGraph]⟩
 
-lemma existsUnique_mulGraph (x y : M) : ∃! z, MulGraph z x y := by
+instance ltGraph_definable : ℒ⊢-relation[V] LtGraph := ltGraph_defined.to_definable
+
+lemma existsUnique_mulGraph (x y : V) : ∃! z, MulGraph z x y := by
   by_cases h : ∃! r, IsProduct r x y
   · simp [MulGraph, h]
   · use ∅
@@ -130,22 +118,21 @@ def arithmeticTranslation : DirectTranslation 𝗪𝗦𝗲𝗾 ℒₒᵣ where
     | .one => ⟨“z. z = ⋆ ⊢ ⋆”⟩
     | .add => ⟨“z x y. z = x ⌢ y”⟩
     | .mul => ⟨mulGraph⟩
-  domain_nonempty := complete.{0} _ _ fun M _ _ ↦ (models_domainNonempty_iff _).mpr <| by
+  domain_nonempty := complete.{0} _ _ fun V _ _ ↦ (models_domainNonempty_iff _).mpr <| by
     use ∅
     simp [Semiformula.Operator.val]
-  func_defined f := complete.{0} _ _ fun M _ _ ↦ (models_funcDefined_iff _ _).mpr <| by
+  func_defined f := complete.{0} _ _ fun V _ _ ↦ (models_funcDefined_iff _ _).mpr <| by
     intro e _
     cases f
-    · simp [Semiformula.Operator.val, Semiformula.Operator.Eq.sentence_eq]
-    · simp [Semiformula.Operator.val, Semiformula.Operator.Eq.sentence_eq]
-    · simp [Semiformula.Operator.val, Semiformula.Operator.Eq.sentence_eq]
-    · rw [Matrix.fun_eq_vec_two e]
+    case mul =>
+      rw [Matrix.fun_eq_vec_two e]
       simpa [Semiformula.Operator.val] using existsUnique_mulGraph (e 0) (e 1)
-  preserve_eq := complete.{0} _ _ fun M _ _ ↦ (models_preserveEq_iff _ _).mpr <| by
+    all_goals simp [Semiformula.Operator.val, Semiformula.Operator.Eq.sentence_eq]
+  preserve_eq := complete.{0} _ _ fun V _ _ ↦ (models_preserveEq_iff _ _).mpr <| by
     simp [Semiformula.Operator.val, Semiformula.Operator.Eq.sentence_eq]
 
 @[simp]
-lemma arithmeticTranslation_dom {M : Type*} [SequenceStructure M] (x : M) :
+lemma arithmeticTranslation.dom {V : Type*} [SequenceStructure V] (x : V) :
     arithmeticTranslation.Dom x := by
   simp [dom_iff, arithmeticTranslation, Semiformula.Operator.val]
 
@@ -154,12 +141,12 @@ section FiniteSequence
 variable {a b p s t w : FiniteSequence} {m n : ℕ}
 
 @[simp]
-lemma isPrefix_tally_iff : ∀ {n}, s ◨ tally n ↔ ∃ i ≤ n, s = tally i
+lemma isPrefix_tally_iff : ∀ {n}, IsPrefix s (tally n) ↔ ∃ i ≤ n, s = tally i
   | 0 => by simp [tally]
   | n + 1 => by simp [tally, isPrefix_snoc_iff, isPrefix_tally_iff, Nat.le_succ_iff, or_and_right,
       exists_or, or_comm]
 
-lemma IsPrefix.of_snoc (h : s.snoc t ◨ w) : s ◨ w := by
+private lemma IsPrefix.of_snoc (h : IsPrefix (s.snoc t) w) : IsPrefix s w := by
   induction w with
   | nil => simp at h
   | snoc w p hw =>
@@ -175,7 +162,7 @@ lemma not_isEntry_nil : ¬IsEntry a b nil := by simp [IsEntry]
 @[simp]
 lemma isEntry_snoc_iff :
     IsEntry a b (w.snoc p) ↔ p = (nil.snoc a).snoc b ∨ IsEntry a b w := by
-  have h {w} : IsEntry a b w ↔ ∃ s : FiniteSequence, s.snoc ((nil.snoc a).snoc b) ◨ w :=
+  have h {w} : IsEntry a b w ↔ ∃ s : FiniteSequence, IsPrefix (s.snoc ((nil.snoc a).snoc b)) w :=
     exists_congr fun s ↦ and_iff_right_of_imp IsPrefix.of_snoc
   simp [h, isPrefix_snoc_iff, exists_or, eq_comm]
 
@@ -192,20 +179,20 @@ lemma isEntry_mulTable_iff :
 
 end FiniteSequence
 
-variable {M : Type*} [SequenceStructure M] {u w x z : M} {m n : ℕ}
+variable {V : Type*} [SequenceStructure V] {u w x z : V} {m n : ℕ}
 
-lemma toStructure_tally_one : ((tally 1).toStructure : M) = snoc ∅ ∅ := rfl
+lemma toStructure_tally_one : ((tally 1).toStructure : V) = snoc ∅ ∅ := rfl
 
-variable [M↓[ℒ⊢] ⊧* 𝗪𝗦𝗲𝗾]
+variable [V↓[ℒ⊢] ⊧* 𝗪𝗦𝗲𝗾]
 
 lemma isPrefix_toStructure_tally_iff :
-    x ◨ (tally n).toStructure ↔ ∃ i ≤ n, x = (tally i).toStructure := by
+    IsPrefix x (tally n).toStructure ↔ ∃ i ≤ n, x = (tally i).toStructure := by
   simp only [isPrefix_toStructure_iff, isPrefix_tally_iff]
   grind
 
 lemma isEntry_toStructure_iff {a b c : FiniteSequence} :
-    IsEntry (a.toStructure : M) b.toStructure c.toStructure ↔ IsEntry a b c := by
-  have h (s : FiniteSequence) : (snoc s.toStructure (snoc (snoc ∅ a.toStructure) b.toStructure) : M)
+    IsEntry (a.toStructure : V) b.toStructure c.toStructure ↔ IsEntry a b c := by
+  have h (s : FiniteSequence) : (snoc s.toStructure (snoc (snoc ∅ a.toStructure) b.toStructure) : V)
       = (s.snoc ((nil.snoc a).snoc b)).toStructure := rfl
   constructor
   · rintro ⟨_, hs, h'⟩
@@ -214,9 +201,10 @@ lemma isEntry_toStructure_iff {a b c : FiniteSequence} :
   · rintro ⟨s, hs, h'⟩
     exact ⟨s.toStructure, by simpa using hs, by simpa [h] using h'⟩
 
-lemma IsMulTable.eq_tally
+private lemma IsMulTable.eq_tally
     (hw : IsMulTable (tally m).toStructure (tally n).toStructure z w) :
-    ∀ k ≤ n, ∀ u, u ◨ z → IsEntry u (tally k).toStructure w → u = (tally (m * k)).toStructure := by
+    ∀ k ≤ n, ∀ u, IsPrefix u z → IsEntry u (tally k).toStructure w →
+      u = (tally (m * k)).toStructure := by
   intro k
   induction k with
   | zero =>
@@ -269,11 +257,11 @@ lemma isProduct_tally_iff :
       · rw [isEntry_toStructure_iff, isEntry_mulTable_iff]
         use n
 
-lemma mulGraph_tally (m n : ℕ) :
-    MulGraph ((tally (m * n)).toStructure : M) (tally m).toStructure (tally n).toStructure := by
+private lemma mulGraph_tally (m n : ℕ) :
+    MulGraph ((tally (m * n)).toStructure : V) (tally m).toStructure (tally n).toStructure := by
   simp [MulGraph, isProduct_tally_iff]
 
-lemma ltGraph_tally_iff : LtGraph x (tally n).toStructure ↔
+private lemma ltGraph_tally_iff : LtGraph x (tally n).toStructure ↔
     ∃ i < n, x = (tally i).toStructure := by
   simp only [LtGraph, isPrefix_toStructure_tally_iff]
   constructor
@@ -287,55 +275,48 @@ lemma ltGraph_tally_iff : LtGraph x (tally n).toStructure ↔
 namespace arithmeticTranslation
 
 /-- The constants, the operations and the order of the sequences of a model of $\mathsf{WSeq}$. -/
-noncomputable abbrev oRingStructure : ORingStructure (arithmeticTranslation.Model M) where
-  zero := ⟨∅, arithmeticTranslation_dom _⟩
-  one := ⟨snoc ∅ ∅, arithmeticTranslation_dom _⟩
-  add a b := ⟨(a : M) ++ (b : M), arithmeticTranslation_dom _⟩
+noncomputable abbrev oRingStructure : ORingStructure (arithmeticTranslation.Model V) where
+  zero := ⟨∅, arithmeticTranslation.dom _⟩
+  one := ⟨snoc ∅ ∅, arithmeticTranslation.dom _⟩
+  add a b := ⟨(a : V) ++ (b : V), arithmeticTranslation.dom _⟩
   mul a b := Tarski.Structure.func (L := ℒₒᵣ) Language.ORing.Func.mul ![a, b]
-  lt a b := LtGraph (a : M) b
+  lt a b := LtGraph (a : V) b
 
 /-- The structure of the model of `arithmeticTranslation` is the one of `oRingStructure`. -/
-lemma struc_eq : Model.struc arithmeticTranslation M = @Arithmetic.standardModel _ oRingStructure :=
+lemma struc_eq : Model.struc arithmeticTranslation V = @Arithmetic.standardModel _ oRingStructure :=
   Tarski.Structure.ext
     (funext₃ fun k f v ↦ by
       cases f
-      · symm
+      case mul =>
+        conv_lhs => rw [Matrix.fun_eq_vec_two v]
+        rfl
+      all_goals
+        symm
         apply Model.func_iff.mpr
         simp [arithmeticTranslation, Semiformula.Operator.val, Semiformula.Operator.Eq.sentence_eq]
-        rfl
-      · symm
-        apply Model.func_iff.mpr
-        simp [arithmeticTranslation, Semiformula.Operator.val, Semiformula.Operator.Eq.sentence_eq]
-        rfl
-      · symm
-        apply Model.func_iff.mpr
-        simp [arithmeticTranslation, Semiformula.Operator.val, Semiformula.Operator.Eq.sentence_eq]
-        rfl
-      · conv_lhs => rw [Matrix.fun_eq_vec_two v]
         rfl)
     (funext₃ fun k r v ↦ by
       cases r
       · exact propext <| Model.eq_iff v
-      · change (arithmeticTranslation.rel .lt).val (fun i ↦ (v i : M)) = LtGraph (v 0 : M) (v 1)
-        rw [Matrix.fun_eq_vec_two (fun i ↦ (v i : M))]
+      · change (arithmeticTranslation.rel .lt).val (fun i ↦ (v i : V)) = LtGraph (v 0 : V) (v 1)
+        rw [Matrix.fun_eq_vec_two (fun i ↦ (v i : V))]
         simp [arithmeticTranslation, Semiformula.Operator.val])
 
 section
 
 attribute [local instance] oRingStructure
 
-variable {a b : arithmeticTranslation.Model M}
+variable {a b : arithmeticTranslation.Model V}
 
-lemma val_add : ((a + b : arithmeticTranslation.Model M) : M) = (a : M) ++ (b : M) := rfl
+lemma val_add : ((a + b : arithmeticTranslation.Model V) : V) = (a : V) ++ (b : V) := rfl
 
-lemma val_mul_eq_iff : ((a * b : arithmeticTranslation.Model M) : M) = z ↔ MulGraph z a b := by
-  have h := Model.eval_func (π := arithmeticTranslation) (M := M) Language.ORing.Func.mul ![a, b]
-  rw [Matrix.fun_eq_vec_two fun i ↦ ((![a, b] : Fin 2 → arithmeticTranslation.Model M) i : M)] at h
-  simp only [arithmeticTranslation, Semiformula.Operator.val, Matrix.cons_val, eval_mulGraph] at h
+lemma val_mul_eq_iff : ((a * b : arithmeticTranslation.Model V) : V) = z ↔ MulGraph z a b := by
+  have h : MulGraph ((a * b : arithmeticTranslation.Model V) : V) a b :=
+    Model.rel_func_of_defined (φ := mulGraph) (f := Language.ORing.Func.mul) rfl a b
   exact ⟨fun e ↦ e ▸ h, (existsUnique_mulGraph _ _).unique h⟩
 
 @[simp]
-lemma val_numeral : ∀ n, ((ORingStructure.numeral n : arithmeticTranslation.Model M) : M) =
+lemma val_numeral : ∀ n, ((ORingStructure.numeral n : arithmeticTranslation.Model V) : V) =
     (tally n).toStructure
   | 0 => rfl
   | 1 => rfl
@@ -346,28 +327,28 @@ lemma val_numeral : ∀ n, ((ORingStructure.numeral n : arithmeticTranslation.Mo
 end
 
 /-- The sequences of a model of $\mathsf{WSeq}$ form a model of $\mathsf{R}_0$. -/
-instance : (arithmeticTranslation.Model M)↓[ℒₒᵣ] ⊧* 𝗥₀ := by
+instance : (arithmeticTranslation.Model V)↓[ℒₒᵣ] ⊧* 𝗥₀ := by
   rw [struc_eq]
-  let := oRingStructure (M := M)
+  let := oRingStructure (V := V)
   constructor
   intro σ hσ
   cases hσ
   case equal hφ => exact models_theory_iff.mp inferInstance _ hφ
   case Ω₁ m n =>
-    suffices (ORingStructure.numeral m + ORingStructure.numeral n : arithmeticTranslation.Model M) =
+    suffices (ORingStructure.numeral m + ORingStructure.numeral n : arithmeticTranslation.Model V) =
         ORingStructure.numeral (m + n) by simpa [models_iff] using this
     apply Model.ext
     simp [val_add, ← toStructure_append]
   case Ω₂ m n =>
-    suffices (ORingStructure.numeral m * ORingStructure.numeral n : arithmeticTranslation.Model M) =
+    suffices (ORingStructure.numeral m * ORingStructure.numeral n : arithmeticTranslation.Model V) =
         ORingStructure.numeral (m * n) by simpa [models_iff] using this
     apply Model.ext
     simpa [val_mul_eq_iff] using mulGraph_tally m n
   case Ω₃ n =>
-    suffices ∀ x : arithmeticTranslation.Model M, x < ORingStructure.numeral n ↔
+    suffices ∀ x : arithmeticTranslation.Model V, x < ORingStructure.numeral n ↔
         ∃ i < n, x = ORingStructure.numeral i by simpa [models_iff] using this
     intro x
-    change LtGraph (x : M) _ ↔ _
+    change LtGraph (x : V) _ ↔ _
     simp [ltGraph_tally_iff, ← Model.val_inj_iff]
 
 end arithmeticTranslation
@@ -377,93 +358,31 @@ end Sequence
 /-- $\mathsf{WSeq}$ interprets $\mathsf{R}_0$. -/
 instance : 𝗪𝗦𝗲𝗾 ⊳ 𝗥₀ where
   trln := Sequence.arithmeticTranslation
-  interpret_theory φ hφ := Sequence.complete.{0} _ _ fun _ _ _ ↦
-    DirectTranslation.Model.translate_iff.mpr <| models_theory_iff.mp inferInstance φ hφ
-
-namespace FiniteSequence
-
-open Encodable Denumerable
-
-/-- The code of a sequence. -/
-def code : FiniteSequence → ℕ
-  | nil => 0
-  | .snoc s t => Nat.pair t.code s.code + 1
-
-lemma code_injective : Function.Injective code := by
-  intro s
-  induction s with
-  | nil => rintro (_ | _) <;> simp [code]
-  | snoc s t hs ht =>
-    rintro (_ | ⟨s', t'⟩)
-    · simp [code]
-    · simp only [code, Nat.add_right_cancel_iff, Nat.pair_eq_pair, snoc.injEq, and_imp]
-      exact fun h₁ h₂ ↦ ⟨hs h₂, ht h₁⟩
-
-@[simp]
-lemma code_inj {s t : FiniteSequence} : s.code = t.code ↔ s = t := code_injective.eq_iff
-
-lemma code_surjective : Function.Surjective code := by
-  intro n
-  induction n using Nat.strongRec with
-  | ind n ih =>
-    rcases n with _ | n
-    · use nil
-      rfl
-    · obtain ⟨t, ht⟩ := ih _ <| Nat.lt_succ_of_le n.unpair_left_le
-      obtain ⟨s, hs⟩ := ih _ <| Nat.lt_succ_of_le n.unpair_right_le
-      use s.snoc t
-      simp [code, hs, ht]
-
-lemma code_le_code_append_left (s t : FiniteSequence) : s.code ≤ (s ++ t).code := by
-  induction t with
-  | nil => simp
-  | snoc t u ht =>
-    rw [append_snoc, code]
-    exact ht.trans <| (Nat.right_le_pair _ _).trans <| Nat.le_succ _
-
-lemma code_le_code_append_right (s t : FiniteSequence) : t.code ≤ (s ++ t).code := by
-  induction t with
-  | nil => simp [code]
-  | snoc t u ht =>
-    rw [append_snoc, code, code, Nat.add_le_add_iff_right]
-    rcases ht.eq_or_lt with h | h
-    · rw [h]
-    · exact (Nat.pair_lt_pair_right _ h).le
-
-/-- The code of the concatenation of the sequences coded by `m` and `n`. -/
-def appendCode (m n : ℕ) : ℕ := encode (ofNat (List ℕ) n ++ ofNat (List ℕ) m)
-
-@[simp]
-lemma appendCode_code (s t : FiniteSequence) : appendCode s.code t.code = (s ++ t).code := by
-  induction t with
-  | nil => simp [appendCode, code]
-  | snoc t u ht => simpa [appendCode, code] using ht
-
-lemma primrec₂_appendCode : Primrec₂ appendCode :=
-  Primrec.encode.comp <| Primrec.list_append.comp ((Primrec.ofNat _).comp Primrec.snd)
-    ((Primrec.ofNat _).comp Primrec.fst)
-
-end FiniteSequence
+  interpret_theory _ hφ := Sequence.complete.{0} _ _ fun _ _ _ ↦
+    DirectTranslation.models_translate_of_mem hφ
 
 namespace Sequence
 
 open DirectTranslation FiniteSequence ORingStructure Arithmetic Arithmetic.R0
+open scoped FFL.FirstOrder.Bounding
 
-variable {M : Type*} [ORingStructure M] {x y z : M}
+variable {V : Type*} [ORingStructure V] {x y z : V}
 
 /-- `z` is $\langle y, x \rangle + 1$, in the pairing `Nat.pair`. -/
-def SnocGraph (z x y : M) : Prop :=
+def SnocGraph (z x y : V) : Prop :=
   (y < x ∧ z = x * x + y + 1) ∨ (¬y < x ∧ z = y * y + y + x + 1)
 
 /-- `z` is $\langle y, x \rangle + 1$, in the pairing `Nat.pair`. -/
-def snocGraph : ArithmeticSemisentence 3 :=
-  “z x y. (y < x ∧ z = x * x + y + 1) ∨ (¬y < x ∧ z = y * y + y + x + 1)”
+def snocGraphDef : 𝚺ᴬ₀.Semisentence 3 :=
+  .mkSigma “z x y. (y < x ∧ z = x * x + y + 1) ∨ (¬y < x ∧ z = y * y + y + x + 1)”
 
-@[simp]
-lemma eval_snocGraph : M ⊧/![z, x, y] snocGraph ↔ SnocGraph z x y := by
-  simp [snocGraph, SnocGraph]
+instance snocGraph_defined : 𝚺ᴬ₀-Relation₃[V] SnocGraph via snocGraphDef := .mk fun v ↦ by
+  simp [snocGraphDef, SnocGraph, Semiformula.Operator.val, Semiformula.Operator.Eq.sentence_eq,
+    Semiformula.Operator.LT.sentence_eq]
 
-lemma existsUnique_snocGraph (x y : M) : ∃! z, SnocGraph z x y := by
+instance snocGraph_definable : 𝚺ᴬ₀-Relation₃[V] SnocGraph := snocGraph_defined.to_definable
+
+private lemma existsUnique_snocGraph (x y : V) : ∃! z, SnocGraph z x y := by
   by_cases h : y < x
   · use x * x + y + 1
     simp [SnocGraph, h]
@@ -471,18 +390,19 @@ lemma existsUnique_snocGraph (x y : M) : ∃! z, SnocGraph z x y := by
     simp [SnocGraph, h]
 
 /-- `z` is the concatenation of `x` and `y`, or `x` if there is none. -/
-def ConcatGraph (z x y : M) : Prop :=
+def ConcatGraph (z x y : V) : Prop :=
   IsValue₂ appendCode x y z ∨ (z = x ∧ ∀ w, ¬IsValue₂ appendCode x y w)
 
 /-- `z` is the concatenation of `x` and `y`, or `x` if there is none. -/
-noncomputable def concatGraph : ArithmeticSemisentence 3 :=
-  “z x y. !(isValue₂ appendCode) x y z ∨ (z = x ∧ ∀ w, ¬!(isValue₂ appendCode) x y w)”
+noncomputable def concatGraphDef : ArithmeticSemisentence 3 :=
+  “z x y. !(isValue₂Def appendCode) x y z ∨ (z = x ∧ ∀ w, ¬!(isValue₂Def appendCode) x y w)”
 
-@[simp]
-lemma eval_concatGraph : M ⊧/![z, x, y] concatGraph ↔ ConcatGraph z x y := by
-  simp [concatGraph, ConcatGraph]
+instance concatGraph_defined : ℒₒᵣ-relation₃[V] ConcatGraph via concatGraphDef :=
+  ⟨fun v ↦ by simp [concatGraphDef, ConcatGraph]⟩
 
-lemma existsUnique_concatGraph (x y : M) : ∃! z, ConcatGraph z x y :=
+instance concatGraph_definable : ℒₒᵣ-relation₃[V] ConcatGraph := concatGraph_defined.to_definable
+
+lemma existsUnique_concatGraph (x y : V) : ∃! z, ConcatGraph z x y :=
   existsUnique_isValue₂_or _ x y x
 
 /--
@@ -495,11 +415,11 @@ noncomputable def codeTranslation : DirectTranslation 𝗥₀ ℒ⊢ where
     | .eq => ⟨“x y. x = y”⟩
   func
     | .empty => ⟨“z. z = 0”⟩
-    | .snoc => ⟨snocGraph⟩
-    | .concat => ⟨concatGraph⟩
-  domain_nonempty := Arithmetic.complete.{0} _ _ fun M _ _ ↦ (models_domainNonempty_iff _).mpr <| by
+    | .snoc => ⟨snocGraphDef.val⟩
+    | .concat => ⟨concatGraphDef⟩
+  domain_nonempty := Arithmetic.complete.{0} _ _ fun V _ _ ↦ (models_domainNonempty_iff _).mpr <| by
     simp [Semiformula.Operator.val]
-  func_defined f := Arithmetic.complete.{0} _ _ fun M _ _ ↦ (models_funcDefined_iff _ _).mpr <| by
+  func_defined f := Arithmetic.complete.{0} _ _ fun V _ _ ↦ (models_funcDefined_iff _ _).mpr <| by
     intro e _
     cases f
     · simp [Semiformula.Operator.val, Semiformula.Operator.Eq.sentence_eq]
@@ -507,31 +427,29 @@ noncomputable def codeTranslation : DirectTranslation 𝗥₀ ℒ⊢ where
       simpa [Semiformula.Operator.val] using existsUnique_snocGraph (e 0) (e 1)
     · rw [Matrix.fun_eq_vec_two e]
       simpa [Semiformula.Operator.val] using existsUnique_concatGraph (e 0) (e 1)
-  preserve_eq := Arithmetic.complete.{0} _ _ fun M _ _ ↦ (models_preserveEq_iff _ _).mpr <| by
+  preserve_eq := Arithmetic.complete.{0} _ _ fun V _ _ ↦ (models_preserveEq_iff _ _).mpr <| by
     simp [Semiformula.Operator.val, Semiformula.Operator.Eq.sentence_eq]
 
 @[simp]
-lemma codeTranslation_dom (x : M) : codeTranslation.Dom x := by
+lemma codeTranslation.dom (x : V) : codeTranslation.Dom x := by
   simp [dom_iff, codeTranslation, Semiformula.Operator.val]
 
-variable [M↓[ℒₒᵣ] ⊧* 𝗥₀]
+variable [V↓[ℒₒᵣ] ⊧* 𝗥₀]
 
-lemma snocGraph_numeral (s t : FiniteSequence) :
-    SnocGraph (numeral (s.snoc t).code : M) (numeral s.code) (numeral t.code) := by
-  by_cases h : t.code < s.code
-  · simp [SnocGraph, FiniteSequence.code, Nat.pair, h, numeral_mul_numeral, numeral_add_numeral,
-      numeral_add_one_of_R0]
-  · simp [SnocGraph, FiniteSequence.code, Nat.pair, h, numeral_mul_numeral, numeral_add_numeral,
+private lemma snocGraph_numeral (s t : FiniteSequence) :
+    SnocGraph (numeral (s.snoc t).code : V) (numeral s.code) (numeral t.code) := by
+  by_cases h : t.code < s.code <;>
+    simp [SnocGraph, FiniteSequence.code, Nat.pair, h, numeral_mul_numeral, numeral_add_numeral,
       numeral_add_one_of_R0]
 
 lemma concatGraph_numeral (s t : FiniteSequence) :
-    ConcatGraph (numeral (s ++ t).code : M) (numeral s.code) (numeral t.code) := by
-  have h := isValue₂_numeral (M := M) (m := s.code) (n := t.code) primrec₂_appendCode.to_comp
+    ConcatGraph (numeral (s ++ t).code : V) (numeral s.code) (numeral t.code) := by
+  have h := isValue₂_numeral (V := V) (m := s.code) (n := t.code) primrec₂_appendCode.to_comp
   rw [appendCode_code] at h
   exact .inl <| h (s.code_le_code_append_left t) (s.code_le_code_append_right t)
 
-lemma ConcatGraph.exists_of_numeral {s : FiniteSequence}
-    (h : ConcatGraph (numeral s.code) x y) : ∃ u, u ◨ s ∧ x = numeral u.code := by
+private lemma ConcatGraph.exists_of_numeral {s : FiniteSequence}
+    (h : ConcatGraph (numeral s.code) x y) : ∃ u, IsPrefix u s ∧ x = numeral u.code := by
   rcases h with h | ⟨rfl, -⟩
   · obtain ⟨m, n, rfl, rfl, h'⟩ := h.exists_of_numeral primrec₂_appendCode.to_comp
     obtain ⟨u, rfl⟩ := code_surjective m
@@ -542,16 +460,16 @@ lemma ConcatGraph.exists_of_numeral {s : FiniteSequence}
 namespace codeTranslation
 
 /-- The numeral of the code of a sequence. -/
-def ofSequence (s : FiniteSequence) : codeTranslation.Model M := ⟨numeral s.code, by simp⟩
+def ofSequence (s : FiniteSequence) : codeTranslation.Model V := ⟨numeral s.code, by simp⟩
 
-/-- The empty sequence and the operations on codes in `M`. -/
-noncomputable abbrev sequenceStructure : SequenceStructure (codeTranslation.Model M) where
+/-- The empty sequence and the operations on codes in `V`. -/
+noncomputable abbrev sequenceStructure : SequenceStructure (codeTranslation.Model V) where
   emptyCollection := ofSequence .nil
   snoc x y := Tarski.Structure.func (L := ℒ⊢) Language.Sequence.Func.snoc ![x, y]
   append x y := Tarski.Structure.func (L := ℒ⊢) Language.Sequence.Func.concat ![x, y]
 
 /-- The structure of the model of `codeTranslation` is the one of `sequenceStructure`. -/
-lemma struc_eq : Model.struc codeTranslation M = @standardModel _ sequenceStructure :=
+lemma struc_eq : Model.struc codeTranslation V = @standardModel _ sequenceStructure :=
   Tarski.Structure.ext
     (funext₃ fun k f v ↦ by
       cases f
@@ -559,9 +477,8 @@ lemma struc_eq : Model.struc codeTranslation M = @standardModel _ sequenceStruct
         apply Model.func_iff.mpr
         simp [codeTranslation, Semiformula.Operator.val]
         rfl
-      · conv_lhs => rw [Matrix.fun_eq_vec_two v]
-        rfl
-      · conv_lhs => rw [Matrix.fun_eq_vec_two v]
+      all_goals
+        conv_lhs => rw [Matrix.fun_eq_vec_two v]
         rfl)
     (funext₃ fun k r v ↦ by
       cases r
@@ -571,25 +488,26 @@ section
 
 attribute [local instance] sequenceStructure
 
-variable {x y z : codeTranslation.Model M}
+variable {x y z : codeTranslation.Model V}
 
-lemma snoc_eq_iff : SequenceStructure.snoc x y = z ↔ SnocGraph (z : M) x y := by
-  have := Model.func_iff (π := codeTranslation) (M := M) (f := Language.Sequence.Func.snoc)
+private lemma snoc_eq_iff : SequenceStructure.snoc x y = z ↔ SnocGraph (z : V) x y := by
+  have := Model.func_iff (π := codeTranslation) (M := V) (f := Language.Sequence.Func.snoc)
     (y := z) (v := ![x, y])
-  rw [Matrix.fun_eq_vec_two fun i ↦ ((![x, y] : Fin 2 → codeTranslation.Model M) i : M)] at this
-  simp only [codeTranslation, Semiformula.Operator.val, Matrix.cons_val, eval_snocGraph] at this
+  rw [Matrix.fun_eq_vec_two fun i ↦ ((![x, y] : Fin 2 → codeTranslation.Model V) i : V)] at this
+  simp only [codeTranslation, Semiformula.Operator.val, Matrix.cons_val,
+    Bounding.HierarchySymbol.Defined.iff] at this
   exact eq_comm.trans this
 
-lemma append_eq_iff : x ++ y = z ↔ ConcatGraph (z : M) x y := by
-  have := Model.func_iff (π := codeTranslation) (M := M) (f := Language.Sequence.Func.concat)
+lemma append_eq_iff : x ++ y = z ↔ ConcatGraph (z : V) x y := by
+  have := Model.func_iff (π := codeTranslation) (M := V) (f := Language.Sequence.Func.concat)
     (y := z) (v := ![x, y])
-  rw [Matrix.fun_eq_vec_two fun i ↦ ((![x, y] : Fin 2 → codeTranslation.Model M) i : M)] at this
-  simp only [codeTranslation, Semiformula.Operator.val, Matrix.cons_val, eval_concatGraph] at this
+  rw [Matrix.fun_eq_vec_two fun i ↦ ((![x, y] : Fin 2 → codeTranslation.Model V) i : V)] at this
+  simp only [codeTranslation, Semiformula.Operator.val, Matrix.cons_val, Defined.eval_iff] at this
   exact eq_comm.trans this
 
 /-- The sequences are embedded onto an initial part of the model of `codeTranslation`. -/
-lemma isInitialEmbedding_ofSequence :
-    IsInitialEmbedding (ofSequence : FiniteSequence → codeTranslation.Model M) where
+private lemma isInitialEmbedding_ofSequence :
+    IsInitialEmbedding (ofSequence : FiniteSequence → codeTranslation.Model V) where
   injective s t h := by simpa [ofSequence] using h
   map_nil := rfl
   map_snoc s t := (snoc_eq_iff.mpr <| snocGraph_numeral s t).symm
@@ -602,9 +520,9 @@ lemma isInitialEmbedding_ofSequence :
 end
 
 /-- The model of `codeTranslation` satisfies $\mathsf{WSeq}$. -/
-instance : (codeTranslation.Model M)↓[ℒ⊢] ⊧* 𝗪𝗦𝗲𝗾 := by
+instance : (codeTranslation.Model V)↓[ℒ⊢] ⊧* 𝗪𝗦𝗲𝗾 := by
   rw [struc_eq]
-  let := sequenceStructure (M := M)
+  let := sequenceStructure (V := V)
   exact isInitialEmbedding_ofSequence.models_WSeq
 
 end codeTranslation
@@ -614,8 +532,8 @@ end Sequence
 /-- $\mathsf{R}_0$ interprets $\mathsf{WSeq}$. -/
 noncomputable instance : 𝗥₀ ⊳ 𝗪𝗦𝗲𝗾 where
   trln := Sequence.codeTranslation
-  interpret_theory φ hφ := Arithmetic.complete.{0} _ _ fun _ _ _ ↦
-    DirectTranslation.Model.translate_iff.mpr <| models_theory_iff.mp inferInstance φ hφ
+  interpret_theory _ hφ := Arithmetic.complete.{0} _ _ fun _ _ _ ↦
+    DirectTranslation.models_translate_of_mem hφ
 
 /--
 $\mathsf{WSeq}$ and $\mathsf{R}$ are mutually interpretable.

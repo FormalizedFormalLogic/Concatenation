@@ -10,7 +10,9 @@ public import Concatenation.Language
 public import Concatenation.OpenProblem
 public import Concatenation.OpenProblem.Attribute
 public import Concatenation.QT.Basic
+public import Concatenation.Semantics.AtomicPairing
 public import Concatenation.Semantics.Basic
+public import Concatenation.Semantics.Relativization
 public import Concatenation.Seq.Basic
 public import Concatenation.Seq.Interpretability
 public import Concatenation.TC.Arithmetic
@@ -23,6 +25,8 @@ public import Concatenation.ToFoundation.Arithmetic.Pairing
 public import Concatenation.ToFoundation.Arithmetic.PeanoMinus
 public import Concatenation.ToFoundation.Arithmetic.Q
 public import Concatenation.ToFoundation.Arithmetic.R
+public import Concatenation.ToFoundation.Arithmetic.R.Interpretability
+public import Concatenation.ToFoundation.Arithmetic.R0.Basic
 public import Concatenation.ToFoundation.Arithmetic.R0.Certificate
 public import Concatenation.ToFoundation.Arithmetic.R0.Cobham
 public import Concatenation.ToFoundation.Arithmetic.R0.Cut
@@ -37,11 +41,13 @@ public import Concatenation.ToFoundation.Interpretability.Basic
 public import Concatenation.ToFoundation.Interpretability.DefinitionalEquivalence
 public import Concatenation.ToFoundation.Interpretability.LocallyFinitelySatisfiable
 public import Concatenation.ToFoundation.Interpretability.Undecidability
+public import Concatenation.ToFoundation.Language
 public import Concatenation.ToFoundation.Naming
+public import Concatenation.ToFoundation.Theory
 public import Concatenation.ToMathlib.AtomicPairing
 public import Concatenation.ToMathlib.Encodable
 public import Concatenation.ToMathlib.FreeSemigroup
-public import Concatenation.ToMathlib.Nat
+public import Concatenation.ToMathlib.Infinite
 public import Concatenation.ToMathlib.NonnegSpecialLinearGroup
 public import Concatenation.WTC.Arithmetic
 public import Concatenation.WTC.Basic

@@ -120,6 +120,120 @@ lemma exists_termGraph (t : Semiterm ℒₒᵣ ξ k) (f : ξ → TallyNumber V) 
         · rintro rfl
           exact ⟨_, _, rfl, rfl, TallyNumber.isTallyMul_val_mul _ _⟩
 
+/-- A relation of three $\Sigma_1$ relations through the values of two terms. -/
+private lemma exists_prenexDefinable_terms (t₁ t₂ : Semiterm ℒₒᵣ ξ k) (f : ξ → TallyNumber V)
+    {R : V → V → Prop} (hR : PrenexDefinable ℬₛ 𝚺 1 fun v : Fin 2 → V ↦ R (v 0) (v 1)) :
+    ∃ Q : (Fin k → V) → Prop, PrenexDefinable ℬₛ 𝚺 1 Q ∧ ∀ v : Fin k → TallyNumber V,
+      (Q fun i ↦ (v i).1) ↔ R (t₁.val v f).1 (t₂.val v f).1 := by
+  obtain ⟨G₁, hG₁, H₁⟩ := exists_termGraph t₁ f
+  obtain ⟨G₂, hG₂, H₂⟩ := exists_termGraph t₂ f
+  refine ⟨fun w ↦ ∃ y₁, ∃ y₂, G₁ (y₁ :> w) ∧ G₂ (y₂ :> w) ∧ R y₁ y₂, ?_, fun v ↦ ?_⟩
+  · exact (PrenexDefinable.exs_Sigma1 <| PrenexDefinable.exs_Sigma1 <|
+      PrenexDefinable.and_Sigma1 (hG₁.retraction (1 :> fun i ↦ i.succ.succ)) <|
+        PrenexDefinable.and_Sigma1 (hG₂.retraction (0 :> fun i ↦ i.succ.succ)) <|
+          hR.retraction ![1, 0]).of_iff fun w ↦ by simp [Matrix.fun_vecCons_apply]
+  · simp [H₁, H₂]
+
+/--
+A bounded arithmetic formula is $\Sigma_1$ on the tallies.
+- [HH14, Question 3]
+-/
+lemma exists_prenexDefinable_of_closure {φ : Semiformula ℒₒᵣ ξ k} (hφ : ℬ[<, ℒₒᵣ].Closure φ)
+    (f : ξ → TallyNumber V) :
+    ∃ Q : (Fin k → V) → Prop, PrenexDefinable ℬₛ 𝚺 1 Q ∧
+      ∀ v : Fin k → TallyNumber V, (Q fun i ↦ (v i).1) ↔ φ.Eval v f := by
+  have : Nonempty V := ⟨∅⟩
+  induction hφ with
+  | verum => exact ⟨fun _ ↦ True, .of_delta0 (by simp), by simp⟩
+  | falsum => exact ⟨fun _ ↦ False, .of_delta0 (by simp), by simp⟩
+  | rel r ts =>
+    cases r with
+    | eq =>
+      obtain ⟨Q, hQ, H⟩ := exists_prenexDefinable_terms (ts 0) (ts 1) f (R := (· = ·))
+        (.of_delta0 <| definable_eq_term #0 #1)
+      exact ⟨Q, hQ, fun v ↦ (H v).trans TallyNumber.ext_iff'.symm⟩
+    | lt =>
+      obtain ⟨Q, hQ, H⟩ := exists_prenexDefinable_terms (ts 0) (ts 1) f (R := IsProperPrefix)
+        (.of_delta0 isProperPrefix_definable)
+      exact ⟨Q, hQ, fun v ↦ (H v).trans Iff.rfl⟩
+  | nrel r ts =>
+    cases r with
+    | eq =>
+      obtain ⟨Q, hQ, H⟩ := exists_prenexDefinable_terms (ts 0) (ts 1) f (R := (· ≠ ·))
+        (.of_delta0 <| (definable_eq_term #0 #1).not_zero)
+      exact ⟨Q, hQ, fun v ↦ (H v).trans (not_congr TallyNumber.ext_iff'.symm)⟩
+    | lt =>
+      obtain ⟨Q, hQ, H⟩ := exists_prenexDefinable_terms (ts 0) (ts 1) f
+        (R := fun x y ↦ ¬IsProperPrefix x y) (.of_delta0 isProperPrefix_definable.not_zero)
+      exact ⟨Q, hQ, fun v ↦ (H v).trans Iff.rfl⟩
+  | and _ _ ih₁ ih₂ =>
+    obtain ⟨Q₁, hQ₁, H₁⟩ := ih₁
+    obtain ⟨Q₂, hQ₂, H₂⟩ := ih₂
+    exact ⟨_, PrenexDefinable.and_Sigma1 hQ₁ hQ₂, fun v ↦ by simp [H₁, H₂]⟩
+  | or _ _ ih₁ ih₂ =>
+    obtain ⟨Q₁, hQ₁, H₁⟩ := ih₁
+    obtain ⟨Q₂, hQ₂, H₂⟩ := ih₂
+    exact ⟨_, PrenexDefinable.or_Sigma1 hQ₁ hQ₂, fun v ↦ by simp [H₁, H₂]⟩
+  | @ball k R φ t hR ht _ ih =>
+    obtain rfl : R = Semiformula.Operator.LT.lt := Set.mem_singleton_iff.mp hR
+    obtain ⟨t, rfl⟩ := Rew.positive_iff.mp ht
+    have key (v : Fin k → TallyNumber V) :
+        (∀¹[(Semiformula.Operator.LT.lt).operator ![#0, Rew.bShift t]] φ).Eval v f ↔
+          ∀ x : TallyNumber V, x < t.val v f → φ.Eval (x :> v) f := by
+      simp [Semiformula.Operator.LT.sentence_eq, Semiformula.Operator.val, Semiterm.val_bShift']
+    obtain ⟨G, hG, HG⟩ := exists_termGraph t f
+    obtain ⟨Q, hQ, HQ⟩ := ih
+    obtain ⟨C, hC, HC⟩ := TCISigma.exists_prenexDefinable_ball (k := k)
+      (P := fun u ↦ Q (u 0 :> fun i ↦ u i.succ.succ) ∨ u 0 = u 1)
+      ((hQ.retraction (0 :> fun i ↦ i.succ.succ)).or_delta0 (definable_eq_term #0 #1) |>.of_iff
+        fun u ↦ by simp [Matrix.fun_vecCons_apply])
+    refine ⟨fun w ↦ ∃ b, G (b :> w) ∧ C (b :> w),
+      PrenexDefinable.exs_Sigma1 (PrenexDefinable.and_Sigma1 hG hC), fun v ↦ ?_⟩
+    have HC' := HC ((t.val v f).1 :> fun i ↦ (v i).1) (t.val v f).2
+    simp only [Matrix.cons_val_zero, Matrix.cons_val_succ] at HC'
+    rw [key]
+    constructor
+    · rintro ⟨b, hb, hc⟩ x hx
+      obtain rfl := (HG v b).mp hb
+      have hx' := (TCISigma.isSubstring_and_ne_iff (t.val v f).2).mpr ⟨x.2, hx⟩
+      rcases HC'.mp hc x.1 hx'.1 with h | h
+      · exact (HQ (x :> v)).mp <|
+          cast (congrArg Q (Matrix.fun_vecCons_apply Subtype.val x v).symm) h
+      · exact absurd h hx'.2
+    · intro h
+      refine ⟨_, (HG v _).mpr rfl, HC'.mpr fun y hy ↦ ?_⟩
+      by_cases hyb : y = (t.val v f).1
+      · exact .inr hyb
+      · obtain ⟨ty, hlt⟩ := (TCISigma.isSubstring_and_ne_iff (t.val v f).2).mp ⟨hy, hyb⟩
+        have := (HQ ((⟨y, ty⟩ : TallyNumber V) :> v)).mpr (h ⟨y, ty⟩ hlt)
+        exact .inl <| cast (congrArg Q (Matrix.fun_vecCons_apply Subtype.val _ v)) this
+  | @bexs k R φ t hR ht _ ih =>
+    obtain rfl : R = Semiformula.Operator.LT.lt := Set.mem_singleton_iff.mp hR
+    obtain ⟨t, rfl⟩ := Rew.positive_iff.mp ht
+    have key (v : Fin k → TallyNumber V) :
+        (∃¹[(Semiformula.Operator.LT.lt).operator ![#0, Rew.bShift t]] φ).Eval v f ↔
+          ∃ x : TallyNumber V, x < t.val v f ∧ φ.Eval (x :> v) f := by
+      simp [Semiformula.Operator.LT.sentence_eq, Semiformula.Operator.val, Semiterm.val_bShift']
+    obtain ⟨G, hG, HG⟩ := exists_termGraph t f
+    obtain ⟨Q, hQ, HQ⟩ := ih
+    refine ⟨fun w ↦ ∃ b, G (b :> w) ∧ ∃ x, Q (x :> fun i ↦ w i) ∧ IsSubstring x b ∧ x ≠ b,
+      (PrenexDefinable.exs_Sigma1 <| PrenexDefinable.and_Sigma1 hG <|
+        PrenexDefinable.exs_Sigma1 <| (hQ.retraction (0 :> fun i ↦ i.succ.succ)).and_delta0 <|
+          (definable_isSubstring_term #0 #1).and (definable_eq_term #0 #1).not_zero).of_iff
+        fun w ↦ by simp [Matrix.fun_vecCons_apply], fun v ↦ ?_⟩
+    rw [key]
+    constructor
+    · rintro ⟨b, hb, x, hx, hxb, hne⟩
+      obtain rfl := (HG v b).mp hb
+      obtain ⟨tx, hlt⟩ := (TCISigma.isSubstring_and_ne_iff (t.val v f).2).mp ⟨hxb, hne⟩
+      refine ⟨⟨x, tx⟩, hlt, (HQ (⟨x, tx⟩ :> v)).mp ?_⟩
+      exact cast (congrArg Q (Matrix.fun_vecCons_apply Subtype.val _ v).symm) hx
+    · rintro ⟨x, hx, h⟩
+      have hx' := (TCISigma.isSubstring_and_ne_iff (t.val v f).2).mpr ⟨x.2, hx⟩
+      exact ⟨_, (HG v _).mpr rfl, x.1,
+        cast (congrArg Q (Matrix.fun_vecCons_apply Subtype.val x v)) ((HQ (x :> v)).mpr h),
+        hx'.1, hx'.2⟩
+
 end definability
 
 end FFL.FirstOrder.Concatenation

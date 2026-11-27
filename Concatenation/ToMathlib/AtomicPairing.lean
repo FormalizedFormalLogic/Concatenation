@@ -146,17 +146,17 @@ lemma tower_injective : Function.Injective F.tower := by
 variable (T : Set V)
 
 /-- Every descent from `x` through left and right factors leaves `T` within `n` steps. -/
-def HeightLE : ℕ → V → Prop
+private def HeightLE : ℕ → V → Prop
   | 0, x => x ∉ T
   | n + 1, x => x ∉ T ∨ (HeightLE n (F.left x) ∧ HeightLE n (F.right x))
 
 variable {T}
 
-lemma heightLE_of_notMem (h : x ∉ T) : ∀ n, F.HeightLE T n x
+private lemma heightLE_of_notMem (h : x ∉ T) : ∀ n, F.HeightLE T n x
   | 0 => h
   | _ + 1 => .inl h
 
-lemma heightLE_induction {P : ℕ → V → Prop} (h₀ : ∀ n x, x ∉ T → P n x)
+private lemma heightLE_induction {P : ℕ → V → Prop} (h₀ : ∀ n x, x ∉ T → P n x)
     (h₁ : ∀ n x, x ∈ T → P n (F.left x) → P n (F.right x) → P (n + 1) x) :
     ∀ n x, F.HeightLE T n x → P n x := by
   intro n
@@ -169,7 +169,7 @@ lemma heightLE_induction {P : ℕ → V → Prop} (h₀ : ∀ n x, x ∉ T → P
       · exact h₁ n x hx (ih _ hl) (ih _ hr)
       · exact h₀ _ x hx
 
-lemma heightLE_length (hT : ∀ x ∈ T, ¬F.IsAtom x) (L : List V) (x : V)
+private lemma heightLE_length (hT : ∀ x ∈ T, ¬F.IsAtom x) (L : List V) (x : V)
     (hx : ∀ y, Relation.ReflTransGen IsFactor y x → y ∈ T → y ∈ L) : F.HeightLE T L.length x := by
   classical
   suffices ∀ n (L : List V), L.length = n → ∀ x,
@@ -215,13 +215,13 @@ open Classical in
 The map that is `φ` outside `T` and sends an element of `T` to the product of the images of its
 factors, cut off after `n` descents.
 -/
-noncomputable def build (φ : V → W) : ℕ → V → W
+private noncomputable def build (φ : V → W) : ℕ → V → W
   | 0, x => φ x
   | n + 1, x => if x ∈ T then build φ n (F.left x) ++ build φ n (F.right x) else φ x
 
 variable {T}
 
-lemma build_eq {φ : V → W} (h : F.HeightLE T n x) (m : ℕ) (hm : n ≤ m) :
+private lemma build_eq {φ : V → W} (h : F.HeightLE T n x) (m : ℕ) (hm : n ≤ m) :
     F.build T φ m x = F.build T φ n x := by
   induction n generalizing x m with
   | zero =>
@@ -239,7 +239,8 @@ lemma build_eq {φ : V → W} (h : F.HeightLE T n x) (m : ℕ) (hm : n ≤ m) :
 A map that is `φ` outside a finite set `T` of elements that are not atoms, and sends an element of
 `T` to the product of the images of its factors.
 -/
-lemma exists_copy (hT : ∀ x ∈ T, ¬F.IsAtom x) (L : List V) (hL : ∀ x ∈ T, x ∈ L) (φ : V → W) :
+private lemma exists_copy (hT : ∀ x ∈ T, ¬F.IsAtom x) (L : List V) (hL : ∀ x ∈ T, x ∈ L)
+    (φ : V → W) :
     ∃ H : V → W, (∀ x, x ∉ T → H x = φ x) ∧ (∀ x ∈ T, H x = H (F.left x) ++ H (F.right x)) ∧
       ∀ x, F.HeightLE T L.length x := by
   have hh (x : V) : F.HeightLE T L.length x := F.heightLE_length hT L x fun y _ hy ↦ hL y hy

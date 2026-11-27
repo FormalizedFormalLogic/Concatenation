@@ -25,10 +25,6 @@ namespace Semiformula.Operator
 protected class Prefix (L : Language) where
   pref : Semiformula.Operator L 2
 
-notation "op(⊑)" => Prefix.pref
-
-notation "op(⊑)[" L "]" => Prefix.pref (L := L)
-
 variable {L : Language}
 
 instance [L.Prefix] : Operator.Prefix L :=
@@ -60,10 +56,6 @@ namespace Operator
 
 protected class Concat (L : Language) where
   concat : Semiterm.Operator L 2
-
-notation "op(⌢)" => Concat.concat
-
-notation "op(⌢)[" L "]" => Concat.concat (L := L)
 
 instance [L.Concat] : Operator.Concat L := ⟨⟨Semiterm.func Language.Concat.concat Semiterm.bvar⟩⟩
 
@@ -115,13 +107,5 @@ lemma concat_eq_of_lang [L.Concat] [Append V] [Tarski.Structure.Concat L V] {v :
   exact h
 
 end Tarski.Structure
-
-variable {V : Type*} [Tarski.Structure L V] [Append V]
-
-@[simp]
-lemma Semiterm.val_concat [Semiterm.Operator.Concat L] [Tarski.Structure.Concat L V]
-    {e : Fin n → V} {ε : ξ → V} (t u : Semiterm L ξ n) :
-    (Operator.Concat.concat.operator ![t, u]).val e ε = t.val e ε ++ u.val e ε := by
-  simp
 
 end FFL.FirstOrder

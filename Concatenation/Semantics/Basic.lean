@@ -122,7 +122,7 @@ lemma standardModel_ofEquiv {α : Type*} (e : α ≃ V) :
 end semantics
 
 /-- Every structure with equality is the one of two letters and a concatenation. -/
-lemma exists_eq_standardModel (V : Type*) [Nonempty V] (s : Tarski.Structure ℒ⌢ V)
+lemma exists_eq_standardModel (V : Type*) (s : Tarski.Structure ℒ⌢ V)
     [Tarski.Structure.Eq ℒ⌢ V] : ∃ c : ConcatenationStructure V, s = @standardModel V c := by
   let c : ConcatenationStructure V :=
     { zero := s.func Language.Zero.zero ![]
@@ -140,27 +140,6 @@ lemma complete (T : ConcatenationTheory) [𝗘𝗤 ℒ⌢ ⪯ T] (φ : Concatena
   Theory.Proof.complete_on_eq_models φ fun V _ s _ hT ↦ by
     obtain ⟨c, rfl⟩ := exists_eq_standardModel V s
     exact H V
-
-lemma provable_iff_of_models_iff {T : ConcatenationTheory} [𝗘𝗤 ℒ⌢ ⪯ T] {n}
-    {φ ψ : ConcatenationSemisentence n}
-    (h : ∀ (V : Type*) [ConcatenationStructure V] [V↓[ℒ⌢] ⊧* T] (e : Fin n → V),
-      V ⊧/e φ ↔ V ⊧/e ψ) :
-    T ⊢ ∀¹* (φ 🡘 ψ) := by
-  apply complete T _
-  intro V _ _
-  simpa [models_iff] using h V
-
-lemma models_iff_of_provable_iff {T : ConcatenationTheory} [𝗘𝗤 ℒ⌢ ⪯ T] {n}
-    {φ ψ : ConcatenationSemisentence n} (h : T ⊢ ∀¹* (φ 🡘 ψ)) (V : Type*)
-    [ConcatenationStructure V] [V↓[ℒ⌢] ⊧* T] (e : Fin n → V) :
-    V ⊧/e φ ↔ V ⊧/e ψ := by
-  have h' := consequence_iff.mp (Theory.Proof.sound h) V inferInstance
-  simp only [models_iff, Semiformula.eval_allClosure] at h'
-  simpa using h' e
-
-lemma weakerThan_of_models (T S : ConcatenationTheory) [𝗘𝗤 ℒ⌢ ⪯ S]
-    (H : ∀ (V : Type*) [ConcatenationStructure V] [V↓[ℒ⌢] ⊧* S], V↓[ℒ⌢] ⊧* T) : T ⪯ S :=
-  Entailment.weakerThan_iff.mpr fun h ↦ complete _ _ fun V _ _ ↦ Theory.Proof.sound h (H V)
 
 @[simp]
 lemma val_stringTerm {L : Language} [L.Concat] {α ξ V : Type*} {n : ℕ} [Tarski.Structure L V]
@@ -214,10 +193,6 @@ the one `isSubstring` defines in any structure with a concatenation.
 def IsSubstring (x y : V) : Prop :=
   x = y ∨ (∃ u, y = u ++ x) ∨ (∃ v, y = x ++ v) ∨ (∃ u v, y = (u ++ x) ++ v) ∨
     ∃ u v, y = u ++ (x ++ v)
-
-lemma IsSubstring.map {W : Type*} [Append W] (g : V → W) (hg : ∀ x y, g (x ++ y) = g x ++ g y)
-    (h : IsSubstring x y) : IsSubstring (g x) (g y) := by
-  grind [IsSubstring]
 
 /-- A property that passes from a concatenation to its parts passes to substrings. -/
 lemma IsSubstring.of_forall_append {P : V → Prop} (hP : ∀ x y, P (x ++ y) → P x ∧ P y)
@@ -314,15 +289,15 @@ lemma IsSubstring.refl (x : V) : IsSubstring x x := Or.inl rfl
 
 @[simp]
 lemma isSubstring_append_left (x y : V) : IsSubstring x (x ++ y) := by
-  right; right; left; use y
+  grind [IsSubstring]
 
 @[simp]
 lemma isSubstring_append_right (x y : V) : IsSubstring y (x ++ y) := by
-  right; left; use x
+  grind [IsSubstring]
 
 @[simp]
 lemma isSubstring_append_append (u x v : V) : IsSubstring x (u ++ x ++ v) := by
-  right; right; right; left; use u, v
+  grind [IsSubstring]
 
 @[refl, simp]
 lemma IsPrefix.refl (x : V) : x ◨ x := Or.inl rfl
@@ -462,18 +437,12 @@ open ConcatenationStructure ConcatenationEmptyStructure
 variable {V : Type*} [ConcatenationEmptyStructure V] {ξ : Type*} {n : ℕ} {e : Fin n → V} {ε : ξ → V}
   {x y : V}
 
-lemma val_biteral_empty (u : FreeSemigroup Bool) :
-    (biteral u : Semiterm ℒ⌢ₑ ξ n).val e ε = ofFreeSemigroup u := by
-  have hb (b : Bool) : (letter b : Semiterm ℒ⌢ₑ ξ n).val e ε = if b then 1 else 0 := by
-    cases b <;> simp [letter]
-  simp [biteral, ofFreeSemigroup, hb]
-
 @[simp]
 lemma val_biteralEmpty (l : List Bool) :
     (biteralEmpty l : Semiterm ℒ⌢ₑ ξ n).val e ε = ofList l := by
-  cases l
-  · simp [biteralEmpty, ofList]
-  · simp [biteralEmpty, ofList, val_biteral_empty]
+  have hb (b : Bool) : (letter b : Semiterm ℒ⌢ₑ ξ n).val e ε = if b then 1 else 0 := by
+    cases b <;> simp [letter]
+  cases l <;> simp [biteralEmpty, ofList, biteral, ofFreeSemigroup, hb]
 
 end eval
 

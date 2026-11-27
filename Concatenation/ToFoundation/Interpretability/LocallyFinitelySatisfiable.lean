@@ -32,10 +32,6 @@ def HasFiniteModel (T : Theory L) : Prop :=
 -/
 def LocallyFinitelySatisfiable (T : Theory L) : Prop := ∀ F ⊆ T, F.Finite → F.HasFiniteModel
 
-lemma HasFiniteModel.of_weakerThan (h : U.HasFiniteModel) (hT : T ⪯ U) : T.HasFiniteModel :=
-  let ⟨V, hV, hf, s, hU⟩ := h
-  ⟨V, hV, hf, s, models_of_subtheory hU⟩
-
 /-- A finite model can be taken to interpret the equality symbol as equality. -/
 lemma HasFiniteModel.exists_eq [L.Eq] [𝗘𝗤 L ⪯ T] (h : T.HasFiniteModel) :
     ∃ (V : Type) (_ : Nonempty V) (_ : Finite V) (_ : Tarski.Structure L V)
@@ -45,9 +41,6 @@ lemma HasFiniteModel.exists_eq [L.Eq] [𝗘𝗤 L ⪯ T] (h : T.HasFiniteModel) 
   exact ⟨Tarski.Structure.Eq.QuotEq L V, inferInstance,
     inferInstanceAs (Finite (Quotient (Tarski.Structure.Eq.eqvSetoid L V))), inferInstance,
     inferInstance, (Tarski.Structure.Eq.QuotEq.elementaryEquiv L V).modelsTheory.mpr hT⟩
-
-lemma LocallyFinitelySatisfiable.of_subset (h : U.LocallyFinitelySatisfiable) (hT : T ⊆ U) :
-    T.LocallyFinitelySatisfiable := fun F hF ↦ h F (hF.trans hT)
 
 /--
 A theory each of whose axioms holds in all but finitely many of the finite structures `V 0`,

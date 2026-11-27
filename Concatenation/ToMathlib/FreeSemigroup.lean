@@ -78,32 +78,6 @@ def prefixes (x : FreeSemigroup α) : List (FreeSemigroup α) := x.toList.inits.
 def substrings (x : FreeSemigroup α) : List (FreeSemigroup α) :=
   x.toList.tails.flatMap fun l ↦ l.inits.filterMap ofList?
 
-lemma mem_prefixes_iff : y ∈ x.prefixes ↔ y = x ∨ ∃ z, x = y * z := by
-  simp only [prefixes, List.mem_filterMap, List.mem_inits, ofList?_eq_some_iff, exists_eq_right]
-  constructor
-  · rintro ⟨l, hl⟩
-    rcases eq_nil_or_exists_toList l with rfl | ⟨z, rfl⟩
-    · exact .inl <| toList_injective <| by simpa using hl
-    · exact .inr ⟨z, toList_injective hl.symm⟩
-  · rintro (rfl | ⟨z, rfl⟩) <;> simp
-
-lemma mem_substrings_iff :
-    y ∈ x.substrings ↔
-      y = x ∨ (∃ u, x = u * y) ∨ (∃ v, x = y * v) ∨ ∃ u v, x = u * y * v := by
-  have h : y ∈ x.substrings ↔ y.toList <:+: x.toList := by
-    simp [substrings, List.infix_iff_prefix_suffix, and_comm]
-  rw [h]
-  constructor
-  · rintro ⟨s, t, e⟩
-    rcases eq_nil_or_exists_toList s with rfl | ⟨u, rfl⟩ <;>
-    rcases eq_nil_or_exists_toList t with rfl | ⟨v, rfl⟩
-    · exact .inl <| toList_injective <| by simpa using e
-    · exact .inr <| .inr <| .inl ⟨v, toList_injective <| by simpa using e.symm⟩
-    · exact .inr <| .inl ⟨u, toList_injective <| by simpa using e.symm⟩
-    · exact .inr <| .inr <| .inr ⟨u, v, toList_injective <| by simpa using e.symm⟩
-  · rintro (rfl | ⟨u, rfl⟩ | ⟨v, rfl⟩ | ⟨u, v, rfl⟩) <;>
-      simp [List.infix_append_left, List.infix_append_right]
-
 lemma finite_length_le [Finite α] (n : ℕ) : {x : FreeSemigroup α | x.length ≤ n}.Finite :=
   ((List.finite_length_le α n).preimage toList_injective.injOn).subset
     fun x hx ↦ by simpa [toList, length] using hx

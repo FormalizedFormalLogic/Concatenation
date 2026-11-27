@@ -68,10 +68,6 @@ instance (k) : Encodable (Concatenation.Rel k) where
     | _, _ => none
   encodek x := by rcases x; simp
 
-instance : (ℒ⌢).DecidableEq := ⟨fun _ ↦ inferInstance, fun _ ↦ inferInstance⟩
-
-instance : (ℒ⌢).Encodable := ⟨fun _ ↦ inferInstance, fun _ ↦ inferInstance⟩
-
 instance : (ℒ⌢).Finite where
   func := ⟨{⟨0, .zero⟩, ⟨0, .one⟩, ⟨2, .concat⟩}, by rintro ⟨_, _ | _ | _⟩ <;> simp⟩
   rel := ⟨{⟨2, .eq⟩}, by rintro ⟨_, _ | _⟩; simp⟩
@@ -118,8 +114,6 @@ instance [Encodable α] (k) : Encodable (ConcatenationLettersFunc α k) where
     | 2, 0 => some .concat
     | _, _ => none
   encodek x := by rcases x <;> simp
-
-instance [Encodable α] : (ℒ⌢[α]).Encodable := ⟨fun _ ↦ inferInstance, fun _ ↦ inferInstance⟩
 
 instance : (ℒ⌢[α]).Concat := ⟨.concat⟩
 
@@ -213,8 +207,6 @@ instance : Encodable ((ℒ⌢ₑ).Func k) :=
 
 instance : Encodable ((ℒ⌢ₑ).Rel k) := inferInstanceAs (Encodable (Concatenation.Rel k ⊕ PEmpty))
 
-instance : (ℒ⌢ₑ).Encodable := ⟨fun _ ↦ inferInstance, fun _ ↦ inferInstance⟩
-
 instance : (ℒ⌢ₑ).Finite where
   func :=
     have : DecidableEq ((k : ℕ) × (ℒ⌢ₑ).Func k) := inferInstance
@@ -241,8 +233,6 @@ end
 end Language
 
 abbrev ConcatenationTheory := Theory ℒ⌢
-
-abbrev ConcatenationSemisentence (n : ℕ) := Semisentence ℒ⌢ n
 
 abbrev ConcatenationSentence := Sentence ℒ⌢
 

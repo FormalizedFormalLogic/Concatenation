@@ -1,7 +1,6 @@
 module
 
 public import Concatenation.ToFoundation.Arithmetic.Pairing
-public import Concatenation.ToMathlib.Nat
 public import Foundation.FirstOrder.Syntax.Classical.PrimrecCoding
 
 /-!
@@ -23,7 +22,7 @@ def witnessName (p s : ℕ) : ℕ := mkPair (mkPair 0 p) s
 /-- The name of the value of the function symbol of code `f` and arity `k`. -/
 def funcName (k f d : ℕ) : ℕ := mkPair (mkPair 1 (mkPair k f)) d
 
-variable {L : Language} [L.Encodable] {V : Type*} [Nonempty V] [Tarski.Structure L V]
+variable {L : Language} [L.Encodable] {V : Type*} [Tarski.Structure L V]
 
 /--
 `val` names the elements of `V` by the numbers: it maps the names of witnesses to witnesses and
@@ -36,7 +35,7 @@ structure IsNaming (L : Language) [L.Encodable] {V : Type*} [Nonempty V] [Tarski
   func : ∀ {k} (f : L.Func k) (v : Fin k → ℕ),
     val (funcName k (encode f) (envCode v)) = Tarski.Structure.func f (val ∘ v)
 
-variable (L V) in
+variable (L V) [Nonempty V] in
 lemma exists_isNaming : ∃ val : ℕ → V, IsNaming L val := by
   have (e : ℕ) (u : ℕ → V) : ∃ b : V,
       (∀ n (φ : Semisentence L (n + 1)) (v : Fin n → ℕ),
@@ -83,7 +82,17 @@ lemma exists_isNaming : ∃ val : ℕ → V, IsNaming L val := by
       · use Classical.arbitrary V
         exact ⟨fun n φ v h ↦ absurd ⟨n, φ, v, h⟩ h₁, fun k f v h ↦ absurd ⟨k, f, v, h⟩ h₂⟩
   choose g hg₁ hg₂ using this
-  obtain ⟨val, hval⟩ := Nat.exists_strongRec g
+  obtain ⟨val, hval⟩ : ∃ val : ℕ → V, ∀ e, ∃ u : ℕ → V, (∀ i < e, u i = val i) ∧ val e = g e u := by
+    classical
+    let val : ℕ → V := Nat.lt_wfRel.wf.fix fun e ih ↦
+      g e fun i ↦ if h : i < e then ih i h else Classical.arbitrary V
+    use val
+    intro e
+    use fun i ↦ if i < e then val i else Classical.arbitrary V
+    constructor
+    · intro i hi
+      simp [hi]
+    · exact Nat.lt_wfRel.wf.fix_eq _ e
   have comp {n e : ℕ} {u : ℕ → V} (hu : ∀ i < e, u i = val i) (v : Fin n → ℕ)
       (h : envCode v < e) : u ∘ v = val ∘ v :=
     funext fun i ↦ hu (v i) <| (lt_envCode i).trans h
@@ -109,17 +118,14 @@ def IsEnv (val : ℕ → V) (n s : ℕ) : Prop :=
 
 variable {val : ℕ → V} {a b n s : ℕ}
 
-omit [Nonempty V] in
 @[grind .]
 lemma IsCanonical.zero : IsCanonical val 0 := by
   simp [IsCanonical]
 
-omit [Nonempty V] in
 lemma IsCanonical.eq (ha : IsCanonical val a) (hb : IsCanonical val b) (h : val a = val b) :
     a = b := by
   grind [IsCanonical]
 
-omit [Nonempty V] in
 variable (val) in
 lemma exists_isCanonical (a : ℕ) : ∃ b ≤ a, IsCanonical val b ∧ val b = val a := by
   classical
@@ -127,7 +133,6 @@ lemma exists_isCanonical (a : ℕ) : ∃ b ≤ a, IsCanonical val b ∧ val b = 
   exact ⟨Nat.find h, Nat.find_min' h rfl,
     fun b hb H ↦ Nat.find_min h hb (H.trans <| Nat.find_spec h), Nat.find_spec h⟩
 
-omit [Nonempty V] in
 variable (val) in
 lemma exists_isCanonical_le [Finite V] : ∃ D, ∀ a, IsCanonical val a → a ≤ D := by
   have : {a | IsCanonical val a}.Finite :=
@@ -135,14 +140,12 @@ lemma exists_isCanonical_le [Finite V] : ∃ D, ∀ a, IsCanonical val a → a �
   obtain ⟨D, hD⟩ := this.bddAbove
   exact ⟨D, fun a ha ↦ hD ha⟩
 
-omit [Nonempty V] in
 lemma IsEnv.cons (ha : IsCanonical val a) (hs : IsEnv val n s) :
     IsEnv val (n + 1) (mkPair a s) := by
   obtain ⟨v, hv, rfl⟩ := hs
   use a :> v
   simpa [Fin.forall_fin_succ] using ⟨ha, hv⟩
 
-omit [Nonempty V] in
 variable (val) in
 lemma exists_isEnv_le [Finite V] (N : ℕ) : ∃ B, ∀ n ≤ N, ∀ s, IsEnv val n s → s ≤ B := by
   obtain ⟨D, hD⟩ := exists_isCanonical_le val

@@ -8,8 +8,7 @@ public import Foundation.FirstOrder.Syntax.Classical.PrimrecCoding
 /-!
 # Codes of formulas
 
-Quantifying and casting the bound variables of formulas are primitive recursive, and the internal
-substitution of a closed term agrees with the substitution.
+Quantifying and casting the bound variables of formulas are primitive recursive.
 -/
 
 @[expose] public section
@@ -29,9 +28,9 @@ lemma Semiterm.encode_castLE (h : n ≤ n') (t : Semiterm L ξ n) :
   simp only [encode_eq_toNat]
   induction t <;> simp [toNat, Rew.func, toNat_func, *]
 
-lemma Semiformula.encode_castLE (φ : Semiformula L ξ n) :
-    ∀ {n' : ℕ} (h : n ≤ n'), encode (Rew.castLE h ▹ φ) = encode φ := by
-  induction φ using rec' <;> intro n' h <;>
+lemma Semiformula.encode_castLE (h : n ≤ n') (φ : Semiformula L ξ n) :
+    encode (Rew.castLE h ▹ φ) = encode φ := by
+  induction φ using rec' generalizing n' <;>
     simp [encode_rel, encode_nrel, encode_verum, encode_falsum, encode_and, encode_or, encode_all,
       encode_ex, Function.comp_def, Semiterm.encode_castLE, ← encode_eq_toNat, *]
 
@@ -151,7 +150,7 @@ lemma primrec_ex : Primrec fun φ : Semiformula L ξ (n + 1) ↦ ∃¹ φ :=
 
 lemma primrec_castLE (h : n ≤ n') :
     Primrec fun φ : Semiformula L ξ n ↦ (Rew.castLE h ▹ φ : Semiformula L ξ n') :=
-  Primrec.encode_iff.mp <| Primrec.encode.of_eq fun φ ↦ (encode_castLE φ h).symm
+  Primrec.encode_iff.mp <| Primrec.encode.of_eq fun φ ↦ (encode_castLE h φ).symm
 
 end Semiformula
 
@@ -164,18 +163,6 @@ lemma Theory.RE.range [L.DecidableEq] {f : ℕ → Sentence L} (hf : Primrec f) 
 end
 
 end FFL.FirstOrder
-
-namespace FFL.FirstOrder.Arithmetic.Bootstrapping
-
-variable {V : Type*} [ORingStructure V] [V↓[ℒₒᵣ] ⊧* 𝗜𝚺₁] {L : Language} [L.Encodable]
-  [L.LORDefinable]
-
-lemma substs1_app_quote (σ : Semisentence L 1) (t : ClosedSemiterm L 0) :
-    substs1 L (⌜t⌝ : V) ⌜σ⌝ = ⌜(σ/[t] : Sentence L)⌝ := by
-  simp [substs1, Sentence.quote_def, Semiformula.quote_def, Rewriting.emb_subst_eq_subst_coe₁]
-  rfl
-
-end FFL.FirstOrder.Arithmetic.Bootstrapping
 
 namespace FFL.FirstOrder.Arithmetic
 

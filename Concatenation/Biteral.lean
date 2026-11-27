@@ -29,7 +29,7 @@ def letter : Bool → Semiterm L ξ n
 The canonical term of a nonempty binary string, associated to the left.
 - [Mur22, §2]
 -/
-def biteral (α : FreeSemigroup Bool) : Semiterm L ξ n := stringTerm letter α
+def biteral (x : FreeSemigroup Bool) : Semiterm L ξ n := stringTerm letter x
 
 /--
 The canonical term of a possibly empty binary string.
@@ -67,8 +67,9 @@ def substringBounding (L : Language) [L.Eq] [L.Concat] : Bounding L := ⟨{subst
 @[inherit_doc]
 scoped notation "ℬ[⊑, " L "]" => substringBounding L
 
+omit [L.Zero] [L.One] in
 @[simp]
-lemma mem_substringBounding_iff {R : Semiformula.Operator ℒ⌢ 2} :
-    R ∈ ℬ[⊑, ℒ⌢] ↔ R = substringOperator ℒ⌢ := Iff.rfl
+lemma mem_substringBounding_iff {R : Semiformula.Operator L 2} :
+    R ∈ ℬ[⊑, L] ↔ R = substringOperator L := Iff.rfl
 
 end FFL.FirstOrder.Concatenation

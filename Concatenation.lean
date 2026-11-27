@@ -10,6 +10,7 @@ public import Concatenation.Language
 public import Concatenation.OpenProblem
 public import Concatenation.OpenProblem.Attribute
 public import Concatenation.QT.Basic
+public import Concatenation.Semantics.AtomicPairing
 public import Concatenation.Semantics.Basic
 public import Concatenation.Seq.Basic
 public import Concatenation.Seq.Interpretability

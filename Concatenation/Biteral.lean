@@ -57,19 +57,17 @@ def isSubstring : Semisentence L 2 :=
 def substringOperator (L : Language) [L.Eq] [L.Concat] : Semiformula.Operator L 2 := ⟨isSubstring⟩
 
 /--
-Quantifiers bounded by the substring relation. `ℬ[⊑, L].PrenexHierarchy 𝚺 0` is the class
-of $\Sigma_0$ formulas, and `ℬ[⊑, L].PrenexHierarchy 𝚺 1` the class of $\Sigma_1$ formulas.
+Quantifiers bounded by the substring relation. `(substringBounding L).PrenexHierarchy 𝚺 0` is the
+class of $\Sigma_0$ formulas, and `(substringBounding L).PrenexHierarchy 𝚺 1` the class of
+$\Sigma_1$ formulas.
 - [Hor11, §3]
 - [Hor12, §3]
 -/
 def substringBounding (L : Language) [L.Eq] [L.Concat] : Bounding L := ⟨{substringOperator L}⟩
 
-@[inherit_doc]
-scoped notation "ℬ[⊑, " L "]" => substringBounding L
-
 omit [L.Zero] [L.One] in
 @[simp]
 lemma mem_substringBounding_iff {R : Semiformula.Operator L 2} :
-    R ∈ ℬ[⊑, L] ↔ R = substringOperator L := Iff.rfl
+    R ∈ substringBounding L ↔ R = substringOperator L := Iff.rfl
 
 end FFL.FirstOrder.Concatenation

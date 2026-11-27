@@ -131,7 +131,7 @@ instance isSuffixEmpty_definable : ℒ⌢ₑ-relation[V] IsSuffix := isSuffixEmp
 - [Hor11, §2, Theorem 2.12]
 - [Gan09, §4, Lemma 8]
 -/
-def IsTame (x : V) : Prop := ∀ u y, u ++ x ◧ y → x ◧ y ∨ y ◧ x
+def IsTame (x : V) : Prop := ∀ u y, y ◧ u ++ x → y ◧ x ∨ x ◧ y
 
 /--
 `x` is tame: every suffix of a string that ends with `x` is comparable with `x`.
@@ -146,7 +146,7 @@ instance isTame_defined : ℒ⌢ₑ-predicate[V] IsTame via isTame := ⟨fun v �
 instance isTame_definable : ℒ⌢ₑ-predicate[V] IsTame := isTame_defined.to_definable
 
 /-- Every suffix of `x` is tame. -/
-def IsHereditarilyTame (x : V) : Prop := ∀ y, x ◧ y → IsTame y
+def IsHereditarilyTame (x : V) : Prop := ∀ y, y ◧ x → IsTame y
 
 /-- Every suffix of `x` is tame. -/
 def isHereditarilyTame : Semisentence ℒ⌢ₑ 1 := “x. ∀ y, !isSuffixEmpty y x → !isTame y”
@@ -165,7 +165,7 @@ namespace F
 
 variable {V : Type*} [ConcatenationEmptyStructure V] [V↓[ℒ⌢ₑ] ⊧* 𝗙] {x y z w : V}
 
-lemma isSuffix_iff : y ◧ x ↔ ∃ u, y = u ++ x := by
+lemma isSuffix_iff : x ◧ y ↔ ∃ u, y = u ++ x := by
   constructor
   · rintro (rfl | h)
     · use ∅
@@ -173,15 +173,15 @@ lemma isSuffix_iff : y ◧ x ↔ ∃ u, y = u ++ x := by
     · exact h
   · exact Or.inr
 
-lemma isSuffix_trans (hxy : z ◧ y) (hyx : y ◧ x) : z ◧ x := by
-  obtain ⟨u, rfl⟩ := isSuffix_iff.mp hxy
-  obtain ⟨v, rfl⟩ := isSuffix_iff.mp hyx
+lemma isSuffix_trans (hyz : y ◧ z) (hxy : x ◧ y) : x ◧ z := by
+  obtain ⟨u, rfl⟩ := isSuffix_iff.mp hyz
+  obtain ⟨v, rfl⟩ := isSuffix_iff.mp hxy
   simp [← F.append_assoc]
 
 @[simp]
-lemma isSuffix_empty (x : V) : x ◧ ∅ := isSuffix_iff.mpr ⟨x, by simp⟩
+lemma isSuffix_empty (x : V) : ∅ ◧ x := isSuffix_iff.mpr ⟨x, by simp⟩
 
-lemma isSuffix_append_right_iff : y ++ z ◧ x ++ z ↔ y ◧ x := by
+lemma isSuffix_append_right_iff : x ++ z ◧ y ++ z ↔ x ◧ y := by
   simp only [isSuffix_iff, ← F.append_assoc]
   exact exists_congr fun u ↦ ⟨F.append_right_cancel, congrArg (· ++ z)⟩
 
@@ -207,7 +207,7 @@ lemma isTame_append (hx : IsTame x) (hy : IsTame y) : IsTame (x ++ y) := by
   · obtain ⟨v, rfl⟩ := isSuffix_iff.mp h
     simpa only [isSuffix_append_right_iff] using hx u v (isSuffix_append_right_iff.mp hz)
 
-lemma isHereditarilyTame_of_isSuffix (hx : IsHereditarilyTame x) (h : x ◧ y) :
+lemma isHereditarilyTame_of_isSuffix (hx : IsHereditarilyTame x) (h : y ◧ x) :
     IsHereditarilyTame y := fun z hz ↦ hx z <| isSuffix_trans h hz
 
 lemma isHereditarilyTame_empty : IsHereditarilyTame (∅ : V) := by

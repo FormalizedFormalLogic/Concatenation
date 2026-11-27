@@ -47,7 +47,7 @@ instance isPair_definable : ℒ⌢-predicate[V] IsPair := isPair_defined.to_defi
 @[mk_iff]
 structure IsSeq (z : V) : Prop where
   isPrefix : 0 ++ 0 ++ 1 ◨ z
-  isSuffix : z ◧ 1 ++ 0 ++ 0
+  isSuffix : 1 ++ 0 ++ 0 ◧ z
   eq_of_isTally : ∀ y, IsTally 0 y → IsSubstring y z → y = 0 ∨ y = 0 ++ 0
 
 /-- `z` is a sequence. -/
@@ -115,7 +115,7 @@ instance isFirst_definable : ℒ⌢-relation[V] IsFirst := isFirst_defined.to_de
 `u` is the last member of `z`.
 - [Gan09, §1, Definition 1(f)]
 -/
-def IsLast (u z : V) : Prop := z ◧ 0 ++ 0 ++ u ++ 0 ++ 0
+def IsLast (u z : V) : Prop := 0 ++ 0 ++ u ++ 0 ++ 0 ◧ z
 
 /-- `u` is the last member of `z`. -/
 def isLast : Semisentence ℒ⌢ 2 :=
@@ -143,7 +143,7 @@ structure IsMulSeq (x y z : V) : Prop where
   exists_isLast : ∃ w, IsTally 1 w ∧ IsLast (pairOf w y) z
   exists_pred : ∀ s u' v', IsTally 1 u' → IsTally 1 v' →
     s ++ 0 ++ 0 ++ pairOf u' v' ++ 0 ++ 0 ◨ z →
-    ∃ u v, IsTally 1 u ∧ IsTally 1 v ∧ u' = u ++ x ∧ v' = v ++ 1 ∧ s ◧ 0 ++ 0 ++ pairOf u v
+    ∃ u v, IsTally 1 u ∧ IsTally 1 v ∧ u' = u ++ x ∧ v' = v ++ 1 ∧ 0 ++ 0 ++ pairOf u v ◧ s
 
 /-- `z` is a multiplication sequence for the `1`-tallies `x` and `y`. -/
 def isMulSeq : Semisentence ℒ⌢ 3 :=
@@ -169,7 +169,7 @@ section separation
 variable {V : Type*} [ConcatenationStructure V] {c d s s' t u v u' v' x x' y y' z z' : V}
   [V↓[ℒ⌢] ⊧* 𝗧𝗖⁺]
 
-lemma exists_isSuffix_isAtom (x : V) : ∃ c, IsAtom c ∧ x ◧ c := by
+lemma exists_isSuffix_isAtom (x : V) : ∃ c, IsAtom c ∧ c ◧ x := by
   rcases TCPlus.isBounded x with hx | ⟨-, c, z, hc, rfl⟩
   · use x
   · use c
@@ -181,7 +181,7 @@ lemma exists_isPrefix_isAtom (x : V) : ∃ c, IsAtom c ∧ c ◨ x := by
   · use c
     simp [hc]
 
-lemma IsTally.isSuffix (hx : IsTally c x) : x ◧ c := by
+lemma IsTally.isSuffix (hx : IsTally c x) : c ◧ x := by
   obtain ⟨d, hd, h⟩ := exists_isSuffix_isAtom x
   rwa [← hx d hd h.isSubstring]
 
@@ -200,7 +200,7 @@ lemma IsPrefix.isPrefix_of_isAtom (ht : t ◨ z) (hc : IsAtom c) (hz : c ◨ z) 
   obtain ⟨e, he, het⟩ := exists_isPrefix_isAtom t
   rwa [← (het.trans ht).eq_of_isAtom he hc hz]
 
-lemma IsSuffix.isSuffix_of_isAtom (ht : z ◧ t) (hc : IsAtom c) (hz : z ◧ c) : t ◧ c := by
+lemma IsSuffix.isSuffix_of_isAtom (ht : t ◧ z) (hc : IsAtom c) (hz : c ◧ z) : c ◧ t := by
   obtain ⟨e, he, het⟩ := exists_isSuffix_isAtom t
   rwa [← (het.trans ht).eq_of_isAtom he hc hz]
 
@@ -212,7 +212,7 @@ lemma IsTally.not_isSubstring_of_isTally_one (ht : IsTally 0 t) (hx : IsTally 1 
     ¬IsSubstring t x := fun h ↦ Concatenation.zero_ne_one <| ht.eq_of_isTally <| hx.of_isSubstring h
 
 lemma IsTally.isSubstring_or_isSubstring (ht : IsTally 0 t) (h : IsSubstring t (x ++ y))
-    (hxy : x ◧ 1 ∨ 1 ◨ y) : IsSubstring t x ∨ IsSubstring t y := by
+    (hxy : 1 ◧ x ∨ 1 ◨ y) : IsSubstring t x ∨ IsSubstring t y := by
   rcases h.append_cases with h | h | ⟨t₁, t₂, rfl, h₁, h₂⟩
   · exact Or.inl h
   · exact Or.inr h
@@ -227,11 +227,11 @@ are `c`-tallies and `z`, `z'` end with `d`, then `z ++ x = z' ++ y` implies `z =
 - [Gan09, §3, Lemma 7]
 -/
 lemma tally_separation_of_ne (hd : IsAtom d) (hdc : d ≠ c) (hx : IsTally c x) (hy : IsTally c y)
-    (hz : z ◧ d) (hz' : z' ◧ d) (h : z ++ x = z' ++ y) : z = z' ∧ x = y := by
-  have H : ∀ {z z' x y : V}, IsTally c x → z' ◧ d → ∀ w, z ++ w = z' → x ≠ w ++ y := by
+    (hz : d ◧ z) (hz' : d ◧ z') (h : z ++ x = z' ++ y) : z = z' ∧ x = y := by
+  have H : ∀ {z z' x y : V}, IsTally c x → d ◧ z' → ∀ w, z ++ w = z' → x ≠ w ++ y := by
     intro z z' x y hx hz' w hw hxw
     obtain ⟨e, he, hew⟩ := exists_isSuffix_isAtom w
-    have h₁ : z' ◧ e := hw ▸ hew.append_left
+    have h₁ : e ◧ z' := hw ▸ hew.append_left
     obtain rfl := h₁.eq_of_isAtom he hd hz'
     exact hdc <| hx e he <| hxw ▸ hew.isSubstring.append_right
   rcases editor h with h | ⟨w, ⟨hw, hxw⟩ | ⟨hw, hyw⟩⟩
@@ -242,8 +242,8 @@ If `x` and `y` are `1`-tallies and `z`, `z'` end with `0`, then `z ++ x = z' ++ 
 and `x = y`.
 - [Gan09, §3, Lemma 7]
 -/
-lemma tally_separation (hx : IsTally 1 x) (hy : IsTally 1 y) (hz : z ◧ 0)
-    (hz' : z' ◧ 0) (h : z ++ x = z' ++ y) : z = z' ∧ x = y :=
+lemma tally_separation (hx : IsTally 1 x) (hy : IsTally 1 y) (hz : 0 ◧ z)
+    (hz' : 0 ◧ z') (h : z ++ x = z' ++ y) : z = z' ∧ x = y :=
   tally_separation_of_ne isAtom_zero Concatenation.zero_ne_one hx hy hz hz' h
 
 /--
@@ -270,7 +270,7 @@ For `1`-tallies `u`, `v`, `u'`, `v'` and strings `s`, `s'` ending with `0`, the 
 `s u 0 v 0 0` determines `s`, `u` and `v`.
 - [Gan09, §3]
 -/
-lemma configuration_eq_of_isSuffix (hs : s ◧ 0) (hs' : s' ◧ 0)
+lemma configuration_eq_of_isSuffix (hs : 0 ◧ s) (hs' : 0 ◧ s')
     (h : s ++ (pairOf u v ++ 0 ++ 0) = s' ++ (pairOf u' v' ++ 0 ++ 0)) :
     s = s' ∧ u = u' ∧ v = v' := by
   simp only [pairOf, ← Concatenation.append_assoc] at h
@@ -342,7 +342,7 @@ lemma eq_zero_or_eq_zero_zero_of_isSubstring_pairOf (ht : IsTally 0 t)
 lemma not_isSubstring_zero_zero_append_pairOf :
     ¬IsSubstring (0 ++ 0 ++ z) (pairOf p q ++ 0 ++ 0) := by
   have h0 : IsAtom (0 : V) := isAtom_zero
-  have H : ∀ {r t₁ t₂ : V}, IsTally 1 r → r ◧ t₁ → 0 ++ (0 ++ z) = t₁ ++ t₂ → False := by
+  have H : ∀ {r t₁ t₂ : V}, IsTally 1 r → t₁ ◧ r → 0 ++ (0 ++ z) = t₁ ++ t₂ → False := by
     intro r t₁ t₂ hr h₁ he
     have h₂ : 0 ◨ t₁ := (isPrefix_append t₁ t₂).isPrefix_of_isAtom h0
       (he ▸ isPrefix_append 0 (0 ++ z))
@@ -372,13 +372,13 @@ lemma eq_of_isPrefix_pairOf (h : k ++ 0 ++ 0 ◨ pairOf p q ++ 0 ++ 0) : k = pai
     rw [h]
     simp [Concatenation.append_assoc]
 
-lemma eq_of_isSuffix_of_isPrefix_pairOf (h : z ++ 0 ++ 0 ◧ k)
+lemma eq_of_isSuffix_of_isPrefix_pairOf (h : k ◧ z ++ 0 ++ 0)
     (h' : k ◨ pairOf p q ++ 0 ++ 0) : k = pairOf p q ++ 0 ++ 0 := by
   have h1 : 1 ◨ k :=
     h'.isPrefix_of_isAtom isAtom_one hp.isPrefix_pairOf_append
   have hn : ¬IsSubstring k (0 ++ 0) := fun h ↦
     (isTally_zero_zero.of_isSubstring h).not_isSubstring_one h1.isSubstring
-  have h00 : z ++ 0 ++ 0 ◧ 0 ++ 0 := by
+  have h00 : 0 ++ 0 ◧ z ++ 0 ++ 0 := by
     right; use z; simp [Concatenation.append_assoc]
   rcases h.total h00 with h | h | ⟨j, rfl⟩
   · exact absurd h.isSubstring hn
@@ -400,7 +400,7 @@ lemma isPrefix_append_pairOf_cases (h : z ++ 0 ++ 0 ◨ x ++ (pairOf p q ++ 0 ++
 lemma isSubstring_append_pairOf_cases
     (h : IsSubstring (0 ++ 0 ++ z ++ 0 ++ 0) (x ++ (pairOf p q ++ 0 ++ 0))) :
     IsSubstring (0 ++ 0 ++ z ++ 0 ++ 0) x ∨
-      ∃ z₁, x ◧ z₁ ∧ 0 ++ 0 ++ z ++ 0 ++ 0 = z₁ ++ (pairOf p q ++ 0 ++ 0) := by
+      ∃ z₁, z₁ ◧ x ∧ 0 ++ 0 ++ z ++ 0 ++ 0 = z₁ ++ (pairOf p q ++ 0 ++ 0) := by
   rcases h.append_cases with h | h | ⟨z₁, z₂, he, h₁, h₂⟩
   · exact Or.inl h
   · apply absurd _ (not_isSubstring_zero_zero_append_pairOf (z := z ++ 0 ++ 0) hp hq)
@@ -412,8 +412,8 @@ lemma isSubstring_append_pairOf_cases
 
 end pairOf
 
-lemma isSubstring_zero_zero_of_isSuffix (hx : x ◧ 1 ++ 0 ++ 0)
-    (hu : x ◧ 0 ++ 0 ++ u) : IsSubstring (0 ++ 0) u := by
+lemma isSubstring_zero_zero_of_isSuffix (hx : 1 ++ 0 ++ 0 ◧ x)
+    (hu : 0 ++ 0 ++ u ◧ x) : IsSubstring (0 ++ 0) u := by
   have h0 : IsAtom (0 : V) := isAtom_zero
   have h100 : IsSubstring (0 ++ 0 : V) (1 ++ 0 ++ 0) := by
     simp [Concatenation.append_assoc]
@@ -444,12 +444,12 @@ lemma IsLast.pairOf_inj (hu : IsTally 1 u) (hv : IsTally 1 v) (hp : IsTally 1 p)
   · exact absurd h' (configuration_ne hp hq hu hv)
   · exact (configuration_eq hu hv hp hq h').2
 
-lemma IsSeq.isSuffix_zero_zero (h : IsSeq z) : z ◧ 0 ++ 0 := by
-  have h₁ : 1 ++ 0 ++ 0 ◧ (0 ++ 0 : V) := by
+lemma IsSeq.isSuffix_zero_zero (h : IsSeq z) : 0 ++ 0 ◧ z := by
+  have h₁ : (0 ++ 0 : V) ◧ 1 ++ 0 ++ 0 := by
     right; use 1; simp [Concatenation.append_assoc]
   exact h₁.trans h.isSuffix
 
-lemma isLast_append (h : z ◧ 0 ++ 0) : IsLast u (z ++ u ++ 0 ++ 0) := by
+lemma isLast_append (h : 0 ++ 0 ◧ z) : IsLast u (z ++ u ++ 0 ++ 0) := by
   grind [IsLast, IsSuffix, Concatenation.append_assoc]
 
 lemma IsFirst.of_append_pairOf (hp : IsTally 1 p) (hq : IsTally 1 q)
@@ -606,7 +606,7 @@ lemma IsPairSeq.of_append_pairOf (hs : IsPairSeq (k ++ 0 ++ 0 ++ pairOf a b ++ 0
     · exact fun t ht h ↦ hs.isSeq.eq_of_isTally t ht (h.trans hsub)
   exact ⟨hseq, fun v ⟨_, hv, h⟩ ↦ hs.2 v ⟨hs.isSeq, hv, h.trans hsub⟩⟩
 
-lemma IsLast.exists_eq_append (h : IsLast u z) : ∃ k, k ◧ 0 ++ 0 ++ u ∧ z = k ++ 0 ++ 0 := by
+lemma IsLast.exists_eq_append (h : IsLast u z) : ∃ k, 0 ++ 0 ++ u ◧ k ∧ z = k ++ 0 ++ 0 := by
   rcases h with rfl | ⟨k, rfl⟩
   · use 0 ++ 0 ++ u
   · use k ++ (0 ++ 0 ++ u)
@@ -703,7 +703,7 @@ theorem existsUnique_isMulSeq_succ_iff (hx : IsTally 1 x) : (∃! r, IsMulSeq x 
     apply ExistsUnique.intro r hr
     intro r' hr'
     obtain ⟨w', hw', hl'⟩ := hr'.exists_isLast
-    have H {r} (hr : IsMulSeq x y r) : r ◧ 0 :=
+    have H {r} (hr : IsMulSeq x y r) : 0 ◧ r :=
       (isSuffix_append (0 : V) 0).trans hr.isPairSeq.isSeq.isSuffix_zero_zero
     exact (configuration_eq_of_isSuffix (hw'.append hx) hs.isTally_right (hw.append hx)
       hs.isTally_right (H hr') (H hr) <| by

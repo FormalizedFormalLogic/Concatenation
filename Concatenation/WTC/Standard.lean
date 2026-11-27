@@ -179,7 +179,7 @@ def ofFreeSemigroupEmbedding (V : Type*) [ConcatenationStructure V] [V↓[ℒ⌢
 lemma ofFreeSemigroupEmbedding_apply (u : FreeSemigroup Bool) :
     ofFreeSemigroupEmbedding V u = ofFreeSemigroup u := rfl
 
-instance : ℬ[⊑, ℒ⌢].IsInitial (ofFreeSemigroupEmbedding V) where
+instance : (substringBounding ℒ⌢).IsInitial (ofFreeSemigroupEmbedding V) where
   operator_iff hR a b := by
     obtain rfl := mem_substringBounding_iff.mp hR
     simp
@@ -195,8 +195,9 @@ $\mathsf{WTC}$ proves the $\Sigma_1$ sentences true of the nonempty binary strin
 - [Hor11, §3, Theorem 3.8]
 - [Hor12, §3, Theorem 3.13]
 -/
-theorem sigma1_completeness {σ : ConcatenationSentence} (hσ : ℬ[⊑, ℒ⌢].Hierarchy 𝚺 1 σ)
-    (h : (FreeSemigroup Bool)↓[ℒ⌢] ⊧ σ) : 𝗪𝗧𝗖 ⊢ σ := by
+theorem sigma1_completeness {σ : ConcatenationSentence}
+    (hσ : (substringBounding ℒ⌢).Hierarchy 𝚺 1 σ) (h : (FreeSemigroup Bool)↓[ℒ⌢] ⊧ σ) :
+    𝗪𝗧𝗖 ⊢ σ := by
   apply complete.{0}
   intro V _ _
   simpa [models_iff, Matrix.empty_eq, Empty.eq_elim] using

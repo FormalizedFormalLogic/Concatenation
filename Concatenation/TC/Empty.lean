@@ -751,7 +751,7 @@ section option
 variable {V : Type*} [ConcatenationStructure V] {x y z : V}
 
 /-- Every suffix of `x` begins with the letter $0$. -/
-def SuffixesBeginWithZero (x : V) : Prop := ∀ y, x ◧ y → 0 ◨ y
+def SuffixesBeginWithZero (x : V) : Prop := ∀ y, y ◧ x → 0 ◨ y
 
 /-- Every suffix of `x` begins with the letter $0$. -/
 def suffixesBeginWithZero : Semisentence ℒ⌢ 1 :=

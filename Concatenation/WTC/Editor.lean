@@ -695,15 +695,8 @@ instance : Entailment.Complete (PairingTheory N) where
 
 /-- The theory of the structure of strings and formal pairs is decidable. -/
 theorem Pairing.decidable_theory (N : ℕ) :
-    Entailment.Decidable (Tarski.Structure.theory ℒ⌢ (Pairing N)) where
-  dec := by
-    have : (Pairing N)↓[ℒ⌢] ⊧* Tarski.Structure.theory ℒ⌢ (Pairing N) :=
-      models_theory_iff.mpr fun _ h ↦ h
-    apply (Theory.decidable_of_complete (PairingTheory N) inferInstance).dec.of_eq
-    intro σ
-    exact provable_pairingTheory_iff.trans
-      ⟨fun h ↦ (Entailment.by_axm h : Tarski.Structure.theory ℒ⌢ (Pairing N) ⊢ σ),
-        fun h ↦ consequence_iff'.mp (Theory.Proof.sound h) (Pairing N)⟩
+    Entailment.Decidable (Tarski.Structure.theory ℒ⌢ (Pairing N)) :=
+  Theory.decidable_theory_of_complete (PairingTheory N) (Pairing N) inferInstance
 
 end theory
 

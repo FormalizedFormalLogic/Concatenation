@@ -96,6 +96,22 @@ theorem decidable_of_complete (h : Entailment.Complete T) : Entailment.Decidable
         exact (h.con σ).resolve_left hσ
   · exact Entailment.decidable_of_incomplete <| Entailment.not_consistent_iff_inconsistent.mp hT
 
+/-- The theory of a model of a complete recursively enumerable theory is decidable. -/
+theorem decidable_theory_of_complete (V : Type*) [Nonempty V] [Tarski.Structure L V] [V↓[L] ⊧* T]
+    (h : Entailment.Complete T) : Entailment.Decidable (Tarski.Structure.theory L V) where
+  dec := by
+    have : V↓[L] ⊧* Tarski.Structure.theory L V := models_theory_iff.mpr fun _ h ↦ h
+    apply (decidable_of_complete T h).dec.of_eq
+    intro σ
+    change T ⊢ σ ↔ Tarski.Structure.theory L V ⊢ σ
+    constructor
+    · exact fun hσ ↦ Entailment.by_axm <| consequence_iff'.mp (Theory.Proof.sound hσ) V
+    · intro hσ
+      refine (h.con σ).resolve_right fun hn ↦ ?_
+      have h₁ := consequence_iff'.mp (Theory.Proof.sound hσ) V
+      have h₂ := consequence_iff'.mp (Theory.Proof.sound hn) V
+      simp_all [models_iff]
+
 end Theory
 
 end FFL.FirstOrder

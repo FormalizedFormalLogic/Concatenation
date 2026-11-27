@@ -200,6 +200,40 @@ lemma IsSubstring.of_forall_append {P : V → Prop} (hP : ∀ x y, P (x ++ y) �
     (h : IsSubstring x y) (hy : P y) : P x := by
   grind [IsSubstring]
 
+section image
+
+variable {β : Type*} {c : β → V} {w : β}
+  (hc : ∀ {x y : V} {w : β}, x ++ y = c w → ∃ u v, x = c u ∧ y = c v)
+include hc
+
+/-- If the parts of a concatenation in the range of `c` are in it, so are the substrings. -/
+lemma IsSubstring.exists_eq_of_append_eq (h : IsSubstring x (c w)) : ∃ u, x = c u :=
+  h.of_forall_append (P := fun x ↦ ∃ u, x = c u)
+    (fun _ _ ⟨_, h⟩ ↦ let ⟨u, v, hu, hv⟩ := hc h; ⟨⟨u, hu⟩, ⟨v, hv⟩⟩) ⟨w, rfl⟩
+
+lemma IsSubstring.exists_eq_append_of_append_eq (h : IsSubstring (x ++ y) (c w)) :
+    ∃ u v, x = c u ∧ y = c v :=
+  let ⟨_, h⟩ := h.exists_eq_of_append_eq hc
+  hc h
+
+/--
+The concatenation is associative on the substrings of the range of `c` if it is on the range and
+the parts of a concatenation in the range are in it.
+-/
+lemma append_assoc_of_isSubstring_of_append_eq
+    (hassoc : ∀ u v w, c u ++ c v ++ c w = c u ++ (c v ++ c w)) {z : V}
+    (h : IsSubstring (x ++ y ++ z) (c w) ∨ IsSubstring (x ++ (y ++ z)) (c w)) :
+    x ++ y ++ z = x ++ (y ++ z) := by
+  rcases h with h | h
+  · obtain ⟨a, r, ha, rfl⟩ := h.exists_eq_append_of_append_eq hc
+    obtain ⟨p, q, rfl, rfl⟩ := hc ha
+    exact hassoc p q r
+  · obtain ⟨p, a, rfl, ha⟩ := h.exists_eq_append_of_append_eq hc
+    obtain ⟨q, r, rfl, rfl⟩ := hc ha
+    exact hassoc p q r
+
+end image
+
 instance isSubstring_defined {L : Language} [L.Concat] [L.Eq] [Tarski.Structure L V]
     [Tarski.Structure.Concat L V] [Tarski.Structure.Eq L V] :
     L-relation[V] IsSubstring via isSubstring := ⟨fun v ↦ by

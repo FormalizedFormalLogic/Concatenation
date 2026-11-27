@@ -495,31 +495,15 @@ include hc
 lemma stringValue_eq (w : FreeSemigroup α) : FreeSemigroup.stringValue ofLetter w = c w :=
   FreeSemigroup.stringValue_eq_of_map_append hc.map_letter hc.map_append w
 
-lemma exists_of_isSubstring (h : IsSubstring x (c w)) : ∃ u, x = c u :=
-  h.of_forall_append (P := fun x ↦ ∃ u, x = c u)
-    (fun _ _ ⟨_, h⟩ ↦ let ⟨u, v, hu, hv⟩ := hc.exists_of_append_eq h; ⟨⟨u, hu⟩, ⟨v, hv⟩⟩) ⟨w, rfl⟩
-
-lemma exists_of_isSubstring_append (h : IsSubstring (x ++ y) (c w)) :
-    ∃ u v, x = c u ∧ y = c v := by
-  obtain ⟨w', hw'⟩ := hc.exists_of_isSubstring h
-  exact hc.exists_of_append_eq hw'
-
 lemma append_assoc_of_isSubstring {z : V}
     (h : IsSubstring (x ++ y ++ z) (c w) ∨ IsSubstring (x ++ (y ++ z)) (c w)) :
-    x ++ y ++ z = x ++ (y ++ z) := by
-  obtain ⟨u, v, w, rfl, rfl, rfl⟩ : ∃ u v w, x = c u ∧ y = c v ∧ z = c w := by
-    rcases h with h | h
-    · obtain ⟨a, e, ha, rfl⟩ := hc.exists_of_isSubstring_append h
-      obtain ⟨u, v, rfl, rfl⟩ := hc.exists_of_append_eq ha
-      use u, v, e
-    · obtain ⟨u, a, rfl, ha⟩ := hc.exists_of_isSubstring_append h
-      obtain ⟨v, e, rfl, rfl⟩ := hc.exists_of_append_eq ha
-      use u, v, e
-  simp only [← hc.map_append, FreeSemigroup.append_eq_mul, mul_assoc]
+    x ++ y ++ z = x ++ (y ++ z) :=
+  append_assoc_of_isSubstring_of_append_eq hc.exists_of_append_eq
+    (fun _ _ _ ↦ by simp only [← hc.map_append, FreeSemigroup.append_eq_mul, mul_assoc]) h
 
 lemma editor_of_isSubstring {s t : V} (h : x ++ y = s ++ t) (hw : IsSubstring (x ++ y) (c w)) :
     (x = s ∧ y = t) ∨ ∃ u, (x ++ u = s ∧ y = u ++ t) ∨ (x = s ++ u ∧ u ++ y = t) := by
-  obtain ⟨a, b, rfl, rfl⟩ := hc.exists_of_isSubstring_append hw
+  obtain ⟨a, b, rfl, rfl⟩ := hw.exists_eq_append_of_append_eq hc.exists_of_append_eq
   obtain ⟨d, e, rfl, rfl⟩ := hc.exists_of_append_eq (h.symm.trans (hc.map_append a b).symm)
   rw [← hc.map_append, ← hc.map_append, hc.injective.eq_iff] at h
   rcases FreeSemigroup.mul_eq_mul_iff.mp h with ⟨rfl, rfl⟩ | ⟨u, ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩⟩

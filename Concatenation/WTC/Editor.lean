@@ -194,13 +194,6 @@ lemma exists_of_append_eq (hu : u.length ≤ N + 1) (h : a ++ b = string u hu) :
   · exact ⟨x, y, hx, hy, rfl, rfl, by simpa [h'] using h⟩
   · simp [h'] at h
 
-lemma exists_of_isSubstring (hu : u.length ≤ N + 1) (h : IsSubstring a (string u hu)) :
-    ∃ x hx, a = string x hx := by
-  apply h.of_forall_append (P := fun a ↦ ∃ x hx, a = string x hx) _ ⟨u, hu, rfl⟩
-  rintro a b ⟨u, hu, h⟩
-  obtain ⟨x, y, hx, hy, rfl, rfl, -⟩ := exists_of_append_eq hu h
-  exact ⟨⟨x, hx, rfl⟩, ⟨y, hy, rfl⟩⟩
-
 lemma append_assoc_of_eq_string (hu : u.length ≤ N + 1)
     (h : a ++ b ++ c = string u hu ∨ a ++ (b ++ c) = string u hu) :
     a ++ b ++ c = a ++ (b ++ c) := by
@@ -225,7 +218,12 @@ lemma append_assoc_of_eq_string (hu : u.length ≤ N + 1)
 lemma append_assoc_of_isSubstring (hu : u.length ≤ N + 1)
     (h : IsSubstring (a ++ b ++ c) (string u hu) ∨ IsSubstring (a ++ (b ++ c)) (string u hu)) :
     a ++ b ++ c = a ++ (b ++ c) := by
-  rcases h with h | h <;> obtain ⟨v, hv, h⟩ := exists_of_isSubstring hu h
+  have hc {a b : PrePairing N} {w : {u : FreeSemigroup Bool // u.length ≤ N + 1}}
+      (h : a ++ b = string w.1 w.2) : ∃ x y : {u : FreeSemigroup Bool // u.length ≤ N + 1},
+        a = string x.1 x.2 ∧ b = string y.1 y.2 := by
+    obtain ⟨x, y, hx, hy, rfl, rfl, -⟩ := exists_of_append_eq w.2 h
+    exact ⟨⟨x, hx⟩, ⟨y, hy⟩, rfl, rfl⟩
+  rcases h with h | h <;> obtain ⟨⟨v, hv⟩, h⟩ := h.exists_eq_of_append_eq (w := ⟨u, hu⟩) hc
   exacts [append_assoc_of_eq_string hv <| .inl h, append_assoc_of_eq_string hv <| .inr h]
 
 lemma editor (h : a ++ b = c ++ d) :

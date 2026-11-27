@@ -62,34 +62,18 @@ lemma ofList_eq (u : List Bool) : ofList u = c u := by
     · exact hb b
     · rw [ofList_append_singleton hu, ih, hb, ← hc.map_append]
 
-lemma exists_of_isSubstring (h : IsSubstring x (c u)) : ∃ v, x = c v :=
-  h.of_forall_append (P := fun x ↦ ∃ v, x = c v)
-    (fun _ _ ⟨_, h⟩ ↦ let ⟨v, w, hv, hw⟩ := hc.exists_of_append_eq h; ⟨⟨v, hv⟩, ⟨w, hw⟩⟩) ⟨u, rfl⟩
-
-lemma exists_of_isSubstring_append (h : IsSubstring (x ++ y) (c u)) :
-    ∃ a b, x = c a ∧ y = c b := by
-  obtain ⟨v, hv⟩ := hc.exists_of_isSubstring h
-  exact hc.exists_of_append_eq hv
-
 lemma append_empty (u : List Bool) : c u ++ ∅ = c u := by simp [← hc.map_nil, ← hc.map_append]
 
 lemma empty_append (u : List Bool) : ∅ ++ c u = c u := by simp [← hc.map_nil, ← hc.map_append]
 
 lemma append_assoc_of_isSubstring (h : IsSubstring (x ++ y ++ z) (c u) ∨
-    IsSubstring (x ++ (y ++ z)) (c u)) : x ++ y ++ z = x ++ (y ++ z) := by
-  obtain ⟨p, q, r, rfl, rfl, rfl⟩ : ∃ p q r, x = c p ∧ y = c q ∧ z = c r := by
-    rcases h with h | h
-    · obtain ⟨a, r, ha, rfl⟩ := hc.exists_of_isSubstring_append h
-      obtain ⟨p, q, rfl, rfl⟩ := hc.exists_of_append_eq ha
-      use p, q, r
-    · obtain ⟨p, a, rfl, ha⟩ := hc.exists_of_isSubstring_append h
-      obtain ⟨q, r, rfl, rfl⟩ := hc.exists_of_append_eq ha
-      use p, q, r
-  simp only [← hc.map_append, List.append_assoc]
+    IsSubstring (x ++ (y ++ z)) (c u)) : x ++ y ++ z = x ++ (y ++ z) :=
+  append_assoc_of_isSubstring_of_append_eq hc.exists_of_append_eq
+    (fun _ _ _ ↦ by simp only [← hc.map_append, List.append_assoc]) h
 
 lemma editor_of_isSubstring (h : x ++ y = s ++ t) (hu : IsSubstring (x ++ y) (c u)) :
     ∃ w, (x ++ w = s ∧ y = w ++ t) ∨ (x = s ++ w ∧ w ++ y = t) := by
-  obtain ⟨p, q, rfl, rfl⟩ := hc.exists_of_isSubstring_append hu
+  obtain ⟨p, q, rfl, rfl⟩ := hu.exists_eq_append_of_append_eq hc.exists_of_append_eq
   obtain ⟨p', q', rfl, rfl⟩ := hc.exists_of_append_eq (h.symm.trans (hc.map_append p q).symm)
   rw [← hc.map_append, ← hc.map_append, hc.injective.eq_iff] at h
   rcases List.append_eq_append_iff.mp h with ⟨w, rfl, rfl⟩ | ⟨w, rfl, rfl⟩ <;>
@@ -109,7 +93,7 @@ lemma models_WTCEmpty : V↓[ℒ⌢ₑ] ⊧* 𝗪𝗧𝗖ₑ := by
   case emptyUnit u =>
     suffices ∀ x, IsSubstring x (ofList u) → x ++ ∅ = x ∧ ∅ ++ x = x by simpa [models_iff]
     intro x hx
-    obtain ⟨v, rfl⟩ := hc.exists_of_isSubstring (hc.ofList_eq u ▸ hx)
+    obtain ⟨v, rfl⟩ := (hc.ofList_eq u ▸ hx).exists_eq_of_append_eq hc.exists_of_append_eq
     exact ⟨hc.append_empty v, hc.empty_append v⟩
   case concatAssoc u =>
     suffices ∀ x y z : V, IsSubstring (x ++ y ++ z) (ofList u) ∨
@@ -458,8 +442,8 @@ instance [V↓[ℒ⌢ₑ] ⊧* 𝗪𝗧𝗖ₑ] : ((nonemptyTranslation 𝗪𝗧
     have h : (x : V) ++ (y : V) = (s : V) ++ (t : V) := congrArg Model.val h
     have hu : IsSubstring ((x : V) ++ (y : V)) (ofList u.toList) :=
       nonemptyTranslation.isSubstring_ofList_of_isSubstring hu
-    obtain ⟨p, q, hx, hy⟩ := hc.exists_of_isSubstring_append hu
-    obtain ⟨r, o, hs, ht⟩ := hc.exists_of_isSubstring_append (h ▸ hu)
+    obtain ⟨p, q, hx, hy⟩ := hu.exists_eq_append_of_append_eq hc.exists_of_append_eq
+    obtain ⟨r, o, hs, ht⟩ := (h ▸ hu).exists_eq_append_of_append_eq hc.exists_of_append_eq
     obtain ⟨w, hw⟩ := hc.editor_of_isSubstring h hu
     rcases Classical.em (w = ∅) with rfl | hw'
     · left

@@ -2,6 +2,8 @@ module
 
 public import Concatenation.F.Basic
 public import Concatenation.TC.Empty
+public import Concatenation.ToFoundation.Interpretability.DefinitionalEquivalence
+import Concatenation.OpenProblem
 
 /-!
 # Mutual interpretability of $\mathsf{F}$ and $\mathsf{TC}$
@@ -521,5 +523,21 @@ $\mathsf{F}$ is essentially undecidable.
 -/
 instance : 𝗙.EssentiallyUndecidable :=
   DirectInterpretation.essentiallyUndecidable (inferInstance : 𝗙 ⊳ 𝗧𝗖)
+
+/--
+Are $\mathsf{F}$ and $\mathsf{TC}$,
+which are mutually interpretable by the cited theorem, bi-interpretable?
+- [Hor11, §2, Theorem 2.12]
+- [Gan09, §4, Theorem 6]
+-/
+open_problem F_biInterpretable_TC := Nonempty (BiInterpretation 𝗙 𝗧𝗖)
+
+/--
+Are $\mathsf{F}$ and $\mathsf{TC}$,
+which are mutually interpretable by the cited theorem, definitionally equivalent?
+- [Hor11, §2, Theorem 2.12]
+- [Gan09, §4, Theorem 6]
+-/
+open_problem F_definitionallyEquivalent_TC := Nonempty (DefinitionalEquivalence 𝗙 𝗧𝗖)
 
 end FFL.FirstOrder.Concatenation

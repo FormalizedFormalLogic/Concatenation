@@ -4,8 +4,10 @@ public import AlphaCentauri.ToMathlib.Algebra.Order.Ring.RingOfDifferences
 public import Concatenation.TC.Arithmetic
 public import Concatenation.ToFoundation.Arithmetic.PeanoMinus
 public import Concatenation.ToFoundation.Arithmetic.R0.LocallyFinitelySatisfiable
+public import Concatenation.ToFoundation.Interpretability.DefinitionalEquivalence
 public import Concatenation.ToFoundation.Interpretability.Undecidability
 public import Concatenation.ToMathlib.NonnegSpecialLinearGroup
+import Concatenation.OpenProblem
 
 /-!
 # Mutual interpretability of $\mathsf{Q}$ and $\mathsf{TC}$
@@ -392,5 +394,19 @@ theorem TC.undecidable : Entailment.Undecidable 𝗧𝗖 := Theory.EssentiallyUn
 
 theorem _root_.FFL.FirstOrder.Arithmetic.R0.notInterprets_TC : 𝗥₀ ⋫ 𝗧𝗖 :=
   Arithmetic.R0.notInterprets_Q.of_right (inferInstance : 𝗧𝗖 ⊳ 𝗤)
+
+/--
+Are $\mathsf{Q}$ and $\mathsf{TC}$,
+which are mutually interpretable by the cited theorem, bi-interpretable?
+- [Gan09, §3, Theorem 5]
+-/
+open_problem Q_biInterpretable_TC := Nonempty (BiInterpretation 𝗤 𝗧𝗖)
+
+/--
+Are $\mathsf{Q}$ and $\mathsf{TC}$,
+which are mutually interpretable by the cited theorem, definitionally equivalent?
+- [Gan09, §3, Theorem 5]
+-/
+open_problem Q_definitionallyEquivalent_TC := Nonempty (DefinitionalEquivalence 𝗤 𝗧𝗖)
 
 end FFL.FirstOrder.Concatenation

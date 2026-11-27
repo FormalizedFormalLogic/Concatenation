@@ -103,17 +103,15 @@ instance mulGraph_defined : ℒ⌢-relation₃[V] MulGraph via mulGraph :=
 
 instance mulGraph_definable : ℒ⌢-relation₃[V] MulGraph := mulGraph_defined.to_definable
 
-/-- `x` is less than `y`: `0` below everything else, or a proper prefix of `y`. -/
-def LtGraph (x y : V) : Prop := (x = 0 ∧ y ≠ 0) ∨ ∃ v, y = x ++ v
-
-/-- `x` is less than `y`. -/
+/-- `x` is an initial segment of `y`. -/
 def ltGraph : Semisentence ℒ⌢ 2 :=
   “x y. (x = !!(op(0).const) ∧ y ≠ !!(op(0).const)) ∨ ∃ v, y = x ⌢ v”
 
-instance ltGraph_defined : ℒ⌢-relation[V] LtGraph via ltGraph :=
-  ⟨fun v ↦ by simp [ltGraph, LtGraph]⟩
+instance isInitialSegment_defined : ℒ⌢-relation[V] IsInitialSegment via ltGraph :=
+  ⟨fun v ↦ by simp [ltGraph, IsInitialSegment]⟩
 
-instance ltGraph_definable : ℒ⌢-relation[V] LtGraph := ltGraph_defined.to_definable
+instance isInitialSegment_definable : ℒ⌢-relation[V] IsInitialSegment :=
+  isInitialSegment_defined.to_definable
 
 lemma existsUnique_addGraph (x y : V) : ∃! z, AddGraph z x y := by
   by_cases hy : y = 0
@@ -133,7 +131,7 @@ lemma existsUnique_mulGraph (x y : V) : ∃! z, MulGraph z x y := by
 
 /--
 The translation of the language of arithmetic into $\mathsf{WTC}$ on all strings: `0` is `0`, `1`
-is `1`, `+`, `*` and `<` are `AddGraph`, `MulGraph` and `LtGraph`.
+is `1`, `+`, `*` and `<` are `AddGraph`, `MulGraph` and `IsInitialSegment`.
 - [Hor12, §4, Corollary 4.9]
 -/
 def arithmeticTranslation : DirectTranslation 𝗪𝗧𝗖 ℒₒᵣ where
@@ -342,7 +340,8 @@ private lemma mulGraph_tallyOf (m n : ℕ) :
   | 0, n + 1 => simp [MulGraph, IsProduct, h0]
   | m + 1, n + 1 => simp [MulGraph, isProduct_tallyOf_iff]
 
-private lemma ltGraph_tallyOf_iff : LtGraph x (tallyOf n) ↔ ∃ i < n, x = tallyOf i := by
+private lemma isInitialSegment_tallyOf_iff :
+    IsInitialSegment x (tallyOf n) ↔ ∃ i < n, x = tallyOf i := by
   constructor
   · rintro (⟨rfl, hn⟩ | ⟨v, h⟩)
     · use 0
@@ -369,7 +368,7 @@ noncomputable abbrev oRingStructure : ORingStructure (arithmeticTranslation.Mode
   one := ⟨1, dom 1⟩
   add a b := Tarski.Structure.func (L := ℒₒᵣ) Language.ORing.Func.add ![a, b]
   mul a b := Tarski.Structure.func (L := ℒₒᵣ) Language.ORing.Func.mul ![a, b]
-  lt a b := LtGraph (a : V) b
+  lt a b := IsInitialSegment (a : V) b
 
 /-- The structure of the model of `arithmeticTranslation` is the one of `oRingStructure`. -/
 lemma struc_eq :
@@ -388,7 +387,8 @@ lemma struc_eq :
   · funext k r v
     cases r
     · exact propext <| Model.eq_iff v
-    · change (arithmeticTranslation.rel .lt).val (fun i ↦ (v i : V)) = LtGraph (v 0 : V) (v 1)
+    · change (arithmeticTranslation.rel .lt).val (fun i ↦ (v i : V)) =
+        IsInitialSegment (v 0 : V) (v 1)
       rw [Matrix.fun_eq_vec_two (fun i ↦ (v i : V))]
       simp [arithmeticTranslation, Semiformula.Operator.val]
 
@@ -444,8 +444,8 @@ instance : (arithmeticTranslation.Model V)↓[ℒₒᵣ] ⊧* 𝗥₀ := by
     suffices ∀ x : arithmeticTranslation.Model V, x < ORingStructure.numeral n ↔
         ∃ i < n, x = ORingStructure.numeral i by simpa [models_iff] using this
     intro x
-    change LtGraph (x : V) _ ↔ _
-    simp [ltGraph_tallyOf_iff, ← Model.val_inj_iff]
+    change IsInitialSegment (x : V) _ ↔ _
+    simp [isInitialSegment_tallyOf_iff, ← Model.val_inj_iff]
 
 end arithmeticTranslation
 

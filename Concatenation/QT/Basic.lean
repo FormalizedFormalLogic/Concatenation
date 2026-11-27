@@ -92,14 +92,8 @@ instance : Tarski.Structure.Concat ℒ⌢ₛ V := ⟨fun _ _ ↦ rfl⟩
 @[simp]
 lemma val_successor {e : Fin 1 → V} {ε : Empty → V} : successor.val e ε = succ (e 0) := rfl
 
-/--
-`x` is an initial segment of `y`: `x` is $0$ and `y` is not, or `y` extends `x`.
-- [Dam17, §1]
--/
-def IsInitialSegment (x y : V) : Prop := (x = 0 ∧ y ≠ 0) ∨ ∃ z, x ++ z = y
-
 instance isInitialSegment_defined : ℒ⌢ₛ-relation[V] IsInitialSegment via isInitialSegment :=
-  ⟨fun v ↦ by simp [isInitialSegment, IsInitialSegment]⟩
+  ⟨fun v ↦ by simp [isInitialSegment, IsInitialSegment, eq_comm (b := v 1)]⟩
 
 instance isInitialSegment_definable : ℒ⌢ₛ-relation[V] IsInitialSegment :=
   isInitialSegment_defined.to_definable
@@ -216,7 +210,6 @@ theorem unprovable_isInitialSegment_irrefl : 𝗤𝗧⁺ ⊬ “∀ x, ¬!isInit
   use .ends (.const true) (.const true)
   right
   use EndedWord.letter true
-  simpa [EndedWord.append_def, EndedWord.append] using
-    (Stream'.const_eq true).symm
+  simpa [EndedWord.append_def, EndedWord.append] using Stream'.const_eq true
 
 end FFL.FirstOrder.Concatenation

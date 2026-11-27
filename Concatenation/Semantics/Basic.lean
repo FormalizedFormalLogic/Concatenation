@@ -283,6 +283,12 @@ instance isPrefix_defined : ℒ⌢-relation[V] IsPrefix via isPrefix :=
 instance isPrefix_definable : ℒ⌢-relation[V] IsPrefix := isPrefix_defined.to_definable
 
 /--
+`x` is an initial segment of `y`: `x` is $0$ and `y` is not, or `y` extends `x`.
+- [Dam17, §1]
+-/
+def IsInitialSegment (x y : V) : Prop := (x = 0 ∧ y ≠ 0) ∨ ∃ z, y = x ++ z
+
+/--
 `x` is a suffix of `y`.
 - [Gan09, §1, Definition 1]
 -/

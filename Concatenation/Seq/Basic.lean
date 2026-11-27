@@ -98,12 +98,6 @@ macro_rules
     `(Semiterm.Operator.snoc.operator
       ![⤫term(lit)[ $binders* | $fbinders* | $e₁ ], ⤫term(lit)[ $binders* | $fbinders* | $e₂ ]])
 
-abbrev SequenceTheory := Theory ℒ⊢
-
-abbrev SequenceSemisentence (n : ℕ) := Semisentence ℒ⊢ n
-
-abbrev SequenceSentence := Sentence ℒ⊢
-
 /--
 The sequences: the empty sequence `nil`, and the sequence `snoc s t` that has `t` appended to `s`.
 - [KM24, §2]
@@ -180,6 +174,12 @@ open Language FiniteSequence SequenceStructure
 -/
 def isPrefix : Semisentence ℒ⊢ 2 := “x y. ∃ z, x ⌢ z = y”
 
+/--
+`x` is an initial segment of `y`.
+- [KM24, §2]
+-/
+def IsPrefix {V : Type*} [Append V] (x y : V) : Prop := ∃ z, x ++ z = y
+
 /-- `x` is one of the sequences in the list. -/
 def isOneOf (l : List FiniteSequence) : Semisentence ℒ⊢ 1 := l.disj' fun s ↦ “x. x = !!s.sequeral”
 
@@ -187,7 +187,7 @@ def isOneOf (l : List FiniteSequence) : Semisentence ℒ⊢ 1 := l.disj' fun s �
 Axioms of the weak theory of sequences $\mathsf{WSeq}$.
 - [KM24, §2, Figure 2]
 -/
-inductive IsWSeqAxiom : SequenceSentence → Prop
+inductive IsWSeqAxiom : Sentence ℒ⊢ → Prop
   | equal : ∀ φ ∈ 𝗘𝗤 ℒ⊢, IsWSeqAxiom φ
   | ne (s t : FiniteSequence) (h : s ≠ t) : IsWSeqAxiom “!!s.sequeral ≠ !!t.sequeral”
   | concat (s t : FiniteSequence) : IsWSeqAxiom
@@ -199,7 +199,7 @@ inductive IsWSeqAxiom : SequenceSentence → Prop
 The weak theory of sequences $\mathsf{WSeq}$.
 - [KM24, §2, Figure 2]
 -/
-abbrev WSeq : SequenceTheory := Set.ofPred IsWSeqAxiom
+abbrev WSeq : Theory ℒ⊢ := Set.ofPred IsWSeqAxiom
 
 @[inherit_doc]
 notation "𝗪𝗦𝗲𝗾" => WSeq
@@ -232,7 +232,7 @@ lemma val_star : (Semiterm.Operator.Star.star : Semiterm.Const ℒ⊢).val ![] =
 @[simp]
 lemma val_snoc (x y : V) : Semiterm.Operator.snoc.val ![x, y] = snoc x y := rfl
 
-lemma complete (T : SequenceTheory) [𝗘𝗤 ℒ⊢ ⪯ T] (φ : SequenceSentence)
+lemma complete (T : Theory ℒ⊢) [𝗘𝗤 ℒ⊢ ⪯ T] (φ : Sentence ℒ⊢)
     (H : ∀ (V : Type*) [SequenceStructure V] [V↓[ℒ⊢] ⊧* T], V↓[ℒ⊢] ⊧ φ) : T ⊢ φ :=
   Theory.Proof.complete_on_eq_models φ fun V _ s _ hT ↦ by
     have hr (v : Fin 2 → V) : s.rel Language.Eq.eq v ↔ v 0 = v 1 := by simp
@@ -244,9 +244,8 @@ lemma complete (T : SequenceTheory) [𝗘𝗤 ℒ⊢ ⪯ T] (φ : SequenceSenten
       (funext₃ fun k f v ↦ by
         cases f
         · rw [Matrix.empty_eq v]; rfl
-        · conv_lhs => rw [Matrix.fun_eq_vec_two v]
-          rfl
-        · conv_lhs => rw [Matrix.fun_eq_vec_two v]
+        all_goals
+          conv_lhs => rw [Matrix.fun_eq_vec_two v]
           rfl)
       (funext₃ fun k r v ↦ by
         cases r
@@ -267,15 +266,6 @@ lemma val_sequeral (s : FiniteSequence) :
   induction s with
   | nil => simp [sequeral, toStructure]
   | snoc s t hs ht => simp [sequeral, toStructure, hs, ht]
-
-/--
-`x` is an initial segment of `y`.
-- [KM24, §2]
--/
-def IsPrefix (x y : V) : Prop := ∃ z, x ++ z = y
-
-/-- `x ◨ y`: `x` is an initial segment of `y`. -/
-scoped infix:50 " ◨ " => IsPrefix
 
 instance isPrefix_defined : ℒ⊢-relation[V] IsPrefix via isPrefix :=
   ⟨fun v ↦ by simp [isPrefix, IsPrefix]⟩
@@ -303,7 +293,7 @@ lemma toStructure_self (s : FiniteSequence) : s.toStructure = s := by
   | snoc s t hs ht => simp [toStructure, hs, ht]
 
 @[simp]
-lemma isPrefix_nil_iff : s ◨ nil ↔ s = nil := by
+lemma isPrefix_nil_iff : IsPrefix s nil ↔ s = nil := by
   constructor
   · rintro ⟨_ | _, h⟩
     · simpa using h
@@ -311,7 +301,7 @@ lemma isPrefix_nil_iff : s ◨ nil ↔ s = nil := by
   · rintro rfl
     exact ⟨nil, rfl⟩
 
-lemma isPrefix_snoc_iff : s ◨ t.snoc u ↔ s = t.snoc u ∨ s ◨ t := by
+lemma isPrefix_snoc_iff : IsPrefix s (t.snoc u) ↔ s = t.snoc u ∨ IsPrefix s t := by
   constructor
   · rintro ⟨_ | ⟨v, w⟩, h⟩
     · simp_all
@@ -323,7 +313,7 @@ lemma isPrefix_snoc_iff : s ◨ t.snoc u ↔ s = t.snoc u ∨ s ◨ t := by
     · exact ⟨v.snoc u, rfl⟩
 
 @[simp]
-lemma mem_prefixes_iff : s ∈ t.prefixes ↔ s ◨ t := by
+lemma mem_prefixes_iff : s ∈ t.prefixes ↔ IsPrefix s t := by
   induction t with
   | nil => simp [prefixes]
   | snoc t u ht => simp [prefixes, isPrefix_snoc_iff, ht]
@@ -343,7 +333,8 @@ structure IsInitialEmbedding (c : FiniteSequence → V) : Prop where
   map_nil : c nil = ∅
   map_snoc (s t : FiniteSequence) : c (s.snoc t) = snoc (c s) (c t)
   map_append (s t : FiniteSequence) : c (s ++ t) = c s ++ c t
-  exists_of_isPrefix {x : V} {s : FiniteSequence} (h : x ◨ c s) : ∃ u, u ◨ s ∧ x = c u
+  exists_of_isPrefix {x : V} {s : FiniteSequence} (h : IsPrefix x (c s)) :
+    ∃ u, IsPrefix u s ∧ x = c u
 
 /-- A structure with an initial embedding of the sequences is a model of $\mathsf{WSeq}$. -/
 lemma IsInitialEmbedding.models_WSeq {c : FiniteSequence → V} (hc : IsInitialEmbedding c) :
@@ -398,7 +389,8 @@ lemma toStructure_append (s t : FiniteSequence) :
 The initial segments of a standard sequence are its standard initial segments.
 - [KM24, §2]
 -/
-lemma isPrefix_toStructure_iff : x ◨ s.toStructure ↔ ∃ u, u ◨ s ∧ x = u.toStructure := by
+lemma isPrefix_toStructure_iff :
+    IsPrefix x s.toStructure ↔ ∃ u, IsPrefix u s ∧ x = u.toStructure := by
   constructor
   · have := by simpa [models_iff] using Theory.models V _ (IsWSeqAxiom.pref s)
     exact this x
@@ -407,7 +399,8 @@ lemma isPrefix_toStructure_iff : x ◨ s.toStructure ↔ ∃ u, u ◨ s ∧ x = 
     rw [toStructure_append]
 
 @[simp]
-lemma toStructure_isPrefix_toStructure_iff : (s.toStructure : V) ◨ t.toStructure ↔ s ◨ t := by
+lemma toStructure_isPrefix_toStructure_iff :
+    IsPrefix (s.toStructure : V) t.toStructure ↔ IsPrefix s t := by
   simp [isPrefix_toStructure_iff]
 
 end WSeq

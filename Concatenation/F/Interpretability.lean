@@ -62,7 +62,8 @@ lemma dom_iff : (relativization T δ H).Dom x ↔ V ⊧/![x] δ := by
 variable [V↓[ℒ⌢ₑ] ⊧* T]
 
 /-- The letters, the empty string and the concatenation of `V` restricted to `δ`. -/
-abbrev concatenationStructure : ConcatenationEmptyStructure ((relativization T δ H).Model V) where
+abbrev concatenationEmptyStructure :
+    ConcatenationEmptyStructure ((relativization T δ H).Model V) where
   zero := ⟨0, (dom_iff T δ H).mpr (H V).zero⟩
   one := ⟨1, (dom_iff T δ H).mpr (H V).one⟩
   emptyCollection := ⟨∅, (dom_iff T δ H).mpr (H V).empty⟩
@@ -74,7 +75,7 @@ The structure of the model of `relativization` is the standard one of the letter
 and the concatenation restricted to `δ`.
 -/
 lemma struc_eq : Model.struc (relativization T δ H) V =
-    @standardModelEmpty _ (concatenationStructure T δ H) :=
+    @standardModelEmpty _ (concatenationEmptyStructure T δ H) :=
   Tarski.Structure.ext
     (funext₃ fun k f v ↦ by
       symm
@@ -87,7 +88,7 @@ lemma struc_eq : Model.struc (relativization T δ H) V =
 
 section
 
-attribute [local instance] concatenationStructure
+attribute [local instance] concatenationEmptyStructure
 
 variable {y : V} {hx : (relativization T δ H).Dom x} {hy : (relativization T δ H).Dom y}
 
@@ -265,7 +266,7 @@ empty string.
 instance {V : Type} [ConcatenationEmptyStructure V] [V↓[ℒ⌢ₑ] ⊧* 𝗙] :
     (tameTranslation.Model V)↓[ℒ⌢ₑ] ⊧* 𝗧𝗖ₑ := by
   rw [relativization.struc_eq]
-  let := relativization.concatenationStructure 𝗙 isHereditarilyTame
+  let := relativization.concatenationEmptyStructure 𝗙 isHereditarilyTame
     (fun _ _ _ ↦ F.isConcatenationClosed_isHereditarilyTame) (V := V)
   constructor
   intro σ hσ
@@ -296,17 +297,17 @@ instance : 𝗙 ⊳ 𝗧𝗖ₑ where
   interpret_theory φ hφ := completeEmpty.{0} _ _ fun _ _ _ ↦
     Model.translate_iff.mpr <| models_theory_iff.mp inferInstance φ hφ
 
-section
-
-variable {V : Type*} [ConcatenationEmptyStructure V] {x : V}
-
 /--
 `x` can be cancelled on both sides.
 - [Hor11, §2, Theorem 2.12]
 -/
-structure IsRadical (x : V) : Prop where
+structure IsRadical {V : Type*} [Append V] (x : V) : Prop where
   right {y z : V} : y ++ x = z ++ x → y = z
   left {y z : V} : x ++ y = x ++ z → y = z
+
+section
+
+variable {V : Type*} [ConcatenationEmptyStructure V] {x : V}
 
 /--
 `x` can be cancelled on both sides.
@@ -401,10 +402,11 @@ lemma isEmptyOrAppendAtom_append (hx : IsEmptyOrAppendAtom x) (hy : IsEmptyOrApp
 lemma isHereditarilyRadical_left (h : IsHereditarilyRadical (x ++ y)) : IsHereditarilyRadical x :=
   fun z w hw ↦ h z (w ++ y) <| by rw [hw, TCEmpty.append_assoc]
 
-lemma isRadical (hx : IsHereditarilyRadical x) : IsRadical x := (hx x ∅ <| by simp).1
+lemma _root_.FFL.FirstOrder.Concatenation.IsHereditarilyRadical.isRadical
+    (hx : IsHereditarilyRadical x) : IsRadical x := (hx x ∅ <| by simp).1
 
-lemma isEmptyOrAppendAtom (hx : IsHereditarilyRadical x) : IsEmptyOrAppendAtom x :=
-  (hx x ∅ <| by simp).2
+lemma _root_.FFL.FirstOrder.Concatenation.IsHereditarilyRadical.isEmptyOrAppendAtom
+    (hx : IsHereditarilyRadical x) : IsEmptyOrAppendAtom x := (hx x ∅ <| by simp).2
 
 lemma isHereditarilyRadical_empty : IsHereditarilyRadical (∅ : V) := by
   intro y z h
@@ -423,10 +425,10 @@ lemma isHereditarilyRadical_append (hx : IsHereditarilyRadical x) (hy : IsHeredi
   intro z w h
   obtain ⟨u, ⟨rfl, rfl⟩ | ⟨rfl, -⟩⟩ := editor h
   · have hu := isHereditarilyRadical_left hy
-    exact ⟨isRadical_append (isRadical hx) (isRadical hu),
-      isEmptyOrAppendAtom_append (isEmptyOrAppendAtom hx) (isEmptyOrAppendAtom hu)⟩
+    exact ⟨isRadical_append hx.isRadical hu.isRadical,
+      isEmptyOrAppendAtom_append hx.isEmptyOrAppendAtom hu.isEmptyOrAppendAtom⟩
   · have hz := isHereditarilyRadical_left hx
-    exact ⟨isRadical hz, isEmptyOrAppendAtom hz⟩
+    exact ⟨hz.isRadical, hz.isEmptyOrAppendAtom⟩
 
 lemma isConcatenationClosed_isHereditarilyRadical :
     IsConcatenationClosed fun x : V ↦ V ⊧/![x] isHereditarilyRadical where
@@ -461,7 +463,7 @@ $\mathsf{F}$.
 instance {V : Type} [ConcatenationEmptyStructure V] [V↓[ℒ⌢ₑ] ⊧* 𝗧𝗖ₑ] :
     (radicalTranslation.Model V)↓[ℒ⌢ₑ] ⊧* 𝗙 := by
   rw [relativization.struc_eq]
-  let := relativization.concatenationStructure 𝗧𝗖ₑ isHereditarilyRadical
+  let := relativization.concatenationEmptyStructure 𝗧𝗖ₑ isHereditarilyRadical
     (fun _ _ _ ↦ TCEmpty.isConcatenationClosed_isHereditarilyRadical) (V := V)
   constructor
   intro σ hσ
@@ -470,15 +472,15 @@ instance {V : Type} [ConcatenationEmptyStructure V] [V↓[ℒ⌢ₑ] ⊧* 𝗧�
   case cancelRight =>
     simpa [models_iff, Model.forall_iff] using fun (x : V) (_ : IsHereditarilyRadical x) (y : V)
       (_ : IsHereditarilyRadical y) (z : V) (hz : IsHereditarilyRadical z) ↦
-      (TCEmpty.isRadical hz).right (y := x) (z := y)
+      hz.isRadical.right (y := x) (z := y)
   case cancelLeft =>
     simpa [models_iff, Model.forall_iff] using fun (x : V) (_ : IsHereditarilyRadical x) (y : V)
       (_ : IsHereditarilyRadical y) (z : V) (hz : IsHereditarilyRadical z) ↦
-      (TCEmpty.isRadical hz).left (y := x) (z := y)
+      hz.isRadical.left (y := x) (z := y)
   case emptyOrConcatLetter =>
     simpa [models_iff, Model.forall_iff, Model.exists_iff] using
       fun (x : V) (hx : IsHereditarilyRadical x) (hx' : x ≠ ∅) ↦
-      match TCEmpty.isEmptyOrAppendAtom hx with
+      match hx.isEmptyOrAppendAtom with
       | .inl h => (hx' h).elim
       | .inr ⟨u, .inl h⟩ => ⟨u, TCEmpty.isHereditarilyRadical_left (h ▸ hx), .inl h⟩
       | .inr ⟨u, .inr h⟩ => ⟨u, TCEmpty.isHereditarilyRadical_left (h ▸ hx), .inr h⟩

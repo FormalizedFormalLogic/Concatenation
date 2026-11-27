@@ -325,6 +325,40 @@ instance isMulSeqₑ_defined [V↓[ℒ⌢ₑ] ⊧* 𝗧𝗖ₑ] :
     𝚺-[ℬₛ, 0]-Relation₃[V] IsMulSeqₑ via isMulSeqₑDef :=
   .mk fun v ↦ by simp [isMulSeqₑDef, IsMulSeqₑ, pairOf]
 
+instance isMulSeqₑ_definable [V↓[ℒ⌢ₑ] ⊧* 𝗧𝗖ₑ] : 𝚺-[ℬₛ, 0]-Relation₃[V] IsMulSeqₑ :=
+  isMulSeqₑ_defined.to_definable
+
+/--
+`r` witnesses that `z` is the product of the `1`-tallies `x` and `y`: one of `x` and `y` is empty
+and so is `z`, or `r` is a multiplication sequence for `x` and `y` whose last member is `(z, y)`.
+- [Gan09, §1, Definition 2]
+-/
+def IsTallyMulWitness (r x y z : V) : Prop :=
+  IsTally 1 x ∧ IsTally 1 y ∧ IsTally 1 z ∧ ((x = ∅ ∨ y = ∅) ∧ z = ∅ ∨
+    z ≠ ∅ ∧ IsMulSeqₑ x y r ∧ IsSuffix (0 ++ 0 ++ pairOf z y ++ 0 ++ 0) r)
+
+/-- `r` witnesses that `z` is the product of the `1`-tallies `x` and `y`. -/
+def isTallyMulWitnessDef : 𝚺-[ℬₛ, 0].Semisentence 4 :=
+  .mkSigma “r x y z. !isTallyBoundedDef.val !!(op(1).const) x ∧
+    !isTallyBoundedDef.val !!(op(1).const) y ∧ !isTallyBoundedDef.val !!(op(1).const) z ∧
+    ((x = ⋆ ∨ y = ⋆) ∧ z = ⋆ ∨ z ≠ ⋆ ∧ !isMulSeqₑDef.val x y r ∧
+      !isSuffixBoundedDef.val (!!(op(0).const) ⌢ !!(op(0).const) ⌢
+        (z ⌢ !!(op(0).const) ⌢ y) ⌢ !!(op(0).const) ⌢ !!(op(0).const)) r)”
+
+instance isTallyMulWitness_defined [V↓[ℒ⌢ₑ] ⊧* 𝗧𝗖ₑ] :
+    𝚺-[ℬₛ, 0]-Relation₄[V] IsTallyMulWitness via isTallyMulWitnessDef :=
+  .mk fun v ↦ by simp [isTallyMulWitnessDef, IsTallyMulWitness, pairOf]
+
+instance isTallyMulWitness_definable [V↓[ℒ⌢ₑ] ⊧* 𝗧𝗖ₑ] :
+    𝚺-[ℬₛ, 0]-Relation₄[V] IsTallyMulWitness :=
+  isTallyMulWitness_defined.to_definable
+
+/--
+`z` is the product of the `1`-tallies `x` and `y`.
+- [Gan09, §1, Definition 2]
+-/
+def IsTallyMul (x y z : V) : Prop := ∃ r, IsTallyMulWitness r x y z
+
 end boundedDefinitions
 
 section transfer
@@ -462,6 +496,102 @@ lemma eq_and_eq_of_isSuffix_pairOf {u v p q : V} (hu : u ≠ ∅) (hv : v ≠ �
   simpa [ext_iff'] using this
 
 end mulSeq
+
+section tallyMul
+
+local notation "ℬₛ" => substringBounding ℒ⌢ₑ
+
+variable {V : Type*} [ConcatenationEmptyStructure V] [V↓[ℒ⌢ₑ] ⊧* TCISigma 1] {x y z z' : V}
+
+lemma prenexDefinable_isTallyMul :
+    PrenexDefinable ℬₛ 𝚺 1 fun v : Fin 3 → V ↦ IsTallyMul (v 0) (v 1) (v 2) :=
+  have : Nonempty V := ⟨∅⟩
+  PrenexDefinable.sigma_succ_iff.mpr ⟨_, PrenexDefinable.zero_iff.mpr <|
+    isTallyMulWitness_definable.retraction ![0, 1, 2, 3], fun v ↦ by simp [IsTallyMul]⟩
+
+lemma exists_isMulSeqₑ (hx : IsTally 1 x) (hx₀ : x ≠ ∅) (hy : IsTally 1 y) (hy₀ : y ≠ ∅) :
+    ∃ r, IsMulSeqₑ x y r := by
+  have : Nonempty V := ⟨∅⟩
+  have H := TCISigma.tally_induction (s := 1) (P := fun y ↦ y = ∅ ∨ ∃ r, IsMulSeqₑ x y r)
+    ((PrenexDefinable.sigma_succ_iff.mpr ⟨_, PrenexDefinable.zero_iff.mpr <|
+      isMulSeqₑ_definable.retractiont ![&x, #1, #0], fun v ↦ Iff.rfl⟩).or_delta0
+        (definable_eq_term #0 ‘⋆’) |>.of_iff fun v ↦ by simp [or_comm])
+    (.inl rfl) ?_ y hy
+  · exact H.resolve_left hy₀
+  · rintro y - (rfl | ⟨r, hr⟩)
+    · rw [TCEmpty.empty_append]
+      exact .inr ⟨_, (isMulSeqₑ_one_iff hx hx₀).mpr rfl⟩
+    · obtain ⟨w, hw, tw, last⟩ := hr.exists_last
+      exact .inr ⟨_, (hr.extend hw tw last).1⟩
+
+lemma isMulSeqₑ_unique (hx : IsTally 1 x) (hx₀ : x ≠ ∅) (hy : IsTally 1 y) {r r' : V}
+    (hr : IsMulSeqₑ x y r) (hr' : IsMulSeqₑ x y r') : r = r' := by
+  have : Nonempty V := ⟨∅⟩
+  have H := TCISigma.tally_induction_Pi1
+    (P := fun y ↦ ∀ r r', IsMulSeqₑ x y r → IsMulSeqₑ x y r' → r = r') ?_ ?_ ?_ y hy
+  · exact H r r' hr hr'
+  · refine (PrenexDefinable.all_Pi1 <| PrenexDefinable.all_Pi1 <| PrenexDefinable.of_delta0 <|
+      ((isMulSeqₑ_definable.retractiont ![&x, #2, #1]).not_zero.or <|
+        (isMulSeqₑ_definable.retractiont ![&x, #2, #0]).not_zero.or <|
+          definable_eq_term #1 #0)).of_iff fun v ↦ ?_
+    simp only [imp_iff_not_or]
+    simp
+  · exact fun r _ h ↦ absurd rfl h.ne_empty_right
+  · intro y ty ih s s' hs hs'
+    by_cases hy₀ : y = ∅
+    · subst hy₀
+      simp only [TCEmpty.empty_append] at hs hs'
+      rw [(isMulSeqₑ_one_iff hx hx₀).mp hs, (isMulSeqₑ_one_iff hx hx₀).mp hs']
+    · obtain ⟨r, w, hw, tw, hr, last, rfl⟩ := hs.restrict hy₀
+      obtain ⟨r', w', hw', tw', hr', last', rfl⟩ := hs'.restrict hy₀
+      obtain rfl := ih r r' hr hr'
+      obtain ⟨rfl, -⟩ := eq_and_eq_of_isSuffix_pairOf hw hy₀ hw' hy₀ tw ty tw' ty
+        hr.ne_empty last last'
+      rfl
+
+omit [V↓[ℒ⌢ₑ] ⊧* TCISigma 1] in
+lemma IsTallyMul.isTally (h : IsTallyMul x y z) : IsTally 1 z :=
+  let ⟨_, h⟩ := h
+  h.2.2.1
+
+/-- The multiplication of tallies is total. -/
+lemma exists_isTallyMul (hx : IsTally 1 x) (hy : IsTally 1 y) : ∃ z, IsTallyMul x y z := by
+  by_cases h : x = ∅ ∨ y = ∅
+  · exact ⟨∅, ∅, hx, hy, by simp, .inl ⟨h, rfl⟩⟩
+  push Not at h
+  obtain ⟨r, hr⟩ := exists_isMulSeqₑ hx h.1 hy h.2
+  obtain ⟨w, hw, tw, last⟩ := hr.exists_last
+  exact ⟨w, r, hx, hy, tw, .inr ⟨hw, hr, last⟩⟩
+
+/-- The multiplication of tallies is a function. -/
+lemma IsTallyMul.unique (h : IsTallyMul x y z) (h' : IsTallyMul x y z') : z = z' := by
+  obtain ⟨r, hx, hy, hz, (⟨h₁, rfl⟩ | ⟨hz₀, hr, last⟩)⟩ := h <;>
+    obtain ⟨r', -, -, hz', (⟨h₁', rfl⟩ | ⟨hz₀', hr', last'⟩)⟩ := h'
+  · rfl
+  · exact absurd h₁ (by simp [hr'.ne_empty_left, hr'.ne_empty_right])
+  · exact absurd h₁' (by simp [hr.ne_empty_left, hr.ne_empty_right])
+  · obtain rfl := isMulSeqₑ_unique hx hr.ne_empty_left hy hr hr'
+    exact (eq_and_eq_of_isSuffix_pairOf hz₀ hr.ne_empty_right hz₀' hr.ne_empty_right hz hy hz' hy
+      hr.ne_empty last last').1
+
+lemma isTallyMul_empty (hx : IsTally 1 x) : IsTallyMul x ∅ ∅ :=
+  ⟨∅, hx, by simp, by simp, .inl ⟨.inr rfl, rfl⟩⟩
+
+lemma IsTallyMul.append_one (h : IsTallyMul x y z) : IsTallyMul x (y ++ 1) (z ++ x) := by
+  obtain ⟨r, hx, hy, hz, (⟨h₁ | rfl, rfl⟩ | ⟨hz₀, hr, last⟩)⟩ := h
+  · subst h₁
+    exact ⟨∅, by simp, TCEmpty.isTally_append hy TCEmpty.isTally_one, by simp, .inl ⟨.inl rfl,
+      by simp⟩⟩
+  · by_cases hx₀ : x = ∅
+    · subst hx₀
+      exact ⟨∅, by simp, by simpa using TCEmpty.isTally_one, by simp, .inl ⟨.inl rfl, by simp⟩⟩
+    · rw [TCEmpty.empty_append, TCEmpty.empty_append]
+      exact ⟨_, hx, TCEmpty.isTally_one, hx, .inr ⟨hx₀, (isMulSeqₑ_one_iff hx hx₀).mpr rfl,
+        IsSuffix.refl _⟩⟩
+  · exact ⟨_, hx, TCEmpty.isTally_append hy TCEmpty.isTally_one, TCEmpty.isTally_append hz hx,
+      .inr ⟨fun h ↦ hz₀ (TCEmpty.eq_empty_of_append_eq_empty h).1, hr.extend hz₀ hz last⟩⟩
+
+end tallyMul
 
 
 end FFL.FirstOrder.Concatenation

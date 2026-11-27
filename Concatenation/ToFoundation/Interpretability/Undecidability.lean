@@ -128,17 +128,20 @@ include π
 A consistent theory directly interpreting an essentially undecidable theory is undecidable.
 - [Sve08, §1]
 -/
-theorem undecidable [U.EssentiallyUndecidable] [Entailment.Consistent T] :
+theorem undecidable [Entailment.EssentiallyUndecidable U fun _ ↦ True]
+    [Entailment.Consistent T] :
     Entailment.Undecidable T :=
   π.undecidable_of_undecidable_pullback <|
-    Theory.EssentiallyUndecidable.undecidable_of_consistent (T := U) _ inferInstance inferInstance
+    Entailment.EssentiallyUndecidable.essentially_undec (𝓢 := U) (P := fun _ ↦ True) _ inferInstance
+      inferInstance trivial
 
 /--
 A theory directly interpreting an essentially undecidable theory is essentially undecidable.
 - [Sve08, §1]
 -/
-theorem essentiallyUndecidable [U.EssentiallyUndecidable] : T.EssentiallyUndecidable where
-  undecidable_of_consistent T' hT _ :=
+theorem essentiallyUndecidable [Entailment.EssentiallyUndecidable U fun _ ↦ True] :
+    Entailment.EssentiallyUndecidable T fun _ ↦ True where
+  essentially_undec T' hT _ _ :=
     have : 𝗘𝗤 L₁ ⪯ T' := Entailment.WeakerThan.trans (inferInstanceAs (𝗘𝗤 L₁ ⪯ T)) hT
     (π.ofWeakerThanLeft (T' := T')).undecidable
 
@@ -151,8 +154,8 @@ axiomatizable essentially undecidable theory.
 theorem notInterprets_of_forall_finite_not_essentiallyUndecidable {L₁ L₂ : Language}
     [L₁.Encodable] [L₁.Primcodable] [L₁.LORDefinable] [L₁.Eq] [L₁.Finite] [L₂.Encodable]
     [L₂.Primcodable] [L₂.LORDefinable] [L₂.Eq] [L₂.Finite] {T : Theory L₁} [𝗘𝗤 _ ⪯ T]
-    {U : Theory L₂} [U.EssentiallyUndecidable] (hU : FiniteAxiomatizable U)
-    (h : ∀ F ⊆ T, F.Finite → ¬F.EssentiallyUndecidable) : T ⋫ U :=
+    {U : Theory L₂} [Entailment.EssentiallyUndecidable U fun _ ↦ True] (hU : FiniteAxiomatizable U)
+    (h : ∀ F ⊆ T, F.Finite → ¬Entailment.EssentiallyUndecidable F fun _ ↦ True) : T ⋫ U :=
   ⟨fun π ↦
     let ⟨F, hF, hfin, _, ⟨ρ⟩⟩ := π.exists_finite_subset hU
     h F hF hfin ρ.essentiallyUndecidable⟩

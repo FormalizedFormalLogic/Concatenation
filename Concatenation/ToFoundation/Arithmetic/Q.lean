@@ -1,6 +1,6 @@
 module
 
-public import Concatenation.ToFoundation.Arithmetic.R0.Undecidability
+public import Foundation.FirstOrder.Arithmetic.R0.Undecidability
 public import Concatenation.ToFoundation.Interpretability.LocallyFinitelySatisfiable
 public import Concatenation.ToMathlib.Infinite
 public import Foundation.FirstOrder.Arithmetic.Q.Basic
@@ -60,7 +60,7 @@ end RobinsonQ
 $\mathsf{Q}$ is essentially undecidable.
 - [Sve08, §2]
 -/
-instance : (𝗤 : ArithmeticTheory).EssentiallyUndecidable :=
-  Theory.EssentiallyUndecidable.of_weakerThan 𝗥₀ 𝗤
+instance : Entailment.EssentiallyUndecidable (𝗤 : ArithmeticTheory) fun _ ↦ True :=
+  Entailment.EssentiallyUndecidable.of_weakerThan 𝗥₀ 𝗤
 
 end FFL.FirstOrder.Arithmetic

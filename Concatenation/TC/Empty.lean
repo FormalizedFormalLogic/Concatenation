@@ -517,7 +517,7 @@ instance : Entailment.Consistent 𝗧𝗖ₑ := DirectInterpretation.consistent 
 $\mathsf{TC}$ with the empty string is essentially undecidable.
 - [Hor11, §2]
 -/
-instance : 𝗧𝗖ₑ.EssentiallyUndecidable :=
+instance : Entailment.EssentiallyUndecidable 𝗧𝗖ₑ fun _ ↦ True :=
   DirectInterpretation.essentiallyUndecidable (inferInstance : 𝗧𝗖ₑ ⊳ 𝗧𝗖)
 
 end code

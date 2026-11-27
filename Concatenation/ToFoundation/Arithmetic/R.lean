@@ -1,6 +1,6 @@
 module
 
-public import Concatenation.ToFoundation.Arithmetic.R0.Basic
+public import Foundation.FirstOrder.Arithmetic.R0.Cobham
 
 /-!
 # The theory $\mathsf{R}$ of Tarski, Mostowski and Robinson

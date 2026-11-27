@@ -704,7 +704,7 @@ $\mathsf{WTC}$ with the empty string is essentially undecidable.
 - [HH14, Theorem 1, Theorem 11]
 - [Hor12, §4, Corollary 4.11]
 -/
-instance : 𝗪𝗧𝗖ₑ.EssentiallyUndecidable :=
+instance : Entailment.EssentiallyUndecidable 𝗪𝗧𝗖ₑ fun _ ↦ True :=
   DirectInterpretation.essentiallyUndecidable (inferInstance : 𝗪𝗧𝗖ₑ ⊳ 𝗥₀)
 
 /--
@@ -712,6 +712,6 @@ $\mathsf{WTC}$ with the empty string is undecidable.
 - [HH14, Theorem 1]
 -/
 theorem WTCEmpty.undecidable : Entailment.Undecidable 𝗪𝗧𝗖ₑ :=
-  Theory.EssentiallyUndecidable.undecidable 𝗪𝗧𝗖ₑ
+  Entailment.EssentiallyUndecidable.undecidable (P := fun _ ↦ True) 𝗪𝗧𝗖ₑ trivial
 
 end FFL.FirstOrder.Concatenation

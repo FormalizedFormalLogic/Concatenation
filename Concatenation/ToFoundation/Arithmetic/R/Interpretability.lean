@@ -4,7 +4,7 @@ public import AlphaCentauri.Interpretability.Basic
 public import Concatenation.ToFoundation.Interpretability.Basic
 public import Concatenation.ToFoundation.Arithmetic.R
 public import Concatenation.ToFoundation.Arithmetic.R0.Cobham
-public import Concatenation.ToFoundation.Arithmetic.R0.Undecidability
+public import Foundation.FirstOrder.Arithmetic.R0.Undecidability
 
 /-!
 # Interpretability of $\mathsf{R}$ in $\mathsf{R}_0$
@@ -151,7 +151,7 @@ $\mathsf{R}$ is essentially undecidable.
 - [Hor11, §3]
 - [Sve08, §3.3]
 -/
-instance : (𝗥 : ArithmeticTheory).EssentiallyUndecidable :=
-  Theory.EssentiallyUndecidable.of_weakerThan 𝗥₀ 𝗥
+instance : Entailment.EssentiallyUndecidable (𝗥 : ArithmeticTheory) fun _ ↦ True :=
+  Entailment.EssentiallyUndecidable.of_weakerThan 𝗥₀ 𝗥
 
 end FFL.FirstOrder.Arithmetic

@@ -26,13 +26,11 @@ public import Concatenation.ToFoundation.Arithmetic.PeanoMinus
 public import Concatenation.ToFoundation.Arithmetic.Q
 public import Concatenation.ToFoundation.Arithmetic.R
 public import Concatenation.ToFoundation.Arithmetic.R.Interpretability
-public import Concatenation.ToFoundation.Arithmetic.R0.Basic
 public import Concatenation.ToFoundation.Arithmetic.R0.Certificate
 public import Concatenation.ToFoundation.Arithmetic.R0.Cobham
 public import Concatenation.ToFoundation.Arithmetic.R0.Cut
 public import Concatenation.ToFoundation.Arithmetic.R0.LocallyFinitelySatisfiable
 public import Concatenation.ToFoundation.Arithmetic.R0.Representation
-public import Concatenation.ToFoundation.Arithmetic.R0.Undecidability
 public import Concatenation.ToFoundation.Arithmetic.R0.Visser
 public import Concatenation.ToFoundation.Coding
 public import Concatenation.ToFoundation.Concat

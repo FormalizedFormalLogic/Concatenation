@@ -67,16 +67,16 @@ structure IsCertificate₁ (A : 𝚺ᴬ₀.Semisentence 2) (E : ℕ) (c j : V) :
   lt : j < c
   dom_zero : HasFact c (numeral 2) 0 0 0
   env_zero : HasFact c (numeral 3) 0 0 0
-  env_succ : ∀ n < c, ∀ s < c, ∀ a < c, n ⊴ j → HasFact c (numeral 3) n s 0 →
+  env_succ : ∀ n < c, ∀ s < c, ∀ a < c, n ≤ᶜ j → HasFact c (numeral 3) n s 0 →
     HasFact c (numeral 2) a 0 0 → HasFact c (numeral 3) (n + 1) (mkPair a s) 0
-  fn_total : ∀ k < c, ∀ f < c, ∀ d < c, k ⊴ j → f ⊴ j → HasFact c (numeral 3) k d 0 →
-    ∃ a < c, a ⊴ mkPair (mkPair 1 (mkPair k f)) d ∧ HasFact c (numeral 2) a 0 0 ∧
+  fn_total : ∀ k < c, ∀ f < c, ∀ d < c, k ≤ᶜ j → f ≤ᶜ j → HasFact c (numeral 3) k d 0 →
+    ∃ a < c, a ≤ᶜ mkPair (mkPair 1 (mkPair k f)) d ∧ HasFact c (numeral 2) a 0 0 ∧
       HasFact c (numeral 8) (mkPair k f) d a
   fn_unique : ∀ x < c, ∀ d < c, ∀ a < c, ∀ b < c, HasFact c (numeral 8) x d a →
     HasFact c (numeral 8) x d b → a = b
   eq_iff : ∀ a < c, ∀ b < c, HasFact c (numeral 2) a 0 0 → HasFact c (numeral 2) b 0 0 →
     (HasFact c (numeral 7) (mkPair (numeral 2) (numeral E)) (mkPair a (mkPair b 0)) 0 ↔ a = b)
-  ax : ∀ p < c, ∀ w < c, p ⊴ j → w ⊴ j → V ⊧/![p, w] A.val → HasFact c (numeral 4) p 0 0
+  ax : ∀ p < c, ∀ w < c, p ≤ᶜ j → w ≤ᶜ j → V ⊧/![p, w] A.val → HasFact c (numeral 4) p 0 0
 
 /--
 The clauses of a certificate `c` of level `j` on the domain (tag 2), the environments (tag 3) and
@@ -105,19 +105,19 @@ instance isCertificate₁_definable : 𝚺ᴬ₀-Relation[V] (IsCertificate₁ A
 /-- The clauses of a certificate `c` of level `j` on the values of terms (tags 5 and 6). -/
 @[mk_iff]
 structure IsCertificate₂ (c j : V) : Prop where
-  bvar_zero : ∀ t < c, ∀ n < c, ∀ s < c, ∀ a < c, IsNode t 0 0 → t ⊴ j →
+  bvar_zero : ∀ t < c, ∀ n < c, ∀ s < c, ∀ a < c, IsNode t 0 0 → t ≤ᶜ j →
     HasFact c (numeral 3) n s 0 → HasFact c (numeral 2) a 0 0 →
     HasFact c (numeral 3) (n + 1) (mkPair a s) 0 → HasFact c (numeral 5) t (mkPair a s) a
   bvar_succ : ∀ t < c, ∀ u < c, ∀ i < c, ∀ n < c, ∀ s < c, ∀ a < c, ∀ b < c, IsNode t 0 i →
-    IsNode u 0 (i + 1) → u ⊴ j → HasFact c (numeral 3) (n + 1) (mkPair b s) 0 →
+    IsNode u 0 (i + 1) → u ≤ᶜ j → HasFact c (numeral 3) (n + 1) (mkPair b s) 0 →
     HasFact c (numeral 2) b 0 0 → HasFact c (numeral 5) t s a →
     HasFact c (numeral 5) u (mkPair b s) a
   func : ∀ t < c, ∀ x < c, ∀ k < c, ∀ y < c, ∀ f < c, ∀ v < c, ∀ s < c, ∀ d < c, ∀ a < c,
-    IsNode t (numeral 2) x → IsPair x k y → IsPair y f v → t ⊴ j →
+    IsNode t (numeral 2) x → IsPair x k y → IsPair y f v → t ≤ᶜ j →
     HasFact c (numeral 6) v s d → HasFact c (numeral 8) (mkPair k f) d a →
     HasFact c (numeral 5) t s a
   vec_nil : ∀ n < c, ∀ s < c, HasFact c (numeral 3) n s 0 → HasFact c (numeral 6) 0 s 0
-  vec_cons : ∀ w < c, ∀ t < c, ∀ v < c, ∀ s < c, ∀ a < c, ∀ d < c, IsNode w t v → w ⊴ j →
+  vec_cons : ∀ w < c, ∀ t < c, ∀ v < c, ∀ s < c, ∀ a < c, ∀ d < c, IsNode w t v → w ≤ᶜ j →
     HasFact c (numeral 5) t s a → HasFact c (numeral 6) v s d →
     HasFact c (numeral 6) w s (mkPair a d)
 
@@ -154,7 +154,7 @@ structure IsCertificate₃ (c : V) : Prop where
   all : ∀ p < c, ∀ q < c, ∀ s < c, ∀ a < c, IsNode p (numeral 6) q → HasFact c (numeral 4) p s 0 →
     HasFact c (numeral 2) a 0 0 → HasFact c (numeral 4) q (mkPair a s) 0
   exs : ∀ p < c, ∀ q < c, ∀ s < c, IsNode p (numeral 7) q → HasFact c (numeral 4) p s 0 →
-    ∃ a < c, a ⊴ mkPair (mkPair 0 q) s ∧ HasFact c (numeral 2) a 0 0 ∧
+    ∃ a < c, a ≤ᶜ mkPair (mkPair 0 q) s ∧ HasFact c (numeral 2) a 0 0 ∧
       HasFact c (numeral 4) q (mkPair a s) 0
   falsum : ∀ p < c, ∀ s < c, IsNode p (numeral 3) 0 → ¬HasFact c (numeral 4) p s 0
   rel : ∀ p < c, ∀ x < c, ∀ k < c, ∀ y < c, ∀ R < c, ∀ v < c, ∀ s < c, ∀ d < c,

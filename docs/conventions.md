@@ -139,6 +139,86 @@ rewrite, so it is written as if it were already there.
   model, and the PR body says an AI agent wrote it. Here that is the normal case, not the
   exception, so every PR body says so explicitly.
 
+## Standards from Foundation's review
+
+Foundation's maintainers have reviewed the AI-assisted pull requests sent there; the points they
+settled on are collected here, since material written here is meant to pass the same review. The
+pull request that raised each point is given as `Foundation#n`. Where Foundation's guidelines
+above already say the same (no `maxHeartbeats`, `grind` for routine steps), they are not repeated.
+
+**Statements**
+
+- **`∀`, not `¬∃`.** A result saying that no object has a property is stated as
+  `∀ x, ¬P x` (or with the positive conclusion it yields), not `¬∃ x, P x`, so that users need no
+  `push_neg` (Foundation#900).
+- **The strongest natural form.** State `Primrec` rather than `Computable` when it holds
+  (Foundation#900); state provability over the weakest base theory that suffices, `𝗜𝚺₁ ⊢ σ`,
+  rather than over an arbitrary `T` with `[𝗜𝚺₁ ⪯ T]` (Foundation#902); drop hypotheses the proof
+  does not need (Foundation#906); generalise where it costs nothing, e.g. a parameter type `ξ`
+  or arity `n` instead of a fixed one (Foundation#902, Foundation#906).
+- **Constructions, not existence.** When a witness — a formula, a bound, a function — can be
+  written down, define it rather than prove that it exists; an existence statement used over
+  and over is turned once into a (possibly noncomputable) function (Foundation#902,
+  Foundation#903, Foundation#1018).
+- **No lemma that only restates what is at hand.** A lemma that follows from a structure's field
+  or from `simp [def, models_iff]`, or whose witness is the obvious one, is not stated; state the
+  property that carries content instead (Foundation#1041).
+
+**Definitions**
+
+- **A formula carries its class.** A formula known to lie in a hierarchy class is typed by it,
+  `𝚺ᴬ₀.Semisentence k`, rather than given a separate `hierarchy_foo` lemma (Foundation#902); its
+  relation is tied to it by definability instances, as described above (Foundation#902,
+  Foundation#1062).
+- **No definition without a second use.** No auxiliary definition for a transitory
+  representation (`Theory.codes`; use the standard bridges such as `Computable.encode_iff`,
+  Foundation#905), no function defined for a single use (Foundation#901), no structure or type
+  class with a single instance in practice (Foundation#906), and no `abbrev` that only re-spells
+  a type (`ArithmeticBoundedSemiformula` for `ℬ[<, ℒₒᵣ].Semiformula`, Foundation#959).
+- **Existing notation over new notation.** Use `insert`, `LogicalConnective`, heterogeneous
+  notation and the like instead of local or scoped notation of one's own (Foundation#903,
+  Foundation#906).
+- **The coding stays opaque.** Constants of the coding (`eqIndex`, `addIndex`, …) are not
+  unfolded to their values, and an argument assumes no more of a coding than that it is
+  $\Sigma_1$- or $\Delta_1$-definable (Foundation#903, Foundation#1018).
+- **Names and argument order.** Predicates are adjectival, like `Provable` (`…Satisfied`,
+  `…True`); a name does not repeat its namespace (`Bounding.Hierarchy`, not
+  `Bounding.BoundingHierarchy`), and a structure parametrised by `ℬ : Bounding L` lives in
+  `Bounding` so that it reads `ℬ.Semiformula` (Foundation#838, Foundation#959, Foundation#1018).
+  Arguments follow `Semiformula.Eval`: parameters before the formula (Foundation#1018).
+- **Models are called `V`.** The type of a model is `V` (a second one `W`), as in Foundation's
+  arithmetic, whose hierarchical definability notations expand to `(V := V)`.
+
+**Proofs**
+
+- **Model theory with predicates, not formulas.** An argument inside a model works with
+  predicates on the model and their definability, not with formulas and `⊧/`: an axiom scheme is
+  connected to its models only through a lemma of the shape of `InductionOnHierarchy.succ_induction`,
+  and induction runs over definable predicates (Foundation#929). Syntactic operations
+  (`Rew.q`, `Rew.subst`, `emb`) stay out of such proofs and out of downstream statements; the
+  usual route is syntax, then model, then syntax, as in ProvabilityLogic's `SolovaySentences.lean`
+  (Foundation#902, Foundation#929).
+- **The meta level uses `⊢`.** A statement about provability outside the model uses `T ⊢ σ`,
+  not the internalised `Proof` of the bootstrapping (Foundation#900, Foundation#903).
+- **Reuse, do not reprove.** A result already in Foundation or Mathlib (`REPred.or`,
+  `computablePred_iff_delta1`, `piOne_downward_absolute`, `by definability`) is used, or
+  specialised, not proved again (Foundation#903, Foundation#905, Foundation#1043).
+- **Fold one-off lemmas.** An auxiliary lemma used once is folded into the proof that uses it
+  or made `private` (Foundation#901, Foundation#906).
+- **Shape of proofs.** A long proof is not an anonymous constructor of tactic blocks
+  `⟨by …, by …⟩`; use `constructor` (Foundation#838). A routine case analysis is closed by
+  `grind`, `omega` or `simp` rather than a chain of `rcases` and `exact ⟨…⟩` (Foundation#900).
+  Mathlib's deprecations are followed (`Std.Refl`, `Std.Symm` for `Reflexive`, `Symmetric`,
+  Foundation#834), and no comment excuses a linter: rewrite until it is satisfied
+  (Foundation#901).
+
+**Organisation**
+
+- Generic lemmas go to the module where they belong, not next to their first use
+  (Foundation#850, Foundation#858, Foundation#900); here, `ToMathlib/` or `ToFoundation/`.
+- The definitions of axioms and schemes are kept together; proofs that they are equivalent go in
+  a file of their own (Foundation#921).
+
 ## Checks before opening a pull request
 
 ```bash

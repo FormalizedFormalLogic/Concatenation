@@ -1151,6 +1151,33 @@ instance (n : ℕ) : 𝗘𝗤 ℒ⌢ₑ ⪯ TCISigma n :=
   Entailment.WeakerThan.trans (𝓣 := 𝗧𝗖ₑ) inferInstance inferInstance
 
 /--
+Axioms of the theory $\mathsf{TCI}$.
+- [Gan09, §1]
+-/
+inductive IsTCIAxiom : Sentence ℒ⌢ₑ → Prop
+  | tcEmpty : ∀ φ ∈ 𝗧𝗖ₑ, IsTCIAxiom φ
+  | notationInduction (φ : Semiformula ℒ⌢ₑ ℕ 1) : IsTCIAxiom (notationInduction φ).univCl
+
+/--
+The theory $\mathsf{TCI}$: $\mathsf{TC}$ with the empty string and notation induction for every
+formula.
+- [Gan09, §1]
+-/
+abbrev TCI : Theory ℒ⌢ₑ := Set.ofPred IsTCIAxiom
+
+@[inherit_doc]
+notation "𝗧𝗖𝗜" => TCI
+
+instance : 𝗧𝗖ₑ ⪯ 𝗧𝗖𝗜 := Entailment.WeakerThan.ofSubset IsTCIAxiom.tcEmpty
+
+instance : 𝗘𝗤 ℒ⌢ₑ ⪯ 𝗧𝗖𝗜 := Entailment.WeakerThan.trans (𝓣 := 𝗧𝗖ₑ) inferInstance inferInstance
+
+instance (n : ℕ) : TCISigma n ⪯ 𝗧𝗖𝗜 := Entailment.WeakerThan.ofSubset fun _ h ↦ by
+  cases h with
+  | tcEmpty _ hσ => exact .tcEmpty _ hσ
+  | notationInduction _ _ => exact .notationInduction _
+
+/--
 Are $\Sigma_n\text{-}\mathsf{TCI}$ and $\mathsf{I}\Sigma_n$ mutually interpretable for each $n$?
 - [HH14, Question 3]
 -/

@@ -20,6 +20,7 @@ public import Concatenation.TC.Basic
 public import Concatenation.TC.Empty
 public import Concatenation.TC.ISigma
 public import Concatenation.TC.Interpretability
+public import Concatenation.TC.Peano
 public import Concatenation.TC.Sequence
 public import Concatenation.TC.Substring
 public import Concatenation.ToFoundation.Arithmetic.BijectiveBinary
@@ -36,6 +37,7 @@ public import Concatenation.ToFoundation.Arithmetic.R0.LocallyFinitelySatisfiabl
 public import Concatenation.ToFoundation.Arithmetic.R0.Representation
 public import Concatenation.ToFoundation.Arithmetic.R0.Undecidability
 public import Concatenation.ToFoundation.Arithmetic.R0.Visser
+public import Concatenation.ToFoundation.BoundingHierarchy
 public import Concatenation.ToFoundation.Coding
 public import Concatenation.ToFoundation.Concat
 public import Concatenation.ToFoundation.Decidability

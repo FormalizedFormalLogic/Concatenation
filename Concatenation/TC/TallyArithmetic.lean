@@ -308,4 +308,52 @@ lemma exists_prenexDefinable_of_prenex (Γ : Polarity) (s : ℕ)
 
 end definability
 
+section induction
+
+variable {V : Type*} [ConcatenationEmptyStructure V] [V↓[ℒ⌢ₑ] ⊧* TCISigma 1]
+
+/--
+The tallies of a model of $\Sigma_{n+1}\text{-}\mathsf{TCI}$ satisfy induction for the prenex
+$\Sigma_{n+1}$ formulas.
+- [HH14, Question 3]
+-/
+lemma TallyNumber.models_inductionScheme (n : ℕ) [V↓[ℒ⌢ₑ] ⊧* TCISigma (n + 1)] :
+    (TallyNumber V)↓[ℒₒᵣ] ⊧* InductionScheme ℒₒᵣ (ℬ[<, ℒₒᵣ].PrenexHierarchy 𝚺 (n + 1)) := by
+  apply Semantics.modelsSet_iff.mpr
+  rintro _ ⟨_, ⟨ψ, rfl⟩, rfl⟩
+  have hv (a : TallyNumber V) : (fun i ↦ (![a] i).1) = ![a.1] :=
+    funext fun i ↦ by fin_cases i; rfl
+  have key : ∀ f : ℕ → TallyNumber V, ∃ Q : (Fin 1 → V) → Prop,
+      PrenexDefinable (substringBounding ℒ⌢ₑ) 𝚺 (n + 1) Q ∧
+        ∀ a : TallyNumber V, Q ![a.1] ↔ ψ.val.Eval ![a] f := fun f ↦
+    let ⟨Q, hQ, HQ⟩ := exists_prenexDefinable_of_prenex 𝚺 n ψ f
+    ⟨Q, hQ, fun a ↦ by rw [← hv, HQ]⟩
+  generalize ψ.val = φ at key
+  suffices ∀ f : ℕ → TallyNumber V, φ.Eval ![0] f →
+      (∀ x, φ.Eval ![x] f → φ.Eval ![x + 1] f) → ∀ x, φ.Eval ![x] f by
+    simpa [models_iff, Semiformula.eval_univCl, succInd, Semiformula.eval_substs,
+      Matrix.constant_eq_singleton] using this
+  intro f h₀ hs x
+  obtain ⟨Q, hQ, H⟩ := key f
+  have := TCISigma.tally_induction (s := n + 1) (P := fun y ↦ Q ![y])
+    (hQ.of_iff fun v ↦ by rw [← Matrix.fun_eq_vec_one]) ((H 0).mpr h₀)
+    (fun y hy h ↦ (H (⟨y, hy⟩ + 1)).mpr (hs _ ((H ⟨y, hy⟩).mp h))) x.1 x.2
+  exact (H x).mp this
+
+namespace TallyNumber
+
+/-- Induction on the tallies for bounded arithmetic formulas. -/
+lemma induction {P : TallyNumber V → Prop} (φ : Semiformula ℒₒᵣ ℕ 1)
+    (hφ : ℬ[<, ℒₒᵣ].Hierarchy 𝚺 0 φ) (e : ℕ → TallyNumber V) (hP : ∀ x, P x ↔ φ.Eval ![x] e)
+    (zero : P 0) (succ : ∀ x, P x → P (x + 1)) : ∀ x, P x := by
+  have := models_inductionScheme (V := V) 0
+  have : Nonempty (TallyNumber V) := ⟨0⟩
+  obtain ⟨ψ, hψ, H⟩ := PrenexHierarchy.exists_eval_iff_of_deltaZero hφ 𝚺 1
+  exact InductionScheme.succ_induction (C := ℬ[<, ℒₒᵣ].PrenexHierarchy 𝚺 1)
+    ⟨e, ψ, hψ, fun x ↦ (hP x).trans (H _ _ _)⟩ zero succ
+
+end TallyNumber
+
+end induction
+
 end FFL.FirstOrder.Concatenation

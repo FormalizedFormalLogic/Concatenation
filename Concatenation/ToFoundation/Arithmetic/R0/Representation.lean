@@ -118,7 +118,7 @@ lemma eval_cobhamRepresentation₂_numeral_iff {f : ℕ → ℕ → ℕ} (hf : C
   have := models_of_provable (M := V) inferInstance <|
     cobhamRepresentation_spec hf' (Nat.pair m n)
   simp [models_iff] at this
-  simp [cobhamRepresentation₂, eval_pairDef_numeral_iff, this]
+  simp [cobhamRepresentation₂, isPair_numeral_iff, this]
 
 section value
 

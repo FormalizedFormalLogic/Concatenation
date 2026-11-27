@@ -24,7 +24,7 @@ section certificate
 variable {V : Type*} [ORingStructure V] {c j k x y z p : V}
 
 /-- $p = \langle k, x \rangle + 1$. -/
-def IsNode (p k x : V) : Prop := ∃ q, q < p ∧ V ⊧/![q, k, x] pairDef.val ∧ p = q + 1
+def IsNode (p k x : V) : Prop := ∃ q, q < p ∧ IsPair q k x ∧ p = q + 1
 
 /-- $p = \langle k, x \rangle + 1$. -/
 def isNodeDef : 𝚺ᴬ₀.Semisentence 3 := .mkSigma “p k x. ∃ q < p, !pairDef q k x ∧ p = q + 1”
@@ -36,7 +36,7 @@ instance isNode_definable : 𝚺ᴬ₀-Relation₃[V] IsNode := isNode_defined.t
 
 lemma isNode_numeral [V↓[ℒₒᵣ] ⊧* 𝗥₀] (k x : ℕ) :
     IsNode (numeral (Nat.pair k x + 1) : V) (numeral k) (numeral x) :=
-  ⟨numeral (Nat.pair k x), by simp, (eval_pairDef_numeral_iff k x).mpr rfl,
+  ⟨numeral (Nat.pair k x), by simp, (isPair_numeral_iff k x).mpr rfl,
     (numeral_add_one_of_R0 _).symm⟩
 
 /-- The fact of tag `k` about `x`, `y` and `z` belongs to `c`. -/
@@ -113,7 +113,7 @@ structure IsCertificate₂ (c j : V) : Prop where
     HasFact c (numeral 2) b 0 0 → HasFact c (numeral 5) t s a →
     HasFact c (numeral 5) u (mkPair b s) a
   func : ∀ t < c, ∀ x < c, ∀ k < c, ∀ y < c, ∀ f < c, ∀ v < c, ∀ s < c, ∀ d < c, ∀ a < c,
-    IsNode t (numeral 2) x → V ⊧/![x, k, y] pairDef.val → V ⊧/![y, f, v] pairDef.val → t ⊴ j →
+    IsNode t (numeral 2) x → IsPair x k y → IsPair y f v → t ⊴ j →
     HasFact c (numeral 6) v s d → HasFact c (numeral 8) (mkPair k f) d a →
     HasFact c (numeral 5) t s a
   vec_nil : ∀ n < c, ∀ s < c, HasFact c (numeral 3) n s 0 → HasFact c (numeral 6) 0 s 0
@@ -146,10 +146,10 @@ instance isCertificate₂_definable : 𝚺ᴬ₀-Relation[V] IsCertificate₂ :=
 @[mk_iff]
 structure IsCertificate₃ (c : V) : Prop where
   and : ∀ p < c, ∀ x < c, ∀ q < c, ∀ r < c, ∀ s < c, IsNode p (numeral 4) x →
-    V ⊧/![x, q, r] pairDef.val → HasFact c (numeral 4) p s 0 →
+    IsPair x q r → HasFact c (numeral 4) p s 0 →
     HasFact c (numeral 4) q s 0 ∧ HasFact c (numeral 4) r s 0
   or : ∀ p < c, ∀ x < c, ∀ q < c, ∀ r < c, ∀ s < c, IsNode p (numeral 5) x →
-    V ⊧/![x, q, r] pairDef.val → HasFact c (numeral 4) p s 0 →
+    IsPair x q r → HasFact c (numeral 4) p s 0 →
     HasFact c (numeral 4) q s 0 ∨ HasFact c (numeral 4) r s 0
   all : ∀ p < c, ∀ q < c, ∀ s < c, ∀ a < c, IsNode p (numeral 6) q → HasFact c (numeral 4) p s 0 →
     HasFact c (numeral 2) a 0 0 → HasFact c (numeral 4) q (mkPair a s) 0
@@ -158,11 +158,11 @@ structure IsCertificate₃ (c : V) : Prop where
       HasFact c (numeral 4) q (mkPair a s) 0
   falsum : ∀ p < c, ∀ s < c, IsNode p (numeral 3) 0 → ¬HasFact c (numeral 4) p s 0
   rel : ∀ p < c, ∀ x < c, ∀ k < c, ∀ y < c, ∀ R < c, ∀ v < c, ∀ s < c, ∀ d < c,
-    IsNode p 0 x → V ⊧/![x, k, y] pairDef.val → V ⊧/![y, R, v] pairDef.val →
+    IsNode p 0 x → IsPair x k y → IsPair y R v →
     HasFact c (numeral 4) p s 0 → HasFact c (numeral 6) v s d →
     HasFact c (numeral 7) (mkPair k R) d 0
   nrel : ∀ p < c, ∀ x < c, ∀ k < c, ∀ y < c, ∀ R < c, ∀ v < c, ∀ s < c, ∀ d < c,
-    IsNode p 1 x → V ⊧/![x, k, y] pairDef.val → V ⊧/![y, R, v] pairDef.val →
+    IsNode p 1 x → IsPair x k y → IsPair y R v →
     HasFact c (numeral 4) p s 0 → HasFact c (numeral 6) v s d →
     ¬HasFact c (numeral 7) (mkPair k R) d 0
 
@@ -223,9 +223,9 @@ section nat
 lemma nat_isNode_iff {p k x : ℕ} : IsNode p k x ↔ p = Nat.pair k x + 1 := by
   constructor
   · rintro ⟨q, -, hq, rfl⟩
-    rw [nat_eval_pairDef.mp hq]
+    rw [nat_isPair_iff.mp hq]
   · rintro rfl
-    exact ⟨Nat.pair k x, Nat.lt_succ_self _, nat_eval_pairDef.mpr rfl, rfl⟩
+    exact ⟨Nat.pair k x, Nat.lt_succ_self _, nat_isPair_iff.mpr rfl, rfl⟩
 
 end nat
 
@@ -429,8 +429,8 @@ lemma isCertificate₂ (hval : IsNaming L val) : IsCertificate₂ c j := by
       · simp
       · rw [nat_isNode_iff.mp ht, Semiterm.encode_eq_toNat, Semiterm.toNat, ← Nat.succ.inj hx]
   · intro t _ x _ k _ y _ f _ v _ s _ d _ a _ ht hx hy htj hd ha
-    obtain rfl := nat_eval_pairDef.mp hx
-    obtain rfl := nat_eval_pairDef.mp hy
+    obtain rfl := nat_isPair_iff.mp hx
+    obtain rfl := nat_isPair_iff.mp hy
     obtain ⟨-, -, -, -, ⟨n, hn, hs⟩, -, hd⟩ := H.fact.mp hd
     obtain ⟨-, -, -, hac, ha⟩ := H.fact.mp ha
     apply H.value (nat_cobhamLE_iff.mp htj) hn hs hac
@@ -474,7 +474,7 @@ lemma isCertificate₃ (hval : IsNaming L val) : IsCertificate₃ c := by
     funext fun i ↦ by cases i using Fin.cases <;> rfl
   constructor
   · intro p _ x _ q _ r _ s _ hp hx h
-    obtain rfl := nat_eval_pairDef.mp hx
+    obtain rfl := nat_isPair_iff.mp hx
     obtain ⟨-, -, -, n, φ, v, hj, rfl, hv, rfl, hφ, -⟩ := H.fact.mp h
     have hp := nat_isNode_iff.mp hp
     obtain ⟨φ₁, φ₂, rfl, rfl, rfl⟩ := Semiformula.exists_eq_and_of_encode_eq hp
@@ -482,7 +482,7 @@ lemma isCertificate₃ (hval : IsNaming L val) : IsCertificate₃ c := by
     have hφ : V ⊧/(val ∘ v) φ₁ ∧ V ⊧/(val ∘ v) φ₂ := by simpa using hφ
     exact ⟨H.sat (by omega) hv hφ.1, H.sat (by omega) hv hφ.2⟩
   · intro p _ x _ q _ r _ s _ hp hx h
-    obtain rfl := nat_eval_pairDef.mp hx
+    obtain rfl := nat_isPair_iff.mp hx
     obtain ⟨-, -, -, n, φ, v, hj, rfl, hv, rfl, hφ, -⟩ := H.fact.mp h
     have hp := nat_isNode_iff.mp hp
     obtain ⟨φ₁, φ₂, rfl, rfl, rfl⟩ := Semiformula.exists_eq_or_of_encode_eq hp
@@ -516,8 +516,8 @@ lemma isCertificate₃ (hval : IsNaming L val) : IsCertificate₃ c := by
     obtain rfl := Semiformula.eq_falsum_of_encode_eq <| nat_isNode_iff.mp hp
     simp at hφ
   · intro p _ x _ k _ y _ R _ v _ s _ d _ hp hx hy h hd
-    obtain rfl := nat_eval_pairDef.mp hx
-    obtain rfl := nat_eval_pairDef.mp hy
+    obtain rfl := nat_isPair_iff.mp hx
+    obtain rfl := nat_isPair_iff.mp hy
     obtain ⟨-, -, -, n, φ, v, hj, rfl, hv, rfl, hφ, -⟩ := H.fact.mp h
     have hp := nat_isNode_iff.mp hp
     obtain ⟨R, t, rfl, rfl, rfl⟩ := Semiformula.exists_eq_rel_of_encode_eq hp
@@ -532,8 +532,8 @@ lemma isCertificate₃ (hval : IsNaming L val) : IsCertificate₃ c := by
     exact H.fact.mpr
       ⟨H.mkPair_le (by omega) (by omega), hdB, Nat.zero_le _, k, R, u, rfl, rfl, hφ, rfl⟩
   · intro p _ x _ k _ y _ R _ v _ s _ d _ hp hx hy h hd h'
-    obtain rfl := nat_eval_pairDef.mp hx
-    obtain rfl := nat_eval_pairDef.mp hy
+    obtain rfl := nat_isPair_iff.mp hx
+    obtain rfl := nat_isPair_iff.mp hy
     obtain ⟨-, -, -, n, φ, v, hj, rfl, hv, rfl, hφ, -⟩ := H.fact.mp h
     obtain ⟨R, t, rfl, rfl, rfl⟩ :=
       Semiformula.exists_eq_nrel_of_encode_eq <| nat_isNode_iff.mp hp

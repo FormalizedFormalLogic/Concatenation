@@ -16,6 +16,7 @@ numbers.
 namespace FFL.FirstOrder.Arithmetic
 
 open ORingStructure
+open scoped FFL.FirstOrder.Bounding
 
 variable {V : Type*} [ORingStructure V]
 
@@ -73,16 +74,26 @@ lemma mkPair_numeral [V↓[ℒₒᵣ] ⊧* 𝗥₀] (a b : ℕ) :
   have h : (1 : V) = numeral 1 := by simp
   simp only [mkPair, h, numeral_add_numeral, numeral_mul_numeral]
 
-lemma eval_pairDef_numeral_iff [V↓[ℒₒᵣ] ⊧* 𝗥₀] {p : V} (m n : ℕ) :
-    V ⊧/![p, numeral m, numeral n] pairDef.val ↔ p = numeral (Nat.pair m n) := by
-  simp [pairDef, Nat.pair, Semiformula.Operator.LE.sentence_eq, Semiformula.Operator.val,
-    Semiformula.Operator.Eq.sentence_eq, Semiformula.Operator.LT.sentence_eq,
-    numeral_mul_numeral, numeral_add_numeral]
+/--
+`p` is the pair of `a` and `b` in Foundation's coding of pairs: $b^2 + a$ if $a < b$, and
+$a^2 + a + b$ otherwise.
+-/
+def IsPair (p a b : V) : Prop := (a < b ∧ p = b * b + a) ∨ ((b = a ∨ b < a) ∧ p = a * a + a + b)
+
+instance isPair_defined : 𝚺ᴬ₀-Relation₃[V] IsPair via pairDef := .mk fun v ↦ by
+  simp [pairDef, IsPair, Semiformula.Operator.LE.sentence_eq, Semiformula.Operator.val,
+    Semiformula.Operator.Eq.sentence_eq, Semiformula.Operator.LT.sentence_eq]
+
+instance isPair_definable : 𝚺ᴬ₀-Relation₃[V] IsPair := isPair_defined.to_definable
+
+lemma isPair_numeral_iff [V↓[ℒₒᵣ] ⊧* 𝗥₀] {p : V} (m n : ℕ) :
+    IsPair p (numeral m) (numeral n) ↔ p = numeral (Nat.pair m n) := by
+  simp [IsPair, Nat.pair, numeral_mul_numeral, numeral_add_numeral]
   grind
 
 @[simp, grind =]
-lemma nat_eval_pairDef {q m n : ℕ} : ℕ ⊧/![q, m, n] pairDef.val ↔ q = Nat.pair m n := by
-  simp [nat_pair_eq]
+lemma nat_isPair_iff {q m n : ℕ} : IsPair q m n ↔ q = Nat.pair m n := by
+  simpa using isPair_numeral_iff (V := ℕ) (p := q) m n
 
 end pair
 

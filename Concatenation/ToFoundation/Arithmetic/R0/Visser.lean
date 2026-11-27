@@ -391,8 +391,8 @@ lemma func (hs : P s) (hd : P d) (ha : P a) (hv : F 6 (numeral v) s d)
   have hf := (hF 8 (by simp) _ _ _ v₇ v₂ v₃).mp hf
   apply (hF 5 (by simp) _ _ _ v₀ v₁ v₃).mpr
   exact hc.func _ (hn _ v₀).1 _ (hn _ v₉).1 _ (hn _ v₅).1 _ (hn _ v₈).1 _ (hn _ v₆).1 _ hv.lt₁ _
-    hv.lt₂ _ hv.lt₃ _ hf.lt₃ (isNode_numeral _ _) ((eval_pairDef_numeral_iff _ _).mpr rfl)
-    ((eval_pairDef_numeral_iff _ _).mpr rfl) (hn _ v₀).2 hv hf
+    hv.lt₂ _ hv.lt₃ _ hf.lt₃ (isNode_numeral _ _) ((isPair_numeral_iff _ _).mpr rfl)
+    ((isPair_numeral_iff _ _).mpr rfl) (hn _ v₀).2 hv hf
 
 lemma vec_cons {t : ℕ} (hs : P s) (ha : P a) (hd : P d) (ht : F 5 (numeral t) s a)
     (hv : F 6 (numeral v) s d) : F 6 (numeral (Nat.pair t v + 1)) s (mkPair a d) := by
@@ -415,7 +415,7 @@ lemma and (hs : P s) (hp : F 4 (numeral (Nat.pair 4 (Nat.pair q r) + 1)) s 0) :
   obtain ⟨v₀, v₁, v₂, v₃, v₄, v₅, -⟩ := hl
   have hp := (hF 4 (by simp) _ _ _ v₅ v₁ v₀).mp hp
   exact (hc.and _ hp.lt₁ _ (hn _ v₄).1 _ (hn _ v₂).1 _ (hn _ v₃).1 _ hp.lt₂ (isNode_numeral _ _)
-    ((eval_pairDef_numeral_iff _ _).mpr rfl) hp).imp (hF 4 (by simp) _ _ _ v₂ v₁ v₀).mpr
+    ((isPair_numeral_iff _ _).mpr rfl) hp).imp (hF 4 (by simp) _ _ _ v₂ v₁ v₀).mpr
     (hF 4 (by simp) _ _ _ v₃ v₁ v₀).mpr
 
 lemma or (hs : P s) (hp : F 4 (numeral (Nat.pair 5 (Nat.pair q r) + 1)) s 0) :
@@ -427,7 +427,7 @@ lemma or (hs : P s) (hp : F 4 (numeral (Nat.pair 5 (Nat.pair q r) + 1)) s 0) :
   obtain ⟨v₀, v₁, v₂, v₃, v₄, v₅, -⟩ := hl
   have hp := (hF 4 (by simp) _ _ _ v₅ v₁ v₀).mp hp
   exact (hc.or _ hp.lt₁ _ (hn _ v₄).1 _ (hn _ v₂).1 _ (hn _ v₃).1 _ hp.lt₂ (isNode_numeral _ _)
-    ((eval_pairDef_numeral_iff _ _).mpr rfl) hp).imp (hF 4 (by simp) _ _ _ v₂ v₁ v₀).mpr
+    ((isPair_numeral_iff _ _).mpr rfl) hp).imp (hF 4 (by simp) _ _ _ v₂ v₁ v₀).mpr
     (hF 4 (by simp) _ _ _ v₃ v₁ v₀).mpr
 
 lemma all (hs : P s) (ha : P a) (hp : F 4 (numeral (Nat.pair 6 q + 1)) s 0) (hda : F 2 a 0 0) :
@@ -479,7 +479,7 @@ lemma rel (hs : P s) (hd : P d)
   exact (hF 7 (by simp) _ _ _ v₆ v₂ v₀).mpr <| hc.rel _ hp.lt₁ _ (hn _ v₈).1 _ (hn _ v₄).1 _
     (hn _ v₇).1 _ (hn _ v₅).1 _ hv.lt₁ _ hp.lt₂ _ hv.lt₃
     (by simpa using isNode_numeral (V := V) 0 (Nat.pair n (Nat.pair R v)))
-    ((eval_pairDef_numeral_iff _ _).mpr rfl) ((eval_pairDef_numeral_iff _ _).mpr rfl) hp hv
+    ((isPair_numeral_iff _ _).mpr rfl) ((isPair_numeral_iff _ _).mpr rfl) hp hv
 
 lemma nrel (hs : P s) (hd : P d)
     (hp : F 4 (numeral (Nat.pair 1 (Nat.pair n (Nat.pair R v)) + 1)) s 0)
@@ -496,7 +496,7 @@ lemma nrel (hs : P s) (hd : P d)
   exact (hF 7 (by simp) _ _ _ v₆ v₂ v₀).not.mpr <| hc.nrel _ hp.lt₁ _ (hn _ v₈).1 _ (hn _ v₄).1 _
     (hn _ v₇).1 _ (hn _ v₅).1 _ hv.lt₁ _ hp.lt₂ _ hv.lt₃
     (by simpa using isNode_numeral (V := V) 1 (Nat.pair n (Nat.pair R v)))
-    ((eval_pairDef_numeral_iff _ _).mpr rfl) ((eval_pairDef_numeral_iff _ _).mpr rfl) hp hv
+    ((isPair_numeral_iff _ _).mpr rfl) ((isPair_numeral_iff _ _).mpr rfl) hp hv
 
 end IsApproximable
 

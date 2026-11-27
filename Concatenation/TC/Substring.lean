@@ -65,7 +65,7 @@ followed by a prefix of `y`.
 -/
 lemma IsSubstring.append_cases (h : IsSubstring z (x ++ y)) :
     IsSubstring z x ∨ IsSubstring z y ∨
-      ∃ z₁ z₂, z = z₁ ++ z₂ ∧ z₁ ◧ x ∧ z₂ ◨ y := by
+      ∃ z₁ z₂, z = z₁ ++ z₂ ∧ x ◧ z₁ ∧ z₂ ◨ y := by
   rcases isSubstring_iff.mp h with rfl | ⟨u, h⟩ | ⟨v, h⟩ | ⟨u, v, h⟩
   · right; right; use x, y
   · rcases editor h with ⟨rfl, rfl⟩ | ⟨w, ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩⟩
@@ -121,7 +121,7 @@ lemma IsTally.ne_zero_append_zero (hx : IsTally 1 x) : x ≠ 0 ++ 0 := by
 lemma append_one_ne_zero_append_zero (x : V) : x ++ 1 ≠ 0 ++ 0 := fun h ↦
   Concatenation.zero_ne_one (isAtom_one.eq_of_append_eq_append isAtom_zero h).1.symm
 
-lemma IsSuffix.append_left (h : x ◧ y) : x ◧ u ++ y := by
+lemma IsSuffix.append_left (h : y ◧ x) : u ++ y ◧ x := by
   rcases h with rfl | ⟨u', rfl⟩
   · simp
   · right; use u ++ u'; simp [Concatenation.append_assoc]
@@ -129,8 +129,8 @@ lemma IsSuffix.append_left (h : x ◧ y) : x ◧ u ++ y := by
 lemma IsPrefix.append_right (h : x ◨ y) : x ◨ y ++ v := by
   grind [IsPrefix, Concatenation.append_assoc]
 
-lemma IsSuffix.eq_of_isAtom (hc : IsAtom c) (hc' : IsAtom c') (h : c ◧ x)
-    (h' : c' ◧ x) : c = c' := by
+lemma IsSuffix.eq_of_isAtom (hc : IsAtom c) (hc' : IsAtom c') (h : x ◧ c)
+    (h' : x ◧ c') : c = c' := by
   grind [IsSuffix, IsAtom.eq_of_append_eq_append]
 
 lemma IsPrefix.eq_of_isAtom (hc : IsAtom c) (hc' : IsAtom c') (h : c ◨ x)
@@ -144,7 +144,7 @@ lemma IsPrefix.trans (hxy : x ◨ y) (hyz : y ◨ z) : x ◨ z := by
   · exact hxy.append_right
 
 @[trans]
-lemma IsSuffix.trans (hxy : x ◧ y) (hyz : y ◧ z) : x ◧ z := by
+lemma IsSuffix.trans (hxy : y ◧ x) (hyz : z ◧ y) : z ◧ x := by
   rcases hyz with rfl | ⟨u, rfl⟩
   · exact hxy
   · exact hxy.append_left
@@ -152,7 +152,7 @@ lemma IsSuffix.trans (hxy : x ◧ y) (hyz : y ◧ z) : x ◧ z := by
 lemma IsPrefix.total (hx : x ◨ z) (hy : y ◨ z) : x ◨ y ∨ y ◨ x := by
   grind [IsPrefix, editor]
 
-lemma IsSuffix.total (hx : x ◧ z) (hy : y ◧ z) : x ◧ y ∨ y ◧ x := by
+lemma IsSuffix.total (hx : z ◧ x) (hy : z ◧ y) : y ◧ x ∨ x ◧ y := by
   grind [IsSuffix, editor]
 
 lemma eq_and_eq_of_append_eq_append_isAtom (hc : IsAtom c) (hd : IsAtom d) (h : x ++ y = c ++ d) :
@@ -167,7 +167,7 @@ lemma eq_zero_or_eq_zero_zero_of_isSubstring (h : IsSubstring t (0 ++ 0 : V)) :
   · rw [isAtom_zero.eq_of_isSubstring h₁.isSubstring, isAtom_zero.eq_of_isSubstring h₂.isSubstring]
     exact Or.inr rfl
 
-lemma eq_of_isSuffix_isAtom_zero_zero (hc : IsAtom c) (h : t ◧ c ++ 0 ++ 0) :
+lemma eq_of_isSuffix_isAtom_zero_zero (hc : IsAtom c) (h : c ++ 0 ++ 0 ◧ t) :
     t = 0 ∨ t = 0 ++ 0 ∨ t = c ++ 0 ++ 0 := by
   rcases h with rfl | ⟨k, h⟩
   · simp
@@ -186,7 +186,7 @@ lemma zero_zero_append_ne_zero_zero : (0 ++ 0 ++ x : V) ≠ 0 ++ 0 := by
   intro h
   rcases editor h with ⟨h, -⟩ | ⟨u, ⟨h, -⟩ | ⟨-, h⟩⟩ <;> simp at h
 
-lemma IsSuffix.append_congr (h : x ◧ y) : x ++ z ◧ y ++ z := by
+lemma IsSuffix.append_congr (h : y ◧ x) : y ++ z ◧ x ++ z := by
   grind [IsSuffix, Concatenation.append_assoc]
 
 lemma IsPrefix.of_append_left_isAtom (hc : IsAtom c) (h : c ++ x ◨ c ++ y) : x ◨ y := by

@@ -294,8 +294,8 @@ def IsInitialSegment (x y : V) : Prop := (x = 0 ∧ y ≠ 0) ∨ ∃ z, y = x ++
 -/
 def IsSuffix (x y : V) : Prop := x = y ∨ ∃ u, y = u ++ x
 
-/-- `x ◧ y`: `x` is a suffix of `y`. -/
-scoped infix:50 " ◧ " => IsSuffix
+/-- `x ◧ y`: `y` is a suffix of `x`. -/
+scoped notation:50 x:51 " ◧ " y:51 => IsSuffix y x
 
 /-- `x` is a suffix of `y`. -/
 def isSuffix {L : Language} [L.Eq] [L.Concat] : Semisentence L 2 := “x y. x = y ∨ ∃ u, y = u ⌢ x”
@@ -358,13 +358,13 @@ lemma isPrefix_append (x y : V) : x ◨ x ++ y := by
 lemma IsSuffix.refl (x : V) : x ◧ x := Or.inl rfl
 
 @[simp]
-lemma isSuffix_append (x y : V) : y ◧ x ++ y := by
+lemma isSuffix_append (x y : V) : x ++ y ◧ y := by
   right; use x
 
 lemma IsPrefix.isSubstring (h : x ◨ y) : IsSubstring x y := by
   rcases h with rfl | ⟨v, rfl⟩ <;> simp
 
-lemma IsSuffix.isSubstring (h : x ◧ y) : IsSubstring x y := by
+lemma IsSuffix.isSubstring (h : y ◧ x) : IsSubstring x y := by
   rcases h with rfl | ⟨u, rfl⟩ <;> simp
 
 end substring

@@ -2,7 +2,7 @@ module
 
 public import AlphaCentauri.Interpretability.Basic
 public import Concatenation.Seq.Basic
-public import Concatenation.ToFoundation.Arithmetic.R
+public import Concatenation.ToFoundation.Arithmetic.R.Interpretability
 public import Concatenation.ToFoundation.Arithmetic.R0.Representation
 
 /-!

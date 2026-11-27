@@ -23,6 +23,7 @@ public import Concatenation.ToFoundation.Arithmetic.Pairing
 public import Concatenation.ToFoundation.Arithmetic.PeanoMinus
 public import Concatenation.ToFoundation.Arithmetic.Q
 public import Concatenation.ToFoundation.Arithmetic.R
+public import Concatenation.ToFoundation.Arithmetic.R0.Basic
 public import Concatenation.ToFoundation.Arithmetic.R0.Certificate
 public import Concatenation.ToFoundation.Arithmetic.R0.Cobham
 public import Concatenation.ToFoundation.Arithmetic.R0.Cut

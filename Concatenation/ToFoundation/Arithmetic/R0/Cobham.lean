@@ -1,7 +1,7 @@
 module
 
 public import Foundation.FirstOrder.Arithmetic.Definability.Definable
-public import Foundation.FirstOrder.Arithmetic.R0.Basic
+public import Concatenation.ToFoundation.Arithmetic.R0.Basic
 
 /-!
 # Cobham's order on models of $\mathsf{R}_0$
@@ -85,10 +85,6 @@ lemma cobhamLE_refl (x : V) : x ⊴ x := Or.inl <| Or.inl rfl
 
 variable [V↓[ℒₒᵣ] ⊧* 𝗥₀]
 
-@[simp, grind =]
-lemma numeral_add_one_of_R0 (n : ℕ) : (numeral n : V) + 1 = numeral (n + 1) := by
-  simpa using numeral_add_numeral (M := V) n 1
-
 /--
 Every numeral is regular.
 - [Sve08, §3.3, Lemma 2]
@@ -158,7 +154,7 @@ Below a numeral, the strict part of Cobham's order is $<$.
 - [Sve08, §3.3, Lemma 2]
 -/
 @[grind =]
-lemma cobhamLT_numeral_iff {n : ℕ} : CobhamLT x (numeral n) ↔ x < numeral n := by
+lemma cobhamLT_numeral_iff {n : ℕ} : x ◃ numeral n ↔ x < numeral n := by
   have := not_numeral_lt_self (M := V) n
   grind [CobhamLT]
 

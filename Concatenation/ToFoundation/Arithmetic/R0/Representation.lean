@@ -1,5 +1,6 @@
 module
 
+public import Concatenation.ToFoundation.Arithmetic.Pairing
 public import Concatenation.ToFoundation.Arithmetic.R0.Cobham
 public import Foundation.FirstOrder.Arithmetic.IOpen.Basic
 public import Foundation.FirstOrder.Arithmetic.Prenex
@@ -16,6 +17,19 @@ Every computable function is weakly representable in $\mathsf{R}_0$, through Cob
 namespace FFL.FirstOrder.Arithmetic
 
 open ORingStructure
+open scoped FFL.FirstOrder.Bounding
+
+/--
+A $\Delta_0$ formula $\psi(w, \vec{x})$ such that $\exists w\, \psi(w, \vec{x})$ is equivalent in
+`ℕ` to the $\Sigma_1$ formula `φ`.
+-/
+noncomputable def delta0Matrix {k : ℕ} (φ : 𝚺ᴬ₁.Semisentence k) : 𝚺ᴬ₀.Semisentence (k + 1) :=
+  .mkSigma φ.sigma_prop.prenex.sigmaInv.val (by simp)
+
+lemma nat_eval_iff_exists_delta0Matrix {k : ℕ} (φ : 𝚺ᴬ₁.Semisentence k) (v : Fin k → ℕ) :
+    ℕ ⊧/v φ.val ↔ ∃ w, ℕ ⊧/(w :> v) (delta0Matrix φ).val :=
+  ((Bounding.Prenex.models_exists_prenex.{_, 0} (Γ' := 𝚺) φ.sigma_prop).choose_spec ℕ v
+    Empty.elim).trans (Bounding.Prenex.models_sigmaInv _ _)
 
 /--
 The formula $\exists w\,(y \lhd w \wedge \exists v\,(v \lhd w \wedge \varphi(x, y, v)) \wedge
@@ -23,56 +37,20 @@ The formula $\exists w\,(y \lhd w \wedge \exists v\,(v \lhd w \wedge \varphi(x, 
 Cobham's order.
 - [Sve08, §3.3, Theorem 3]
 -/
-def cobhamComparison (φ : ArithmeticSemisentence 3) : ArithmeticSemisentence 2 :=
+def cobhamComparison (φ : 𝚺ᴬ₀.Semisentence 3) : ArithmeticSemisentence 2 :=
   “x y. ∃ w, !cobhamLEDef y w ∧ (∃ v, !cobhamLEDef v w ∧ !φ x y v) ∧
     ∀ z u, !cobhamLEDef z w → !cobhamLEDef u w → !φ x z u → y = z”
 
-variable {V : Type*} [ORingStructure V] {φ : ArithmeticSemisentence 3}
-  {A : ArithmeticSemisentence 2}
+variable {V : Type*} [ORingStructure V] {φ : 𝚺ᴬ₀.Semisentence 3}
 
 @[simp]
 lemma eval_cobhamComparison {x y : V} :
     V ⊧/![x, y] (cobhamComparison φ) ↔ ∃ w, y ⊴ w ∧
-      (∃ v, v ⊴ w ∧ V ⊧/![x, y, v] φ) ∧
-      ∀ z u, z ⊴ w → u ⊴ w → V ⊧/![x, z, u] φ → y = z := by
+      (∃ v, v ⊴ w ∧ V ⊧/![x, y, v] φ.val) ∧
+      ∀ z u, z ⊴ w → u ⊴ w → V ⊧/![x, z, u] φ.val → y = z := by
   simp [cobhamComparison]
 
-variable [V↓[ℒₒᵣ] ⊧* 𝗥₀]
-
-lemma eval_numeral_iff_of_deltaZero (hφ₀ : ℬ[<, ℒₒᵣ].Hierarchy 𝚺 0 φ) (n i j : ℕ) :
-    V ⊧/![numeral n, numeral i, numeral j] φ ↔ ℕ ⊧/![n, i, j] φ := by
-  have e : (numeral ∘ ![n, i, j] : Fin 3 → V) = ![numeral n, numeral i, numeral j] := by
-    funext x
-    match x with | 0 | 1 | 2 => rfl
-  constructor
-  · intro h
-    by_contra h'
-    have := bold_sigma_one_completeness' (M := V) (σ := ∼φ) (by simpa using hφ₀.of_zero)
-      (bv := ![n, i, j]) (by simpa using h')
-    exact absurd h (by simpa [e] using this)
-  · intro h
-    simpa [e] using bold_sigma_one_completeness' (M := V) hφ₀.of_zero h
-
-lemma eval_numeral_iff_of_deltaZero₂ (hA : ℬ[<, ℒₒᵣ].Hierarchy 𝚺 0 A) (i j : ℕ) :
-    V ⊧/![numeral i, numeral j] A ↔ ℕ ⊧/![i, j] A := by
-  have e : (numeral ∘ ![i, j] : Fin 2 → V) = ![numeral i, numeral j] := by
-    funext x
-    match x with | 0 | 1 => rfl
-  constructor
-  · intro h
-    by_contra h'
-    have := bold_sigma_one_completeness' (M := V) (σ := ∼A) (by simpa using hA.of_zero)
-      (bv := ![i, j]) (by simpa using h')
-    exact absurd h (by simpa [e] using this)
-  · intro h
-    simpa [e] using bold_sigma_one_completeness' (M := V) hA.of_zero h
-
-variable {f : ℕ → ℕ}
-
-section
-
-variable (hφ₀ : ℬ[<, ℒₒᵣ].Hierarchy 𝚺 0 φ) (hφ : ∀ n m, m = f n ↔ ∃ k, ℕ ⊧/![n, m, k] φ)
-include hφ₀ hφ
+variable [V↓[ℒₒᵣ] ⊧* 𝗥₀] {f : ℕ → ℕ}
 
 /--
 If the $\Delta_0$ formula $\varphi(x, y, v)$ defines the graph of `f` in `ℕ` up to an existential
@@ -80,13 +58,14 @@ quantifier on $v$, then `cobhamComparison φ` defines the graph of `f` on numera
 every model of $\mathsf{R}_0$.
 - [Sve08, §3.3, Theorem 3]
 -/
-lemma eval_cobhamComparison_numeral_iff (n : ℕ) (y : V) :
-    V ⊧/![numeral n, y] (cobhamComparison φ) ↔ y = numeral (f n) := by
+lemma eval_cobhamComparison_numeral_iff (hφ : ∀ n m, m = f n ↔ ∃ k, ℕ ⊧/![n, m, k] φ.val) (n : ℕ)
+    (y : V) : V ⊧/![numeral n, y] (cobhamComparison φ) ↔ y = numeral (f n) := by
+  have eval (i j : ℕ) : V ⊧/![numeral n, numeral i, numeral j] φ.val ↔ ℕ ⊧/![n, i, j] φ.val := by
+    simpa [Matrix.comp_vecCons'] using eval_numeral_iff_nat (V := V) φ ![n, i, j]
   obtain ⟨k, hk⟩ := (hφ n (f n)).mp rfl
-  have key : ∀ i j, V ⊧/![numeral n, numeral i, numeral j] φ → i = f n := fun i j h ↦
-    (hφ n i).mpr ⟨j, (eval_numeral_iff_of_deltaZero hφ₀ n i j).mp h⟩
-  have hkV : V ⊧/![numeral n, numeral (f n), numeral k] φ :=
-    (eval_numeral_iff_of_deltaZero hφ₀ n (f n) k).mpr hk
+  have key (i j : ℕ) (h : V ⊧/![numeral n, numeral i, numeral j] φ.val) : i = f n :=
+    (hφ n i).mpr ⟨j, (eval i j).mp h⟩
+  have hkV : V ⊧/![numeral n, numeral (f n), numeral k] φ.val := (eval (f n) k).mpr hk
   rw [eval_cobhamComparison]
   constructor
   · rintro ⟨w, hyw, ⟨v, hvw, hv⟩, huniq⟩
@@ -101,33 +80,14 @@ lemma eval_cobhamComparison_numeral_iff (n : ℕ) (y : V) :
     · use numeral k, by simp
     · grind [eq_numeral_of_cobhamLE_numeral]
 
-end
-
-/--
-The graph of a computable function is defined in `ℕ` by a $\Delta_0$ formula up to an existential
-quantifier.
--/
-lemma exists_deltaZero_graph (hf : Computable f) : ∃ φ : ArithmeticSemisentence 3,
-    ℬ[<, ℒₒᵣ].Hierarchy 𝚺 0 φ ∧ ∀ n m, m = f n ↔ ∃ k, ℕ ⊧/![n, m, k] φ := by
-  let F : List.Vector ℕ 1 →. ℕ := fun v ↦ Part.some (f (v.get 0))
-  have hF : Nat.Partrec' F := Nat.Partrec'.of_part <| hf.comp (Primrec.to_comp (by primrec))
-  have hσ : ℬ[<, ℒₒᵣ].Hierarchy 𝚺 1 (codeOfPartrec' F) := by simp [codeOfPartrec']
-  obtain ⟨ψ, hψ⟩ := Bounding.Prenex.models_exists_prenex.{_, 0} (Γ' := 𝚺) hσ
-  use “x y v. !ψ.sigmaInv.val v y x”
-  and_intros
-  · simp
-  · intro n m
-    have := (codeOfPartrec'_spec hF (y := m) (v := ![n])).symm.trans
-      ((hψ ℕ (m :> ![n]) Empty.elim).trans (ψ.models_sigmaInv _))
-    simpa [F] using this
-
 /--
 The formula that represents the computable function `f` through Cobham's order.
 - [Sve08, §3.3, Theorem 3]
 -/
 noncomputable def cobhamRepresentation (f : ℕ → ℕ) : ArithmeticSemisentence 2 :=
-  cobhamComparison <| Classical.epsilon fun φ ↦
-    ℬ[<, ℒₒᵣ].Hierarchy 𝚺 0 φ ∧ ∀ n m, m = f n ↔ ∃ k, ℕ ⊧/![n, m, k] φ
+  let F : 𝚺ᴬ₁.Semisentence 2 :=
+    .mkSigma (codeOfPartrec' fun v ↦ Part.some (f (v.get 0))) (by simp [codeOfPartrec'])
+  cobhamComparison <| .mkSigma “x y v. !(delta0Matrix F) v y x”
 
 /--
 `cobhamRepresentation f` weakly represents the computable function `f` in $\mathsf{R}_0$.
@@ -135,22 +95,14 @@ noncomputable def cobhamRepresentation (f : ℕ → ℕ) : ArithmeticSemisentenc
 -/
 theorem cobhamRepresentation_spec (hf : Computable f) (n : ℕ) :
     𝗥₀ ⊢ “∀ y, !(cobhamRepresentation f) ↑n y ↔ y = ↑(f n)” := by
-  obtain ⟨hφ₀, hφ⟩ := Classical.epsilon_spec (exists_deltaZero_graph hf)
+  have hF : Nat.Partrec' fun v : List.Vector ℕ 1 ↦ Part.some (f (v.get 0)) :=
+    Nat.Partrec'.of_part <| hf.comp (Primrec.to_comp (by primrec))
   apply complete.{0}
   intro V _ _
   simpa [models_iff, cobhamRepresentation, -eval_cobhamComparison]
-    using eval_cobhamComparison_numeral_iff (V := V) hφ₀ hφ n
-
-lemma eval_pairDef_numeral_iff {p : V} (m n : ℕ) :
-    V ⊧/![p, numeral m, numeral n] pairDef.val ↔ p = numeral (Nat.pair m n) := by
-  simp [pairDef, Nat.pair, Semiformula.Operator.LE.sentence_eq, Semiformula.Operator.val,
-    Semiformula.Operator.Eq.sentence_eq, Semiformula.Operator.LT.sentence_eq,
-    numeral_mul_numeral, numeral_add_numeral]
-  grind
-
-@[simp, grind =]
-lemma nat_eval_pairDef {q m n : ℕ} : ℕ ⊧/![q, m, n] pairDef.val ↔ q = Nat.pair m n := by
-  simpa using eval_pairDef_numeral_iff (V := ℕ) (p := q) m n
+    using eval_cobhamComparison_numeral_iff (V := V) (n := n) fun n m ↦ by
+      simpa [← nat_eval_iff_exists_delta0Matrix, Matrix.comp_vecCons'] using
+        (codeOfPartrec'_spec hF (y := m) (v := ![n])).symm
 
 /-- The formula that represents the computable binary function `f` through the pairing. -/
 noncomputable def cobhamRepresentation₂ (f : ℕ → ℕ → ℕ) : ArithmeticSemisentence 3 :=

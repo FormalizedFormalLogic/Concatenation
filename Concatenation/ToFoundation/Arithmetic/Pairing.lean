@@ -73,6 +73,17 @@ lemma mkPair_numeral [V↓[ℒₒᵣ] ⊧* 𝗥₀] (a b : ℕ) :
   have h : (1 : V) = numeral 1 := by simp
   simp only [mkPair, h, numeral_add_numeral, numeral_mul_numeral]
 
+lemma eval_pairDef_numeral_iff [V↓[ℒₒᵣ] ⊧* 𝗥₀] {p : V} (m n : ℕ) :
+    V ⊧/![p, numeral m, numeral n] pairDef.val ↔ p = numeral (Nat.pair m n) := by
+  simp [pairDef, Nat.pair, Semiformula.Operator.LE.sentence_eq, Semiformula.Operator.val,
+    Semiformula.Operator.Eq.sentence_eq, Semiformula.Operator.LT.sentence_eq,
+    numeral_mul_numeral, numeral_add_numeral]
+  grind
+
+@[simp, grind =]
+lemma nat_eval_pairDef {q m n : ℕ} : ℕ ⊧/![q, m, n] pairDef.val ↔ q = Nat.pair m n := by
+  simp [nat_pair_eq]
+
 end pair
 
 section envCode

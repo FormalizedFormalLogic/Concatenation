@@ -17,7 +17,7 @@ namespace FFL.FirstOrder.Arithmetic.R0
 
 open ORingStructure Encodable DirectTranslation
 
-variable {V : Type*} [ORingStructure V] {A : ArithmeticSemisentence 2} {E : ℕ}
+variable {V : Type*} [ORingStructure V] {A : 𝚺ᴬ₀.Semisentence 2} {E : ℕ}
   {c j k x y z : V}
 
 namespace Visser
@@ -26,12 +26,12 @@ section stage
 
 /-- `c` is the least certificate of level `j`. -/
 @[mk_iff]
-structure IsStage (A : ArithmeticSemisentence 2) (E : ℕ) (j c : V) : Prop where
+structure IsStage (A : 𝚺ᴬ₀.Semisentence 2) (E : ℕ) (j c : V) : Prop where
   isCertificate : IsCertificate A E c j
   eq_of_le : ∀ d, d ⊴ c → IsCertificate A E d j → d = c
 
 /-- `c` is the least certificate of level `j`. -/
-def isStageDef (A : ArithmeticSemisentence 2) (E : ℕ) : ArithmeticSemisentence 2 := “j c.
+def isStageDef (A : 𝚺ᴬ₀.Semisentence 2) (E : ℕ) : ArithmeticSemisentence 2 := “j c.
   !(isCertificateDef A E) c j ∧ ∀ d, !cobhamLEDef d c → !(isCertificateDef A E) d j → d = c”
 
 instance isStage_defined : ℒₒᵣ-relation[V] (IsStage A E) via isStageDef A E :=
@@ -41,13 +41,13 @@ instance isStage_definable : ℒₒᵣ-relation[V] (IsStage A E) := isStage_defi
 
 /-- `j` has a unique least certificate, which bounds the elements up to `j`. -/
 @[mk_iff]
-structure HasStage (A : ArithmeticSemisentence 2) (E : ℕ) (j : V) : Prop where
+structure HasStage (A : 𝚺ᴬ₀.Semisentence 2) (E : ℕ) (j : V) : Prop where
   exists_isStage : ∃ c, IsStage A E j c
   unique : ∀ c, IsStage A E j c → ∀ d, IsStage A E j d → c = d
   lt : ∀ c, IsStage A E j c → ∀ x, x ⊴ j → x < c
 
 /-- `j` has a unique least certificate, which bounds the elements up to `j`. -/
-def hasStageDef (A : ArithmeticSemisentence 2) (E : ℕ) : ArithmeticSemisentence 1 := “j.
+def hasStageDef (A : 𝚺ᴬ₀.Semisentence 2) (E : ℕ) : ArithmeticSemisentence 1 := “j.
   (∃ c, !(isStageDef A E) j c) ∧ (∀ c, !(isStageDef A E) j c → ∀ d, !(isStageDef A E) j d → c = d) ∧
   ∀ c, !(isStageDef A E) j c → ∀ x, !cobhamLEDef x j → x < c”
 
@@ -57,11 +57,11 @@ instance hasStage_defined : ℒₒᵣ-predicate[V] (HasStage A E) via hasStageDe
 instance hasStage_definable : ℒₒᵣ-predicate[V] (HasStage A E) := hasStage_defined.to_definable
 
 /-- `x` belongs to the least certificate of level `j`. -/
-def MemStage (A : ArithmeticSemisentence 2) (E : ℕ) (x j : V) : Prop :=
+def MemStage (A : 𝚺ᴬ₀.Semisentence 2) (E : ℕ) (x j : V) : Prop :=
   ∃ c, IsStage A E j c ∧ V ⊧/![x, c] bitDef.val
 
 /-- `x` belongs to the least certificate of level `j`. -/
-def memStageDef (A : ArithmeticSemisentence 2) (E : ℕ) : ArithmeticSemisentence 2 :=
+def memStageDef (A : 𝚺ᴬ₀.Semisentence 2) (E : ℕ) : ArithmeticSemisentence 2 :=
   “x j. ∃ c, !(isStageDef A E) j c ∧ !bitDef x c”
 
 instance memStage_defined : ℒₒᵣ-relation[V] (MemStage A E) via memStageDef A E :=
@@ -69,24 +69,22 @@ instance memStage_defined : ℒₒᵣ-relation[V] (MemStage A E) via memStageDef
 
 instance memStage_definable : ℒₒᵣ-relation[V] (MemStage A E) := memStage_defined.to_definable
 
-variable [V↓[ℒₒᵣ] ⊧* 𝗥₀] (hA : ℬ[<, ℒₒᵣ].Hierarchy 𝚺 0 A)
+variable [V↓[ℒₒᵣ] ⊧* 𝗥₀]
 
-include hA in
 lemma isCertificate_numeral_iff (i j : ℕ) :
     IsCertificate A E (numeral i : V) (numeral j) ↔ IsCertificate A E i j := by
-  simpa using eval_numeral_iff_of_deltaZero₂ (V := V) (hierarchy_isCertificate (E := E) hA) i j
+  simpa [Matrix.comp_vecCons'] using eval_numeral_iff_nat (V := V) (isCertificateDef A E) ![i, j]
 
-include hA in
 lemma hasStage_numeral {j : ℕ} (h : ∃ c : ℕ, IsCertificate A E c j) :
     HasStage A E (numeral j : V) := by
   classical
   have cert : IsCertificate A E (numeral (Nat.find h) : V) (numeral j) :=
-    (isCertificate_numeral_iff hA _ _).mpr <| Nat.find_spec h
+    (isCertificate_numeral_iff _ _).mpr <| Nat.find_spec h
   have stage : IsStage A E (numeral j : V) (numeral (Nat.find h)) := by
     apply IsStage.mk cert
     intro d hd hdj
     obtain ⟨i, hi, rfl⟩ := eq_numeral_of_cobhamLE_numeral hd
-    have := Nat.find_min' h <| (isCertificate_numeral_iff hA _ _).mp hdj
+    have := Nat.find_min' h <| (isCertificate_numeral_iff _ _).mp hdj
     rw [le_antisymm hi this]
   have eq (c : V) (hc : IsStage A E (numeral j : V) c) : c = numeral (Nat.find h) := by
     rcases cobhamLE_numeral_or (x := c) (Nat.find h) with h' | h'
@@ -112,7 +110,7 @@ The fact of tag `k` about `x`, `y` and `z` belongs to the set that `S` assigns t
 element or, if there is none, to the limit of the sets `R · j`.
 -/
 def Holds (P : V → Prop) (R S : V → V → Prop) (k x y z : V) : Prop :=
-  (∃ m, IsGreatestGood P R m ∧ ∃ c, S m c ∧ Fact c k x y z) ∨
+  (∃ m, IsGreatestGood P R m ∧ ∃ c, S m c ∧ HasFact c k x y z) ∨
   (∀ m : V, ¬IsGreatestGood P R m) ∧ MemLimit P R (mkPair k (mkPair x (mkPair y z)))
 
 /--
@@ -121,7 +119,7 @@ element or, if there is none, to the limit of the sets defined by `ψ`.
 -/
 def holdsDef (φ : ArithmeticSemisentence 1) (ψ σ : ArithmeticSemisentence 2) :
     ArithmeticSemisentence 4 := “k x y z.
-  (∃ m, !(isGreatestGoodDef φ ψ) m ∧ ∃ c, !σ m c ∧ !factDef c k x y z) ∨
+  (∃ m, !(isGreatestGoodDef φ ψ) m ∧ ∃ c, !σ m c ∧ !hasFactDef c k x y z) ∨
   (∀ m, ¬!(isGreatestGoodDef φ ψ) m) ∧
     !(memLimitDef φ ψ) (!mkPairTerm k (!mkPairTerm x (!mkPairTerm y z)))”
 
@@ -151,7 +149,7 @@ section approximation
 The facts `F` about the elements of `P` agree, on finitely many elements and all elements below
 them, with those of a certificate whose level exceeds the numerals among them.
 -/
-structure IsApproximable (A : ArithmeticSemisentence 2) (E : ℕ) (P : V → Prop)
+structure IsApproximable (A : 𝚺ᴬ₀.Semisentence 2) (E : ℕ) (P : V → Prop)
     (F : ℕ → V → V → V → Prop) : Prop where
   num (n : ℕ) : P (numeral n)
   pair (x y : V) : P x → P y → P (mkPair x y)
@@ -160,15 +158,14 @@ structure IsApproximable (A : ArithmeticSemisentence 2) (E : ℕ) (P : V → Pro
     (∀ x a y, P x → P y → Q (mkPair x y) → a ⊴ x → Q (mkPair a y)) ∧
     (∀ n : ℕ, Q (numeral n) →
       numeral n < c ∧ numeral n ⊴ j) ∧
-    ∀ k ≤ 9, ∀ x y z, Q x → Q y → Q z → (F k x y z ↔ Fact c (numeral k) x y z)
+    ∀ k ≤ 9, ∀ x y z, Q x → Q y → Q z → (F k x y z ↔ HasFact c (numeral k) x y z)
 
 variable [V↓[ℒₒᵣ] ⊧* 𝗥₀]
 
-lemma isApproximable_holds (hA : ℬ[<, ℒₒᵣ].Hierarchy 𝚺 0 A)
-    (h : ∀ j : ℕ, ∃ c : ℕ, IsCertificate A E c j) :
+lemma isApproximable_holds (h : ∀ j : ℕ, ∃ c : ℕ, IsCertificate A E c j) :
     IsApproximable A E (IsSmall (V := V) (HasStage A E) (MemStage A E))
       (fun k ↦ Holds (HasStage A E) (MemStage A E) (IsStage A E) (numeral k)) := by
-  have hP (n : ℕ) : HasStage A E (numeral n : V) := hasStage_numeral hA (h n)
+  have hP (n : ℕ) : HasStage A E (numeral n : V) := hasStage_numeral (h n)
   by_cases hm : ∃ m : V, IsGreatestGood (HasStage A E) (MemStage A E) m
   · constructor
     · exact fun _ ↦ .inl hm
@@ -180,7 +177,7 @@ lemma isApproximable_holds (hA : ℬ[<, ℒₒᵣ].Hierarchy 𝚺 0 A)
     have hle (n : ℕ) : numeral n ⊴ m := hm.2 _ <| isGood_numeral hP n
     use c, m, fun _ ↦ True
     have holds (k x y z : V) :
-        Holds (HasStage A E) (MemStage A E) (IsStage A E) k x y z ↔ Fact c k x y z := by
+        Holds (HasStage A E) (MemStage A E) (IsStage A E) k x y z ↔ HasFact c k x y z := by
       constructor
       · rintro (⟨m', hm', c', hc', h⟩ | ⟨h, -⟩)
         · obtain rfl := hm.1.tame.antisymm m' (hm'.2 m hm.1) (hm.2 m' hm'.1)
@@ -346,14 +343,14 @@ lemma env_succ (hs : P s) (ha : P a) (hns : F 3 (numeral n) s 0) (hda : F 2 a 0 
   apply (hF 3 (by simp) _ _ _ v₄ v₅ v₀).mpr
   simpa using hc.env_succ _ hns.lt₁ _ hns.lt₂ _ hda.lt₁ (hn _ v₁).2 hns hda
 
-lemma ax (hA : ℬ[<, ℒₒᵣ].Hierarchy 𝚺 0 A) {w : ℕ} (hp : ℕ ⊧/![p, w] A) :
+lemma ax {w : ℕ} (hp : ℕ ⊧/![p, w] A.val) :
     F 4 (numeral p) 0 0 := by
   obtain ⟨c, j, Q, hc, hl, -, -, -, hn, hF⟩ := h.approx [0, numeral p, numeral w]
     (by simp [h.zero, h.num])
   simp only [List.forall_mem_cons] at hl
   obtain ⟨v₀, v₁, v₂, -⟩ := hl
   exact (hF 4 (by simp) _ _ _ v₁ v₀ v₀).mpr <| hc.ax _ (hn _ v₁).1 _ (hn _ v₂).1 (hn _ v₁).2
-    (hn _ v₂).2 <| (eval_numeral_iff_of_deltaZero₂ hA p w).mpr hp
+    (hn _ v₂).2 <| by simpa [Matrix.comp_vecCons'] using (eval_numeral_iff_nat A ![p, w]).mpr hp
 
 lemma bvar_zero (hs : P s) (ha : P a) (hns : F 3 (numeral n) s 0) (hda : F 2 a 0 0) :
     F 5 (numeral (Nat.pair 0 0 + 1)) (mkPair a s) a := by
@@ -672,8 +669,7 @@ section translation
 variable {L : Language} [L.Encodable] [L.Eq]
 
 /-- The translation that describes the models coded by the certificates. -/
-def certificateTranslation (hA : ℬ[<, ℒₒᵣ].Hierarchy 𝚺 0 A)
-    (h : ∀ j : ℕ, ∃ c : ℕ, IsCertificate A (eqCode L) c j) :
+def certificateTranslation (h : ∀ j : ℕ, ∃ c : ℕ, IsCertificate A (eqCode L) c j) :
     DirectTranslation 𝗥₀ L :=
   { domain := ⟨inDomainDef (hasStageDef A (eqCode L)) (memStageDef A (eqCode L))
       (isStageDef A (eqCode L))⟩
@@ -682,12 +678,12 @@ def certificateTranslation (hA : ℬ[<, ℒₒᵣ].Hierarchy 𝚺 0 A)
     func := fun {n} f ↦ ⟨describedFunc (hasStageDef A (eqCode L)) (memStageDef A (eqCode L))
       (isStageDef A (eqCode L)) n (encode f)⟩
     domain_nonempty := complete.{0} _ _ fun V _ _ ↦ (models_domainNonempty_iff _).mpr <| by
-      have := isApproximable_holds (V := V) hA h
+      have := isApproximable_holds (V := V) h
       use 0
       simpa only [Semiformula.Operator.val, Semiformula.eval_substs] using
         (Defined.eval_iff _).mpr ⟨this.zero, this.dom_zero⟩
     func_defined := fun {n} f ↦ complete.{0} _ _ fun V _ _ ↦ (models_funcDefined_iff _ _).mpr <| by
-      have := isApproximable_holds (V := V) hA h
+      have := isApproximable_holds (V := V) h
       intro e he
       have he (i) := (Defined.eval_iff _).mp (he i)
       have env := this.env he
@@ -697,18 +693,18 @@ def certificateTranslation (hA : ℬ[<, ℒₒᵣ].Hierarchy 𝚺 0 A)
           this.fn_unique (this.pair _ _ (this.num _) (this.num _)) env.1 hb.1 ha hfb hfa⟩
       simp [Semiformula.Operator.val]
     preserve_eq := complete.{0} _ _ fun V _ _ ↦ (models_preserveEq_iff _ _).mpr <| by
-      have := isApproximable_holds (V := V) hA h
+      have := isApproximable_holds (V := V) h
       intro x y hx hy
       have hx := (Defined.eval_iff _).mp hx
       have hy := (Defined.eval_iff _).mp hy
       simpa [Semiformula.Operator.val] using this.eq_iff hx.1 hy.1 hx.2 hy.2 }
 
-lemma certificateTranslation.isDescribedBy_model [V↓[ℒₒᵣ] ⊧* 𝗥₀] (hA : ℬ[<, ℒₒᵣ].Hierarchy 𝚺 0 A)
+lemma certificateTranslation.isDescribedBy_model [V↓[ℒₒᵣ] ⊧* 𝗥₀]
     (h : ∀ j : ℕ, ∃ c : ℕ, IsCertificate A (eqCode L) c j) :
     IsDescribedBy L (IsSmall (HasStage A (eqCode L)) (MemStage A (eqCode L)))
       (fun k ↦ Holds (HasStage A (eqCode L)) (MemStage A (eqCode L)) (IsStage A (eqCode L))
         (numeral k))
-      (Model.val : (certificateTranslation hA h).Model V → V) where
+      (Model.val : (certificateTranslation h).Model V → V) where
   mem a := (inDomain_defined.iff _).mp a.dom
   exists_eq x hx hdx := ⟨⟨x, (inDomain_defined.iff _).mpr ⟨hx, hdx⟩⟩, rfl⟩
   rel _ v := describedRel_defined.iff (Model.val ∘ v)
@@ -716,14 +712,13 @@ lemma certificateTranslation.isDescribedBy_model [V↓[ℒₒᵣ] ⊧* 𝗥₀] 
 
 variable {T : Theory L}
 
-lemma nonempty_interpretation (hA : ℬ[<, ℒₒᵣ].Hierarchy 𝚺 0 A)
-    (h : ∀ j : ℕ, ∃ c : ℕ, IsCertificate A (eqCode L) c j)
-    (hT : ∀ σ ∈ T, ∃ w : ℕ, ℕ ⊧/![encode σ, w] A) : Nonempty (𝗥₀ ⊳ T) :=
-  ⟨⟨certificateTranslation hA h, fun σ hσ ↦ complete.{0} _ _ fun V _ _ ↦
+lemma nonempty_interpretation (h : ∀ j : ℕ, ∃ c : ℕ, IsCertificate A (eqCode L) c j)
+    (hT : ∀ σ ∈ T, ∃ w : ℕ, ℕ ⊧/![encode σ, w] A.val) : Nonempty (𝗥₀ ⊳ T) :=
+  ⟨⟨certificateTranslation h, fun σ hσ ↦ complete.{0} _ _ fun V _ _ ↦
     let ⟨_, hw⟩ := hT σ hσ
-    have := isApproximable_holds (V := V) hA h
+    have := isApproximable_holds (V := V) h
     Model.translate_iff.mpr <|
-      (certificateTranslation.isDescribedBy_model hA h).evalb this ![] σ <| this.ax hA hw⟩⟩
+      (certificateTranslation.isDescribedBy_model h).evalb this ![] σ <| this.ax hw⟩⟩
 
 end translation
 
@@ -740,25 +735,20 @@ A recursively enumerable locally finitely satisfiable theory is interpretable in
 -/
 lemma nonempty_interpretation_of_locallyFinitelySatisfiable (hT : REPred (· ∈ T))
     (h : T.LocallyFinitelySatisfiable) : Nonempty (𝗥₀ ⊳ T) := by
-  obtain ⟨A, hA₀, hA⟩ : ∃ A : ArithmeticSemisentence 2, ℬ[<, ℒₒᵣ].Hierarchy 𝚺 0 A ∧
-      ∀ p, (∃ σ ∈ T, encode σ = p) ↔ ∃ w, ℕ ⊧/![p, w] A := by
-    have hP : REPred fun p ↦ ∃ σ ∈ T, encode σ = p := by
-      have heq : PrimrecPred fun x : ℕ × Sentence L ↦ encode x.2 = x.1 :=
-        Primrec.eq.comp (Primrec.encode.comp Primrec.snd) Primrec.fst
-      exact REPred.projection (p := fun x : ℕ × Sentence L ↦ x.2 ∈ T ∧ encode x.2 = x.1) <|
-        (hT.comp Computable.snd).and heq.computablePred.to_re
-    have hσ : ℬ[<, ℒₒᵣ].Hierarchy 𝚺 1 (codeOfREPred fun p ↦ ∃ σ ∈ T, encode σ = p) := by
-      simp [codeOfREPred, codeOfPartrec']
-    obtain ⟨ψ, hψ⟩ := Bounding.Prenex.models_exists_prenex.{_, 0} (Γ' := 𝚺) hσ
-    use “p w. !ψ.sigmaInv.val w p”
-    and_intros
-    · simp
-    · intro p
-      simpa using (codeOfREPred_spec hP (x := p)).symm.trans
-        ((hψ ℕ ![p] Empty.elim).trans (ψ.models_sigmaInv _))
+  have hP : REPred fun p ↦ ∃ σ ∈ T, encode σ = p := by
+    have heq : PrimrecPred fun x : ℕ × Sentence L ↦ encode x.2 = x.1 :=
+      Primrec.eq.comp (Primrec.encode.comp Primrec.snd) Primrec.fst
+    exact REPred.projection (p := fun x : ℕ × Sentence L ↦ x.2 ∈ T ∧ encode x.2 = x.1) <|
+      (hT.comp Computable.snd).and heq.computablePred.to_re
+  let φ : 𝚺ᴬ₁.Semisentence 1 := .mkSigma (codeOfREPred fun p ↦ ∃ σ ∈ T, encode σ = p)
+    (by simp [codeOfREPred, codeOfPartrec'])
+  let A : 𝚺ᴬ₀.Semisentence 2 := .mkSigma “p w. !(delta0Matrix φ) w p”
+  have hA (p : ℕ) : (∃ σ ∈ T, encode σ = p) ↔ ∃ w, ℕ ⊧/![p, w] A.val := by
+    simpa [A, φ, ← nat_eval_iff_exists_delta0Matrix, Matrix.comp_vecCons'] using
+      (codeOfREPred_spec hP (x := p)).symm
   obtain ⟨F, hF, hfin, hEQ⟩ := exists_finite_subset_weakerThan (Theory.Eq.finite (L := L))
     (inferInstance : 𝗘𝗤 L ⪯ T)
-  apply nonempty_interpretation hA₀ _ fun σ hσ ↦ (hA _).mp ⟨σ, hσ, rfl⟩
+  apply nonempty_interpretation (A := A) _ fun σ hσ ↦ (hA _).mp ⟨σ, hσ, rfl⟩
   intro j
   let G : Theory L := F ∪ {σ | σ ∈ T ∧ encode σ ≤ j}
   have hG : G.Finite := hfin.union <|

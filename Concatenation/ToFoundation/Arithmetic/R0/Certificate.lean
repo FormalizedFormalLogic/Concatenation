@@ -36,102 +36,100 @@ instance isNode_definable : 𝚺ᴬ₀-Relation₃[V] IsNode := isNode_defined.t
 
 /-- The fact of tag `k` about `x`, `y` and `z` belongs to `c`. -/
 @[mk_iff]
-structure Fact (c k x y z : V) : Prop where
+structure HasFact (c k x y z : V) : Prop where
   lt₁ : x < c
   lt₂ : y < c
   lt₃ : z < c
   mem : V ⊧/![mkPair k (mkPair x (mkPair y z)), c] bitDef.val
 
 /-- The fact of tag `k` about `x`, `y` and `z` belongs to `c`. -/
-def factDef : 𝚺ᴬ₀.Semisentence 5 := .mkSigma “c k x y z. x < c ∧ y < c ∧ z < c ∧
+def hasFactDef : 𝚺ᴬ₀.Semisentence 5 := .mkSigma “c k x y z. x < c ∧ y < c ∧ z < c ∧
   !bitDef (!mkPairTerm k (!mkPairTerm x (!mkPairTerm y z))) c”
 
-instance fact_defined :
-    Bounding.HierarchySymbol.Defined (fun v : Fin 5 → V ↦ Fact (v 0) (v 1) (v 2) (v 3) (v 4))
-      factDef :=
-  .mk fun v ↦ by simp [factDef, fact_iff]
+instance hasFact_defined :
+    Bounding.HierarchySymbol.Defined (fun v : Fin 5 → V ↦ HasFact (v 0) (v 1) (v 2) (v 3) (v 4))
+      hasFactDef :=
+  .mk fun v ↦ by simp [hasFactDef, hasFact_iff]
 
-instance fact_definable : 𝚺ᴬ₀-Relation₅[V] Fact := fact_defined.to_definable
+instance hasFact_definable : 𝚺ᴬ₀-Relation₅[V] HasFact := hasFact_defined.to_definable
 
 /--
 The clauses of a certificate `c` of level `j` on the domain (tag 2), the environments (tag 3) and
 the functions (tag 8), the equality (tag 7) and the axioms `A` (tag 4).
 -/
 @[mk_iff]
-structure IsCertificate₁ (A : ArithmeticSemisentence 2) (E : ℕ) (c j : V) : Prop where
+structure IsCertificate₁ (A : 𝚺ᴬ₀.Semisentence 2) (E : ℕ) (c j : V) : Prop where
   lt : j < c
-  dom_zero : Fact c (numeral 2) 0 0 0
-  env_zero : Fact c (numeral 3) 0 0 0
-  env_succ : ∀ n < c, ∀ s < c, ∀ a < c, n ⊴ j → Fact c (numeral 3) n s 0 →
-    Fact c (numeral 2) a 0 0 → Fact c (numeral 3) (n + 1) (mkPair a s) 0
-  fn_total : ∀ k < c, ∀ f < c, ∀ d < c, k ⊴ j → f ⊴ j → Fact c (numeral 3) k d 0 →
-    ∃ a < c, a ⊴ mkPair (mkPair 1 (mkPair k f)) d ∧ Fact c (numeral 2) a 0 0 ∧
-      Fact c (numeral 8) (mkPair k f) d a
-  fn_unique : ∀ x < c, ∀ d < c, ∀ a < c, ∀ b < c, Fact c (numeral 8) x d a →
-    Fact c (numeral 8) x d b → a = b
-  eq_iff : ∀ a < c, ∀ b < c, Fact c (numeral 2) a 0 0 → Fact c (numeral 2) b 0 0 →
-    (Fact c (numeral 7) (mkPair (numeral 2) (numeral E)) (mkPair a (mkPair b 0)) 0 ↔ a = b)
-  ax : ∀ p < c, ∀ w < c, p ⊴ j → w ⊴ j → V ⊧/![p, w] A → Fact c (numeral 4) p 0 0
+  dom_zero : HasFact c (numeral 2) 0 0 0
+  env_zero : HasFact c (numeral 3) 0 0 0
+  env_succ : ∀ n < c, ∀ s < c, ∀ a < c, n ⊴ j → HasFact c (numeral 3) n s 0 →
+    HasFact c (numeral 2) a 0 0 → HasFact c (numeral 3) (n + 1) (mkPair a s) 0
+  fn_total : ∀ k < c, ∀ f < c, ∀ d < c, k ⊴ j → f ⊴ j → HasFact c (numeral 3) k d 0 →
+    ∃ a < c, a ⊴ mkPair (mkPair 1 (mkPair k f)) d ∧ HasFact c (numeral 2) a 0 0 ∧
+      HasFact c (numeral 8) (mkPair k f) d a
+  fn_unique : ∀ x < c, ∀ d < c, ∀ a < c, ∀ b < c, HasFact c (numeral 8) x d a →
+    HasFact c (numeral 8) x d b → a = b
+  eq_iff : ∀ a < c, ∀ b < c, HasFact c (numeral 2) a 0 0 → HasFact c (numeral 2) b 0 0 →
+    (HasFact c (numeral 7) (mkPair (numeral 2) (numeral E)) (mkPair a (mkPair b 0)) 0 ↔ a = b)
+  ax : ∀ p < c, ∀ w < c, p ⊴ j → w ⊴ j → V ⊧/![p, w] A.val → HasFact c (numeral 4) p 0 0
 
 /--
 The clauses of a certificate `c` of level `j` on the domain (tag 2), the environments (tag 3) and
 the functions (tag 8), the equality (tag 7) and the axioms `A` (tag 4).
 -/
-def isCertificate₁Def (A : ArithmeticSemisentence 2) (E : ℕ) : ArithmeticSemisentence 2 := “c j.
-  j < c ∧ !factDef c 2 0 0 0 ∧ !factDef c 3 0 0 0 ∧
-  (∀ n < c, ∀ s < c, ∀ a < c, !cobhamLEDef n j → !factDef c 3 n s 0 → !factDef c 2 a 0 0 →
-    !factDef c 3 (n + 1) (!mkPairTerm a s) 0) ∧
-  (∀ k < c, ∀ f < c, ∀ d < c, !cobhamLEDef k j → !cobhamLEDef f j → !factDef c 3 k d 0 →
-    ∃ a < c, !cobhamLEDef a (!mkPairTerm (!mkPairTerm 1 (!mkPairTerm k f)) d) ∧ !factDef c 2 a 0 0 ∧
-      !factDef c 8 (!mkPairTerm k f) d a) ∧
-  (∀ x < c, ∀ d < c, ∀ a < c, ∀ b < c, !factDef c 8 x d a → !factDef c 8 x d b → a = b) ∧
-  (∀ a < c, ∀ b < c, !factDef c 2 a 0 0 → !factDef c 2 b 0 0 →
-    (!factDef c 7 (!mkPairTerm 2 ↑E) (!mkPairTerm a (!mkPairTerm b 0)) 0 ↔ a = b)) ∧
-  ∀ p < c, ∀ w < c, !cobhamLEDef p j → !cobhamLEDef w j → !A p w → !factDef c 4 p 0 0”
+def isCertificate₁Def (A : 𝚺ᴬ₀.Semisentence 2) (E : ℕ) : 𝚺ᴬ₀.Semisentence 2 := .mkSigma “c j.
+  j < c ∧ !hasFactDef c 2 0 0 0 ∧ !hasFactDef c 3 0 0 0 ∧
+  (∀ n < c, ∀ s < c, ∀ a < c, !cobhamLEDef n j → !hasFactDef c 3 n s 0 → !hasFactDef c 2 a 0 0 →
+    !hasFactDef c 3 (n + 1) (!mkPairTerm a s) 0) ∧
+  (∀ k < c, ∀ f < c, ∀ d < c, !cobhamLEDef k j → !cobhamLEDef f j → !hasFactDef c 3 k d 0 →
+    ∃ a < c, !cobhamLEDef a (!mkPairTerm (!mkPairTerm 1 (!mkPairTerm k f)) d) ∧
+      !hasFactDef c 2 a 0 0 ∧ !hasFactDef c 8 (!mkPairTerm k f) d a) ∧
+  (∀ x < c, ∀ d < c, ∀ a < c, ∀ b < c, !hasFactDef c 8 x d a → !hasFactDef c 8 x d b → a = b) ∧
+  (∀ a < c, ∀ b < c, !hasFactDef c 2 a 0 0 → !hasFactDef c 2 b 0 0 →
+    (!hasFactDef c 7 (!mkPairTerm 2 ↑E) (!mkPairTerm a (!mkPairTerm b 0)) 0 ↔ a = b)) ∧
+  ∀ p < c, ∀ w < c, !cobhamLEDef p j → !cobhamLEDef w j → !A p w → !hasFactDef c 4 p 0 0”
 
-variable {A : ArithmeticSemisentence 2} {E : ℕ}
+variable {A : 𝚺ᴬ₀.Semisentence 2} {E : ℕ}
 
-instance isCertificate₁_defined : ℒₒᵣ-relation[V] (IsCertificate₁ A E) via isCertificate₁Def A E :=
-  ⟨fun v ↦ by simp [isCertificate₁Def, isCertificate₁_iff]⟩
+instance isCertificate₁_defined : 𝚺ᴬ₀-Relation[V] (IsCertificate₁ A E) via isCertificate₁Def A E :=
+  .mk fun v ↦ by simp [isCertificate₁Def, isCertificate₁_iff]
 
-instance isCertificate₁_definable : ℒₒᵣ-relation[V] (IsCertificate₁ A E) :=
+instance isCertificate₁_definable : 𝚺ᴬ₀-Relation[V] (IsCertificate₁ A E) :=
   isCertificate₁_defined.to_definable
-
-lemma hierarchy_isCertificate₁ (hA : ℬ[<, ℒₒᵣ].Hierarchy 𝚺 0 A) :
-    ℬ[<, ℒₒᵣ].Hierarchy 𝚺 0 (isCertificate₁Def A E) := by
-  have hA' : ℬ[<, ℒₒᵣ].Hierarchy 𝚷 0 A := hA.of_zero
-  simp [isCertificate₁Def, hA']
 
 /-- The clauses of a certificate `c` of level `j` on the values of terms (tags 5 and 6). -/
 @[mk_iff]
 structure IsCertificate₂ (c j : V) : Prop where
   bvar_zero : ∀ t < c, ∀ n < c, ∀ s < c, ∀ a < c, IsNode t 0 0 → t ⊴ j →
-    Fact c (numeral 3) n s 0 → Fact c (numeral 2) a 0 0 →
-    Fact c (numeral 3) (n + 1) (mkPair a s) 0 → Fact c (numeral 5) t (mkPair a s) a
+    HasFact c (numeral 3) n s 0 → HasFact c (numeral 2) a 0 0 →
+    HasFact c (numeral 3) (n + 1) (mkPair a s) 0 → HasFact c (numeral 5) t (mkPair a s) a
   bvar_succ : ∀ t < c, ∀ u < c, ∀ i < c, ∀ n < c, ∀ s < c, ∀ a < c, ∀ b < c, IsNode t 0 i →
-    IsNode u 0 (i + 1) → u ⊴ j → Fact c (numeral 3) (n + 1) (mkPair b s) 0 →
-    Fact c (numeral 2) b 0 0 → Fact c (numeral 5) t s a → Fact c (numeral 5) u (mkPair b s) a
+    IsNode u 0 (i + 1) → u ⊴ j → HasFact c (numeral 3) (n + 1) (mkPair b s) 0 →
+    HasFact c (numeral 2) b 0 0 → HasFact c (numeral 5) t s a →
+    HasFact c (numeral 5) u (mkPair b s) a
   func : ∀ t < c, ∀ x < c, ∀ k < c, ∀ y < c, ∀ f < c, ∀ v < c, ∀ s < c, ∀ d < c, ∀ a < c,
     IsNode t (numeral 2) x → V ⊧/![x, k, y] pairDef.val → V ⊧/![y, f, v] pairDef.val → t ⊴ j →
-    Fact c (numeral 6) v s d → Fact c (numeral 8) (mkPair k f) d a → Fact c (numeral 5) t s a
-  vec_nil : ∀ n < c, ∀ s < c, Fact c (numeral 3) n s 0 → Fact c (numeral 6) 0 s 0
+    HasFact c (numeral 6) v s d → HasFact c (numeral 8) (mkPair k f) d a →
+    HasFact c (numeral 5) t s a
+  vec_nil : ∀ n < c, ∀ s < c, HasFact c (numeral 3) n s 0 → HasFact c (numeral 6) 0 s 0
   vec_cons : ∀ w < c, ∀ t < c, ∀ v < c, ∀ s < c, ∀ a < c, ∀ d < c, IsNode w t v → w ⊴ j →
-    Fact c (numeral 5) t s a → Fact c (numeral 6) v s d → Fact c (numeral 6) w s (mkPair a d)
+    HasFact c (numeral 5) t s a → HasFact c (numeral 6) v s d →
+    HasFact c (numeral 6) w s (mkPair a d)
 
 /-- The clauses of a certificate `c` of level `j` on the values of terms (tags 5 and 6). -/
 def isCertificate₂Def : 𝚺ᴬ₀.Semisentence 2 := .mkSigma “c j.
-  (∀ t < c, ∀ n < c, ∀ s < c, ∀ a < c, !isNodeDef t 0 0 → !cobhamLEDef t j → !factDef c 3 n s 0 →
-    !factDef c 2 a 0 0 → !factDef c 3 (n + 1) (!mkPairTerm a s) 0 →
-    !factDef c 5 t (!mkPairTerm a s) a) ∧
+  (∀ t < c, ∀ n < c, ∀ s < c, ∀ a < c, !isNodeDef t 0 0 → !cobhamLEDef t j → !hasFactDef c 3 n s 0 →
+    !hasFactDef c 2 a 0 0 → !hasFactDef c 3 (n + 1) (!mkPairTerm a s) 0 →
+    !hasFactDef c 5 t (!mkPairTerm a s) a) ∧
   (∀ t < c, ∀ u < c, ∀ i < c, ∀ n < c, ∀ s < c, ∀ a < c, ∀ b < c, !isNodeDef t 0 i →
-    !isNodeDef u 0 (i + 1) → !cobhamLEDef u j → !factDef c 3 (n + 1) (!mkPairTerm b s) 0 →
-    !factDef c 2 b 0 0 → !factDef c 5 t s a → !factDef c 5 u (!mkPairTerm b s) a) ∧
+    !isNodeDef u 0 (i + 1) → !cobhamLEDef u j → !hasFactDef c 3 (n + 1) (!mkPairTerm b s) 0 →
+    !hasFactDef c 2 b 0 0 → !hasFactDef c 5 t s a → !hasFactDef c 5 u (!mkPairTerm b s) a) ∧
   (∀ t < c, ∀ x < c, ∀ k < c, ∀ y < c, ∀ f < c, ∀ v < c, ∀ s < c, ∀ d < c, ∀ a < c,
-    !isNodeDef t 2 x → !pairDef x k y → !pairDef y f v → !cobhamLEDef t j → !factDef c 6 v s d →
-    !factDef c 8 (!mkPairTerm k f) d a → !factDef c 5 t s a) ∧
-  (∀ n < c, ∀ s < c, !factDef c 3 n s 0 → !factDef c 6 0 s 0) ∧
+    !isNodeDef t 2 x → !pairDef x k y → !pairDef y f v → !cobhamLEDef t j → !hasFactDef c 6 v s d →
+    !hasFactDef c 8 (!mkPairTerm k f) d a → !hasFactDef c 5 t s a) ∧
+  (∀ n < c, ∀ s < c, !hasFactDef c 3 n s 0 → !hasFactDef c 6 0 s 0) ∧
   ∀ w < c, ∀ t < c, ∀ v < c, ∀ s < c, ∀ a < c, ∀ d < c, !isNodeDef w t v → !cobhamLEDef w j →
-    !factDef c 5 t s a → !factDef c 6 v s d → !factDef c 6 w s (!mkPairTerm a d)”
+    !hasFactDef c 5 t s a → !hasFactDef c 6 v s d → !hasFactDef c 6 w s (!mkPairTerm a d)”
 
 instance isCertificate₂_defined : 𝚺ᴬ₀-Relation[V] IsCertificate₂ via isCertificate₂Def :=
   .mk fun v ↦ by simp [isCertificate₂Def, isCertificate₂_iff]
@@ -143,42 +141,47 @@ instance isCertificate₂_definable : 𝚺ᴬ₀-Relation[V] IsCertificate₂ :=
 @[mk_iff]
 structure IsCertificate₃ (c : V) : Prop where
   and : ∀ p < c, ∀ x < c, ∀ q < c, ∀ r < c, ∀ s < c, IsNode p (numeral 4) x →
-    V ⊧/![x, q, r] pairDef.val → Fact c (numeral 4) p s 0 →
-    Fact c (numeral 4) q s 0 ∧ Fact c (numeral 4) r s 0
+    V ⊧/![x, q, r] pairDef.val → HasFact c (numeral 4) p s 0 →
+    HasFact c (numeral 4) q s 0 ∧ HasFact c (numeral 4) r s 0
   or : ∀ p < c, ∀ x < c, ∀ q < c, ∀ r < c, ∀ s < c, IsNode p (numeral 5) x →
-    V ⊧/![x, q, r] pairDef.val → Fact c (numeral 4) p s 0 →
-    Fact c (numeral 4) q s 0 ∨ Fact c (numeral 4) r s 0
-  all : ∀ p < c, ∀ q < c, ∀ s < c, ∀ a < c, IsNode p (numeral 6) q → Fact c (numeral 4) p s 0 →
-    Fact c (numeral 2) a 0 0 → Fact c (numeral 4) q (mkPair a s) 0
-  exs : ∀ p < c, ∀ q < c, ∀ s < c, IsNode p (numeral 7) q → Fact c (numeral 4) p s 0 →
-    ∃ a < c, a ⊴ mkPair (mkPair 0 q) s ∧ Fact c (numeral 2) a 0 0 ∧
-      Fact c (numeral 4) q (mkPair a s) 0
-  falsum : ∀ p < c, ∀ s < c, IsNode p (numeral 3) 0 → ¬Fact c (numeral 4) p s 0
+    V ⊧/![x, q, r] pairDef.val → HasFact c (numeral 4) p s 0 →
+    HasFact c (numeral 4) q s 0 ∨ HasFact c (numeral 4) r s 0
+  all : ∀ p < c, ∀ q < c, ∀ s < c, ∀ a < c, IsNode p (numeral 6) q → HasFact c (numeral 4) p s 0 →
+    HasFact c (numeral 2) a 0 0 → HasFact c (numeral 4) q (mkPair a s) 0
+  exs : ∀ p < c, ∀ q < c, ∀ s < c, IsNode p (numeral 7) q → HasFact c (numeral 4) p s 0 →
+    ∃ a < c, a ⊴ mkPair (mkPair 0 q) s ∧ HasFact c (numeral 2) a 0 0 ∧
+      HasFact c (numeral 4) q (mkPair a s) 0
+  falsum : ∀ p < c, ∀ s < c, IsNode p (numeral 3) 0 → ¬HasFact c (numeral 4) p s 0
   rel : ∀ p < c, ∀ x < c, ∀ k < c, ∀ y < c, ∀ R < c, ∀ v < c, ∀ s < c, ∀ d < c,
     IsNode p 0 x → V ⊧/![x, k, y] pairDef.val → V ⊧/![y, R, v] pairDef.val →
-    Fact c (numeral 4) p s 0 → Fact c (numeral 6) v s d → Fact c (numeral 7) (mkPair k R) d 0
+    HasFact c (numeral 4) p s 0 → HasFact c (numeral 6) v s d →
+    HasFact c (numeral 7) (mkPair k R) d 0
   nrel : ∀ p < c, ∀ x < c, ∀ k < c, ∀ y < c, ∀ R < c, ∀ v < c, ∀ s < c, ∀ d < c,
     IsNode p 1 x → V ⊧/![x, k, y] pairDef.val → V ⊧/![y, R, v] pairDef.val →
-    Fact c (numeral 4) p s 0 → Fact c (numeral 6) v s d → ¬Fact c (numeral 7) (mkPair k R) d 0
+    HasFact c (numeral 4) p s 0 → HasFact c (numeral 6) v s d →
+    ¬HasFact c (numeral 7) (mkPair k R) d 0
 
 /-- The clauses of a certificate `c` on satisfaction (tag 4). -/
 def isCertificate₃Def : 𝚺ᴬ₀.Semisentence 1 := .mkSigma “c.
   (∀ p < c, ∀ x < c, ∀ q < c, ∀ r < c, ∀ s < c, !isNodeDef p 4 x → !pairDef x q r →
-    !factDef c 4 p s 0 → !factDef c 4 q s 0 ∧ !factDef c 4 r s 0) ∧
+    !hasFactDef c 4 p s 0 → !hasFactDef c 4 q s 0 ∧ !hasFactDef c 4 r s 0) ∧
   (∀ p < c, ∀ x < c, ∀ q < c, ∀ r < c, ∀ s < c, !isNodeDef p 5 x → !pairDef x q r →
-    !factDef c 4 p s 0 → !factDef c 4 q s 0 ∨ !factDef c 4 r s 0) ∧
-  (∀ p < c, ∀ q < c, ∀ s < c, ∀ a < c, !isNodeDef p 6 q → !factDef c 4 p s 0 → !factDef c 2 a 0 0 →
-    !factDef c 4 q (!mkPairTerm a s) 0) ∧
-  (∀ p < c, ∀ q < c, ∀ s < c, !isNodeDef p 7 q → !factDef c 4 p s 0 →
-    ∃ a < c, !cobhamLEDef a (!mkPairTerm (!mkPairTerm 0 q) s) ∧ !factDef c 2 a 0 0 ∧
-      !factDef c 4 q (!mkPairTerm a s) 0) ∧
-  (∀ p < c, ∀ s < c, !isNodeDef p 3 0 → ¬!factDef c 4 p s 0) ∧
+    !hasFactDef c 4 p s 0 → !hasFactDef c 4 q s 0 ∨ !hasFactDef c 4 r s 0) ∧
+  (∀ p < c, ∀ q < c, ∀ s < c, ∀ a < c, !isNodeDef p 6 q → !hasFactDef c 4 p s 0 →
+  !hasFactDef c 2 a 0 0 →
+    !hasFactDef c 4 q (!mkPairTerm a s) 0) ∧
+  (∀ p < c, ∀ q < c, ∀ s < c, !isNodeDef p 7 q → !hasFactDef c 4 p s 0 →
+    ∃ a < c, !cobhamLEDef a (!mkPairTerm (!mkPairTerm 0 q) s) ∧ !hasFactDef c 2 a 0 0 ∧
+      !hasFactDef c 4 q (!mkPairTerm a s) 0) ∧
+  (∀ p < c, ∀ s < c, !isNodeDef p 3 0 → ¬!hasFactDef c 4 p s 0) ∧
   (∀ p < c, ∀ x < c, ∀ k < c, ∀ y < c, ∀ R < c, ∀ v < c, ∀ s < c, ∀ d < c,
-    !isNodeDef p 0 x → !pairDef x k y → !pairDef y R v → !factDef c 4 p s 0 → !factDef c 6 v s d →
-    !factDef c 7 (!mkPairTerm k R) d 0) ∧
+    !isNodeDef p 0 x → !pairDef x k y → !pairDef y R v → !hasFactDef c 4 p s 0 →
+    !hasFactDef c 6 v s d →
+    !hasFactDef c 7 (!mkPairTerm k R) d 0) ∧
   ∀ p < c, ∀ x < c, ∀ k < c, ∀ y < c, ∀ R < c, ∀ v < c, ∀ s < c, ∀ d < c,
-    !isNodeDef p 1 x → !pairDef x k y → !pairDef y R v → !factDef c 4 p s 0 → !factDef c 6 v s d →
-    ¬!factDef c 7 (!mkPairTerm k R) d 0”
+    !isNodeDef p 1 x → !pairDef x k y → !pairDef y R v → !hasFactDef c 4 p s 0 →
+    !hasFactDef c 6 v s d →
+    ¬!hasFactDef c 7 (!mkPairTerm k R) d 0”
 
 instance isCertificate₃_defined : 𝚺ᴬ₀-Predicate[V] IsCertificate₃ via isCertificate₃Def :=
   .mk fun v ↦ by simp [isCertificate₃Def, isCertificate₃_iff]
@@ -192,7 +195,7 @@ $A(p, w)$ for some `w`, `p` and `w` being at most `j`, where `E` is the code of 
 symbol.
 -/
 @[mk_iff]
-structure IsCertificate (A : ArithmeticSemisentence 2) (E : ℕ) (c j : V) : Prop extends
+structure IsCertificate (A : 𝚺ᴬ₀.Semisentence 2) (E : ℕ) (c j : V) : Prop extends
   IsCertificate₁ A E c j, IsCertificate₂ c j, IsCertificate₃ c
 
 /--
@@ -200,18 +203,14 @@ structure IsCertificate (A : ArithmeticSemisentence 2) (E : ℕ) (c j : V) : Pro
 $A(p, w)$ for some `w`, `p` and `w` being at most `j`, where `E` is the code of the equality
 symbol.
 -/
-def isCertificateDef (A : ArithmeticSemisentence 2) (E : ℕ) : ArithmeticSemisentence 2 :=
-  “c j. !(isCertificate₁Def A E) c j ∧ !isCertificate₂Def c j ∧ !isCertificate₃Def c”
+def isCertificateDef (A : 𝚺ᴬ₀.Semisentence 2) (E : ℕ) : 𝚺ᴬ₀.Semisentence 2 :=
+  .mkSigma “c j. !(isCertificate₁Def A E) c j ∧ !isCertificate₂Def c j ∧ !isCertificate₃Def c”
 
-instance isCertificate_defined : ℒₒᵣ-relation[V] (IsCertificate A E) via isCertificateDef A E :=
-  ⟨fun v ↦ by simp [isCertificateDef, isCertificate_iff]⟩
+instance isCertificate_defined : 𝚺ᴬ₀-Relation[V] (IsCertificate A E) via isCertificateDef A E :=
+  .mk fun v ↦ by simp [isCertificateDef, isCertificate_iff]
 
-instance isCertificate_definable : ℒₒᵣ-relation[V] (IsCertificate A E) :=
+instance isCertificate_definable : 𝚺ᴬ₀-Relation[V] (IsCertificate A E) :=
   isCertificate_defined.to_definable
-
-lemma hierarchy_isCertificate (hA : ℬ[<, ℒₒᵣ].Hierarchy 𝚺 0 A) :
-    ℬ[<, ℒₒᵣ].Hierarchy 𝚺 0 (isCertificateDef A E) := by
-  simp [isCertificateDef, hierarchy_isCertificate₁ hA]
 
 section nat
 
@@ -222,10 +221,6 @@ lemma nat_isNode_iff {p k x : ℕ} : IsNode p k x ↔ p = Nat.pair k x + 1 := by
     rw [nat_eval_pairDef.mp hq]
   · rintro rfl
     exact ⟨Nat.pair k x, Nat.lt_succ_self _, nat_eval_pairDef.mpr rfl, rfl⟩
-
-lemma nat_fact_iff {c k x y z : ℕ} :
-    Fact c k x y z ↔ x < c ∧ y < c ∧ z < c ∧ mkPair k (mkPair x (mkPair y z)) ∈ c := by
-  simp [fact_iff]
 
 end nat
 
@@ -273,7 +268,7 @@ structure IsModelCode (L : Language) [L.Encodable] [L.Eq] {V : Type*} [Nonempty 
   canonical_le {a : ℕ} : IsCanonical val a → a ≤ B
   env_le {n s : ℕ} : n ≤ j + 3 → IsEnv val n s → s ≤ B
   mkPair_le {a b : ℕ} : a ≤ j → b ≤ j → mkPair a b ≤ B
-  fact {k x y z : ℕ} : Fact c (ORingStructure.numeral k) x y z ↔
+  fact {k x y z : ℕ} : HasFact c (ORingStructure.numeral k) x y z ↔
     x ≤ B ∧ y ≤ B ∧ z ≤ B ∧ ModelFact L val j B k x y z
 
 variable [L.Eq] {val : ℕ → V} {j B c : ℕ}
@@ -311,7 +306,10 @@ lemma exists_isModelCode [Finite V] (val : ℕ → V) (j : ℕ) : ∃ B c, IsMod
     env_le {n s} hn h := by have := hC n hn s h; omega
     mkPair_le ha hb := by have := mkPair_le_mkPair ha hb; omega
     fact {k x y z} := by
-      rw [show (ORingStructure.numeral k : ℕ) = k by simp, nat_fact_iff, hc]
+      have h : HasFact c k x y z ↔
+          x < c ∧ y < c ∧ z < c ∧ mkPair k (mkPair x (mkPair y z)) ∈ c := by
+        simp [hasFact_iff]
+      rw [show (ORingStructure.numeral k : ℕ) = k by simp, h, hc]
       constructor
       · rintro ⟨-, -, -, _, _, _, _, hx, hy, hz, h, e⟩
         simp only [mkPair_inj] at e
@@ -325,35 +323,35 @@ namespace IsModelCode
 variable (H : IsModelCode L val j B c)
 include H
 
-lemma dom {a : ℕ} (h : IsCanonical val a) : Fact c (ORingStructure.numeral 2) a 0 0 :=
+lemma dom {a : ℕ} (h : IsCanonical val a) : HasFact c (ORingStructure.numeral 2) a 0 0 :=
   H.fact.mpr ⟨H.canonical_le h, Nat.zero_le _, Nat.zero_le _, h, rfl, rfl⟩
 
 lemma env {n s : ℕ} (hn : n ≤ j + 3) (h : IsEnv val n s) :
-    Fact c (ORingStructure.numeral 3) n s 0 :=
+    HasFact c (ORingStructure.numeral 3) n s 0 :=
   H.fact.mpr ⟨by have := H.le; omega, H.env_le hn h, Nat.zero_le _, hn, h, rfl⟩
 
 lemma sat {n : ℕ} {φ : Semisentence L n} {v : Fin n → ℕ} (h : encode φ + n ≤ j)
     (hv : ∀ i, IsCanonical val (v i)) (hφ : V ⊧/(val ∘ v) φ) :
-    Fact c (ORingStructure.numeral 4) (encode φ) (envCode v) 0 :=
+    HasFact c (ORingStructure.numeral 4) (encode φ) (envCode v) 0 :=
   H.fact.mpr ⟨by have := H.le; omega, H.env_le (n := n) (by omega) ⟨v, hv, rfl⟩, Nat.zero_le _, n,
     φ, v, h, rfl, hv, rfl, hφ, rfl⟩
 
 lemma value {t n s a : ℕ} (ht : t ≤ j) (hn : n ≤ j + 3) (hs : IsEnv val n s)
     (ha : IsCanonical val a) (h : ∀ (n : ℕ) (t' : ClosedSemiterm L n) (v : Fin n → ℕ),
       t = encode t' → s = envCode v → val a = t'.val (val ∘ v) Empty.elim) :
-    Fact c (ORingStructure.numeral 5) t s a :=
+    HasFact c (ORingStructure.numeral 5) t s a :=
   H.fact.mpr ⟨by have := H.le; omega, H.env_le hn hs, H.canonical_le ha, ht, ⟨n, hn, hs⟩, ha, h⟩
 
 lemma values {v n s d k : ℕ} (hv : v ≤ j) (hn : n ≤ j + 3) (hs : IsEnv val n s) (hk : k ≤ v)
     (hd : IsEnv val k d) (h : ∀ (n k : ℕ) (t : Fin k → ClosedSemiterm L n) (w : Fin n → ℕ),
       v = Matrix.vecToNat (fun i ↦ encode (t i)) → s = envCode w →
         ∃ u : Fin k → ℕ, d = envCode u ∧ ∀ i, val (u i) = (t i).val (val ∘ w) Empty.elim) :
-    Fact c (ORingStructure.numeral 6) v s d :=
+    HasFact c (ORingStructure.numeral 6) v s d :=
   H.fact.mpr ⟨by have := H.le; omega, H.env_le hn hs, H.env_le (by omega) hd, hv, ⟨n, hn, hs⟩,
     ⟨k, hk, hd⟩, h⟩
 
-lemma isCertificate₁ [Tarski.Structure.Eq L V] {A : ArithmeticSemisentence 2}
-    (hA : ∀ p ≤ j, ∀ w ≤ j, ℕ ⊧/![p, w] A → ∃ σ : Sentence L, encode σ = p ∧ V↓[L] ⊧ σ) :
+lemma isCertificate₁ [Tarski.Structure.Eq L V] {A : 𝚺ᴬ₀.Semisentence 2}
+    (hA : ∀ p ≤ j, ∀ w ≤ j, ℕ ⊧/![p, w] A.val → ∃ σ : Sentence L, encode σ = p ∧ V↓[L] ⊧ σ) :
     IsCertificate₁ A (eqCode L) c j := by
   have hjB := H.le
   have hBc := H.lt
@@ -546,8 +544,8 @@ lemma isCertificate₃ (hval : IsNaming L val) : IsCertificate₃ c := by
 
 end IsModelCode
 
-lemma exists_isCertificate [Tarski.Structure.Eq L V] [Finite V] (A : ArithmeticSemisentence 2)
-    (j : ℕ) (hA : ∀ p ≤ j, ∀ w ≤ j, ℕ ⊧/![p, w] A → ∃ σ : Sentence L, encode σ = p ∧ V↓[L] ⊧ σ) :
+lemma exists_isCertificate [Tarski.Structure.Eq L V] [Finite V] (A : 𝚺ᴬ₀.Semisentence 2) (j : ℕ)
+    (hA : ∀ p ≤ j, ∀ w ≤ j, ℕ ⊧/![p, w] A.val → ∃ σ : Sentence L, encode σ = p ∧ V↓[L] ⊧ σ) :
     ∃ c : ℕ, IsCertificate A (eqCode L) c j := by
   obtain ⟨val, hval⟩ := exists_isNaming L V
   obtain ⟨B, c, H⟩ := exists_isModelCode (L := L) val j

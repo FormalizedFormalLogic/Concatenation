@@ -233,7 +233,7 @@ private lemma definable_eval (ε : ℕ → W) {Γ : Polarity} {s k : ℕ} {φ : 
   | dummy_pi _ ih => exact (hexs ih).of_lt <| by simp
 
 include empty zero one append in
-private lemma eval_notationInduction (s : ℕ) [V↓[ℒₒᵣ] ⊧* 𝗜𝗡𝗗⁺ 𝚺 s] {φ : Semiformula ℒ⌢ₑ ℕ 1}
+lemma eval_notationInduction (s : ℕ) [V↓[ℒₒᵣ] ⊧* 𝗜𝗡𝗗⁺ 𝚺 s] {φ : Semiformula ℒ⌢ₑ ℕ 1}
     (hφ : (substringBounding ℒ⌢ₑ).Hierarchy 𝚺 s φ) (ε : ℕ → W) :
     Semiformula.Evalf ε (notationInduction φ) := by
   suffices φ.Eval ![∅] ε → (∀ x, φ.Eval ![x] ε → φ.Eval ![x ++ 0] ε ∧ φ.Eval ![x ++ 1] ε) →
@@ -250,7 +250,7 @@ private lemma eval_notationInduction (s : ℕ) [V↓[ℒₒᵣ] ⊧* 𝗜𝗡�
   simpa using this (c.symm x)
 
 include empty zero one append in
-private lemma models_TCISigma (s : ℕ) [V↓[ℒₒᵣ] ⊧* 𝗜𝗡𝗗⁺ 𝚺 s] : W↓[ℒ⌢ₑ] ⊧* TCISigma s := by
+lemma models_TCISigma (s : ℕ) [V↓[ℒₒᵣ] ⊧* 𝗜𝗡𝗗⁺ 𝚺 s] : W↓[ℒ⌢ₑ] ⊧* TCISigma s := by
   have : Nonempty W := ⟨∅⟩
   have hc : ∀ x : W, ∃ a, c a = x := c.surjective
   constructor

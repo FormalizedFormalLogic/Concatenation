@@ -41,6 +41,7 @@ public import Concatenation.ToFoundation.Interpretability.Basic
 public import Concatenation.ToFoundation.Interpretability.DefinitionalEquivalence
 public import Concatenation.ToFoundation.Interpretability.LocallyFinitelySatisfiable
 public import Concatenation.ToFoundation.Interpretability.Undecidability
+public import Concatenation.ToFoundation.Language
 public import Concatenation.ToFoundation.Naming
 public import Concatenation.ToFoundation.Theory
 public import Concatenation.ToMathlib.AtomicPairing

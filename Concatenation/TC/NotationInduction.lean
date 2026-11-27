@@ -167,6 +167,82 @@ instance isProperPrefix_definable : 𝚺-[ℬₛ, 0]-Relation[V] IsProperPrefix 
 
 end definitions
 
+section closure
+
+local notation "ℬₛ" => substringBounding ℒ⌢ₑ
+
+variable {V : Type*} [ConcatenationEmptyStructure V] {k : ℕ}
+
+lemma definable_eq_term (t u : Semiterm ℒ⌢ₑ V k) :
+    𝚺-[ℬₛ, 0].Definable fun v ↦ t.val v id = u.val v id :=
+  (HierarchySymbol.DefinableRel.eq.retractiont ![t, u]).of_iff fun v ↦ by simp
+
+lemma bexs_substring {P : (Fin k → V) → V → Prop}
+    (hP : 𝚺-[ℬₛ, 0].Definable fun w ↦ P (w ·.succ) (w 0)) (t : Semiterm ℒ⌢ₑ V k) :
+    𝚺-[ℬₛ, 0].Definable fun v ↦ ∃ x, IsSubstring x (t.val v id) ∧ P v x :=
+  (HierarchySymbol.Definable.bexs (R := substringOperator ℒ⌢ₑ) rfl hP t).of_iff fun v ↦ by simp
+
+lemma ball_substring {P : (Fin k → V) → V → Prop}
+    (hP : 𝚺-[ℬₛ, 0].Definable fun w ↦ P (w ·.succ) (w 0)) (t : Semiterm ℒ⌢ₑ V k) :
+    𝚺-[ℬₛ, 0].Definable fun v ↦ ∀ x, IsSubstring x (t.val v id) → P v x :=
+  (HierarchySymbol.Definable.ball (R := substringOperator ℒ⌢ₑ) rfl hP t).of_iff fun v ↦ by simp
+
+lemma definable_isSubstring_term (t u : Semiterm ℒ⌢ₑ V k) :
+    𝚺-[ℬₛ, 0].Definable fun v ↦ IsSubstring (t.val v id) (u.val v id) :=
+  (bexs_substring (P := fun v x ↦ x = t.val v id)
+    ((definable_eq_term #0 (Rew.bShift t)).of_iff fun w ↦ by simp [Semiterm.val_bShift'])
+    u).of_iff fun v ↦ by simp
+
+/--
+The class of relations with a $\Sigma_1$ definition with parameters is closed under unbounded
+existential quantification, by quantifying over a string containing both witnesses.
+- [HH14, §2]
+-/
+lemma PrenexDefinable.exs_Sigma1 {Q : (Fin (k + 1) → V) → Prop}
+    (hQ : PrenexDefinable ℬₛ 𝚺 1 Q) : PrenexDefinable ℬₛ 𝚺 1 fun v ↦ ∃ x, Q (x :> v) := by
+  have : Nonempty V := ⟨∅⟩
+  obtain ⟨R, hR, H⟩ := PrenexDefinable.sigma_succ_iff.mp hQ
+  have hR := PrenexDefinable.zero_iff.mp hR
+  have hD : 𝚺-[ℬₛ, 0].Definable fun w : Fin (k + 1) → V ↦
+      ∃ x, IsSubstring x (w 0) ∧ ∃ y, IsSubstring y (w 0) ∧ R (y :> x :> fun i ↦ w i.succ) := by
+    apply bexs_substring _ #0
+    apply bexs_substring _ #1
+    refine (hR.retraction (0 :> 1 :> fun l ↦ l.succ.succ.succ)).of_iff fun w ↦ iff_of_eq ?_
+    congr 1
+    funext i
+    refine Fin.cases ?_ (fun j ↦ Fin.cases ?_ (fun l ↦ ?_) j) i <;> simp
+  refine PrenexDefinable.sigma_succ_iff.mpr ⟨_, PrenexDefinable.zero_iff.mpr hD, fun v ↦ ?_⟩
+  simp only [H]
+  constructor
+  · rintro ⟨x, y, h⟩
+    exact ⟨x ++ y, x, isSubstring_append_left x y, y, by simp, by simpa using h⟩
+  · rintro ⟨z, x, -, y, -, h⟩
+    exact ⟨x, y, by simpa using h⟩
+
+lemma PrenexDefinable.and_Sigma1 {P Q : (Fin k → V) → Prop} (hP : PrenexDefinable ℬₛ 𝚺 1 P)
+    (hQ : PrenexDefinable ℬₛ 𝚺 1 Q) : PrenexDefinable ℬₛ 𝚺 1 fun v ↦ P v ∧ Q v := by
+  have : Nonempty V := ⟨∅⟩
+  obtain ⟨R, hR, H⟩ := PrenexDefinable.sigma_succ_iff.mp hP
+  have hQ' : PrenexDefinable ℬₛ 𝚺 1 fun w : Fin (k + 1) → V ↦ R w ∧ Q (fun i ↦ w i.succ) :=
+    (hQ.retraction Fin.succ).and_delta0 (PrenexDefinable.zero_iff.mp hR) |>.of_iff
+      fun w ↦ and_comm
+  exact (PrenexDefinable.exs_Sigma1 hQ').of_iff fun v ↦ by simp [H]
+
+lemma PrenexDefinable.or_Sigma1 {P Q : (Fin k → V) → Prop} (hP : PrenexDefinable ℬₛ 𝚺 1 P)
+    (hQ : PrenexDefinable ℬₛ 𝚺 1 Q) : PrenexDefinable ℬₛ 𝚺 1 fun v ↦ P v ∨ Q v := by
+  have : Nonempty V := ⟨∅⟩
+  obtain ⟨R, hR, H⟩ := PrenexDefinable.sigma_succ_iff.mp hP
+  obtain ⟨S, hS, H'⟩ := PrenexDefinable.sigma_succ_iff.mp hQ
+  exact PrenexDefinable.sigma_succ_iff.mpr ⟨fun w ↦ R w ∨ S w,
+    PrenexDefinable.zero_iff.mpr <| (PrenexDefinable.zero_iff.mp hR).or
+      (PrenexDefinable.zero_iff.mp hS), fun v ↦ by simp [H, H', exists_or]⟩
+
+lemma PrenexDefinable.all_Pi1 {Q : (Fin (k + 1) → V) → Prop}
+    (hQ : PrenexDefinable ℬₛ 𝚷 1 Q) : PrenexDefinable ℬₛ 𝚷 1 fun v ↦ ∀ x, Q (x :> v) :=
+  (PrenexDefinable.exs_Sigma1 hQ.not).not.of_iff fun v ↦ by simp
+
+end closure
+
 section notationInduction
 
 local notation "ℬₛ" => substringBounding ℒ⌢ₑ
@@ -372,9 +448,111 @@ lemma isSubstring_append_one_cases (hy : IsTally 1 (y ++ 1)) (h : IsSubstring u 
       simpa [TCEmpty.append_assoc] using h).1
     exact .inl (this ▸ isSubstring_append_left u l')
 
+lemma append_eq_self_iff (hx : IsTally 1 x) (hw : IsTally 1 w) : w ++ x = x ↔ w = ∅ :=
+  ⟨fun h ↦ eq_empty_of_append_eq_self (by rwa [append_comm hx hw]), by rintro rfl; simp⟩
+
 end TCISigma
 
 end
+
+namespace TCISigma
+
+/-- Induction on the tallies for a predicate with a prenex $\Sigma_s$ definition. -/
+lemma tally_induction [V↓[ℒ⌢ₑ] ⊧* TCISigma s] {P : V → Prop}
+    (hP : PrenexDefinable ℬₛ 𝚺 s fun v : Fin 1 → V ↦ P (v 0)) (zero : P ∅)
+    (succ : ∀ x, IsTally 1 x → P x → P (x ++ 1)) : ∀ x, IsTally 1 x → P x := by
+  have : V↓[ℒ⌢ₑ] ⊧* 𝗧𝗖ₑ := TCISigma.models_TCEmpty s
+  have : Nonempty V := ⟨∅⟩
+  have key : ∀ x, P x ∨ ¬IsTally 1 x := by
+    refine notation_induction (s := s) (P := fun x ↦ P x ∨ ¬IsTally 1 x) ?_ ?_ ?_
+    · exact hP.or_delta0 isTally_one_definable.not_zero
+    · exact .inl zero
+    · intro x ih
+      refine ⟨.inr (TCEmpty.not_isTally_one_append_zero x), ?_⟩
+      by_cases h : IsTally 1 (x ++ 1)
+      · have hx := (TCEmpty.isTally_append_iff.mp h).1
+        exact .inl (succ x hx (ih.resolve_right (not_not.mpr hx)))
+      · exact .inr h
+  exact fun x hx ↦ (key x).resolve_right (not_not.mpr hx)
+
+variable [V↓[ℒ⌢ₑ] ⊧* TCISigma 1]
+
+/--
+Induction on the tallies for a predicate with a prenex $\Pi_1$ definition.
+-/
+lemma tally_induction_Pi1 {P : V → Prop}
+    (hP : PrenexDefinable ℬₛ 𝚷 1 fun v : Fin 1 → V ↦ P (v 0)) (zero : P ∅)
+    (succ : ∀ x, IsTally 1 x → P x → P (x ++ 1)) : ∀ x, IsTally 1 x → P x := by
+  have : Nonempty V := ⟨∅⟩
+  intro c hc
+  by_contra hPc
+  have H : ∀ d, IsTally 1 d → ¬IsSubstring d c ∨ ∃ e, IsSubstring e c ∧ e ++ d = c ∧ ¬P e := by
+    apply tally_induction (s := 1)
+      (P := fun d ↦ ¬IsSubstring d c ∨ ∃ e, IsSubstring e c ∧ e ++ d = c ∧ ¬P e)
+    · refine ((PrenexDefinable.exs_Sigma1 <| (hP.not.retraction ![0]).and_delta0 <|
+        (definable_isSubstring_term #0 &c).and (definable_eq_term ‘#0 ⌢ #1’ &c)).or_delta0
+        (definable_isSubstring_term #0 &c).not_zero).of_iff fun v ↦ by
+          simp [or_comm, and_comm, and_assoc]
+    · exact .inr ⟨c, IsSubstring.refl c, by simp, hPc⟩
+    · intro d hd ih
+      refine or_iff_not_imp_left.mpr fun hdc ↦ ?_
+      have hdc := not_not.mp hdc
+      obtain ⟨e, hec, rfl, he⟩ := (ih.resolve_left <| not_not.mpr <|
+        TCEmpty.isSubstring_trans (isSubstring_append_left d 1) hdc)
+      have heT := TCEmpty.isTally_of_isSubstring hc hec
+      by_cases he' : e = ∅
+      · subst he'
+        obtain ⟨-, l, -, hl⟩ := exists_append_eq_of_isSubstring hc hdc
+        have : 1 ++ l = ∅ := eq_empty_of_append_eq_self (x := d) <| by
+          simpa [TCEmpty.append_assoc] using hl
+        exact absurd (TCEmpty.eq_empty_of_append_eq_empty this).1 TCEmpty.one_ne_empty
+      · obtain ⟨e', he'T, rfl⟩ := eq_append_one_of_ne_empty heT he'
+        refine ⟨e', TCEmpty.isSubstring_trans (by simp) hec, ?_,
+          fun h ↦ he (succ e' he'T h)⟩
+        rw [← one_append_eq_append_one hd, ← TCEmpty.append_assoc]
+  obtain ⟨e, -, he, hPe⟩ := (H c hc).resolve_left (not_not.mpr (IsSubstring.refl c))
+  obtain rfl := (append_eq_self_iff hc (TCEmpty.isTally_of_isSubstring hc (he ▸
+    isSubstring_append_left e c))).mp he
+  exact hPe zero
+
+/--
+Collection for a $\Delta_0$ relation over the substrings of a tally.
+-/
+lemma collection {θ : V → V → Prop}
+    (hθ : 𝚺-[ℬₛ, 0].Definable fun v : Fin 2 → V ↦ θ (v 0) (v 1)) {b : V} (hb : IsTally 1 b)
+    (h : ∀ y, IsSubstring y b → ∃ w, θ y w) :
+    ∃ W, ∀ y, IsSubstring y b → ∃ w, IsSubstring w W ∧ θ y w := by
+  have : Nonempty V := ⟨∅⟩
+  have H : ∀ u, IsTally 1 u → (∃ W, ∀ y, IsSubstring y u → ∃ w, IsSubstring w W ∧ θ y w) ∨
+      ¬IsSubstring u b := by
+    apply tally_induction (s := 1) (P := fun u ↦
+      (∃ W, ∀ y, IsSubstring y u → ∃ w, IsSubstring w W ∧ θ y w) ∨ ¬IsSubstring u b)
+    · have hD : 𝚺-[ℬₛ, 0].Definable fun w : Fin 2 → V ↦
+          ∀ y, IsSubstring y (w 1) → ∃ x, IsSubstring x (w 0) ∧ θ y x := by
+        apply ball_substring _ #1
+        apply bexs_substring _ #1
+        exact (hθ.retraction ![1, 0]).of_iff fun v ↦ by simp
+      exact (PrenexDefinable.sigma_succ_iff.mpr ⟨_, PrenexDefinable.zero_iff.mpr hD,
+        fun v ↦ Iff.rfl⟩).or_delta0 (definable_isSubstring_term #0 &b).not_zero |>.of_iff
+          fun v ↦ by simp
+    · obtain ⟨w₀, hw₀⟩ := h ∅ (by simp)
+      exact .inl ⟨w₀, fun y hy ↦ ⟨w₀, IsSubstring.refl w₀, by simpa using
+        (TCEmpty.isSubstring_empty_iff.mp hy) ▸ hw₀⟩⟩
+    · intro u hu ih
+      refine or_iff_not_imp_right.mpr fun hub ↦ ?_
+      have hub := not_not.mp hub
+      obtain ⟨W, hW⟩ := ih.resolve_right <| not_not.mpr <|
+        TCEmpty.isSubstring_trans (isSubstring_append_left u 1) hub
+      obtain ⟨w₁, hw₁⟩ := h _ hub
+      refine ⟨W ++ w₁, fun y hy ↦ ?_⟩
+      rcases isSubstring_append_one_cases (TCEmpty.isTally_of_isSubstring hb hub) hy with
+        hy | rfl
+      · obtain ⟨w, hw, hθw⟩ := hW y hy
+        exact ⟨w, TCEmpty.isSubstring_append_right_of hw w₁, hθw⟩
+      · exact ⟨w₁, isSubstring_append_right W w₁, hw₁⟩
+  exact (H b hb).resolve_right (not_not.mpr (IsSubstring.refl b))
+
+end TCISigma
 
 end notationInduction
 

@@ -32,6 +32,10 @@ lemma hierarchy_emb_zero {ξ : Type*} (φ : 𝚺-[ℬ, 0].Semisentence k) :
     ℬ.Hierarchy Γ s (Rewriting.emb φ.val : Semiformula L ξ k) :=
   Hierarchy.of_zero (φ.sigma_prop.rew _)
 
+lemma HierarchySymbol.Definable.not_zero (h : 𝚺-[ℬ, 0].Definable P) :
+    𝚺-[ℬ, 0].Definable fun v ↦ ¬P v :=
+  (HierarchySymbol.Definable.of_zero h (ℌ := 𝚷-[ℬ, 0])).notPi
+
 namespace PrenexDefinable
 
 lemma of_iff (h : ℬ.PrenexDefinable Γ s Q) (H : ∀ v, P v ↔ Q v) : ℬ.PrenexDefinable Γ s P := by

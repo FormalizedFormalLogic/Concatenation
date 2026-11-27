@@ -44,8 +44,6 @@ lemma DirectTranslation.Model.rel_func_of_defined {τ : DirectTranslation T L₂
   rw [Matrix.fun_eq_vec_two fun i ↦ ((![a, b] : Fin 2 → τ.Model M) i : M), hf] at h
   simpa [Semiformula.Operator.val, Defined.eval_iff] using h
 
-lemma notInterprets_iff : T ⋫ U ↔ ¬Nonempty (T ⊳ U) := not_nonempty_iff.symm
-
 namespace NotInterprets
 
 variable [𝗘𝗤 _ ⪯ U] {S : Theory L₃}

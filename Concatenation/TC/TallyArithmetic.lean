@@ -520,4 +520,123 @@ lemma TallyNumber.models_ISigma (n : ℕ) [V↓[ℒ⌢ₑ] ⊧* TCISigma (n + 1)
 
 end induction
 
+section translation
+
+open DirectTranslation
+
+/-- `z` is the product of the `1`-tallies `x` and `y`. -/
+def isTallyMulDef : Semisentence ℒ⌢ₑ 3 := “z x y. ∃ r, !isTallyMulWitnessDef.val r x y z”
+
+instance isTallyMul_defined {V : Type*} [ConcatenationEmptyStructure V] [V↓[ℒ⌢ₑ] ⊧* 𝗧𝗖ₑ] :
+    ℒ⌢ₑ-relation₃[V] (fun z x y ↦ IsTallyMul x y z) via isTallyMulDef :=
+  ⟨fun v ↦ by simp [isTallyMulDef, IsTallyMul]⟩
+
+variable (n : ℕ)
+
+/--
+The translation of the language of arithmetic into $\Sigma_{n+1}\text{-}\mathsf{TCI}$: the
+numbers are the `1`-tallies, `0` is the empty string, `1` is the letter `1`, `+` is the
+concatenation, `*` is the multiplication of tallies, and `<` is the proper prefix relation.
+- [HH14, Question 3]
+- [Gan09, §1, Definition 2]
+-/
+def tallyTranslation : DirectTranslation (TCISigma (n + 1)) ℒₒᵣ where
+  domain := ⟨isTallyOneDef.val⟩
+  rel
+    | .eq => ⟨“x y. x = y”⟩
+    | .lt => ⟨isProperPrefixDef.val⟩
+  func
+    | .zero => ⟨“z. z = ⋆”⟩
+    | .one => ⟨“z. z = !!(op(1).const)”⟩
+    | .add => ⟨“z x y. z = x ⌢ y”⟩
+    | .mul => ⟨isTallyMulDef⟩
+  domain_nonempty := completeEmpty.{0} _ _ fun V _ _ ↦ (models_domainNonempty_iff _).mpr <| by
+    have : V↓[ℒ⌢ₑ] ⊧* TCISigma 1 := TCISigma.models_of_le (s' := n + 1) (by omega)
+    exact ⟨∅, by simp [Semiformula.Operator.val]⟩
+  func_defined f := completeEmpty.{0} _ _ fun V _ _ ↦ (models_funcDefined_iff _ _).mpr <| by
+    have : V↓[ℒ⌢ₑ] ⊧* TCISigma 1 := TCISigma.models_of_le (s' := n + 1) (by omega)
+    intro e he
+    have he (i) : IsTally 1 (e i) := by simpa [Semiformula.Operator.val] using he i
+    cases f
+    · suffices ∃! y : V, IsTally 1 y ∧ y = ∅ by
+        simpa [Semiformula.Operator.val, Semiformula.Operator.Eq.sentence_eq]
+      exact ⟨∅, by simp, fun _ h ↦ h.2⟩
+    · suffices ∃! y : V, IsTally 1 y ∧ y = 1 by
+        simpa [Semiformula.Operator.val, Semiformula.Operator.Eq.sentence_eq]
+      exact ⟨1, ⟨TCEmpty.isTally_one, rfl⟩, fun _ h ↦ h.2⟩
+    · suffices ∃! y : V, IsTally 1 y ∧ y = e 0 ++ e 1 by
+        simpa [Semiformula.Operator.val, Semiformula.Operator.Eq.sentence_eq]
+      exact ⟨_, ⟨TCEmpty.isTally_append (he 0) (he 1), rfl⟩, fun _ h ↦ h.2⟩
+    · suffices ∃! y : V, IsTally 1 y ∧ IsTallyMul (e 0) (e 1) y by
+        simpa [Semiformula.Operator.val]
+      obtain ⟨z, hz⟩ := exists_isTallyMul (he 0) (he 1)
+      exact ⟨z, ⟨hz.isTally, hz⟩, fun _ h ↦ h.2.unique hz⟩
+  preserve_eq := completeEmpty.{0} _ _ fun V _ _ ↦ (models_preserveEq_iff _ _).mpr <| by
+    simp [Semiformula.Operator.val, Semiformula.Operator.Eq.sentence_eq]
+
+namespace tallyTranslation
+
+variable {n} {V : Type*} [ConcatenationEmptyStructure V]
+
+@[simp]
+lemma dom_iff [V↓[ℒ⌢ₑ] ⊧* 𝗧𝗖ₑ] {x : V} : (tallyTranslation n).Dom x ↔ IsTally 1 x := by
+  simp [DirectTranslation.dom_iff, tallyTranslation, Semiformula.Operator.val]
+
+variable [V↓[ℒ⌢ₑ] ⊧* TCISigma 1] [V↓[ℒ⌢ₑ] ⊧* TCISigma (n + 1)]
+
+/-- The tallies of `V` are the elements of the model of `tallyTranslation`. -/
+def equiv : TallyNumber V ≃ (tallyTranslation n).Model V where
+  toFun a := ⟨a.1, dom_iff.mpr a.2⟩
+  invFun x := ⟨x.1, dom_iff.mp x.dom⟩
+
+lemma struc_eq : Model.struc (tallyTranslation n) V = Tarski.Structure.ofEquiv equiv := by
+  apply Tarski.Structure.ext
+  · funext k f v
+    symm
+    apply Model.func_iff.mpr
+    obtain ⟨v, rfl⟩ : ∃ w, v = equiv ∘ w := ⟨equiv.symm ∘ v, by simp [← Function.comp_assoc]⟩
+    cases f
+    · simp [tallyTranslation, Semiformula.Operator.val]
+      rfl
+    · simp [tallyTranslation, Semiformula.Operator.val]
+      rfl
+    · simp [tallyTranslation, Semiformula.Operator.val]
+      rfl
+    · simp [tallyTranslation, Semiformula.Operator.val]
+      exact TallyNumber.isTallyMul_val_mul (v 0) (v 1)
+  · funext k r v
+    cases r
+    · exact propext <| (Model.eq_iff v).trans equiv.symm.apply_eq_iff_eq.symm
+    · apply propext
+      rw [Model.rel_iff, Matrix.fun_eq_vec_two (fun i ↦ (v i : V))]
+      simp [tallyTranslation, Semiformula.Operator.val]
+      rfl
+
+end tallyTranslation
+
+/--
+The tallies of a model of $\Sigma_{n+1}\text{-}\mathsf{TCI}$ form a model of $\mathsf{I}\Sigma_{n+1}$.
+- [HH14, Question 3]
+-/
+instance {V : Type*} [ConcatenationEmptyStructure V] [V↓[ℒ⌢ₑ] ⊧* TCISigma (n + 1)] :
+    ((tallyTranslation n).Model V)↓[ℒₒᵣ] ⊧* 𝗜𝚺 (n + 1) := by
+  have : V↓[ℒ⌢ₑ] ⊧* TCISigma 1 := TCISigma.models_of_le (s' := n + 1) (by omega)
+  have : Nonempty ((tallyTranslation n).Model V) := ⟨tallyTranslation.equiv 0⟩
+  have : TallyNumber V ≡ₑ[ℒₒᵣ] (tallyTranslation n).Model V := by
+    rw [tallyTranslation.struc_eq]
+    exact Tarski.Structure.ElementaryEquiv.ofEquiv _
+  have := TallyNumber.models_ISigma (V := V) n
+  exact (Tarski.Structure.ElementaryEquiv.modelsTheory (M₁ := TallyNumber V)).mp this
+
+/--
+$\Sigma_{n+1}\text{-}\mathsf{TCI}$ interprets $\mathsf{I}\Sigma_{n+1}$.
+- [HH14, Question 3]
+-/
+instance : TCISigma (n + 1) ⊳ 𝗜𝚺 (n + 1) where
+  trln := tallyTranslation n
+  interpret_theory _ hφ := completeEmpty.{0} _ _ fun _ _ _ ↦
+    DirectTranslation.models_translate_of_mem hφ
+
+end translation
+
 end FFL.FirstOrder.Concatenation

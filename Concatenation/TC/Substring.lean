@@ -203,45 +203,6 @@ section thin
 variable {V : Type*} [ConcatenationStructure V] {x y : V}
 
 /--
-`x` is an atom, or begins with an atom and ends with an atom.
-- [Gan09, §3]
--/
-def IsBounded (x : V) : Prop :=
-  IsAtom x ∨ ((∃ c z, IsAtom c ∧ x = c ++ z) ∧ ∃ c z, IsAtom c ∧ x = z ++ c)
-
-/--
-`x` is an atom, or begins with an atom and ends with an atom.
-- [Gan09, §3]
--/
-def isBounded : Semisentence ℒ⌢ 1 :=
-  “x. !isAtom x ∨ ((∃ c z, !isAtom c ∧ x = c ⌢ z) ∧ (∃ c z, !isAtom c ∧ x = z ⌢ c))”
-
-instance isBounded_defined : ℒ⌢-predicate[V] IsBounded via isBounded :=
-  ⟨fun v ↦ by simp [isBounded, IsBounded]⟩
-
-instance isBounded_definable : ℒ⌢-predicate[V] IsBounded := isBounded_defined.to_definable
-
-/--
-Every string is an atom, or begins with an atom and ends with an atom.
-- [Gan09, §3]
--/
-def allIsBounded : ConcatenationSentence := “∀ x, !isBounded x”
-
-/--
-$\mathsf{TC}$ with the axiom that every string is an atom, or begins with an atom and ends with
-an atom.
-- [Gan09, §3]
--/
-abbrev TCPlus : ConcatenationTheory := insert allIsBounded 𝗧𝗖
-
-@[inherit_doc]
-notation "𝗧𝗖⁺" => TCPlus
-
-instance : 𝗧𝗖 ⪯ 𝗧𝗖⁺ := Entailment.WeakerThan.ofSubset <| Set.subset_insert _ _
-
-instance : 𝗘𝗤 ℒ⌢ ⪯ 𝗧𝗖⁺ := (inferInstance : 𝗘𝗤 ℒ⌢ ⪯ 𝗧𝗖).trans inferInstance
-
-/--
 `x` is thin: every substring of `x` is an atom, or begins with an atom and ends with an atom.
 - [Gan09, §3]
 -/

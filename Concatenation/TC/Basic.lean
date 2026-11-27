@@ -6,7 +6,8 @@ public import Concatenation.Semantics.Basic
 /-!
 # The theory of concatenation $\mathsf{TC}$
 
-The axioms of $\mathsf{TC}$, without and with the empty string, and their first consequences.
+The axioms of $\mathsf{TC}$, without and with the empty string, and of $\mathsf{TC}^+$, and their
+first consequences.
 -/
 
 @[expose] public section
@@ -104,6 +105,51 @@ instance : (FreeSemigroup Bool)↓[ℒ⌢] ⊧* 𝗧𝗖 := by
 instance : Entailment.Consistent 𝗧𝗖 :=
   let : (FreeSemigroup Bool)↓[ℒ⌢] ⊧* 𝗧𝗖 := inferInstance
   Sound.consistent_of_satisfiable ⟨_, this⟩
+
+section bounded
+
+variable {V : Type*} [ConcatenationStructure V]
+
+/--
+`x` is an atom, or begins with an atom and ends with an atom.
+- [Gan09, §3]
+-/
+def IsBounded (x : V) : Prop :=
+  IsAtom x ∨ ((∃ c z, IsAtom c ∧ x = c ++ z) ∧ ∃ c z, IsAtom c ∧ x = z ++ c)
+
+/--
+`x` is an atom, or begins with an atom and ends with an atom.
+- [Gan09, §3]
+-/
+def isBounded : Semisentence ℒ⌢ 1 :=
+  “x. !isAtom x ∨ ((∃ c z, !isAtom c ∧ x = c ⌢ z) ∧ (∃ c z, !isAtom c ∧ x = z ⌢ c))”
+
+instance isBounded_defined : ℒ⌢-predicate[V] IsBounded via isBounded :=
+  ⟨fun v ↦ by simp [isBounded, IsBounded]⟩
+
+instance isBounded_definable : ℒ⌢-predicate[V] IsBounded := isBounded_defined.to_definable
+
+/--
+Every string is an atom, or begins with an atom and ends with an atom.
+- [Gan09, §3]
+-/
+def allIsBounded : ConcatenationSentence := “∀ x, !isBounded x”
+
+/--
+$\mathsf{TC}$ with the axiom that every string is an atom, or begins with an atom and ends with
+an atom.
+- [Gan09, §3]
+-/
+abbrev TCPlus : ConcatenationTheory := insert allIsBounded 𝗧𝗖
+
+@[inherit_doc]
+notation "𝗧𝗖⁺" => TCPlus
+
+instance : 𝗧𝗖 ⪯ 𝗧𝗖⁺ := Entailment.WeakerThan.ofSubset <| Set.subset_insert _ _
+
+instance : 𝗘𝗤 ℒ⌢ ⪯ 𝗧𝗖⁺ := (inferInstance : 𝗘𝗤 ℒ⌢ ⪯ 𝗧𝗖).trans inferInstance
+
+end bounded
 
 /--
 Axioms of the theory of concatenation with the empty string.

@@ -21,7 +21,7 @@ section nonemptyPart
 variable (V : Type*) [ConcatenationEmptyStructure V]
 
 /-- The nonempty strings of `V`. -/
-def NonemptyPart : Type _ := {x : V // x ≠ ∅}
+abbrev NonemptyPart : Type _ := {x : V // x ≠ ∅}
 
 variable {V} [V↓[ℒ⌢ₑ] ⊧* 𝗧𝗖ₑ]
 
@@ -171,7 +171,8 @@ instance NonemptyPart.models_TCPlus [V↓[ℒ⌢ₑ] ⊧* TCISigma 1] : (Nonempt
       · exact ⟨⟨c, TCEmpty.isAtom_ne_empty hc⟩, ⟨u, hu'⟩, NonemptyPart.isAtom_iff.mpr hc,
           Subtype.ext hu⟩
   have hT : (NonemptyPart V)↓[ℒ⌢] ⊧* 𝗧𝗖 := inferInstance
-  simpa [models_iff, allIsBounded] using ⟨h, fun φ hφ ↦ models_theory_iff.mp hT φ hφ⟩
+  simpa [models_iff, allIsBounded] using
+    ⟨fun x hx ↦ h ⟨x, hx⟩, fun φ hφ ↦ models_theory_iff.mp hT φ hφ⟩
 
 end nonemptyPart
 
@@ -389,5 +390,78 @@ lemma isMulSeq_iff_isMulSeqₑ : IsMulSeq x y r ↔ IsMulSeqₑ x.1 y.1 r.1 := b
 end NonemptyPart
 
 end transfer
+
+section mulSeq
+
+variable {V : Type*} [ConcatenationEmptyStructure V] {r s w x y z : V}
+
+open NonemptyPart
+
+lemma IsMulSeqₑ.ne_empty_left (h : IsMulSeqₑ x y r) : x ≠ ∅ := h.1
+
+lemma IsMulSeqₑ.ne_empty_right (h : IsMulSeqₑ x y r) : y ≠ ∅ := h.2.1
+
+lemma IsMulSeqₑ.ne_empty (h : IsMulSeqₑ x y r) : r ≠ ∅ := h.2.2.1
+
+lemma IsMulSeqₑ.isTally_right (h : IsMulSeqₑ x y r) : IsTally 1 y := h.2.2.2.2.1
+
+lemma IsMulSeqₑ.exists_last (h : IsMulSeqₑ x y r) :
+    ∃ w, w ≠ ∅ ∧ IsTally 1 w ∧ IsSuffix (0 ++ 0 ++ pairOf w y ++ 0 ++ 0) r :=
+  let ⟨w, _, hw, tw, last⟩ := h.2.2.2.2.2.2.2.1
+  ⟨w, hw, tw, last⟩
+
+variable [V↓[ℒ⌢ₑ] ⊧* TCISigma 1]
+
+lemma isMulSeqₑ_one_iff (hx : IsTally 1 x) (hx₀ : x ≠ ∅) :
+    IsMulSeqₑ x 1 r ↔ r = 0 ++ 0 ++ pairOf x 1 ++ 0 ++ 0 := by
+  by_cases hr : r = ∅
+  · subst hr
+    refine iff_of_false (fun h ↦ h.ne_empty rfl) fun h ↦ ?_
+    exact TCEmpty.zero_ne_empty (TCEmpty.eq_empty_of_append_eq_empty
+      (TCEmpty.eq_empty_of_append_eq_empty (TCEmpty.eq_empty_of_append_eq_empty
+        (TCEmpty.eq_empty_of_append_eq_empty h.symm).1).1).1).1
+  have := isMulSeq_one_iff (x := (⟨x, hx₀⟩ : NonemptyPart V)) (r := (⟨r, hr⟩ : NonemptyPart V))
+    (isTally_iff.mpr hx)
+  rw [isMulSeq_iff_isMulSeqₑ, ext_iff'] at this
+  exact this
+
+lemma IsMulSeqₑ.extend (h : IsMulSeqₑ x y r) (hw : w ≠ ∅) (tw : IsTally 1 w)
+    (last : IsSuffix (0 ++ 0 ++ pairOf w y ++ 0 ++ 0) r) :
+    IsMulSeqₑ x (y ++ 1) (r ++ pairOf (w ++ x) (y ++ 1) ++ 0 ++ 0) ∧
+      IsSuffix (0 ++ 0 ++ pairOf (w ++ x) (y ++ 1) ++ 0 ++ 0)
+        (r ++ pairOf (w ++ x) (y ++ 1) ++ 0 ++ 0) := by
+  have h' := isMulSeq_iff_isMulSeqₑ (x := (⟨x, h.ne_empty_left⟩ : NonemptyPart V))
+    (y := ⟨y, h.ne_empty_right⟩) (r := ⟨r, h.ne_empty⟩) |>.mpr h
+  have hlast : IsLast (pairOf (⟨w, hw⟩ : NonemptyPart V) ⟨y, h.ne_empty_right⟩)
+      (⟨r, h.ne_empty⟩ : NonemptyPart V) := by
+    simpa [IsLast, isSuffix_iff] using last
+  have h₁ := h'.extend (isTally_iff.mpr tw) hlast
+  have h₂ := h'.isLast_extend (w := ⟨w, hw⟩)
+  simp only [isMulSeq_iff_isMulSeqₑ, IsLast, isSuffix_iff, val_append, val_pairOf, val_zero,
+    val_one] at h₁ h₂
+  exact ⟨h₁, h₂⟩
+
+lemma IsMulSeqₑ.restrict (h : IsMulSeqₑ x (y ++ 1) s) (hy : y ≠ ∅) :
+    ∃ r w, w ≠ ∅ ∧ IsTally 1 w ∧ IsMulSeqₑ x y r ∧
+      IsSuffix (0 ++ 0 ++ pairOf w y ++ 0 ++ 0) r ∧
+      s = r ++ pairOf (w ++ x) (y ++ 1) ++ 0 ++ 0 := by
+  have h' := isMulSeq_iff_isMulSeqₑ (x := (⟨x, h.ne_empty_left⟩ : NonemptyPart V))
+    (y := (⟨y, hy⟩ : NonemptyPart V) ++ 1) (r := ⟨s, h.ne_empty⟩) |>.mpr h
+  obtain ⟨r, w, tw, hr, last, hs⟩ := h'.restrict
+  exact ⟨r.1, w.1, w.2, isTally_iff.mp tw, isMulSeq_iff_isMulSeqₑ.mp hr, isSuffix_iff.mp last,
+    congrArg Subtype.val hs⟩
+
+lemma eq_and_eq_of_isSuffix_pairOf {u v p q : V} (hu : u ≠ ∅) (hv : v ≠ ∅) (hp : p ≠ ∅)
+    (hq : q ≠ ∅) (tu : IsTally 1 u) (tv : IsTally 1 v) (tp : IsTally 1 p) (tq : IsTally 1 q)
+    (hr : r ≠ ∅) (h : IsSuffix (0 ++ 0 ++ pairOf u v ++ 0 ++ 0) r)
+    (h' : IsSuffix (0 ++ 0 ++ pairOf p q ++ 0 ++ 0) r) : u = p ∧ v = q := by
+  have := IsLast.pairOf_inj (u := (⟨u, hu⟩ : NonemptyPart V)) (v := ⟨v, hv⟩) (p := ⟨p, hp⟩)
+    (q := ⟨q, hq⟩) (z := (⟨r, hr⟩ : NonemptyPart V)) (isTally_iff.mpr tu) (isTally_iff.mpr tv)
+    (isTally_iff.mpr tp) (isTally_iff.mpr tq) (by simpa [IsLast, isSuffix_iff] using h)
+    (by simpa [IsLast, isSuffix_iff] using h')
+  simpa [ext_iff'] using this
+
+end mulSeq
+
 
 end FFL.FirstOrder.Concatenation

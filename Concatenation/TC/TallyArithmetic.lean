@@ -422,7 +422,101 @@ protected lemma mul_one (a : TallyNumber V) : a * 1 = a := by
   simpa [TallyNumber.mul_zero, TallyNumber.add_comm 0, TallyNumber.add_zero,
     show (0 : TallyNumber V) + 1 = 1 from ext_iff'.mpr (by simp)] using mul_add_one a 0
 
+protected lemma mul_add (a b c : TallyNumber V) : a * (b + c) = a * b + a * c := by
+  refine induction (P := fun c ↦ a * (b + c) = a * b + a * c)
+    “x. &0 * (&1 + x) = &0 * &1 + &0 * x” (by simp) (fun i ↦ if i = 0 then a else b)
+    (fun x ↦ by simp) ?_ ?_ c
+  · rw [TallyNumber.add_zero, TallyNumber.mul_zero, TallyNumber.add_zero]
+  · intro c ih
+    rw [← TallyNumber.add_assoc, mul_add_one, ih, mul_add_one, TallyNumber.add_assoc]
+
+protected lemma mul_assoc (a b c : TallyNumber V) : a * b * c = a * (b * c) := by
+  refine induction (P := fun c ↦ a * b * c = a * (b * c)) “x. &0 * &1 * x = &0 * (&1 * x)”
+    (by simp) (fun i ↦ if i = 0 then a else b) (fun x ↦ by simp) ?_ ?_ c
+  · simp only [TallyNumber.mul_zero]
+  · intro c ih
+    rw [mul_add_one, ih, mul_add_one, TallyNumber.mul_add]
+
+lemma add_one_mul (a b : TallyNumber V) : (a + 1) * b = a * b + b := by
+  refine induction (P := fun b ↦ (a + 1) * b = a * b + b) “x. (&0 + 1) * x = &0 * x + x”
+    (by simp) (fun _ ↦ a) (fun x ↦ by simp) ?_ ?_ b
+  · simp only [TallyNumber.mul_zero, TallyNumber.add_zero]
+  · intro b ih
+    rw [mul_add_one, ih, mul_add_one, TallyNumber.add_assoc, TallyNumber.add_assoc,
+      ← TallyNumber.add_assoc b, TallyNumber.add_comm b a, TallyNumber.add_assoc a b]
+
+protected lemma mul_comm (a b : TallyNumber V) : a * b = b * a := by
+  refine induction (P := fun b ↦ a * b = b * a) “x. &0 * x = x * &0” (by simp) (fun _ ↦ a)
+    (fun x ↦ by simp) ?_ ?_ b
+  · rw [TallyNumber.mul_zero, TallyNumber.zero_mul]
+  · intro b ih
+    rw [mul_add_one, ih, add_one_mul]
+
+lemma mul_lt_mul (h : a < b) (hc : 0 < c) : a * c < b * c := by
+  obtain ⟨d, -, rfl⟩ := exists_add_eq_of_lt h
+  have hd : d ≠ 0 := fun hd ↦ lt_irrefl a (by simpa [hd, TallyNumber.add_zero] using h)
+  obtain rfl | ⟨c', rfl⟩ : c = 0 ∨ ∃ c', c = c' + 1 := by
+    by_cases hc₀ : c.1 = ∅
+    · exact .inl (ext_iff'.mpr hc₀)
+    · obtain ⟨x, tx, hx⟩ := TCISigma.eq_append_one_of_ne_empty c.2 hc₀
+      exact .inr ⟨⟨x, tx⟩, ext_iff'.mpr hx⟩
+  · exact absurd hc (lt_irrefl 0)
+  have e : (a + d) * (c' + 1) = a * (c' + 1) + (d * c' + d) := by
+    rw [TallyNumber.mul_comm, TallyNumber.mul_add, TallyNumber.mul_comm _ a,
+      TallyNumber.mul_comm _ d, mul_add_one d]
+  rw [e]
+  refine ⟨(d * c' + d).1, ?_, rfl⟩
+  simpa using fun h ↦ (ne_zero_iff.mp hd) (TCEmpty.eq_empty_of_append_eq_empty h).2
+
 end TallyNumber
+
+/--
+The tallies of a model of $\Sigma_1\text{-}\mathsf{TCI}$ form a model of $\mathsf{PA}^-$.
+- [HH14, Question 3]
+-/
+instance TallyNumber.models_PeanoMinus : (TallyNumber V)↓[ℒₒᵣ] ⊧* 𝗣𝗔⁻ := by
+  constructor
+  intro σ hσ
+  cases hσ
+  case equal hφ => exact models_theory_iff.mp inferInstance _ hφ
+  case addZero => simpa [models_iff] using TallyNumber.add_zero (V := V)
+  case addAssoc => simpa [models_iff] using TallyNumber.add_assoc (V := V)
+  case addComm => simpa [models_iff] using TallyNumber.add_comm (V := V)
+  case addEqOfLt =>
+    simpa [models_iff, Semiformula.eval_bexsLTSucc] using
+      fun a b ↦ TallyNumber.exists_add_eq_of_lt (V := V) (a := a) (b := b)
+  case zeroLe =>
+    simpa [models_iff, Semiformula.Operator.LE.sentence_eq, Semiformula.Operator.val,
+      Semiformula.Operator.Eq.sentence_eq, Semiformula.Operator.LT.sentence_eq] using
+      TallyNumber.zero_le (V := V)
+  case zeroLtOne => simpa [models_iff] using TallyNumber.zero_lt_one (V := V)
+  case oneLeOfZeroLt =>
+    simpa [models_iff, Semiformula.Operator.LE.sentence_eq, Semiformula.Operator.val,
+      Semiformula.Operator.Eq.sentence_eq, Semiformula.Operator.LT.sentence_eq] using
+      fun a ↦ TallyNumber.one_le_of_zero_lt (V := V) (a := a)
+  case addLtAdd =>
+    simpa [models_iff] using fun a b c h ↦ TallyNumber.add_lt_add (V := V) (a := a) (b := b) h c
+  case mulZero => simpa [models_iff] using TallyNumber.mul_zero (V := V)
+  case mulOne => simpa [models_iff] using TallyNumber.mul_one (V := V)
+  case mulAssoc => simpa [models_iff] using TallyNumber.mul_assoc (V := V)
+  case mulComm => simpa [models_iff] using TallyNumber.mul_comm (V := V)
+  case mulLtMul =>
+    simpa [models_iff] using fun a b c ↦ TallyNumber.mul_lt_mul (V := V) (a := a) (b := b) (c := c)
+  case distr => simpa [models_iff] using TallyNumber.mul_add (V := V)
+  case ltIrrefl => simpa [models_iff] using TallyNumber.lt_irrefl (V := V)
+  case ltTrans =>
+    simpa [models_iff] using fun a b c ↦ TallyNumber.lt_trans (V := V) (a := a) (b := b) (c := c)
+  case ltTri => simpa [models_iff] using TallyNumber.lt_tri (V := V)
+
+/--
+The tallies of a model of $\Sigma_{n+1}\text{-}\mathsf{TCI}$ form a model of
+$\mathsf{I}\Sigma_{n+1}$.
+- [HH14, Question 3]
+-/
+lemma TallyNumber.models_ISigma (n : ℕ) [V↓[ℒ⌢ₑ] ⊧* TCISigma (n + 1)] :
+    (TallyNumber V)↓[ℒₒᵣ] ⊧* 𝗜𝚺 (n + 1) :=
+  have := TallyNumber.models_inductionScheme (V := V) n
+  Semantics.ModelsSet.union_iff.mpr ⟨inferInstance, this⟩
 
 end induction
 

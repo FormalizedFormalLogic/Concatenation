@@ -58,8 +58,9 @@ quantifier on $v$, then `cobhamComparison φ` defines the graph of `f` on numera
 every model of $\mathsf{R}_0$.
 - [Sve08, §3.3, Theorem 3]
 -/
-lemma eval_cobhamComparison_numeral_iff (hφ : ∀ n m, m = f n ↔ ∃ k, ℕ ⊧/![n, m, k] φ.val) (n : ℕ)
-    (y : V) : V ⊧/![numeral n, y] (cobhamComparison φ) ↔ y = numeral (f n) := by
+private lemma eval_cobhamComparison_numeral_iff
+    (hφ : ∀ n m, m = f n ↔ ∃ k, ℕ ⊧/![n, m, k] φ.val) (n : ℕ) (y : V) :
+    V ⊧/![numeral n, y] (cobhamComparison φ) ↔ y = numeral (f n) := by
   have eval (i j : ℕ) : V ⊧/![numeral n, numeral i, numeral j] φ.val ↔ ℕ ⊧/![n, i, j] φ.val := by
     simpa [Matrix.comp_vecCons'] using eval_numeral_iff_nat (V := V) φ ![n, i, j]
   obtain ⟨k, hk⟩ := (hφ n (f n)).mp rfl

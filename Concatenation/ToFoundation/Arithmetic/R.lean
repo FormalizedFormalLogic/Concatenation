@@ -81,20 +81,6 @@ instance : Entailment.Consistent 𝗥 :=
 
 end R
 
-section
-
-variable {V : Type*} [ORingStructure V]
-
-/--
-Every element of a model of $\mathsf{R}$ is comparable with every numeral.
-- [Hor11, §3, Definition 3.1]
--/
-lemma eq_numeral_or_lt_numeral_or_numeral_lt [V↓[ℒₒᵣ] ⊧* 𝗥] (n : ℕ) (x : V) :
-    x = numeral n ∨ x < numeral n ∨ numeral n < x :=
-  (R.models_iff_models_R0.mp inferInstance).2 n x
-
-end
-
 namespace R0
 
 /--

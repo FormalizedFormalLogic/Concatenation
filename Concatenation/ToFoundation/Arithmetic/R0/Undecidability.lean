@@ -1,6 +1,7 @@
 module
 
 public import Concatenation.ToFoundation.Arithmetic.R0.Representation
+public import Concatenation.ToFoundation.Coding
 public import Concatenation.ToFoundation.Decidability
 public import Foundation.FirstOrder.Incompleteness.Church
 
@@ -24,14 +25,9 @@ A consistent extension of $\mathsf{R}_0$ is undecidable.
 theorem undecidable_of_consistent (T : ArithmeticTheory) [𝗥₀ ⪯ T]
     [Entailment.Consistent T] : Entailment.Undecidable T := by
   rintro ⟨hC⟩
-  have hQuoteSubst :
-      Computable₂ fun σ π : ArithmeticSemisentence 1 ↦ (σ/[⌜π⌝] : ArithmeticSentence) :=
-    computable₂_iff_sigma1_simulate (f := substNumeral (V := ℕ)) (by definability)
-      fun σ τ ↦ by simp [← Sentence.quote_eq_encode_nat, substNumeral_app_quote]
-  have hSubst : Computable fun σ : ArithmeticSemisentence 1 ↦ (σ/[⌜σ⌝] : ArithmeticSentence) :=
-    hQuoteSubst.comp Computable.id Computable.id
   have hD : ComputablePred fun σ : ArithmeticSemisentence 1 ↦ T ⊢ σ/[⌜σ⌝] :=
-    ComputablePred.computable_of_manyOneReducible (ManyOneReducible.mk (fun σ ↦ T ⊢ σ) hSubst) hC
+    ComputablePred.computable_of_manyOneReducible
+      (ManyOneReducible.mk (fun σ ↦ T ⊢ σ) computable_subst_quote_self) hC
   let D : ℕ → Prop :=
     fun n ↦ (Encodable.decode (α := ArithmeticSemisentence 1) n).elim False
       fun σ ↦ T ⊢ σ/[⌜σ⌝]
@@ -67,11 +63,5 @@ $\mathsf{R}_0$ is essentially undecidable.
 -/
 instance : (𝗥₀ : ArithmeticTheory).EssentiallyUndecidable where
   undecidable_of_consistent T _ _ := undecidable_of_consistent T
-
-/--
-The theorems of $\mathsf{R}_0$ are not computable.
-- [Sve08, §3.3]
--/
-theorem undecidable : Entailment.Undecidable 𝗥₀ := Theory.EssentiallyUndecidable.undecidable 𝗥₀
 
 end FFL.FirstOrder.Arithmetic.R0

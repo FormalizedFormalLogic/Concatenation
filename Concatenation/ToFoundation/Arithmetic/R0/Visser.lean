@@ -75,7 +75,7 @@ lemma isCertificate_numeral_iff (i j : ℕ) :
     IsCertificate A E (numeral i : V) (numeral j) ↔ IsCertificate A E i j := by
   simpa [Matrix.comp_vecCons'] using eval_numeral_iff_nat (V := V) (isCertificateDef A E) ![i, j]
 
-lemma hasStage_numeral {j : ℕ} (h : ∃ c : ℕ, IsCertificate A E c j) :
+private lemma hasStage_numeral {j : ℕ} (h : ∃ c : ℕ, IsCertificate A E c j) :
     HasStage A E (numeral j : V) := by
   classical
   have cert : IsCertificate A E (numeral (Nat.find h) : V) (numeral j) :=
@@ -317,19 +317,8 @@ lemma vec_nil (hs : P s) (hns : F 3 (numeral n) s 0) : F 6 (numeral 0) s 0 := by
   have hns := (hF 3 (by simp) _ _ _ v₁ v₂ v₀).mp hns
   simpa using (hF 6 (by simp) _ _ _ v₀ v₂ v₀).mpr <| hc.vec_nil _ hns.lt₁ _ hns.lt₂ hns
 
-end IsApproximable
 
 variable [V↓[ℒₒᵣ] ⊧* 𝗥₀]
-
-lemma isNode_numeral (k x : ℕ) : IsNode (numeral (Nat.pair k x + 1) : V) (numeral k) (numeral x) :=
-  ⟨numeral (Nat.pair k x), by simp, (eval_pairDef_numeral_iff k x).mpr rfl,
-    (numeral_add_one_of_R0 _).symm⟩
-
-namespace IsApproximable
-
-variable {P : V → Prop} {F : ℕ → V → V → V → Prop} (h : IsApproximable A E P F) {s a b d : V}
-  {n p q r R f v : ℕ}
-include h
 
 lemma env_succ (hs : P s) (ha : P a) (hns : F 3 (numeral n) s 0) (hda : F 2 a 0 0) :
     F 3 (numeral (n + 1)) (mkPair a s) 0 := by
@@ -699,7 +688,7 @@ def certificateTranslation (h : ∀ j : ℕ, ∃ c : ℕ, IsCertificate A (eqCod
       have hy := (Defined.eval_iff _).mp hy
       simpa [Semiformula.Operator.val] using this.eq_iff hx.1 hy.1 hx.2 hy.2 }
 
-lemma certificateTranslation.isDescribedBy_model [V↓[ℒₒᵣ] ⊧* 𝗥₀]
+private lemma certificateTranslation.isDescribedBy_model [V↓[ℒₒᵣ] ⊧* 𝗥₀]
     (h : ∀ j : ℕ, ∃ c : ℕ, IsCertificate A (eqCode L) c j) :
     IsDescribedBy L (IsSmall (HasStage A (eqCode L)) (MemStage A (eqCode L)))
       (fun k ↦ Holds (HasStage A (eqCode L)) (MemStage A (eqCode L)) (IsStage A (eqCode L))
@@ -712,7 +701,7 @@ lemma certificateTranslation.isDescribedBy_model [V↓[ℒₒᵣ] ⊧* 𝗥₀]
 
 variable {T : Theory L}
 
-lemma nonempty_interpretation (h : ∀ j : ℕ, ∃ c : ℕ, IsCertificate A (eqCode L) c j)
+private lemma nonempty_interpretation (h : ∀ j : ℕ, ∃ c : ℕ, IsCertificate A (eqCode L) c j)
     (hT : ∀ σ ∈ T, ∃ w : ℕ, ℕ ⊧/![encode σ, w] A.val) : Nonempty (𝗥₀ ⊳ T) :=
   ⟨⟨certificateTranslation h, fun σ hσ ↦ complete.{0} _ _ fun V _ _ ↦
     let ⟨_, hw⟩ := hT σ hσ
@@ -772,15 +761,6 @@ theorem nonempty_interpretation_iff_locallyFinitelySatisfiable (hT : REPred (· 
     Nonempty (𝗥₀ ⊳ T) ↔ T.LocallyFinitelySatisfiable :=
   ⟨fun ⟨π⟩ ↦ π.locallyFinitelySatisfiable locallyFinitelySatisfiable,
     nonempty_interpretation_of_locallyFinitelySatisfiable hT⟩
-
-/--
-A recursively enumerable theory of a finite language is not interpretable in $\mathsf{R}_0$ if and
-only if it is not locally finitely satisfiable.
-- [Hor11, §3, Theorem 3.3]
--/
-theorem notInterprets_iff_not_locallyFinitelySatisfiable (hT : REPred (· ∈ T)) :
-    𝗥₀ ⋫ T ↔ ¬T.LocallyFinitelySatisfiable :=
-  notInterprets_iff.trans (nonempty_interpretation_iff_locallyFinitelySatisfiable hT).not
 
 end theorems
 

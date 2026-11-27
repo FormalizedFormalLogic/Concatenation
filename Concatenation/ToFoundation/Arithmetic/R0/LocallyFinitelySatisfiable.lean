@@ -46,7 +46,7 @@ lemma of_add_of (n m : ℕ) : of N n + of N m = of N (n + m) := by
   simp only [ext_iff, val_of]
   omega
 
-lemma of_mul_of (n m : ℕ) : of N n * of N m = of N (n * m) := by
+private lemma of_mul_of (n m : ℕ) : of N n * of N m = of N (n * m) := by
   have h (a : ℕ) {b : ℕ} (hb : 0 < b) : min (min a N * b) N = min (a * b) N := by
     rcases le_total a N with h | h
     · simp [h]
@@ -69,11 +69,14 @@ lemma numeral_eq : (n : ℕ) → (ORingStructure.numeral n : Truncation N) = of 
     rw [ORingStructure.numeral, numeral_eq (n + 1)]
     exact of_add_of (n + 1) 1
 
-lemma lt_of_iff {n : ℕ} (h : n ≤ N) {x : Truncation N} : x < of N n ↔ ∃ i < n, x = of N i := by
+private lemma lt_of_iff_exists {n : ℕ} (h : n ≤ N) {x : Truncation N} :
+    x < of N n ↔ ∃ i < n, x = of N i := by
   simp only [lt_iff, ext_iff, val_of]
-  refine ⟨fun hx ↦ ?_, by grind⟩
-  use x.val
-  grind
+  constructor
+  · intro hx
+    use x.val
+    grind
+  · grind
 
 end Truncation
 
@@ -92,7 +95,7 @@ theorem locallyFinitelySatisfiable : (𝗥₀ : ArithmeticTheory).LocallyFinitel
   case Ω₂ n m => simp [models_iff, Truncation.of_mul_of]
   case Ω₃ n =>
     filter_upwards [Filter.eventually_ge_atTop n] with N hN
-    simpa [models_iff] using fun x ↦ Truncation.lt_of_iff hN
+    simpa [models_iff] using fun x ↦ Truncation.lt_of_iff_exists hN
 
 /--
 $\mathsf{R}_0$ does not interpret $\mathsf{Q}$.

@@ -34,6 +34,11 @@ instance isNode_defined : 𝚺ᴬ₀-Relation₃[V] IsNode via isNodeDef := .mk 
 
 instance isNode_definable : 𝚺ᴬ₀-Relation₃[V] IsNode := isNode_defined.to_definable
 
+lemma isNode_numeral [V↓[ℒₒᵣ] ⊧* 𝗥₀] (k x : ℕ) :
+    IsNode (numeral (Nat.pair k x + 1) : V) (numeral k) (numeral x) :=
+  ⟨numeral (Nat.pair k x), by simp, (eval_pairDef_numeral_iff k x).mpr rfl,
+    (numeral_add_one_of_R0 _).symm⟩
+
 /-- The fact of tag `k` about `x`, `y` and `z` belongs to `c`. -/
 @[mk_iff]
 structure HasFact (c k x y z : V) : Prop where
@@ -273,11 +278,11 @@ structure IsModelCode (L : Language) [L.Encodable] [L.Eq] {V : Type*} [Nonempty 
 
 variable [L.Eq] {val : ℕ → V} {j B c : ℕ}
 
-lemma exists_isModelCode [Finite V] (val : ℕ → V) (j : ℕ) : ∃ B c, IsModelCode L val j B c := by
+private lemma exists_isModelCode [Finite V] (val : ℕ → V) (j : ℕ) :
+    ∃ B c, IsModelCode L val j B c := by
   obtain ⟨D, hD⟩ := exists_isCanonical_le val
   obtain ⟨C, hC⟩ := exists_isEnv_le val (j + 3)
-  obtain ⟨B, hB⟩ : ∃ B, B = D + C + (j + 4) + mkPair j j +
-    mkPair 2 (eqCode L) := ⟨_, rfl⟩
+  set B := D + C + (j + 4) + mkPair j j + mkPair 2 (eqCode L) with hB
   use B
   obtain ⟨c, hc⟩ : ∃ c : ℕ, ∀ e : ℕ, e ∈ c ↔ ∃ k x y z, x ≤ B ∧ y ≤ B ∧ z ≤ B ∧
       ModelFact L val j B k x y z ∧ e = mkPair k (mkPair x (mkPair y z)) := by

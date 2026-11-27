@@ -2,6 +2,7 @@ module
 
 public import Foundation.FirstOrder.Arithmetic.Bootstrapping.Syntax.Theory
 public import Foundation.FirstOrder.Arithmetic.Bootstrapping.Syntax
+public import Foundation.FirstOrder.Incompleteness.Church
 public import Foundation.FirstOrder.Syntax.Classical.PrimrecCoding
 
 /-!
@@ -175,3 +176,16 @@ lemma substs1_app_quote (σ : Semisentence L 1) (t : ClosedSemiterm L 0) :
   rfl
 
 end FFL.FirstOrder.Arithmetic.Bootstrapping
+
+namespace FFL.FirstOrder.Arithmetic
+
+open Bootstrapping Bootstrapping.Arithmetic
+
+lemma computable_subst_quote_self :
+    Computable fun σ : ArithmeticSemisentence 1 ↦ (σ/[⌜σ⌝] : ArithmeticSentence) := by
+  have : Computable₂ fun σ π : ArithmeticSemisentence 1 ↦ (σ/[⌜π⌝] : ArithmeticSentence) :=
+    computable₂_iff_sigma1_simulate (f := substNumeral (V := ℕ)) (by definability)
+      fun σ τ ↦ by simp [← Sentence.quote_eq_encode_nat, substNumeral_app_quote]
+  exact this.comp Computable.id Computable.id
+
+end FFL.FirstOrder.Arithmetic

@@ -97,18 +97,18 @@ macro_rules
 
 namespace Tarski.Structure
 
-variable (L) (M : Type*) [Tarski.Structure L M]
+variable (L) (V : Type*) [Tarski.Structure L V]
 
 /-- The operator of concatenation is interpreted as `++`. -/
-protected class Concat [Semiterm.Operator.Concat L] [Append M] : Prop where
-  concat : ∀ a b : M, (@Semiterm.Operator.Concat.concat L _).val ![a, b] = a ++ b
+protected class Concat [Semiterm.Operator.Concat L] [Append V] : Prop where
+  concat : ∀ a b : V, (@Semiterm.Operator.Concat.concat L _).val ![a, b] = a ++ b
 
 attribute [simp] Concat.concat
 
-variable {L M}
+variable {L V}
 
 @[simp]
-lemma concat_eq_of_lang [L.Concat] [Append M] [Tarski.Structure.Concat L M] {v : Fin 2 → M} :
+lemma concat_eq_of_lang [L.Concat] [Append V] [Tarski.Structure.Concat L V] {v : Fin 2 → V} :
     Tarski.Structure.func (L := L) Language.Concat.concat v = v 0 ++ v 1 := by
   have h := Tarski.Structure.Concat.concat (L := L) (v 0) (v 1)
   simp only [← Matrix.fun_eq_vec_two] at h
@@ -116,11 +116,11 @@ lemma concat_eq_of_lang [L.Concat] [Append M] [Tarski.Structure.Concat L M] {v :
 
 end Tarski.Structure
 
-variable {M : Type*} [Tarski.Structure L M] [Append M]
+variable {V : Type*} [Tarski.Structure L V] [Append V]
 
 @[simp]
-lemma Semiterm.val_concat [Semiterm.Operator.Concat L] [Tarski.Structure.Concat L M]
-    {e : Fin n → M} {ε : ξ → M} (t u : Semiterm L ξ n) :
+lemma Semiterm.val_concat [Semiterm.Operator.Concat L] [Tarski.Structure.Concat L V]
+    {e : Fin n → V} {ε : ξ → V} (t u : Semiterm L ξ n) :
     (Operator.Concat.concat.operator ![t, u]).val e ε = t.val e ε ++ u.val e ε := by
   simp
 

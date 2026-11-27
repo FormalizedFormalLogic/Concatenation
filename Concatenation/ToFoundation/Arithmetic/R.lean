@@ -44,12 +44,12 @@ instance : 𝗘𝗤 ℒₒᵣ ⪯ 𝗥 := Entailment.WeakerThan.trans (𝓣 := �
 
 section
 
-variable {M : Type*} [ORingStructure M]
+variable {V : Type*} [ORingStructure V]
 
-lemma models_iff_models_R0 : M↓[ℒₒᵣ] ⊧* 𝗥 ↔
-    M↓[ℒₒᵣ] ⊧* 𝗥₀ ∧ ∀ (n : ℕ) (x : M), x = numeral n ∨ x < numeral n ∨ numeral n < x := by
-  have hΩ (n : ℕ) : M↓[ℒₒᵣ] ⊧ (“∀ x, x ≤ ↑n ∨ ↑n ≤ x” : ArithmeticSentence) ↔
-      ∀ x : M, x = numeral n ∨ x < numeral n ∨ numeral n < x := by
+lemma models_iff_models_R0 : V↓[ℒₒᵣ] ⊧* 𝗥 ↔
+    V↓[ℒₒᵣ] ⊧* 𝗥₀ ∧ ∀ (n : ℕ) (x : V), x = numeral n ∨ x < numeral n ∨ numeral n < x := by
+  have hΩ (n : ℕ) : V↓[ℒₒᵣ] ⊧ (“∀ x, x ≤ ↑n ∨ ↑n ≤ x” : ArithmeticSentence) ↔
+      ∀ x : V, x = numeral n ∨ x < numeral n ∨ numeral n < x := by
     simp [models_iff, Semiformula.Operator.LE.sentence_eq, Semiformula.Operator.val,
       Semiformula.Operator.Eq.sentence_eq, Semiformula.Operator.LT.sentence_eq]
     grind
@@ -57,14 +57,14 @@ lemma models_iff_models_R0 : M↓[ℒₒᵣ] ⊧* 𝗥 ↔
   · intro h
     and_intros
     · exact models_of_ss h IsRAxiom.r0
-    · exact fun n ↦ (hΩ n).mp <| Theory.models M _ (IsRAxiom.Ω₅ n)
+    · exact fun n ↦ (hΩ n).mp <| Theory.models V _ (IsRAxiom.Ω₅ n)
   · rintro ⟨h₀, h⟩
     constructor
     rintro σ (⟨_, hσ⟩ | n)
     · exact models_theory_iff.mp h₀ _ hσ
     · exact (hΩ n).mpr (h n)
 
-instance [M↓[ℒₒᵣ] ⊧* 𝗥] : M↓[ℒₒᵣ] ⊧* 𝗥₀ := (models_iff_models_R0.mp inferInstance).1
+instance [V↓[ℒₒᵣ] ⊧* 𝗥] : V↓[ℒₒᵣ] ⊧* 𝗥₀ := (models_iff_models_R0.mp inferInstance).1
 
 end
 
@@ -83,13 +83,13 @@ end R
 
 section
 
-variable {M : Type*} [ORingStructure M]
+variable {V : Type*} [ORingStructure V]
 
 /--
 Every element of a model of $\mathsf{R}$ is comparable with every numeral.
 - [Hor11, §3, Definition 3.1]
 -/
-lemma eq_numeral_or_lt_numeral_or_numeral_lt [M↓[ℒₒᵣ] ⊧* 𝗥] (n : ℕ) (x : M) :
+lemma eq_numeral_or_lt_numeral_or_numeral_lt [V↓[ℒₒᵣ] ⊧* 𝗥] (n : ℕ) (x : V) :
     x = numeral n ∨ x < numeral n ∨ numeral n < x :=
   (R.models_iff_models_R0.mp inferInstance).2 n x
 
@@ -108,43 +108,43 @@ def cobhamTranslation : DirectTranslation 𝗥₀ ℒₒᵣ where
     | .eq => ⟨“x y. x = y”⟩
     | .lt => ⟨cobhamLTDef⟩
   func f := ⟨“z. z = !!(Semiterm.func f (#·.succ))”⟩
-  domain_nonempty := complete.{0} _ _ fun M _ _ ↦ (models_domainNonempty_iff _).mpr <| by
+  domain_nonempty := complete.{0} _ _ fun V _ _ ↦ (models_domainNonempty_iff _).mpr <| by
     simp [Semiformula.Operator.val]
-  func_defined f := complete.{0} _ _ fun M _ _ ↦ (models_funcDefined_iff _ _).mpr <| by
+  func_defined f := complete.{0} _ _ fun V _ _ ↦ (models_funcDefined_iff _ _).mpr <| by
     intro e _
     simp [Semiformula.Operator.val, Semiformula.Operator.Eq.sentence_eq, Function.comp_def]
-  preserve_eq := complete.{0} _ _ fun M _ _ ↦ (models_preserveEq_iff _ _).mpr <| by
+  preserve_eq := complete.{0} _ _ fun V _ _ ↦ (models_preserveEq_iff _ _).mpr <| by
     simp [Semiformula.Operator.val, Semiformula.Operator.Eq.sentence_eq]
 
 section model
 
-variable {M : Type*} [ORingStructure M]
+variable {V : Type*} [ORingStructure V]
 
 @[simp]
-lemma cobhamTranslation_dom (x : M) : cobhamTranslation.Dom x := by
+lemma cobhamTranslation_dom (x : V) : cobhamTranslation.Dom x := by
   simp [dom_iff, cobhamTranslation, Semiformula.Operator.val]
 
 namespace cobhamTranslation
 
-/-- The constants and the operations of `M`, with the strict part of Cobham's order. -/
-abbrev oRingStructure : ORingStructure (cobhamTranslation.Model M) where
+/-- The constants and the operations of `V`, with the strict part of Cobham's order. -/
+abbrev oRingStructure : ORingStructure (cobhamTranslation.Model V) where
   zero := ⟨0, by simp⟩
   one := ⟨1, by simp⟩
   add x y := ⟨x + y, by simp⟩
   mul x y := ⟨x * y, by simp⟩
-  lt x y := CobhamLT (x : M) y
+  lt x y := CobhamLT (x : V) y
 
 attribute [local instance] oRingStructure in
-lemma val_numeral (n : ℕ) : ((numeral n : cobhamTranslation.Model M) : M) = numeral n :=
+lemma val_numeral (n : ℕ) : ((numeral n : cobhamTranslation.Model V) : V) = numeral n :=
   match n with
   | 0 => rfl
   | 1 => rfl
-  | n + 2 => congrArg (· + (1 : M)) (val_numeral (n + 1))
+  | n + 2 => congrArg (· + (1 : V)) (val_numeral (n + 1))
 
-variable [M↓[ℒₒᵣ] ⊧* 𝗥₀]
+variable [V↓[ℒₒᵣ] ⊧* 𝗥₀]
 
 /-- The structure of the model of `cobhamTranslation` is the one of `oRingStructure`. -/
-lemma struc_eq : Model.struc cobhamTranslation M = @standardModel _ oRingStructure :=
+lemma struc_eq : Model.struc cobhamTranslation V = @standardModel _ oRingStructure :=
   Tarski.Structure.ext
     (funext₃ fun k f v ↦ by
       symm
@@ -154,20 +154,20 @@ lemma struc_eq : Model.struc cobhamTranslation M = @standardModel _ oRingStructu
     (funext₃ fun k r v ↦ by
       cases r
       · exact propext <| Model.eq_iff v
-      · change (cobhamTranslation.rel .lt).val (fun i ↦ (v i : M)) = CobhamLT (v 0 : M) (v 1)
-        rw [Matrix.fun_eq_vec_two (fun i ↦ (v i : M))]
+      · change (cobhamTranslation.rel .lt).val (fun i ↦ (v i : V)) = CobhamLT (v 0 : V) (v 1)
+        rw [Matrix.fun_eq_vec_two (fun i ↦ (v i : V))]
         simp [cobhamTranslation, Semiformula.Operator.val])
 
 /--
 A model of $\mathsf{R}_0$ with the strict part of Cobham's order is a model of $\mathsf{R}$.
 - [Sve08, §3.3]
 -/
-instance : (cobhamTranslation.Model M)↓[ℒₒᵣ] ⊧* 𝗥 := by
+instance : (cobhamTranslation.Model V)↓[ℒₒᵣ] ⊧* 𝗥 := by
   rw [struc_eq]
-  let := oRingStructure (M := M)
-  have lt_iff (x : cobhamTranslation.Model M) (n : ℕ) :
-      x < numeral n ↔ (x : M) < numeral n := by
-    change CobhamLT (x : M) (numeral n : cobhamTranslation.Model M) ↔ _
+  let := oRingStructure (V := V)
+  have lt_iff (x : cobhamTranslation.Model V) (n : ℕ) :
+      x < numeral n ↔ (x : V) < numeral n := by
+    change CobhamLT (x : V) (numeral n : cobhamTranslation.Model V) ↔ _
     rw [val_numeral, cobhamLT_numeral_iff]
   rw [R.models_iff_models_R0]
   and_intros
@@ -176,29 +176,29 @@ instance : (cobhamTranslation.Model M)↓[ℒₒᵣ] ⊧* 𝗥 := by
     cases hσ
     case equal hφ => exact models_theory_iff.mp inferInstance _ hφ
     case Ω₁ n m =>
-      suffices (numeral n + numeral m : cobhamTranslation.Model M) = numeral (n + m) by
+      suffices (numeral n + numeral m : cobhamTranslation.Model V) = numeral (n + m) by
         simpa [models_iff]
       apply Model.ext
       rw [val_numeral, ← numeral_add_numeral]
       exact congrArg₂ (· + ·) (val_numeral n) (val_numeral m)
     case Ω₂ n m =>
-      suffices (numeral n * numeral m : cobhamTranslation.Model M) = numeral (n * m) by
+      suffices (numeral n * numeral m : cobhamTranslation.Model V) = numeral (n * m) by
         simpa [models_iff]
       apply Model.ext
       rw [val_numeral, ← numeral_mul_numeral]
       exact congrArg₂ (· * ·) (val_numeral n) (val_numeral m)
     case Ω₃ n =>
-      suffices ∀ x : cobhamTranslation.Model M, x < numeral n ↔ ∃ i < n, x = numeral i by
+      suffices ∀ x : cobhamTranslation.Model V, x < numeral n ↔ ∃ i < n, x = numeral i by
         simpa [models_iff]
       intro x
       rw [lt_iff, lt_numeral_iff, Fin.exists_iff]
       simp [← Model.val_inj_iff, val_numeral]
   · intro n x
-    by_cases h : (x : M) = numeral n
+    by_cases h : (x : V) = numeral n
     · exact Or.inl <| Model.ext <| h.trans (val_numeral n).symm
     · right
-      have h' := cobhamLE_numeral_or (x := (x : M)) n
-      rw [← val_numeral (M := M)] at h h'
+      have h' := cobhamLE_numeral_or (x := (x : V)) n
+      rw [← val_numeral (V := V)] at h h'
       exact h'.imp (⟨·, h⟩) (⟨·, Ne.symm h⟩)
 
 end cobhamTranslation

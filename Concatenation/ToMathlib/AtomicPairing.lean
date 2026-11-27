@@ -19,7 +19,7 @@ back-and-forth between two of them with the same table.
 namespace AtomicPairing
 
 /-- `y` is a left or a right factor of `x`. -/
-def IsFactor {M : Type*} [Append M] (y x : M) : Prop := ∃ z, x = y ++ z ∨ x = z ++ y
+def IsFactor {V : Type*} [Append V] (y x : V) : Prop := ∃ z, x = y ++ z ∨ x = z ++ y
 
 end AtomicPairing
 
@@ -28,38 +28,38 @@ An operation `++` with atoms named by `S` whose products are again atoms exactly
 says, and which is otherwise an injective pairing onto the elements that are not atoms, without
 cycles.
 -/
-structure AtomicPairing {S : Type*} (tbl : S → S → S → Prop) (M : Type*) [Append M] where
+structure AtomicPairing {S : Type*} (tbl : S → S → S → Prop) (V : Type*) [Append V] where
   /-- The atom of a name. -/
-  atom : S → M
+  atom : S → V
   atom_injective : Function.Injective atom
   atom_append_atom (s s' s'' : S) : atom s ++ atom s' = atom s'' ↔ tbl s s' s''
-  exists_atom_of_append {x y : M} {s : S} :
+  exists_atom_of_append {x y : V} {s : S} :
     x ++ y = atom s → (∃ s', x = atom s') ∧ ∃ s', y = atom s'
-  append_injective {x y x' y' : M} :
+  append_injective {x y x' y' : V} :
     (∀ s, x ++ y ≠ atom s) → x ++ y = x' ++ y' → x = x' ∧ y = y'
-  exists_append {x : M} : (∀ s, x ≠ atom s) → ∃ y z, x = y ++ z
+  exists_append {x : V} : (∀ s, x ≠ atom s) → ∃ y z, x = y ++ z
   exists_ne_atom : ∃ x, ∀ s, x ≠ atom s
-  acyclic (x : M) : ¬Relation.TransGen AtomicPairing.IsFactor x x
+  acyclic (x : V) : ¬Relation.TransGen AtomicPairing.IsFactor x x
 
 namespace AtomicPairing
 
-variable {S : Type*} {tbl : S → S → S → Prop} {M M' : Type*} [Append M] [Append M']
+variable {S : Type*} {tbl : S → S → S → Prop} {V W : Type*} [Append V] [Append W]
 
 section
 
-variable (F : AtomicPairing tbl M) {x y z : M} {i : Bool} {p q : List Bool} {n : ℕ}
+variable (F : AtomicPairing tbl V) {x y z : V} {i : Bool} {p q : List Bool} {n : ℕ}
 
 /-- `x` is an atom. -/
-def IsAtom (x : M) : Prop := ∃ s, x = F.atom s
+def IsAtom (x : V) : Prop := ∃ s, x = F.atom s
 
 open Classical in
 /-- The left factor of an element that is not an atom, and the element itself for an atom. -/
-noncomputable def left (x : M) : M :=
+noncomputable def left (x : V) : V :=
   if h : F.IsAtom x then x else (F.exists_append (not_exists.mp h)).choose
 
 open Classical in
 /-- The right factor of an element that is not an atom, and the element itself for an atom. -/
-noncomputable def right (x : M) : M :=
+noncomputable def right (x : V) : V :=
   if h : F.IsAtom x then x else (F.exists_append (not_exists.mp h)).choose_spec.choose
 
 @[grind =]
@@ -88,7 +88,7 @@ lemma isFactor_right (h : ¬F.IsAtom x) : IsFactor (F.right x) x :=
   ⟨F.left x, .inr (F.left_append_right h).symm⟩
 
 /-- The right factor for `true` and the left factor for `false`. -/
-noncomputable def child (i : Bool) (x : M) : M := bif i then F.right x else F.left x
+noncomputable def child (i : Bool) (x : V) : V := bif i then F.right x else F.left x
 
 @[simp]
 lemma child_false : F.child false x = F.left x := rfl
@@ -101,7 +101,7 @@ lemma child_of_isAtom (h : F.IsAtom x) : F.child i x = x := by
   cases i <;> simp [F.left_of_isAtom h, F.right_of_isAtom h]
 
 /-- The component of `x` along the path `p` of left and right factors. -/
-noncomputable def comp (p : List Bool) (x : M) : M := p.foldl (fun x i ↦ F.child i x) x
+noncomputable def comp (p : List Bool) (x : V) : V := p.foldl (fun x i ↦ F.child i x) x
 
 @[simp]
 lemma comp_nil : F.comp [] x = x := rfl
@@ -119,7 +119,7 @@ lemma comp_of_isAtom (h : F.IsAtom x) : F.comp p x = x := by
   | cons i p ih => rw [comp_cons, F.child_of_isAtom h, ih]
 
 /-- The elements `e`, `e ++ e`, `(e ++ e) ++ (e ++ e)`, … for an element `e` that is not an atom. -/
-noncomputable def tower : ℕ → M
+noncomputable def tower : ℕ → V
   | 0 => F.exists_ne_atom.choose
   | n + 1 => tower n ++ tower n
 
@@ -143,10 +143,10 @@ lemma tower_injective : Function.Injective F.tower := by
   by_contra hne
   rcases Nat.lt_or_gt_of_ne hne with hlt | hlt <;> exact F.acyclic _ (hij ▸ h hlt)
 
-variable (T : Set M)
+variable (T : Set V)
 
 /-- Every descent from `x` through left and right factors leaves `T` within `n` steps. -/
-def HeightLE : ℕ → M → Prop
+def HeightLE : ℕ → V → Prop
   | 0, x => x ∉ T
   | n + 1, x => x ∉ T ∨ (HeightLE n (F.left x) ∧ HeightLE n (F.right x))
 
@@ -156,7 +156,7 @@ lemma heightLE_of_notMem (h : x ∉ T) : ∀ n, F.HeightLE T n x
   | 0 => h
   | _ + 1 => .inl h
 
-lemma heightLE_induction {P : ℕ → M → Prop} (h₀ : ∀ n x, x ∉ T → P n x)
+lemma heightLE_induction {P : ℕ → V → Prop} (h₀ : ∀ n x, x ∉ T → P n x)
     (h₁ : ∀ n x, x ∈ T → P n (F.left x) → P n (F.right x) → P (n + 1) x) :
     ∀ n x, F.HeightLE T n x → P n x := by
   intro n
@@ -169,10 +169,10 @@ lemma heightLE_induction {P : ℕ → M → Prop} (h₀ : ∀ n x, x ∉ T → P
       · exact h₁ n x hx (ih _ hl) (ih _ hr)
       · exact h₀ _ x hx
 
-lemma heightLE_length (hT : ∀ x ∈ T, ¬F.IsAtom x) (L : List M) (x : M)
+lemma heightLE_length (hT : ∀ x ∈ T, ¬F.IsAtom x) (L : List V) (x : V)
     (hx : ∀ y, Relation.ReflTransGen IsFactor y x → y ∈ T → y ∈ L) : F.HeightLE T L.length x := by
   classical
-  suffices ∀ n (L : List M), L.length = n → ∀ x,
+  suffices ∀ n (L : List V), L.length = n → ∀ x,
       (∀ y, Relation.ReflTransGen IsFactor y x → y ∈ T → y ∈ L) → F.HeightLE T n x from
     this _ L rfl x hx
   intro n
@@ -184,7 +184,7 @@ lemma heightLE_length (hT : ∀ x ∈ T, ¬F.IsAtom x) (L : List M) (x : M)
     intro L hL x hx
     by_cases hxT : x ∈ T
     · have hxL : x ∈ L := hx x .refl hxT
-      have key (c : M) (hc : IsFactor c x) : F.HeightLE T n c := by
+      have key (c : V) (hc : IsFactor c x) : F.HeightLE T n c := by
         apply ih (L.erase x) (by rw [List.length_erase_of_mem hxL, hL]; rfl)
         intro y hy hyT
         apply (List.mem_erase_of_ne _).mpr (hx y (hy.tail hc) hyT)
@@ -193,9 +193,9 @@ lemma heightLE_length (hT : ∀ x ∈ T, ¬F.IsAtom x) (L : List M) (x : M)
       exact .inr ⟨key _ (F.isFactor_left (hT x hxT)), key _ (F.isFactor_right (hT x hxT))⟩
     · exact F.heightLE_of_notMem hxT _
 
-omit [Append M] in
+omit [Append V] in
 /-- For finitely many elements, some level above `d` of a growing family of sets is a gap. -/
-lemma exists_gap (A : ℕ → Set M) (hA : Monotone A) (L : List M) (d : ℕ) :
+lemma exists_gap (A : ℕ → Set V) (hA : Monotone A) (L : List V) (d : ℕ) :
     ∃ θ, d ≤ θ ∧ θ < d + 2 ^ L.length ∧ ∀ x ∈ L, x ∈ A (θ + 1) → x ∈ A θ := by
   induction L generalizing d with
   | nil => exact ⟨d, le_rfl, by simp, by simp⟩
@@ -215,13 +215,13 @@ open Classical in
 The map that is `φ` outside `T` and sends an element of `T` to the product of the images of its
 factors, cut off after `n` descents.
 -/
-noncomputable def build (φ : M → M') : ℕ → M → M'
+noncomputable def build (φ : V → W) : ℕ → V → W
   | 0, x => φ x
   | n + 1, x => if x ∈ T then build φ n (F.left x) ++ build φ n (F.right x) else φ x
 
 variable {T}
 
-lemma build_eq {φ : M → M'} (h : F.HeightLE T n x) (m : ℕ) (hm : n ≤ m) :
+lemma build_eq {φ : V → W} (h : F.HeightLE T n x) (m : ℕ) (hm : n ≤ m) :
     F.build T φ m x = F.build T φ n x := by
   induction n generalizing x m with
   | zero =>
@@ -239,10 +239,10 @@ lemma build_eq {φ : M → M'} (h : F.HeightLE T n x) (m : ℕ) (hm : n ≤ m) :
 A map that is `φ` outside a finite set `T` of elements that are not atoms, and sends an element of
 `T` to the product of the images of its factors.
 -/
-lemma exists_copy (hT : ∀ x ∈ T, ¬F.IsAtom x) (L : List M) (hL : ∀ x ∈ T, x ∈ L) (φ : M → M') :
-    ∃ H : M → M', (∀ x, x ∉ T → H x = φ x) ∧ (∀ x ∈ T, H x = H (F.left x) ++ H (F.right x)) ∧
+lemma exists_copy (hT : ∀ x ∈ T, ¬F.IsAtom x) (L : List V) (hL : ∀ x ∈ T, x ∈ L) (φ : V → W) :
+    ∃ H : V → W, (∀ x, x ∉ T → H x = φ x) ∧ (∀ x ∈ T, H x = H (F.left x) ++ H (F.right x)) ∧
       ∀ x, F.HeightLE T L.length x := by
-  have hh (x : M) : F.HeightLE T L.length x := F.heightLE_length hT L x fun y _ hy ↦ hL y hy
+  have hh (x : V) : F.HeightLE T L.length x := F.heightLE_length hT L x fun y _ hy ↦ hL y hy
   use F.build T φ L.length
   and_intros
   · intro x hx
@@ -256,11 +256,11 @@ end
 
 section
 
-variable (F : AtomicPairing tbl M) (F' : AtomicPairing tbl M') {ρ ρ' : Set (M × M')}
-  {R R' : Set (M × M')} {a a' x : M} {b b' y : M'} {d d' : ℕ} {p : List Bool}
+variable (F : AtomicPairing tbl V) (F' : AtomicPairing tbl W) {ρ ρ' : Set (V × W)}
+  {R R' : Set (V × W)} {a a' x : V} {b b' y : W} {d d' : ℕ} {p : List Bool}
 
 /-- The pairs of components, along the same path of length at most `d`, of the pairs in `ρ`. -/
-def Reach (d : ℕ) (ρ : Set (M × M')) : Set (M × M') :=
+def Reach (d : ℕ) (ρ : Set (V × W)) : Set (V × W) :=
   {z | ∃ a b p, (a, b) ∈ ρ ∧ List.length p ≤ d ∧ z = (F.comp p a, F'.comp p b)}
 
 variable {F F'}
@@ -302,7 +302,7 @@ lemma reach_swap : F'.Reach F d (Prod.swap '' ρ) = Prod.swap '' F.Reach F' d ρ
 
 lemma finite_reach (hρ : ρ.Finite) : (F.Reach F' d ρ).Finite := by
   have h := (Set.Finite.prod hρ (List.finite_length_le Bool d)).image
-    fun z : (M × M') × List Bool ↦ (F.comp z.2 z.1.1, F'.comp z.2 z.1.2)
+    fun z : (V × W) × List Bool ↦ (F.comp z.2 z.1.1, F'.comp z.2 z.1.2)
   apply h.subset
   rintro _ ⟨a, b, p, h, hp, rfl⟩
   exact ⟨((a, b), p), ⟨h, hp⟩, rfl⟩
@@ -310,9 +310,9 @@ lemma finite_reach (hρ : ρ.Finite) : (F.Reach F' d ρ).Finite := by
 variable (F F')
 
 /-- The relation `R` preserves equality and the names of atoms. -/
-structure IsPartialIso (R : Set (M × M')) : Prop where
-  eq_iff {x x' : M} {y y' : M'} : (x, y) ∈ R → (x', y') ∈ R → (x = x' ↔ y = y')
-  atom_iff {x : M} {y : M'} : (x, y) ∈ R → ∀ s, x = F.atom s ↔ y = F'.atom s
+structure IsPartialIso (R : Set (V × W)) : Prop where
+  eq_iff {x x' : V} {y y' : W} : (x, y) ∈ R → (x', y') ∈ R → (x = x' ↔ y = y')
+  atom_iff {x : V} {y : W} : (x, y) ∈ R → ∀ s, x = F.atom s ↔ y = F'.atom s
 
 variable {F F'}
 
@@ -354,7 +354,7 @@ end IsPartialIso
 variable (F F')
 
 /-- The components up to depth `d` of the pairs in `ρ` correspond. -/
-def Similar (d : ℕ) (ρ : Set (M × M')) : Prop := F.IsPartialIso F' (F.Reach F' d ρ)
+def Similar (d : ℕ) (ρ : Set (V × W)) : Prop := F.IsPartialIso F' (F.Reach F' d ρ)
 
 variable {F F'}
 
@@ -449,7 +449,7 @@ variable (F F')
 Components up to a depth `g` depending only on `d` correspond: then every element on the left has a
 partner on the right such that the components up to depth `d` still correspond.
 -/
-theorem exists_similar_insert (d : ℕ) : ∃ g, ∀ ρ : Set (M × M'), ρ.Finite → F.Similar F' g ρ →
+theorem exists_similar_insert (d : ℕ) : ∃ g, ∀ ρ : Set (V × W), ρ.Finite → F.Similar F' g ρ →
     ∀ a, ∃ b, F.Similar F' d (insert (a, b) ρ) := by
   classical
   let P : List (List Bool) := (List.finite_length_le Bool d).toFinset.toList
@@ -458,7 +458,7 @@ theorem exists_similar_insert (d : ℕ) : ∃ g, ∀ ρ : Set (M × M'), ρ.Fini
   obtain ⟨g, hg⟩ : ∃ g, g = d + 2 ^ K + K + 1 := ⟨_, rfl⟩
   use g
   intro ρ hρ hE a
-  let L : List M := P.map (F.comp · a)
+  let L : List V := P.map (F.comp · a)
   have hL (p : List Bool) (hp : p.length ≤ d) : F.comp p a ∈ L :=
     List.mem_map.mpr ⟨p, hP p hp, rfl⟩
   have hLK : L.length = K := by simp [L, hK]
@@ -477,36 +477,36 @@ theorem exists_similar_insert (d : ℕ) : ∃ g, ∀ ρ : Set (M × M'), ρ.Fini
     omega
   obtain ⟨D, hD⟩ : ∃ D, D = K + 1 := ⟨_, rfl⟩
   have hDpos (i : ℕ) : D + 1 ≤ (D + 1) * (i + 1) := Nat.le_mul_of_pos_right _ (Nat.succ_pos i)
-  let m : M → ℕ := fun x ↦ m₀ + (D + 1) * (L.idxOf x + 1)
-  let φ : M → M' := fun x ↦
+  let m : V → ℕ := fun x ↦ m₀ + (D + 1) * (L.idxOf x + 1)
+  let φ : V → W := fun x ↦
     if h : ∃ y, (x, y) ∈ F.Reach F' θ ρ then h.choose
     else if h' : F.IsAtom x then F'.atom h'.choose else F'.tower (m x)
-  let T : Set M := {x | (∃ p : List Bool, p.length < d ∧ x = F.comp p a) ∧ ¬F.IsAtom x ∧
+  let T : Set V := {x | (∃ p : List Bool, p.length < d ∧ x = F.comp p a) ∧ ¬F.IsAtom x ∧
     ¬∃ y, (x, y) ∈ F.Reach F' θ ρ}
-  have hTL (x : M) (hx : x ∈ T) : x ∈ L := by
+  have hTL (x : V) (hx : x ∈ T) : x ∈ L := by
     obtain ⟨⟨p, hp, rfl⟩, -, -⟩ := hx
     exact hL p hp.le
-  have hTc (x : M) (hx : x ∈ T) (i : Bool) : F.child i x ∈ L := by
+  have hTc (x : V) (hx : x ∈ T) (i : Bool) : F.child i x ∈ L := by
     obtain ⟨⟨p, hp, rfl⟩, -, -⟩ := hx
     simpa using hL (p ++ [i]) (by simp; omega)
-  obtain ⟨H, hH₀, hH₁, hHt⟩ := F.exists_copy (M' := M') (fun x (hx : x ∈ T) ↦ hx.2.1) L hTL φ
+  obtain ⟨H, hH₀, hH₁, hHt⟩ := F.exists_copy (W := W) (fun x (hx : x ∈ T) ↦ hx.2.1) L hTL φ
   rw [hLK] at hHt
-  have hold {x : M} {y : M'} (hxy : (x, y) ∈ F.Reach F' θ ρ) : (x, H x) ∈ F.Reach F' θ ρ := by
+  have hold {x : V} {y : W} (hxy : (x, y) ∈ F.Reach F' θ ρ) : (x, H x) ∈ F.Reach F' θ ρ := by
     have h : ∃ y, (x, y) ∈ F.Reach F' θ ρ := ⟨y, hxy⟩
     rw [hH₀ x fun hx ↦ hx.2.2 h]
     simp only [φ, h, ↓reduceDIte]
     exact h.choose_spec
-  have hatom {x : M} (s : S) (hx : ¬∃ y, (x, y) ∈ F.Reach F' θ ρ) (hs : x = F.atom s) :
+  have hatom {x : V} (s : S) (hx : ¬∃ y, (x, y) ∈ F.Reach F' θ ρ) (hs : x = F.atom s) :
       H x = F'.atom s := by
     have h' : F.IsAtom x := ⟨s, hs⟩
     rw [hH₀ x fun hxT ↦ hxT.2.1 h']
     simp only [φ, hx, h', ↓reduceDIte]
     rw [F.atom_injective (h'.choose_spec.symm.trans hs)]
-  have hfresh {x : M} (hx : ¬∃ y, (x, y) ∈ F.Reach F' θ ρ) (hx' : ¬F.IsAtom x) (hxT : x ∉ T) :
+  have hfresh {x : V} (hx : ¬∃ y, (x, y) ∈ F.Reach F' θ ρ) (hx' : ¬F.IsAtom x) (hxT : x ∉ T) :
       H x = F'.tower (m x) := by
     rw [hH₀ x hxT]
     simp only [φ, hx, hx', ↓reduceDIte]
-  have hN (x : M) : ∀ s, H x = F'.atom s ↔ x = F.atom s := by
+  have hN (x : V) : ∀ s, H x = F'.atom s ↔ x = F.atom s := by
     apply F.heightLE_induction (P := fun _ x ↦ ∀ s, H x = F'.atom s ↔ x = F.atom s) _ _ K x
       (hHt x)
     · intro _ x hxT s
@@ -528,9 +528,9 @@ theorem exists_similar_insert (d : ℕ) : ∃ g, ∀ ρ : Set (M × M'), ρ.Fini
         exact (F.atom_append_atom _ _ _).mpr ht
       · intro h
         exact (hxT.2.1 ⟨s, h⟩).elim
-  have hnot (x : M) (hx : ¬F.IsAtom x) : ¬F'.IsAtom (H x) := fun ⟨s, hs⟩ ↦
+  have hnot (x : V) (hx : ¬F.IsAtom x) : ¬F'.IsAtom (H x) := fun ⟨s, hs⟩ ↦
     hx ⟨s, (hN x s).mp hs⟩
-  have hnot' (x : M) (hx : x ∈ T) (s : S) : H (F.left x) ++ H (F.right x) ≠ F'.atom s := by
+  have hnot' (x : V) (hx : x ∈ T) (s : S) : H (F.left x) ++ H (F.right x) ≠ F'.atom s := by
     have := hnot x hx.2.1
     rw [hH₁ x hx] at this
     exact not_exists.mp this s
@@ -561,7 +561,7 @@ theorem exists_similar_insert (d : ℕ) : ∃ g, ∀ ρ : Set (M × M'), ρ.Fini
       have hp : p.length < d := by simp at hp; omega
       rw [comp_append, comp_append, ih hp.le]
       exact hC p hp i
-  have hO (x : M) :
+  have hO (x : V) :
       ∀ j, j + K ≤ g → ∀ x₂ y₂, (x₂, y₂) ∈ F.Reach F' j ρ → H x = y₂ → x = x₂ := by
     apply F.heightLE_induction (P := fun n x ↦ ∀ j, j + n ≤ g → ∀ x₂ y₂,
       (x₂, y₂) ∈ F.Reach F' j ρ → H x = y₂ → x = x₂) _ _ K x (hHt x)
@@ -593,7 +593,7 @@ theorem exists_similar_insert (d : ℕ) : ∃ g, ∀ ρ : Set (M × M'), ρ.Fini
     have : D + 1 ∣ t := (Nat.dvd_add_right (Nat.dvd_mul_right _ _)).mp (h ▸ Nat.dvd_mul_right _ _)
     have := Nat.le_of_dvd (by omega) this
     omega
-  have hZ (x : M) : ∀ i t, 1 ≤ t → t + K ≤ D → H x ≠ F'.tower (m₀ + (D + 1) * (i + 1) - t) := by
+  have hZ (x : V) : ∀ i t, 1 ≤ t → t + K ≤ D → H x ≠ F'.tower (m₀ + (D + 1) * (i + 1) - t) := by
     apply F.heightLE_induction (P := fun n x ↦ ∀ i t, 1 ≤ t → t + n ≤ D →
       H x ≠ F'.tower (m₀ + (D + 1) * (i + 1) - t)) _ _ K x (hHt x)
     · intro n x hxT i t ht htn hxe
@@ -617,9 +617,9 @@ theorem exists_similar_insert (d : ℕ) : ∃ g, ∀ ρ : Set (M × M'), ρ.Fini
       apply hl i (t + 1) (by omega) (by omega)
       rw [show m₀ + (D + 1) * (i + 1) - (t + 1) = k by omega]
       exact (F'.append_injective (hnot' x hxT) hxe).1
-  have hIo (x x' : M) (y : M') (hy : (x, y) ∈ F.Reach F' θ ρ) (h : H x = H x') : x' = x :=
+  have hIo (x x' : V) (y : W) (hy : (x, y) ∈ F.Reach F' θ ρ) (h : H x = H x') : x' = x :=
     hO x' θ (by omega) x (H x) (hold hy) h.symm
-  have hleaf (x x' : M) (ho : ¬∃ y, (x, y) ∈ F.Reach F' θ ρ) (ha : ¬F.IsAtom x) (hxT : x ∉ T)
+  have hleaf (x x' : V) (ho : ¬∃ y, (x, y) ∈ F.Reach F' θ ρ) (ha : ¬F.IsAtom x) (hxT : x ∉ T)
       (hx'T : x' ∈ T) : H x ≠ H x' := by
     intro h
     have hi := hDpos (L.idxOf x)
@@ -627,7 +627,7 @@ theorem exists_similar_insert (d : ℕ) : ∃ g, ∀ ρ : Set (M × M'), ρ.Fini
       show m x = m₀ + (D + 1) * (L.idxOf x + 1) - 1 + 1 by simp only [m]; omega, tower_succ] at h
     exact hZ (F.left x') (L.idxOf x) 1 le_rfl (by omega)
       (F'.append_injective (hnot' x' hx'T) h.symm).1
-  have hI (x : M) : x ∈ L → ∀ x' ∈ L, H x = H x' → x = x' := by
+  have hI (x : V) : x ∈ L → ∀ x' ∈ L, H x = H x' → x = x' := by
     apply F.heightLE_induction (P := fun _ x ↦ x ∈ L → ∀ x' ∈ L, H x = H x' → x = x') _ _ K x
       (hHt x)
     · intro _ x hxT hxL x' hx'L h
@@ -672,8 +672,8 @@ theorem exists_similar_insert (d : ℕ) : ∃ g, ∀ ρ : Set (M × M'), ρ.Fini
     rintro z (hz | ⟨p, hp, rfl⟩)
     · exact .inl hz
     · exact .inr ⟨_, hL p hp, by rw [h1 p hp]⟩
-  have hdg {z : M × M'} (hz : z ∈ F.Reach F' d ρ) : z ∈ F.Reach F' g ρ := hmono (by omega) hz
-  have hOld {x₂ x : M} {y₂ : M'} (h₂ : (x₂, y₂) ∈ F.Reach F' d ρ) : x₂ = x ↔ y₂ = H x := by
+  have hdg {z : V × W} (hz : z ∈ F.Reach F' d ρ) : z ∈ F.Reach F' g ρ := hmono (by omega) hz
+  have hOld {x₂ x : V} {y₂ : W} (h₂ : (x₂, y₂) ∈ F.Reach F' d ρ) : x₂ = x ↔ y₂ = H x := by
     constructor
     · rintro rfl
       have h := hmono (by omega) (hold (reach_mono hdθ le_rfl h₂))
@@ -697,7 +697,7 @@ theorem exists_similar_insert (d : ℕ) : ∃ g, ∀ ρ : Set (M × M'), ρ.Fini
       exact (hN x s).symm
 
 /-- The same as `exists_similar_insert`, for an element on the right. -/
-lemma exists_similar_insert' (d : ℕ) : ∃ g, ∀ ρ : Set (M × M'), ρ.Finite → F.Similar F' g ρ →
+lemma exists_similar_insert' (d : ℕ) : ∃ g, ∀ ρ : Set (V × W), ρ.Finite → F.Similar F' g ρ →
     ∀ b, ∃ a, F.Similar F' d (insert (a, b) ρ) := by
   obtain ⟨g, hg⟩ := exists_similar_insert F' F d
   use g

@@ -25,13 +25,13 @@ lemma notInterprets_iff : T ⋫ U ↔ ¬Nonempty (T ⊳ U) := not_nonempty_iff.s
 
 namespace NotInterprets
 
-variable [𝗘𝗤 _ ⪯ U] {V : Theory L₃}
+variable [𝗘𝗤 _ ⪯ U] {S : Theory L₃}
 
 /-- A theory interpreted in `T` does not interpret what `T` does not interpret. -/
-lemma of_left (h : T ⋫ V) (π : T ⊳ U) : U ⋫ V := ⟨fun ρ ↦ h.false (ρ.comp π)⟩
+lemma of_left (h : T ⋫ S) (π : T ⊳ U) : U ⋫ S := ⟨fun ρ ↦ h.false (ρ.comp π)⟩
 
 /-- `T` does not interpret a theory that interprets what `T` does not interpret. -/
-lemma of_right (h : T ⋫ V) (π : U ⊳ V) : T ⋫ U := ⟨fun ρ ↦ h.false (π.comp ρ)⟩
+lemma of_right (h : T ⋫ S) (π : U ⊳ S) : T ⋫ U := ⟨fun ρ ↦ h.false (π.comp ρ)⟩
 
 end NotInterprets
 

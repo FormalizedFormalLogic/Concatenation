@@ -17,18 +17,18 @@ namespace FFL.FirstOrder.Arithmetic
 
 open ORingStructure
 
-variable {M : Type*} [ORingStructure M]
+variable {V : Type*} [ORingStructure V]
 
 section pair
 
 /-- The pairing $(a + b + 1) (a + b + 1) + a$. -/
-def mkPair (a b : M) : M := (a + b + 1) * (a + b + 1) + a
+def mkPair (a b : V) : V := (a + b + 1) * (a + b + 1) + a
 
 /-- The pairing $(a + b + 1) (a + b + 1) + a$. -/
 def mkPairTerm : ClosedSemiterm ℒₒᵣ 2 := ‘a b. (a + b + 1) * (a + b + 1) + a’
 
 @[simp]
-lemma val_subst_mkPairTerm {n : ℕ} {e : Fin n → M} {f : Empty → M}
+lemma val_subst_mkPairTerm {n : ℕ} {e : Fin n → V} {f : Empty → V}
     {t u : ClosedSemiterm ℒₒᵣ n} :
     (Rew.subst ![t, u] mkPairTerm).val e f = mkPair (t.val e f) (u.val e f) := by
   simp [mkPairTerm, mkPair]
@@ -68,9 +68,9 @@ lemma mkPair_le_mkPair {a b a' b' : ℕ} (ha : a ≤ a') (hb : b ≤ b') :
   gcongr
 
 @[simp, grind =]
-lemma mkPair_numeral [M↓[ℒₒᵣ] ⊧* 𝗥₀] (a b : ℕ) :
-    mkPair (numeral a : M) (numeral b) = numeral (mkPair a b) := by
-  have h : (1 : M) = numeral 1 := by simp
+lemma mkPair_numeral [V↓[ℒₒᵣ] ⊧* 𝗥₀] (a b : ℕ) :
+    mkPair (numeral a : V) (numeral b) = numeral (mkPair a b) := by
+  have h : (1 : V) = numeral 1 := by simp
   simp only [mkPair, h, numeral_add_numeral, numeral_mul_numeral]
 
 end pair
@@ -78,15 +78,15 @@ end pair
 section envCode
 
 /-- The code of the environment `v`. -/
-def envCode : {n : ℕ} → (Fin n → M) → M
+def envCode : {n : ℕ} → (Fin n → V) → V
   | 0, _ => 0
   | _ + 1, v => mkPair (v 0) (envCode fun i ↦ v i.succ)
 
 @[simp]
-lemma envCode_zero {v : Fin 0 → M} : envCode v = 0 := rfl
+lemma envCode_zero {v : Fin 0 → V} : envCode v = 0 := rfl
 
 @[simp, grind =]
-lemma envCode_cons {n : ℕ} {a : M} {v : Fin n → M} :
+lemma envCode_cons {n : ℕ} {a : V} {v : Fin n → V} :
     envCode (a :> v) = mkPair a (envCode v) := by
   simp [envCode]
 
@@ -131,8 +131,8 @@ def envCodeTerm {m : ℕ} : {n : ℕ} → (Fin n → ClosedSemiterm ℒₒᵣ m)
   | _ + 1, t => Rew.subst ![t 0, envCodeTerm fun i ↦ t i.succ] mkPairTerm
 
 @[simp]
-lemma val_envCodeTerm {m n : ℕ} {t : Fin n → ClosedSemiterm ℒₒᵣ m} {e : Fin m → M}
-    {f : Empty → M} : (envCodeTerm t).val e f = envCode fun i ↦ (t i).val e f := by
+lemma val_envCodeTerm {m n : ℕ} {t : Fin n → ClosedSemiterm ℒₒᵣ m} {e : Fin m → V}
+    {f : Empty → V} : (envCodeTerm t).val e f = envCode fun i ↦ (t i).val e f := by
   induction n with
   | zero => simp [envCodeTerm]
   | succ n ih => simp [envCodeTerm, envCode, ih]

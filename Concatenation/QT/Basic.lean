@@ -67,41 +67,41 @@ def isInitialSegment : Semisentence ℒ⌢ₛ 2 :=
 
 section semantics
 
-variable {M : Type*} [ConcatenationStructure M] {x y : M}
+variable {V : Type*} [ConcatenationStructure V] {x y : V}
 
 open scoped Classical in
 /--
 The successor of a string.
 - [Dam17, §1]
 -/
-noncomputable def succ (x : M) : M := if x = 0 then 1 else x ++ 1
+noncomputable def succ (x : V) : V := if x = 0 then 1 else x ++ 1
 
-noncomputable instance : Tarski.Structure (Language.ofFunc Language.SuccessorFunc) M :=
+noncomputable instance : Tarski.Structure (Language.ofFunc Language.SuccessorFunc) V :=
   Tarski.Structure.ofFunc Language.SuccessorFunc fun {_} f ↦
     match f with
     | .succ => fun v ↦ succ (v 0)
 
-instance : Tarski.Structure.Eq ℒ⌢ₛ M := ⟨fun _ _ ↦ Iff.rfl⟩
+instance : Tarski.Structure.Eq ℒ⌢ₛ V := ⟨fun _ _ ↦ Iff.rfl⟩
 
-instance : Tarski.Structure.Zero ℒ⌢ₛ M := ⟨rfl⟩
+instance : Tarski.Structure.Zero ℒ⌢ₛ V := ⟨rfl⟩
 
-instance : Tarski.Structure.One ℒ⌢ₛ M := ⟨rfl⟩
+instance : Tarski.Structure.One ℒ⌢ₛ V := ⟨rfl⟩
 
-instance : Tarski.Structure.Concat ℒ⌢ₛ M := ⟨fun _ _ ↦ rfl⟩
+instance : Tarski.Structure.Concat ℒ⌢ₛ V := ⟨fun _ _ ↦ rfl⟩
 
 @[simp]
-lemma val_successor {e : Fin 1 → M} {ε : Empty → M} : successor.val e ε = succ (e 0) := rfl
+lemma val_successor {e : Fin 1 → V} {ε : Empty → V} : successor.val e ε = succ (e 0) := rfl
 
 /--
 `x` is an initial segment of `y`: `x` is $0$ and `y` is not, or `y` extends `x`.
 - [Dam17, §1]
 -/
-def IsInitialSegment (x y : M) : Prop := (x = 0 ∧ y ≠ 0) ∨ ∃ z, x ++ z = y
+def IsInitialSegment (x y : V) : Prop := (x = 0 ∧ y ≠ 0) ∨ ∃ z, x ++ z = y
 
-instance isInitialSegment_defined : ℒ⌢ₛ-relation[M] IsInitialSegment via isInitialSegment :=
+instance isInitialSegment_defined : ℒ⌢ₛ-relation[V] IsInitialSegment via isInitialSegment :=
   ⟨fun v ↦ by simp [isInitialSegment, IsInitialSegment]⟩
 
-instance isInitialSegment_definable : ℒ⌢ₛ-relation[M] IsInitialSegment :=
+instance isInitialSegment_definable : ℒ⌢ₛ-relation[V] IsInitialSegment :=
   isInitialSegment_defined.to_definable
 
 end semantics

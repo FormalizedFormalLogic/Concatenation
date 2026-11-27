@@ -23,7 +23,7 @@ variable {L : Language} {T U : Theory L}
 
 /-- `T` has a finite model. -/
 def HasFiniteModel (T : Theory L) : Prop :=
-  ∃ (M : Type) (_ : Nonempty M) (_ : Finite M) (_ : Tarski.Structure L M), M↓[L] ⊧* T
+  ∃ (V : Type) (_ : Nonempty V) (_ : Finite V) (_ : Tarski.Structure L V), V↓[L] ⊧* T
 
 /--
 `T` is locally finitely satisfiable: every finite subset of `T` has a finite model.
@@ -33,32 +33,32 @@ def HasFiniteModel (T : Theory L) : Prop :=
 def LocallyFinitelySatisfiable (T : Theory L) : Prop := ∀ F ⊆ T, F.Finite → F.HasFiniteModel
 
 lemma HasFiniteModel.of_weakerThan (h : U.HasFiniteModel) (hT : T ⪯ U) : T.HasFiniteModel :=
-  let ⟨M, hM, hf, s, hU⟩ := h
-  ⟨M, hM, hf, s, models_of_subtheory hU⟩
+  let ⟨V, hV, hf, s, hU⟩ := h
+  ⟨V, hV, hf, s, models_of_subtheory hU⟩
 
 /-- A finite model can be taken to interpret the equality symbol as equality. -/
 lemma HasFiniteModel.exists_eq [L.Eq] [𝗘𝗤 L ⪯ T] (h : T.HasFiniteModel) :
-    ∃ (M : Type) (_ : Nonempty M) (_ : Finite M) (_ : Tarski.Structure L M)
-      (_ : Tarski.Structure.Eq L M), M↓[L] ⊧* T := by
-  obtain ⟨M, hM, hf, s, hT⟩ := h
-  have : M↓[L] ⊧* 𝗘𝗤 L := models_of_subtheory hT
-  exact ⟨Tarski.Structure.Eq.QuotEq L M, inferInstance,
-    inferInstanceAs (Finite (Quotient (Tarski.Structure.Eq.eqvSetoid L M))), inferInstance,
-    inferInstance, (Tarski.Structure.Eq.QuotEq.elementaryEquiv L M).modelsTheory.mpr hT⟩
+    ∃ (V : Type) (_ : Nonempty V) (_ : Finite V) (_ : Tarski.Structure L V)
+      (_ : Tarski.Structure.Eq L V), V↓[L] ⊧* T := by
+  obtain ⟨V, hV, hf, s, hT⟩ := h
+  have : V↓[L] ⊧* 𝗘𝗤 L := models_of_subtheory hT
+  exact ⟨Tarski.Structure.Eq.QuotEq L V, inferInstance,
+    inferInstanceAs (Finite (Quotient (Tarski.Structure.Eq.eqvSetoid L V))), inferInstance,
+    inferInstance, (Tarski.Structure.Eq.QuotEq.elementaryEquiv L V).modelsTheory.mpr hT⟩
 
 lemma LocallyFinitelySatisfiable.of_subset (h : U.LocallyFinitelySatisfiable) (hT : T ⊆ U) :
     T.LocallyFinitelySatisfiable := fun F hF ↦ h F (hF.trans hT)
 
 /--
-A theory each of whose axioms holds in all but finitely many of the finite structures `M 0`,
-`M 1`, … is locally finitely satisfiable.
+A theory each of whose axioms holds in all but finitely many of the finite structures `V 0`,
+`V 1`, … is locally finitely satisfiable.
 -/
-lemma LocallyFinitelySatisfiable.of_eventually (M : ℕ → Type) [∀ n, Nonempty (M n)]
-    [∀ n, Finite (M n)] [∀ n, Tarski.Structure L (M n)]
-    (h : ∀ σ ∈ T, ∀ᶠ n in Filter.atTop, (M n)↓[L] ⊧ σ) : T.LocallyFinitelySatisfiable := by
+lemma LocallyFinitelySatisfiable.of_eventually (V : ℕ → Type) [∀ n, Nonempty (V n)]
+    [∀ n, Finite (V n)] [∀ n, Tarski.Structure L (V n)]
+    (h : ∀ σ ∈ T, ∀ᶠ n in Filter.atTop, (V n)↓[L] ⊧ σ) : T.LocallyFinitelySatisfiable := by
   intro F hF hfin
   obtain ⟨n, hn⟩ := ((Filter.eventually_all_finite hfin).mpr fun σ hσ ↦ h σ (hF hσ)).exists
-  exact ⟨M n, inferInstance, inferInstance, inferInstance, models_theory_iff.mpr hn⟩
+  exact ⟨V n, inferInstance, inferInstance, inferInstance, models_theory_iff.mpr hn⟩
 
 /-- Finitely many theorems of `T` follow from finitely many axioms of `T`. -/
 lemma exists_finite_subset_weakerThan (hU : U.Finite) (h : U ⪯ T) :
@@ -86,14 +86,14 @@ A finitely axiomatizable theory interpreted in `T` is interpreted in a finite su
 lemma exists_finite_subset [L₁.Finite] [L₂.Finite] (π : T ⊳ U) (hU : FiniteAxiomatizable U) :
     ∃ F ⊆ T, F.Finite ∧ ∃ _ : 𝗘𝗤 L₁ ⪯ F, Nonempty (F ⊳ U) := by
   have : Fintype ((k : ℕ) × L₂.Func k) := Language.Finite.func
-  obtain ⟨V, hV, hUV⟩ := hU
-  have : V ⪯ U := hUV.symm.le
-  have hT : 𝗘𝗤 L₁ ∪ π.translate '' V ⪯ T := WeakerThan.ofAxm! <| by
+  obtain ⟨S, hS, hUS⟩ := hU
+  have : S ⪯ U := hUS.symm.le
+  have hT : 𝗘𝗤 L₁ ∪ π.translate '' S ⪯ T := WeakerThan.ofAxm! <| by
     rintro σ (hσ | ⟨σ, hσ, rfl⟩)
     · exact WeakerThan.pbl (𝓢 := 𝗘𝗤 L₁) <| by_axm hσ
-    · exact π.sound <| WeakerThan.pbl (𝓢 := V) <| by_axm hσ
+    · exact π.sound <| WeakerThan.pbl (𝓢 := S) <| by_axm hσ
   obtain ⟨F₀, hF₀, hfin₀, h₀⟩ := Theory.exists_finite_subset_weakerThan
-    (Theory.Eq.finite.union <| hV.image _) hT
+    (Theory.Eq.finite.union <| hS.image _) hT
   obtain ⟨F₁, hF₁, hfin₁, h₁⟩ := Compact.finite_provable π.trln.domain_nonempty
   obtain ⟨F₂, hF₂, hfin₂, h₂⟩ := Compact.finite_provable π.trln.preserve_eq
   choose F₃ hF₃ hfin₃ h₃ using fun f : (k : ℕ) × L₂.Func k ↦
@@ -102,7 +102,7 @@ lemma exists_finite_subset [L₁.Finite] [L₂.Finite] (π : T ⊳ U) (hU : Fini
   have hFT : F ⊆ T :=
     Set.union_subset (Set.union_subset (Set.union_subset hF₀ hF₁) hF₂) <| Set.iUnion_subset hF₃
   have : F ⪯ T := Theory.Proof.weakerThan_of_le hFT
-  have h₀ : 𝗘𝗤 L₁ ∪ π.translate '' V ⪯ F :=
+  have h₀ : 𝗘𝗤 L₁ ∪ π.translate '' S ⪯ F :=
     h₀.trans <| WeakerThan.ofSubset fun _ h ↦ .inl <| .inl <| .inl h
   have : 𝗘𝗤 L₁ ⪯ F := WeakerThan.trans (WeakerThan.ofSubset Set.subset_union_left) h₀
   let ρ : DirectTranslation F L₂ := {
@@ -115,13 +115,13 @@ lemma exists_finite_subset [L₁.Finite] [L₂.Finite] (π : T ⊳ U) (hU : Fini
     preserve_eq := Axiomatized.weakening (fun _ h ↦ .inl <| .inr h) h₂ }
   have hρ (σ : Sentence L₂) : ρ.translate σ = π.translate σ :=
     (ρ.ofWeakerThan_translate (T' := T) σ).symm
-  let ρ' : F ⊳ V := {
+  let ρ' : F ⊳ S := {
     trln := ρ
     interpret_theory σ hσ := hρ σ ▸ h₀.pbl (by_axm <| Or.inr <| Set.mem_image_of_mem _ hσ) }
   exact ⟨F, hFT,
     ((hfin₀.union <| by simpa using hfin₁).union <| by simpa using hfin₂).union <|
       Set.finite_iUnion fun f ↦ by simpa using hfin₃ f,
-    inferInstance, ⟨ρ, fun σ hσ ↦ ρ'.sound <| hUV.le.pbl <| by_axm hσ⟩⟩
+    inferInstance, ⟨ρ, fun σ hσ ↦ ρ'.sound <| hUS.le.pbl <| by_axm hσ⟩⟩
 
 /--
 A finitely axiomatizable theory interpreted in a locally finitely satisfiable theory has a finite
@@ -131,8 +131,8 @@ model.
 lemma hasFiniteModel [L₁.Finite] [L₂.Finite] (π : T ⊳ U) (hT : T.LocallyFinitelySatisfiable)
     (hU : FiniteAxiomatizable U) : U.HasFiniteModel := by
   obtain ⟨F, hF, hfin, _, ⟨ρ⟩⟩ := π.exists_finite_subset hU
-  obtain ⟨M, _, _, _, _, _⟩ := (hT F hF hfin).exists_eq
-  exact ⟨ρ.trln.Model M, inferInstance,
+  obtain ⟨V, _, _, _, _, _⟩ := (hT F hF hfin).exists_eq
+  exact ⟨ρ.trln.Model V, inferInstance,
     Finite.of_injective _ fun _ _ ↦ DirectTranslation.Model.val_inj_iff.mp, inferInstance,
     models_theory_iff.mpr fun σ hσ ↦ DirectTranslation.Model.translate_iff.mp <|
       models_of_provable inferInstance <| ρ.interpret_theory σ hσ⟩

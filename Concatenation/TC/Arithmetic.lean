@@ -20,24 +20,24 @@ open DirectTranslation
 
 section arithmetic
 
-variable {M : Type*} [ConcatenationStructure M] {x y z z' : M}
+variable {V : Type*} [ConcatenationStructure V] {x y z z' : V}
 
 /--
 `x` is a number: a `1`-tally, the zero `0`, or the ideal element `0 0`.
 - [Gan09, §1, Definition 2]
 - [Sve09, §3]
 -/
-def IsNumber (x : M) : Prop := IsTally 1 x ∨ x = 0 ∨ x = 0 ++ 0
+def IsNumber (x : V) : Prop := IsTally 1 x ∨ x = 0 ∨ x = 0 ++ 0
 
 /-- `x` is a number. -/
 def isNumber : Semisentence ℒ⌢ 1 :=
   “x. !isTally !!(op(1).const) x ∨ x = !!(op(0).const) ∨
     x = !!(op(0).const) ⌢ !!(op(0).const)”
 
-instance isNumber_defined : ℒ⌢-predicate[M] IsNumber via isNumber :=
+instance isNumber_defined : ℒ⌢-predicate[V] IsNumber via isNumber :=
   ⟨fun v ↦ by simp [isNumber, IsNumber]⟩
 
-instance isNumber_definable : ℒ⌢-predicate[M] IsNumber := isNumber_defined.to_definable
+instance isNumber_definable : ℒ⌢-predicate[V] IsNumber := isNumber_defined.to_definable
 
 /--
 `z` is the sum of `x` and `y`: the concatenation of `1`-tallies, with `0` neutral and `0 0`
@@ -45,7 +45,7 @@ absorbing.
 - [Gan09, §1, Definition 2]
 - [Sve09, §3]
 -/
-def AddGraph (z x y : M) : Prop :=
+def AddGraph (z x y : V) : Prop :=
   ((x = 0 ++ 0 ∨ y = 0 ++ 0) ∧ z = 0 ++ 0) ∨ (x = 0 ∧ y ≠ 0 ++ 0 ∧ z = y) ∨
     (y = 0 ∧ x ≠ 0 ++ 0 ∧ z = x) ∨ (IsTally 1 x ∧ IsTally 1 y ∧ z = x ++ y)
 
@@ -57,10 +57,10 @@ def addGraph : Semisentence ℒ⌢ 3 :=
     (y = !!(op(0).const) ∧ x ≠ !!(op(0).const) ⌢ !!(op(0).const) ∧ z = x) ∨
     (!isTally !!(op(1).const) x ∧ !isTally !!(op(1).const) y ∧ z = x ⌢ y)”
 
-instance addGraph_defined : ℒ⌢-relation₃[M] AddGraph via addGraph :=
+instance addGraph_defined : ℒ⌢-relation₃[V] AddGraph via addGraph :=
   ⟨fun v ↦ by simp [addGraph, AddGraph]⟩
 
-instance addGraph_definable : ℒ⌢-relation₃[M] AddGraph := addGraph_defined.to_definable
+instance addGraph_definable : ℒ⌢-relation₃[V] AddGraph := addGraph_defined.to_definable
 
 /--
 `z` is the product of `x` and `y`: `0` if `y` is `0`; `0 0` if `y` is not `0` and one of `x` and `y`
@@ -70,7 +70,7 @@ otherwise.
 - [Gan09, §1, Definition 2]
 - [Sve09, §3]
 -/
-def MulGraph (z x y : M) : Prop :=
+def MulGraph (z x y : V) : Prop :=
   (y = 0 ∧ z = 0) ∨ (y ≠ 0 ∧ (x = 0 ++ 0 ∨ y = 0 ++ 0) ∧ z = 0 ++ 0) ∨
     (x = 0 ∧ IsTally 1 y ∧ z = 0) ∨
     (IsTally 1 x ∧ IsTally 1 y ∧
@@ -89,26 +89,26 @@ def mulGraph : Semisentence ℒ⌢ 3 :=
           ∃ r, !isMulSeq x y r ∧ !isLast (z ⌢ !!(op(0).const) ⌢ y) r) ∨
         (¬(∃! r, !isMulSeq x y r) ∧ z = !!(op(0).const) ⌢ !!(op(0).const))))”
 
-instance mulGraph_defined : ℒ⌢-relation₃[M] MulGraph via mulGraph :=
+instance mulGraph_defined : ℒ⌢-relation₃[V] MulGraph via mulGraph :=
   ⟨fun v ↦ by simp [mulGraph, MulGraph, pairOf]⟩
 
-instance mulGraph_definable : ℒ⌢-relation₃[M] MulGraph := mulGraph_defined.to_definable
+instance mulGraph_definable : ℒ⌢-relation₃[V] MulGraph := mulGraph_defined.to_definable
 
 /-- `x` is less than `y`: the translation of `∃ c, x + (c + 1) = y`. -/
-def LtGraph (x y : M) : Prop := ∃ c, IsNumber c ∧ ∃ d, AddGraph d c 1 ∧ AddGraph y x d
+def LtGraph (x y : V) : Prop := ∃ c, IsNumber c ∧ ∃ d, AddGraph d c 1 ∧ AddGraph y x d
 
 /-- `x` is less than `y`. -/
 def ltGraph : Semisentence ℒ⌢ 2 :=
   “x y. ∃ c, !isNumber c ∧ ∃ d, !addGraph d c !!(op(1).const) ∧ !addGraph y x d”
 
-instance ltGraph_defined : ℒ⌢-relation[M] LtGraph via ltGraph :=
+instance ltGraph_defined : ℒ⌢-relation[V] LtGraph via ltGraph :=
   ⟨fun v ↦ by simp [ltGraph, LtGraph]⟩
 
-instance ltGraph_definable : ℒ⌢-relation[M] LtGraph := ltGraph_defined.to_definable
+instance ltGraph_definable : ℒ⌢-relation[V] LtGraph := ltGraph_defined.to_definable
 
-lemma isNumber_zero : IsNumber (0 : M) := Or.inr <| Or.inl rfl
+lemma isNumber_zero : IsNumber (0 : V) := Or.inr <| Or.inl rfl
 
-lemma isNumber_zero_append_zero : IsNumber (0 ++ 0 : M) := Or.inr <| Or.inr rfl
+lemma isNumber_zero_append_zero : IsNumber (0 ++ 0 : V) := Or.inr <| Or.inr rfl
 
 lemma IsTally.isNumber (hx : IsTally 1 x) : IsNumber x := Or.inl hx
 
@@ -156,12 +156,12 @@ lemma exists_mulGraph (hx : IsNumber x) (hy : IsNumber y) : ∃ z, MulGraph z x 
 
 section TC
 
-variable [M↓[ℒ⌢] ⊧* 𝗧𝗖]
+variable [V↓[ℒ⌢] ⊧* 𝗧𝗖]
 
-lemma isNumber_one : IsNumber (1 : M) := Or.inl isTally_one_one
+lemma isNumber_one : IsNumber (1 : V) := Or.inl isTally_one_one
 
 lemma AddGraph.unique (h : AddGraph z x y) (h' : AddGraph z' x y) : z = z' := by
-  have h00 := zero_ne_append (0 : M) 0
+  have h00 := zero_ne_append (0 : V) 0
   rcases h with ⟨hxy, rfl⟩ | ⟨rfl, hy, rfl⟩ | ⟨rfl, hx, rfl⟩ | ⟨hx, hy, rfl⟩ <;>
     rcases h' with ⟨hxy', rfl⟩ | ⟨hx', hy', rfl⟩ | ⟨hy', hx', rfl⟩ | ⟨hx', hy', rfl⟩
   all_goals first
@@ -182,10 +182,10 @@ end TC
 
 section TCPlus
 
-variable [M↓[ℒ⌢] ⊧* 𝗧𝗖⁺]
+variable [V↓[ℒ⌢] ⊧* 𝗧𝗖⁺]
 
 lemma MulGraph.unique (h : MulGraph z x y) (h' : MulGraph z' x y) : z = z' := by
-  have h00 := zero_ne_append (0 : M) 0
+  have h00 := zero_ne_append (0 : V) 0
   rcases h with ⟨hy, rfl⟩ | ⟨hy, hxy, rfl⟩ | ⟨hx, hy, rfl⟩ |
       ⟨hx, hy, ⟨hr, hz, r, hrm, hzr⟩ | ⟨hr, rfl⟩⟩ <;>
     rcases h' with ⟨hy', rfl⟩ | ⟨hy', hxy', rfl⟩ | ⟨hx', hy', rfl⟩ |
@@ -220,18 +220,18 @@ def arithmeticTranslation : DirectTranslation 𝗧𝗖⁺ ℒₒᵣ where
     | .one => ⟨“z. z = !!(op(1).const)”⟩
     | .add => ⟨addGraph⟩
     | .mul => ⟨mulGraph⟩
-  domain_nonempty := complete.{0} _ _ fun M _ _ ↦ (models_domainNonempty_iff _).mpr <| by
+  domain_nonempty := complete.{0} _ _ fun V _ _ ↦ (models_domainNonempty_iff _).mpr <| by
     use 0
     simpa [Semiformula.Operator.val] using isNumber_zero
-  func_defined f := complete.{0} _ _ fun M _ _ ↦ (models_funcDefined_iff _ _).mpr <| by
+  func_defined f := complete.{0} _ _ fun V _ _ ↦ (models_funcDefined_iff _ _).mpr <| by
     intro e he
     have he (i) : IsNumber (e i) := by simpa [Semiformula.Operator.val] using he i
     cases f
-    · suffices ∃! y : M, IsNumber y ∧ y = 0 by
+    · suffices ∃! y : V, IsNumber y ∧ y = 0 by
         simpa [Semiformula.Operator.val, Semiformula.Operator.Eq.sentence_eq]
       use 0
       simp [isNumber_zero]
-    · suffices ∃! y : M, IsNumber y ∧ y = 1 by
+    · suffices ∃! y : V, IsNumber y ∧ y = 1 by
         simpa [Semiformula.Operator.val, Semiformula.Operator.Eq.sentence_eq]
       use 1
       simp [isNumber_one]
@@ -239,32 +239,32 @@ def arithmeticTranslation : DirectTranslation 𝗧𝗖⁺ ℒₒᵣ where
       simpa [Semiformula.Operator.val] using existsUnique_addGraph (he 0) (he 1)
     · rw [Matrix.fun_eq_vec_two e]
       simpa [Semiformula.Operator.val] using existsUnique_mulGraph (he 0) (he 1)
-  preserve_eq := complete.{0} _ _ fun M _ _ ↦ (models_preserveEq_iff _ _).mpr <| by
+  preserve_eq := complete.{0} _ _ fun V _ _ ↦ (models_preserveEq_iff _ _).mpr <| by
     simp [Semiformula.Operator.val, Semiformula.Operator.Eq.sentence_eq]
 
 @[simp]
 lemma arithmeticTranslation_dom_iff : arithmeticTranslation.Dom x ↔ IsNumber x := by
   simp [dom_iff, arithmeticTranslation, Semiformula.Operator.val]
 
-lemma arithmeticTranslation.isNumber_val (a : arithmeticTranslation.Model M) : IsNumber (a : M) :=
+lemma arithmeticTranslation.isNumber_val (a : arithmeticTranslation.Model V) : IsNumber (a : V) :=
   arithmeticTranslation_dom_iff.mp a.dom
 
 section model
 
-variable [M↓[ℒ⌢] ⊧* 𝗧𝗖⁺]
+variable [V↓[ℒ⌢] ⊧* 𝗧𝗖⁺]
 
 namespace arithmeticTranslation
 
 /-- The constants, the operations and the order of the numbers of a model of $\mathsf{TC}^+$. -/
-noncomputable abbrev oRingStructure : ORingStructure (arithmeticTranslation.Model M) where
+noncomputable abbrev oRingStructure : ORingStructure (arithmeticTranslation.Model V) where
   zero := ⟨0, arithmeticTranslation_dom_iff.mpr isNumber_zero⟩
   one := ⟨1, arithmeticTranslation_dom_iff.mpr isNumber_one⟩
   add a b := Tarski.Structure.func (L := ℒₒᵣ) Language.ORing.Func.add ![a, b]
   mul a b := Tarski.Structure.func (L := ℒₒᵣ) Language.ORing.Func.mul ![a, b]
-  lt a b := LtGraph (a : M) b
+  lt a b := LtGraph (a : V) b
 
 /-- The structure of the model of `arithmeticTranslation` is the one of `oRingStructure`. -/
-lemma struc_eq : Model.struc arithmeticTranslation M = @Arithmetic.standardModel _ oRingStructure :=
+lemma struc_eq : Model.struc arithmeticTranslation V = @Arithmetic.standardModel _ oRingStructure :=
   Tarski.Structure.ext
     (funext₃ fun k f v ↦ by
       cases f
@@ -283,104 +283,104 @@ lemma struc_eq : Model.struc arithmeticTranslation M = @Arithmetic.standardModel
     (funext₃ fun k r v ↦ by
       cases r
       · exact propext <| Model.eq_iff v
-      · change (arithmeticTranslation.rel .lt).val (fun i ↦ (v i : M)) = LtGraph (v 0 : M) (v 1)
-        rw [Matrix.fun_eq_vec_two (fun i ↦ (v i : M))]
+      · change (arithmeticTranslation.rel .lt).val (fun i ↦ (v i : V)) = LtGraph (v 0 : V) (v 1)
+        rw [Matrix.fun_eq_vec_two (fun i ↦ (v i : V))]
         simp [arithmeticTranslation, Semiformula.Operator.val])
 
 section
 
 attribute [local instance] oRingStructure
 
-variable {a b : arithmeticTranslation.Model M}
+variable {a b : arithmeticTranslation.Model V}
 
 @[simp]
-lemma val_zero : ((0 : arithmeticTranslation.Model M) : M) = 0 := rfl
+lemma val_zero : ((0 : arithmeticTranslation.Model V) : V) = 0 := rfl
 
 @[simp]
-lemma val_one : ((1 : arithmeticTranslation.Model M) : M) = 1 := rfl
+lemma val_one : ((1 : arithmeticTranslation.Model V) : V) = 1 := rfl
 
-lemma addGraph_val_add (a b : arithmeticTranslation.Model M) :
-    AddGraph ((a + b : arithmeticTranslation.Model M) : M) a b := by
-  have h := Model.eval_func (π := arithmeticTranslation) (M := M) Language.ORing.Func.add ![a, b]
-  rw [Matrix.fun_eq_vec_two fun i ↦ ((![a, b] : Fin 2 → arithmeticTranslation.Model M) i : M)] at h
+lemma addGraph_val_add (a b : arithmeticTranslation.Model V) :
+    AddGraph ((a + b : arithmeticTranslation.Model V) : V) a b := by
+  have h := Model.eval_func (π := arithmeticTranslation) (M := V) Language.ORing.Func.add ![a, b]
+  rw [Matrix.fun_eq_vec_two fun i ↦ ((![a, b] : Fin 2 → arithmeticTranslation.Model V) i : V)] at h
   simp only [arithmeticTranslation, Semiformula.Operator.val, Matrix.cons_val,
     Defined.eval_iff] at h
   exact h
 
-lemma mulGraph_val_mul (a b : arithmeticTranslation.Model M) :
-    MulGraph ((a * b : arithmeticTranslation.Model M) : M) a b := by
-  have h := Model.eval_func (π := arithmeticTranslation) (M := M) Language.ORing.Func.mul ![a, b]
-  rw [Matrix.fun_eq_vec_two fun i ↦ ((![a, b] : Fin 2 → arithmeticTranslation.Model M) i : M)] at h
+lemma mulGraph_val_mul (a b : arithmeticTranslation.Model V) :
+    MulGraph ((a * b : arithmeticTranslation.Model V) : V) a b := by
+  have h := Model.eval_func (π := arithmeticTranslation) (M := V) Language.ORing.Func.mul ![a, b]
+  rw [Matrix.fun_eq_vec_two fun i ↦ ((![a, b] : Fin 2 → arithmeticTranslation.Model V) i : V)] at h
   simp only [arithmeticTranslation, Semiformula.Operator.val, Matrix.cons_val,
     Defined.eval_iff] at h
   exact h
 
-lemma val_add_eq_iff : ((a + b : arithmeticTranslation.Model M) : M) = z ↔ AddGraph z a b :=
+lemma val_add_eq_iff : ((a + b : arithmeticTranslation.Model V) : V) = z ↔ AddGraph z a b :=
   ⟨fun h ↦ h ▸ addGraph_val_add a b, (addGraph_val_add a b).unique⟩
 
-lemma val_mul_eq_iff : ((a * b : arithmeticTranslation.Model M) : M) = z ↔ MulGraph z a b :=
+lemma val_mul_eq_iff : ((a * b : arithmeticTranslation.Model V) : V) = z ↔ MulGraph z a b :=
   ⟨fun h ↦ h ▸ mulGraph_val_mul a b, (mulGraph_val_mul a b).unique⟩
 
-lemma val_add_of_isTally (ha : IsTally 1 (a : M)) (hb : IsTally 1 (b : M)) :
-    ((a + b : arithmeticTranslation.Model M) : M) = a ++ b :=
+lemma val_add_of_isTally (ha : IsTally 1 (a : V)) (hb : IsTally 1 (b : V)) :
+    ((a + b : arithmeticTranslation.Model V) : V) = a ++ b :=
   val_add_eq_iff.mpr <| Or.inr <| Or.inr <| Or.inr ⟨ha, hb, rfl⟩
 
-lemma isTally_val_add (ha : IsTally 1 (a : M)) (hb : IsTally 1 (b : M)) :
-    IsTally 1 ((a + b : arithmeticTranslation.Model M) : M) :=
+lemma isTally_val_add (ha : IsTally 1 (a : V)) (hb : IsTally 1 (b : V)) :
+    IsTally 1 ((a + b : arithmeticTranslation.Model V) : V) :=
   val_add_of_isTally ha hb ▸ ha.append hb
 
-protected lemma add_zero (a : arithmeticTranslation.Model M) : a + 0 = a := by
+protected lemma add_zero (a : arithmeticTranslation.Model V) : a + 0 = a := by
   apply Model.ext
   apply val_add_eq_iff.mpr
-  by_cases ha : (a : M) = 0 ++ 0
+  by_cases ha : (a : V) = 0 ++ 0
   · exact Or.inl ⟨Or.inl ha, ha⟩
   · exact Or.inr <| Or.inr <| Or.inl ⟨rfl, ha, rfl⟩
 
-protected lemma zero_add (a : arithmeticTranslation.Model M) : 0 + a = a := by
+protected lemma zero_add (a : arithmeticTranslation.Model V) : 0 + a = a := by
   apply Model.ext
   apply val_add_eq_iff.mpr
-  by_cases ha : (a : M) = 0 ++ 0
+  by_cases ha : (a : V) = 0 ++ 0
   · exact Or.inl ⟨Or.inr ha, ha⟩
   · exact Or.inr <| Or.inl ⟨rfl, ha, rfl⟩
 
-lemma add_eq_left_of_val_eq_zero_append_zero (ha : (a : M) = 0 ++ 0)
-    (b : arithmeticTranslation.Model M) : a + b = a :=
+lemma add_eq_left_of_val_eq_zero_append_zero (ha : (a : V) = 0 ++ 0)
+    (b : arithmeticTranslation.Model V) : a + b = a :=
   Model.ext <| val_add_eq_iff.mpr <| Or.inl ⟨Or.inl ha, ha⟩
 
-lemma add_eq_right_of_val_eq_zero_append_zero (hb : (b : M) = 0 ++ 0)
-    (a : arithmeticTranslation.Model M) : a + b = b :=
+lemma add_eq_right_of_val_eq_zero_append_zero (hb : (b : V) = 0 ++ 0)
+    (a : arithmeticTranslation.Model V) : a + b = b :=
   Model.ext <| val_add_eq_iff.mpr <| Or.inl ⟨Or.inr hb, hb⟩
 
 /--
 The successor of a number: `x ↦ x 1` on the `1`-tallies, `0 ↦ 1`, and `0 0 ↦ 0 0`.
 - [Sve09, §3]
 -/
-lemma val_add_one_cases (a : arithmeticTranslation.Model M) :
-    (IsTally 1 (a : M) ∧ ((a + 1 : arithmeticTranslation.Model M) : M) = a ++ 1) ∨
-      ((a : M) = 0 ∧ ((a + 1 : arithmeticTranslation.Model M) : M) = 1) ∨
-      ((a : M) = 0 ++ 0 ∧ ((a + 1 : arithmeticTranslation.Model M) : M) = 0 ++ 0) := by
+lemma val_add_one_cases (a : arithmeticTranslation.Model V) :
+    (IsTally 1 (a : V) ∧ ((a + 1 : arithmeticTranslation.Model V) : V) = a ++ 1) ∨
+      ((a : V) = 0 ∧ ((a + 1 : arithmeticTranslation.Model V) : V) = 1) ∨
+      ((a : V) = 0 ++ 0 ∧ ((a + 1 : arithmeticTranslation.Model V) : V) = 0 ++ 0) := by
   rcases isNumber_val a with ha | ha | ha
   · exact Or.inl ⟨ha, val_add_of_isTally ha isTally_one_one⟩
   · obtain rfl : a = 0 := Model.ext ha
     exact Or.inr <| Or.inl ⟨rfl, by rw [arithmeticTranslation.zero_add]; rfl⟩
   · exact Or.inr <| Or.inr ⟨ha, by rw [add_eq_left_of_val_eq_zero_append_zero ha]; exact ha⟩
 
-protected lemma mul_zero (a : arithmeticTranslation.Model M) : a * 0 = 0 :=
+protected lemma mul_zero (a : arithmeticTranslation.Model V) : a * 0 = 0 :=
   Model.ext <| val_mul_eq_iff.mpr <| Or.inl ⟨rfl, rfl⟩
 
-lemma zero_mul_of_isTally (hb : IsTally 1 (b : M)) : 0 * b = 0 :=
+lemma zero_mul_of_isTally (hb : IsTally 1 (b : V)) : 0 * b = 0 :=
   Model.ext <| val_mul_eq_iff.mpr <| Or.inr <| Or.inr <| Or.inl ⟨rfl, hb, rfl⟩
 
-lemma mul_eq_left_of_val_eq_zero_append_zero (ha : (a : M) = 0 ++ 0) (hb : (b : M) ≠ 0) :
+lemma mul_eq_left_of_val_eq_zero_append_zero (ha : (a : V) = 0 ++ 0) (hb : (b : V) ≠ 0) :
     a * b = a :=
   Model.ext <| val_mul_eq_iff.mpr <| Or.inr <| Or.inl ⟨hb, Or.inl ha, ha⟩
 
-lemma mul_eq_right_of_val_eq_zero_append_zero (hb : (b : M) = 0 ++ 0)
-    (a : arithmeticTranslation.Model M) : a * b = b :=
+lemma mul_eq_right_of_val_eq_zero_append_zero (hb : (b : V) = 0 ++ 0)
+    (a : arithmeticTranslation.Model V) : a * b = b :=
   Model.ext <| val_mul_eq_iff.mpr <| Or.inr <| Or.inl
     ⟨hb ▸ (zero_ne_append 0 0).symm, Or.inr hb, hb⟩
 
-protected lemma mul_one (a : arithmeticTranslation.Model M) : a * 1 = a := by
+protected lemma mul_one (a : arithmeticTranslation.Model V) : a * 1 = a := by
   rcases isNumber_val a with ha | ha | ha
   · apply Model.ext
     apply val_mul_eq_iff.mpr
@@ -390,7 +390,7 @@ protected lemma mul_one (a : arithmeticTranslation.Model M) : a * 1 = a := by
     exact zero_mul_of_isTally isTally_one_one
   · exact mul_eq_left_of_val_eq_zero_append_zero ha isTally_one_one.ne_zero
 
-lemma mul_add_one_of_isTally (ha : IsTally 1 (a : M)) (hb : IsTally 1 (b : M)) :
+lemma mul_add_one_of_isTally (ha : IsTally 1 (a : V)) (hb : IsTally 1 (b : V)) :
     a * (b + 1) = a * b + a := by
   have hb1 := val_add_of_isTally hb (b := 1) isTally_one_one
   rw [val_one] at hb1
@@ -409,7 +409,7 @@ lemma mul_add_one_of_isTally (ha : IsTally 1 (a : M)) (hb : IsTally 1 (b : M)) :
     exact Or.inr <| Or.inr <| Or.inr ⟨ha, hb.append_one, Or.inr
       ⟨(existsUnique_isMulSeq_succ_iff ha).not.mpr h, hz⟩⟩
 
-lemma add_one_ne_zero (a : arithmeticTranslation.Model M) : a + 1 ≠ 0 := by
+lemma add_one_ne_zero (a : arithmeticTranslation.Model V) : a + 1 ≠ 0 := by
   intro h
   rw [← Model.val_inj_iff] at h
   rcases val_add_one_cases a with ⟨-, ha⟩ | ⟨-, ha⟩ | ⟨-, ha⟩ <;> rw [ha] at h
@@ -430,7 +430,7 @@ lemma add_one_inj (h : a + 1 = b + 1) : a = b := by
     | exact absurd h (append_one_ne_zero_append_zero _)
     | exact absurd h.symm (append_one_ne_zero_append_zero _)
 
-lemma eq_zero_or_exists_eq_add_one (a : arithmeticTranslation.Model M) :
+lemma eq_zero_or_exists_eq_add_one (a : arithmeticTranslation.Model V) :
     a = 0 ∨ ∃ b, a = b + 1 := by
   rcases isNumber_val a with ha | ha | ha
   · right
@@ -447,7 +447,7 @@ lemma eq_zero_or_exists_eq_add_one (a : arithmeticTranslation.Model M) :
     use a
     exact (add_eq_left_of_val_eq_zero_append_zero ha 1).symm
 
-lemma add_add_one (a b : arithmeticTranslation.Model M) : a + (b + 1) = a + b + 1 := by
+lemma add_add_one (a b : arithmeticTranslation.Model V) : a + (b + 1) = a + b + 1 := by
   rcases isNumber_val a with ha | ha | ha
   · rcases isNumber_val b with hb | hb | hb
     · apply Model.ext
@@ -467,7 +467,7 @@ The numbers satisfy $a \cdot (b + 1) = a \cdot b + a$.
 - [Sve09, §3]
 - [Gan09, §3, Theorem 4]
 -/
-lemma mul_add_one (a b : arithmeticTranslation.Model M) : a * (b + 1) = a * b + a := by
+lemma mul_add_one (a b : arithmeticTranslation.Model V) : a * (b + 1) = a * b + a := by
   rcases isNumber_val b with hb | hb | hb
   · have hb1 := isTally_val_add hb (b := 1) isTally_one_one
     rcases isNumber_val a with ha | ha | ha
@@ -484,7 +484,7 @@ lemma mul_add_one (a b : arithmeticTranslation.Model M) : a * (b + 1) = a * b + 
       mul_eq_right_of_val_eq_zero_append_zero hb]
 
 lemma lt_iff : a < b ↔ ∃ c, a + (c + 1) = b := by
-  change LtGraph (a : M) b ↔ _
+  change LtGraph (a : V) b ↔ _
   constructor
   · rintro ⟨c, hc, d, hd, h⟩
     have hc' : arithmeticTranslation.Dom c := arithmeticTranslation_dom_iff.mpr hc
@@ -493,7 +493,7 @@ lemma lt_iff : a < b ↔ ∃ c, a + (c + 1) = b := by
     rw [val_add_eq_iff, (val_add_eq_iff (a := ⟨c, hc'⟩) (b := 1)).mpr hd]
     exact h
   · rintro ⟨c, rfl⟩
-    use c, isNumber_val c, (c + 1 : arithmeticTranslation.Model M), addGraph_val_add c 1,
+    use c, isNumber_val c, (c + 1 : arithmeticTranslation.Model V), addGraph_val_add c 1,
       addGraph_val_add a (c + 1)
 
 end
@@ -503,21 +503,21 @@ The numbers of a model of $\mathsf{TC}^+$ form a model of $\mathsf{Q}$.
 - [Sve09, §3]
 - [Gan09, §3, Theorem 4]
 -/
-instance : (arithmeticTranslation.Model M)↓[ℒₒᵣ] ⊧* 𝗤 := by
+instance : (arithmeticTranslation.Model V)↓[ℒₒᵣ] ⊧* 𝗤 := by
   rw [struc_eq]
-  let := oRingStructure (M := M)
+  let := oRingStructure (V := V)
   constructor
   intro σ hσ
   cases hσ
   case equal hφ => exact models_theory_iff.mp inferInstance _ hφ
-  case succNeZero => simpa [models_iff] using add_one_ne_zero (M := M)
-  case succInj => simpa [models_iff] using fun a b ↦ add_one_inj (M := M) (a := a) (b := b)
-  case zeroOrSucc => simpa [models_iff] using eq_zero_or_exists_eq_add_one (M := M)
-  case addZero => simpa [models_iff] using arithmeticTranslation.add_zero (M := M)
-  case addSucc => simpa [models_iff] using add_add_one (M := M)
-  case mulZero => simpa [models_iff] using arithmeticTranslation.mul_zero (M := M)
-  case mulSucc => simpa [models_iff] using mul_add_one (M := M)
-  case ltDef => simpa [models_iff] using fun a b ↦ lt_iff (M := M) (a := a) (b := b)
+  case succNeZero => simpa [models_iff] using add_one_ne_zero (V := V)
+  case succInj => simpa [models_iff] using fun a b ↦ add_one_inj (V := V) (a := a) (b := b)
+  case zeroOrSucc => simpa [models_iff] using eq_zero_or_exists_eq_add_one (V := V)
+  case addZero => simpa [models_iff] using arithmeticTranslation.add_zero (V := V)
+  case addSucc => simpa [models_iff] using add_add_one (V := V)
+  case mulZero => simpa [models_iff] using arithmeticTranslation.mul_zero (V := V)
+  case mulSucc => simpa [models_iff] using mul_add_one (V := V)
+  case ltDef => simpa [models_iff] using fun a b ↦ lt_iff (V := V) (a := a) (b := b)
 
 end arithmeticTranslation
 
@@ -545,28 +545,28 @@ end arithmetic
 
 section representation
 
-variable {M : Type*} [ConcatenationStructure M]
+variable {V : Type*} [ConcatenationStructure V]
 
 /--
 The element named by `numeralTerm n`: the letter `0` for `n = 0`, the string of `n` letters `1`
 otherwise.
 -/
-def tallyOf : ℕ → M
+def tallyOf : ℕ → V
   | 0 => 0
   | 1 => 1
   | n + 2 => tallyOf (n + 1) ++ 1
 
 @[simp]
-lemma tallyOf_zero : (tallyOf 0 : M) = 0 := rfl
+lemma tallyOf_zero : (tallyOf 0 : V) = 0 := rfl
 
 @[simp]
-lemma tallyOf_one : (tallyOf 1 : M) = 1 := rfl
+lemma tallyOf_one : (tallyOf 1 : V) = 1 := rfl
 
 @[simp]
-lemma tallyOf_add_two (n : ℕ) : (tallyOf (n + 2) : M) = tallyOf (n + 1) ++ 1 := rfl
+lemma tallyOf_add_two (n : ℕ) : (tallyOf (n + 2) : V) = tallyOf (n + 1) ++ 1 := rfl
 
 @[simp]
-lemma val_numeralTerm : ∀ n, (numeralTerm n).val (![] : Fin 0 → M) Empty.elim = tallyOf n
+lemma val_numeralTerm : ∀ n, (numeralTerm n).val (![] : Fin 0 → V) Empty.elim = tallyOf n
   | 0 => by simp
   | 1 => by simp
   | n + 2 => by simp [val_numeralTerm (n + 1)]
@@ -592,17 +592,17 @@ def weakRepresentation (γ : ArithmeticSemisentence 2) : Semisentence ℒ⌢ 2 :
 
 section TC
 
-variable [M↓[ℒ⌢] ⊧* 𝗧𝗖]
+variable [V↓[ℒ⌢] ⊧* 𝗧𝗖]
 
-lemma isTally_tallyOf_succ : ∀ n, IsTally 1 (tallyOf (n + 1) : M)
+lemma isTally_tallyOf_succ : ∀ n, IsTally 1 (tallyOf (n + 1) : V)
   | 0 => isTally_one_one
   | n + 1 => (isTally_tallyOf_succ n).append_one
 
-lemma isNumber_tallyOf : ∀ n, IsNumber (tallyOf n : M)
+lemma isNumber_tallyOf : ∀ n, IsNumber (tallyOf n : V)
   | 0 => isNumber_zero
   | n + 1 => (isTally_tallyOf_succ n).isNumber
 
-lemma isThin_tallyOf : ∀ n, IsThin (tallyOf n : M)
+lemma isThin_tallyOf : ∀ n, IsThin (tallyOf n : V)
   | 0 => isThin_zero
   | 1 => isThin_one
   | n + 2 => (isThin_tallyOf (n + 1)).append isThin_one
@@ -611,7 +611,7 @@ end TC
 
 section TCPlus
 
-variable [M↓[ℒ⌢] ⊧* 𝗧𝗖⁺]
+variable [V↓[ℒ⌢] ⊧* 𝗧𝗖⁺]
 
 namespace arithmeticTranslation
 
@@ -621,7 +621,7 @@ attribute [local instance] oRingStructure
 
 @[simp]
 lemma val_numeral :
-    ∀ n, ((ORingStructure.numeral n : arithmeticTranslation.Model M) : M) = tallyOf n
+    ∀ n, ((ORingStructure.numeral n : arithmeticTranslation.Model V) : V) = tallyOf n
   | 0 => rfl
   | 1 => rfl
   | n + 2 => by
@@ -633,18 +633,18 @@ end
 
 @[simp]
 lemma val_operator_numeral (n : ℕ) :
-    (((Semiterm.Operator.numeral ℒₒᵣ n).val ![] : arithmeticTranslation.Model M) : M) =
+    (((Semiterm.Operator.numeral ℒₒᵣ n).val ![] : arithmeticTranslation.Model V) : V) =
       tallyOf n := by
-  let _ : ORingStructure (arithmeticTranslation.Model M) := oRingStructure
+  let _ : ORingStructure (arithmeticTranslation.Model V) := oRingStructure
   rw [struc_eq, Tarski.Structure.numeral_eq_numeral, val_numeral]
 
 /-- The numbers of a model of $\mathsf{TC}^+$ form a model of $\mathsf{R}_0$. -/
-instance : (arithmeticTranslation.Model M)↓[ℒₒᵣ] ⊧* 𝗥₀ :=
-  models_of_subtheory (inferInstance : (arithmeticTranslation.Model M)↓[ℒₒᵣ] ⊧* 𝗤)
+instance : (arithmeticTranslation.Model V)↓[ℒₒᵣ] ⊧* 𝗥₀ :=
+  models_of_subtheory (inferInstance : (arithmeticTranslation.Model V)↓[ℒₒᵣ] ⊧* 𝗤)
 
 end arithmeticTranslation
 
-lemma exists_isMulSeq_tallyOf {x : M} (hx : IsTally 1 x) : ∀ n, ∃ z, IsMulSeq x (tallyOf (n + 1)) z
+lemma exists_isMulSeq_tallyOf {x : V} (hx : IsTally 1 x) : ∀ n, ∃ z, IsMulSeq x (tallyOf (n + 1)) z
   | 0 => (existsUnique_isMulSeq_one hx).exists
   | n + 1 => by
     obtain ⟨z, hz⟩ := exists_isMulSeq_tallyOf hx n
@@ -653,15 +653,15 @@ lemma exists_isMulSeq_tallyOf {x : M} (hx : IsTally 1 x) : ∀ n, ∃ z, IsMulSe
 
 variable {γ : ArithmeticSemisentence 2} {f : ℕ → ℕ}
 
-lemma eval_transportedRepresentation (hγ : ∀ n, 𝗥₀ ⊢ “∀ y, !γ ↑n y ↔ y = ↑(f n)”) (n : ℕ) (y : M) :
-    M ⊧/![tallyOf n, y] (transportedRepresentation γ) ↔ y = tallyOf (f n) := by
+lemma eval_transportedRepresentation (hγ : ∀ n, 𝗥₀ ⊢ “∀ y, !γ ↑n y ↔ y = ↑(f n)”) (n : ℕ) (y : V) :
+    V ⊧/![tallyOf n, y] (transportedRepresentation γ) ↔ y = tallyOf (f n) := by
   by_cases hy : IsNumber y
-  · let a : arithmeticTranslation.Model M := (Semiterm.Operator.numeral ℒₒᵣ n).val ![]
-    let b : arithmeticTranslation.Model M := ⟨y, arithmeticTranslation_dom_iff.mpr hy⟩
-    have h : ∀ c : arithmeticTranslation.Model M, (arithmeticTranslation.Model M) ⊧/![a, c] γ ↔
+  · let a : arithmeticTranslation.Model V := (Semiterm.Operator.numeral ℒₒᵣ n).val ![]
+    let b : arithmeticTranslation.Model V := ⟨y, arithmeticTranslation_dom_iff.mpr hy⟩
+    have h : ∀ c : arithmeticTranslation.Model V, (arithmeticTranslation.Model V) ⊧/![a, c] γ ↔
         c = (Semiterm.Operator.numeral ℒₒᵣ (f n)).val ![] := by
       simpa [models_iff] using
-        models_of_provable (M := arithmeticTranslation.Model M) inferInstance (hγ n)
+        models_of_provable (M := arithmeticTranslation.Model V) inferInstance (hγ n)
     replace h := h b
     rw [← Model.evalb_doubleton_translate_iff, ← Model.val_inj_iff] at h
     simpa [transportedRepresentation, hy, a, b] using h
@@ -678,42 +678,42 @@ $\mathsf{TC}^+$.
 lemma transportedRepresentation_spec (hγ : ∀ n, 𝗥₀ ⊢ “∀ y, !γ ↑n y ↔ y = ↑(f n)”) (n : ℕ) :
     𝗧𝗖⁺ ⊢ “∀ y, !(transportedRepresentation γ) !!(Rew.bShift (numeralTerm n)) y ↔
         y = !!(Rew.bShift (numeralTerm (f n)))” :=
-  complete.{0} _ _ fun M _ _ ↦ by
+  complete.{0} _ _ fun V _ _ ↦ by
     simpa [models_iff] using eval_transportedRepresentation hγ n
 
 end TCPlus
 
 section thin
 
-variable [M↓[ℒ⌢] ⊧* 𝗧𝗖] {γ : Semisentence ℒ⌢ 2} {f : ℕ → ℕ}
+variable [V↓[ℒ⌢] ⊧* 𝗧𝗖] {γ : Semisentence ℒ⌢ 2} {f : ℕ → ℕ}
 
 namespace thinTranslation
 
 attribute [local instance] concatenationStructure in
-lemma val_tallyOf : ∀ n, ((tallyOf n : thinTranslation.Model M) : M) = tallyOf n
+lemma val_tallyOf : ∀ n, ((tallyOf n : thinTranslation.Model V) : V) = tallyOf n
   | 0 => rfl
   | 1 => rfl
   | n + 2 => congrArg (· ++ 1) <| val_tallyOf (n + 1)
 
 @[simp]
 lemma val_numeralTerm (n : ℕ) :
-    (((numeralTerm n).val ![] Empty.elim : thinTranslation.Model M) : M) = tallyOf n := by
-  let := concatenationStructure (M := M)
+    (((numeralTerm n).val ![] Empty.elim : thinTranslation.Model V) : V) = tallyOf n := by
+  let := concatenationStructure (V := V)
   rw [struc_eq, Concatenation.val_numeralTerm, val_tallyOf]
 
 end thinTranslation
 
 lemma eval_thinRepresentation
     (hγ : ∀ n, 𝗧𝗖⁺ ⊢ “∀ y, !γ !!(Rew.bShift (numeralTerm n)) y ↔
-      y = !!(Rew.bShift (numeralTerm (f n)))”) (n : ℕ) (y : M) :
-    M ⊧/![tallyOf n, y] (thinRepresentation γ) ↔ y = tallyOf (f n) := by
+      y = !!(Rew.bShift (numeralTerm (f n)))”) (n : ℕ) (y : V) :
+    V ⊧/![tallyOf n, y] (thinRepresentation γ) ↔ y = tallyOf (f n) := by
   by_cases hy : IsThin y
-  · let a : thinTranslation.Model M := (numeralTerm n).val ![] Empty.elim
-    let b : thinTranslation.Model M := ⟨y, thinTranslation_dom_iff.mpr hy⟩
-    have h : ∀ c : thinTranslation.Model M, (thinTranslation.Model M) ⊧/![a, c] γ ↔
+  · let a : thinTranslation.Model V := (numeralTerm n).val ![] Empty.elim
+    let b : thinTranslation.Model V := ⟨y, thinTranslation_dom_iff.mpr hy⟩
+    have h : ∀ c : thinTranslation.Model V, (thinTranslation.Model V) ⊧/![a, c] γ ↔
         c = (numeralTerm (f n)).val ![] Empty.elim := by
       simpa [models_iff] using
-        models_of_provable (M := thinTranslation.Model M) inferInstance (hγ n)
+        models_of_provable (M := thinTranslation.Model V) inferInstance (hγ n)
     replace h := h b
     rw [← Model.evalb_doubleton_translate_iff, ← Model.val_inj_iff] at h
     simpa [thinRepresentation, hy, a, b] using h
@@ -731,7 +731,7 @@ lemma thinRepresentation_spec
       y = !!(Rew.bShift (numeralTerm (f n)))”) (n : ℕ) :
     𝗧𝗖 ⊢ “∀ y, !(thinRepresentation γ) !!(Rew.bShift (numeralTerm n)) y ↔
       y = !!(Rew.bShift (numeralTerm (f n)))” :=
-  complete.{0} _ _ fun M _ _ ↦ by
+  complete.{0} _ _ fun V _ _ ↦ by
     simpa [models_iff] using eval_thinRepresentation hγ n
 
 end thin

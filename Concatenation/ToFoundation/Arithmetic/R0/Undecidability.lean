@@ -45,20 +45,20 @@ theorem undecidable_of_consistent (T : ArithmeticTheory) [𝗥₀ ⪯ T]
   by_cases h : T ⊢ δ/[⌜δ⌝]
   · apply Entailment.Consistent.not_bot (𝓢 := T)
     apply complete.{0} T
-    intro M _ _
-    have hR0 : M↓[ℒₒᵣ] ⊧* 𝗥₀ := ModelsTheory.of_provably_subtheory M 𝗥₀ T inferInstance
+    intro V _ _
+    have hR0 : V↓[ℒₒᵣ] ⊧* 𝗥₀ := ModelsTheory.of_provably_subtheory V 𝗥₀ T inferInstance
     have h₁ := models_of_provable hR0 (hγ (Encodable.encode δ))
-    have h₂ := models_of_provable (M := M) inferInstance h
+    have h₂ := models_of_provable (M := V) inferInstance h
     simp [hδ.mpr h, models_iff, δ, Arithmetic.gödelNumber'_eq_coe_encode] at h₁ h₂
     simp_all
   · apply h
     apply complete.{0} T
-    intro M _ _
-    have hR0 : M↓[ℒₒᵣ] ⊧* 𝗥₀ := ModelsTheory.of_provably_subtheory M 𝗥₀ T inferInstance
+    intro V _ _
+    have hR0 : V↓[ℒₒᵣ] ⊧* 𝗥₀ := ModelsTheory.of_provably_subtheory V 𝗥₀ T inferInstance
     have h₁ := models_of_provable hR0 (hγ (Encodable.encode δ))
     simp [hδ.not.mpr h, models_iff] at h₁
     simpa [models_iff, δ, Arithmetic.gödelNumber'_eq_coe_encode, h₁]
-      using numeral_ne_numeral_of_ne (M := M) zero_ne_one
+      using numeral_ne_numeral_of_ne (M := V) zero_ne_one
 
 /--
 $\mathsf{R}_0$ is essentially undecidable.

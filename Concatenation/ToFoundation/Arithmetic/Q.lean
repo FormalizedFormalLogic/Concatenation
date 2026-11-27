@@ -32,9 +32,9 @@ lemma finite : (𝗤 : ArithmeticTheory).Finite := by
 
 lemma finiteAxiomatizable : FiniteAxiomatizable 𝗤 := .of_finite finite
 
-lemma infinite_of_models (M : Type*) [ORingStructure M] [M↓[ℒₒᵣ] ⊧* 𝗤] : Infinite M :=
+lemma infinite_of_models (V : Type*) [ORingStructure V] [V↓[ℒₒᵣ] ⊧* 𝗤] : Infinite V :=
   not_finite_iff_infinite.mp fun _ ↦
-    let ⟨x, hx⟩ := Finite.surjective_of_injective (fun _ _ ↦ succ_inj : (· + (1 : M)).Injective) 0
+    let ⟨x, hx⟩ := Finite.surjective_of_injective (fun _ _ ↦ succ_inj : (· + (1 : V)).Injective) 0
     Arithmetic.succ_ne_zero x hx
 
 /--
@@ -43,17 +43,17 @@ $\mathsf{Q}$ has no finite models.
 -/
 theorem not_hasFiniteModel : ¬(𝗤 : ArithmeticTheory).HasFiniteModel := by
   intro h
-  obtain ⟨M, _, hfin, _, _, hM⟩ := h.exists_eq
-  obtain ⟨N, _, _, _, s, _, hN⟩ : ∃ (N : Type) (_ : Nonempty N) (_ : Finite N)
-      (_ : ORingStructure N) (_ : Tarski.Structure ℒₒᵣ N) (_ : Tarski.Structure.ORing ℒₒᵣ N),
-      N↓[ℒₒᵣ] ⊧* 𝗤 :=
-    let e := Tarski.Structure.Model.equiv ℒₒᵣ M
-    let s : Tarski.Structure ℒₒᵣ (Tarski.Structure.Model ℒₒᵣ M) := Tarski.Structure.ofEquiv e
-    ⟨Tarski.Structure.Model ℒₒᵣ M, inferInstance, .of_equiv M e, inferInstance, s,
+  obtain ⟨V, _, hfin, _, _, hV⟩ := h.exists_eq
+  obtain ⟨W, _, _, _, s, _, hW⟩ : ∃ (W : Type) (_ : Nonempty W) (_ : Finite W)
+      (_ : ORingStructure W) (_ : Tarski.Structure ℒₒᵣ W) (_ : Tarski.Structure.ORing ℒₒᵣ W),
+      W↓[ℒₒᵣ] ⊧* 𝗤 :=
+    let e := Tarski.Structure.Model.equiv ℒₒᵣ V
+    let s : Tarski.Structure ℒₒᵣ (Tarski.Structure.Model ℒₒᵣ V) := Tarski.Structure.ofEquiv e
+    ⟨Tarski.Structure.Model ℒₒᵣ V, inferInstance, .of_equiv V e, inferInstance, s,
       inferInstance,
-      (Tarski.Structure.Model.elementaryEquiv ℒₒᵣ M).modelsTheory.mp hM⟩
-  rcases standardModel_unique N s
-  exact not_finite_iff_infinite.mpr (infinite_of_models N) inferInstance
+      (Tarski.Structure.Model.elementaryEquiv ℒₒᵣ V).modelsTheory.mp hV⟩
+  rcases standardModel_unique W s
+  exact not_finite_iff_infinite.mpr (infinite_of_models W) inferInstance
 
 end RobinsonQ
 

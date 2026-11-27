@@ -24,19 +24,19 @@ section atomicPairing
 
 open AtomicPairing
 
-variable {S : Type*} {tbl : S → S → S → Prop} {M M' : Type*} [ConcatenationStructure M]
-  [ConcatenationStructure M'] (F : AtomicPairing tbl M) (F' : AtomicPairing tbl M')
-  (h₀ : ∃ s, (0 : M) = F.atom s ∧ (0 : M') = F'.atom s)
-  (h₁ : ∃ s, (1 : M) = F.atom s ∧ (1 : M') = F'.atom s) {n : ℕ}
+variable {S : Type*} {tbl : S → S → S → Prop} {V W : Type*} [ConcatenationStructure V]
+  [ConcatenationStructure W] (F : AtomicPairing tbl V) (F' : AtomicPairing tbl W)
+  (h₀ : ∃ s, (0 : V) = F.atom s ∧ (0 : W) = F'.atom s)
+  (h₁ : ∃ s, (1 : V) = F.atom s ∧ (1 : W) = F'.atom s) {n : ℕ}
 
 include h₀ h₁
 
 lemma exists_similar_val (t : ClosedSemiterm ℒ⌢ n) :
-    ∃ k, ∀ (d : ℕ) (ρ : Set (M × M')), ρ.Finite → F.Similar F' (d + k) ρ →
-      ∀ (v : Fin n → M) (w : Fin n → M'), (∀ i, (v i, w i) ∈ ρ) →
+    ∃ k, ∀ (d : ℕ) (ρ : Set (V × W)), ρ.Finite → F.Similar F' (d + k) ρ →
+      ∀ (v : Fin n → V) (w : Fin n → W), (∀ i, (v i, w i) ∈ ρ) →
         ∃ ρ', ρ ⊆ ρ' ∧ ρ'.Finite ∧ F.Similar F' d ρ' ∧ (t.valb v, t.valb w) ∈ ρ' := by
-  have atom {c : M} {c' : M'} (hc : ∃ s, c = F.atom s ∧ c' = F'.atom s) (d : ℕ)
-      (ρ : Set (M × M')) (hρ : ρ.Finite) (h : F.Similar F' (d + 0) ρ) :
+  have atom {c : V} {c' : W} (hc : ∃ s, c = F.atom s ∧ c' = F'.atom s) (d : ℕ)
+      (ρ : Set (V × W)) (hρ : ρ.Finite) (h : F.Similar F' (d + 0) ρ) :
       ∃ ρ', ρ ⊆ ρ' ∧ ρ'.Finite ∧ F.Similar F' d ρ' ∧ (c, c') ∈ ρ' := by
     obtain ⟨s, rfl, rfl⟩ := hc
     use insert (F.atom s, F'.atom s) ρ
@@ -61,8 +61,8 @@ lemma exists_similar_val (t : ClosedSemiterm ℒ⌢ n) :
         h''.insert_append (hρ₁ρ₂ hm₁) hm₂, Set.mem_insert _ _⟩
 
 lemma exists_similar_val_eq (t₁ t₂ : ClosedSemiterm ℒ⌢ n) :
-    ∃ k, ∀ ρ : Set (M × M'), ρ.Finite → F.Similar F' k ρ →
-      ∀ (v : Fin n → M) (w : Fin n → M'), (∀ i, (v i, w i) ∈ ρ) →
+    ∃ k, ∀ ρ : Set (V × W), ρ.Finite → F.Similar F' k ρ →
+      ∀ (v : Fin n → V) (w : Fin n → W), (∀ i, (v i, w i) ∈ ρ) →
         (t₁.valb v = t₂.valb v ↔ t₁.valb w = t₂.valb w) := by
   obtain ⟨k₁, hk₁⟩ := exists_similar_val F F' h₀ h₁ t₁
   obtain ⟨k₂, hk₂⟩ := exists_similar_val F F' h₀ h₁ t₂
@@ -73,10 +73,10 @@ lemma exists_similar_val_eq (t₁ t₂ : ClosedSemiterm ℒ⌢ n) :
   exact h''.eq_iff (hρ₁ρ₂ hm₁) hm₂
 
 lemma exists_similar_eval (φ : Semisentence ℒ⌢ n) :
-    ∃ k, ∀ ρ : Set (M × M'), ρ.Finite → F.Similar F' k ρ →
-      ∀ (v : Fin n → M) (w : Fin n → M'), (∀ i, (v i, w i) ∈ ρ) → (M ⊧/v φ ↔ M' ⊧/w φ) := by
-  have hc {n : ℕ} {v : Fin n → M} {w : Fin n → M'} {ρ : Set (M × M')} (hvw : ∀ i, (v i, w i) ∈ ρ)
-      (a : M) (b : M') (i) : ((a :> v) i, (b :> w) i) ∈ insert (a, b) ρ := by
+    ∃ k, ∀ ρ : Set (V × W), ρ.Finite → F.Similar F' k ρ →
+      ∀ (v : Fin n → V) (w : Fin n → W), (∀ i, (v i, w i) ∈ ρ) → (V ⊧/v φ ↔ W ⊧/w φ) := by
+  have hc {n : ℕ} {v : Fin n → V} {w : Fin n → W} {ρ : Set (V × W)} (hvw : ∀ i, (v i, w i) ∈ ρ)
+      (a : V) (b : W) (i) : ((a :> v) i, (b :> w) i) ∈ insert (a, b) ρ := by
     cases i using Fin.cases with
     | zero => exact Set.mem_insert _ _
     | succ i => exact Set.mem_insert_of_mem _ (hvw i)
@@ -138,7 +138,7 @@ lemma exists_similar_eval (φ : Semisentence ℒ⌢ n) :
 Two atomic pairings with the same table of atoms, in which each of the two letters is the same
 atom, satisfy the same sentences.
 -/
-lemma models_iff_of_atomicPairing (σ : Sentence ℒ⌢) : M↓[ℒ⌢] ⊧ σ ↔ M'↓[ℒ⌢] ⊧ σ := by
+lemma models_iff_of_atomicPairing (σ : Sentence ℒ⌢) : V↓[ℒ⌢] ⊧ σ ↔ W↓[ℒ⌢] ⊧ σ := by
   obtain ⟨k, hk⟩ := exists_similar_eval F F' h₀ h₁ σ
   exact hk ∅ Set.finite_empty (similar_empty k) ![] ![] fun i ↦ i.elim0
 
@@ -438,7 +438,7 @@ section theory
 
 open AtomicPairing ConcatenationStructure
 
-variable {N : ℕ} {M : Type*} [ConcatenationStructure M] {x y : M}
+variable {N : ℕ} {V : Type*} [ConcatenationStructure V] {x y : V}
 
 /-- The strings of length at most `N + 1`. -/
 noncomputable def short (N : ℕ) : List (FreeSemigroup Bool) :=
@@ -448,27 +448,27 @@ noncomputable def short (N : ℕ) : List (FreeSemigroup Bool) :=
 lemma mem_short {u : FreeSemigroup Bool} : u ∈ short N ↔ u.length ≤ N + 1 := by simp [short]
 
 /-- `x` is the value of a string of length at most `N + 1`. -/
-def IsShort (N : ℕ) (x : M) : Prop :=
+def IsShort (N : ℕ) (x : V) : Prop :=
   ∃ u : {u : FreeSemigroup Bool // u.length ≤ N + 1}, x = ofFreeSemigroup u.1
 
 /-- `x` is the value of a string of length at most `N + 1`. -/
 noncomputable def isShort (N : ℕ) : Semisentence ℒ⌢ 1 := isOneOf (short N)
 
-instance isShort_defined : ℒ⌢-predicate[M] (IsShort N) via isShort N :=
+instance isShort_defined : ℒ⌢-predicate[V] (IsShort N) via isShort N :=
   ⟨fun v ↦ by simp [isShort, IsShort]⟩
 
-instance isShort_definable : ℒ⌢-predicate[M] (IsShort N) := isShort_defined.to_definable
+instance isShort_definable : ℒ⌢-predicate[V] (IsShort N) := isShort_defined.to_definable
 
 /-- `y` is a left or a right factor of `x`. -/
 def isFactor : Semisentence ℒ⌢ 2 := “y x. ∃ z, x = y ⌢ z ∨ x = z ⌢ y”
 
-instance isFactor_defined : ℒ⌢-relation[M] IsFactor via isFactor :=
+instance isFactor_defined : ℒ⌢-relation[V] IsFactor via isFactor :=
   ⟨fun v ↦ by simp [isFactor, IsFactor]⟩
 
-instance isFactor_definable : ℒ⌢-relation[M] IsFactor := isFactor_defined.to_definable
+instance isFactor_definable : ℒ⌢-relation[V] IsFactor := isFactor_defined.to_definable
 
 /-- `y` is reached from `x` by passing `k` times to a factor. -/
-def IsFactorAt : ℕ → M → M → Prop
+def IsFactorAt : ℕ → V → V → Prop
   | 0, x, y => x = y
   | k + 1, x, y => ∃ z, IsFactor z x ∧ IsFactorAt k z y
 
@@ -489,31 +489,31 @@ def notFactorStep (φ : Semisentence ℒ⌢ 2) : Semisentence ℒ⌢ 2 :=
 def notFactorAt (k : ℕ) : Semisentence ℒ⌢ 2 := notFactorStep^[k] “x y. x ≠ y”
 
 instance notFactorAt_defined (k : ℕ) :
-    ℒ⌢-relation[M] (fun x y ↦ ¬IsFactorAt k x y) via notFactorAt k := by
+    ℒ⌢-relation[V] (fun x y ↦ ¬IsFactorAt k x y) via notFactorAt k := by
   refine .mk <| .of_vec_two fun x y ↦ ?_
-  change M ⊧/![x, y] (notFactorAt k) ↔ ¬IsFactorAt k x y
+  change V ⊧/![x, y] (notFactorAt k) ↔ ¬IsFactorAt k x y
   induction k generalizing x y with
   | zero => simp [notFactorAt, IsFactorAt]
   | succ k ih =>
-    have hv (a b : M) :
-        (fun i : Fin 2 ↦ (![b, a, x, y] : Fin 4 → M) (i.castLE (by decide))) = ![b, a] := by
+    have hv (a b : V) :
+        (fun i : Fin 2 ↦ (![b, a, x, y] : Fin 4 → V) (i.castLE (by decide))) = ![b, a] := by
       funext i
       match i with
       | ⟨0, _⟩ => rfl
       | ⟨1, _⟩ => rfl
     rw [notFactorAt, Function.iterate_succ_apply', ← notFactorAt, notFactorStep]
-    suffices (∀ a b : M, (¬IsFactor b x ∨ ¬a = y) ∨ ¬IsFactorAt k b a) ↔
+    suffices (∀ a b : V, (¬IsFactor b x ∨ ¬a = y) ∨ ¬IsFactorAt k b a) ↔
         ∀ z, IsFactor z x → ¬IsFactorAt k z y by
       simpa [hv, ih, IsFactorAt] using this
     grind
 
-instance notFactorAt_definable (k : ℕ) : ℒ⌢-relation[M] (fun x y ↦ ¬IsFactorAt k x y) :=
+instance notFactorAt_definable (k : ℕ) : ℒ⌢-relation[V] (fun x y ↦ ¬IsFactorAt k x y) :=
   (notFactorAt_defined k).to_definable
 
 /-- Nothing is reached from itself by passing `k + 1` times to a factor. -/
 def acyclic (k : ℕ) : Sentence ℒ⌢ := ∀¹ ∀¹ (“x y. x ≠ y” ⋎ notFactorAt (k + 1))
 
-lemma models_acyclic_iff (k : ℕ) : M↓[ℒ⌢] ⊧ acyclic k ↔ ∀ x : M, ¬IsFactorAt (k + 1) x x := by
+lemma models_acyclic_iff (k : ℕ) : V↓[ℒ⌢] ⊧ acyclic k ↔ ∀ x : V, ¬IsFactorAt (k + 1) x x := by
   simp [models_iff, acyclic]
   grind
 lemma primrec_acyclic : Primrec acyclic :=
@@ -637,15 +637,15 @@ instance : (Pairing N)↓[ℒ⌢] ⊧* PairingTheory N := models_theory_iff.mpr 
     omega
 
 /-- A model of `PairingTheory N` is an atomic pairing whose atoms are the short strings. -/
-noncomputable def atomicPairing (N : ℕ) (M : Type*) [ConcatenationStructure M]
-    [hM : M↓[ℒ⌢] ⊧* PairingTheory N] :
-    AtomicPairing (fun u v w : {u : FreeSemigroup Bool // u.length ≤ N + 1} ↦ u.1 * v.1 = w.1) M :=
-  have ax {σ : Sentence ℒ⌢} (h : IsPairingAxiom N σ) : M↓[ℒ⌢] ⊧ σ :=
-    models_theory_iff.mp hM σ (.inl h)
+noncomputable def atomicPairing (N : ℕ) (V : Type*) [ConcatenationStructure V]
+    [hV : V↓[ℒ⌢] ⊧* PairingTheory N] :
+    AtomicPairing (fun u v w : {u : FreeSemigroup Bool // u.length ≤ N + 1} ↦ u.1 * v.1 = w.1) V :=
+  have ax {σ : Sentence ℒ⌢} (h : IsPairingAxiom N σ) : V↓[ℒ⌢] ⊧ σ :=
+    models_theory_iff.mp hV σ (.inl h)
   { atom u := ofFreeSemigroup u.1
     atom_injective u v h := by
       by_contra hne
-      have : (ofFreeSemigroup u.1 : M) ≠ ofFreeSemigroup v.1 := by
+      have : (ofFreeSemigroup u.1 : V) ≠ ofFreeSemigroup v.1 := by
         simpa [models_iff] using ax (.stringNe u.2 v.2 fun e ↦ hne (Subtype.ext e))
       exact this h
     atom_append_atom u v w := by
@@ -653,34 +653,34 @@ noncomputable def atomicPairing (N : ℕ) (M : Type*) [ConcatenationStructure M]
       · simpa [models_iff, h] using ax (.stringAppend u.2 v.2 w.2 h)
       · simpa [models_iff, h] using ax (.stringAppendNe u.2 v.2 w.2 h)
     exists_atom_of_append {x y s} h := by
-      have : ∀ x y : M, IsShort N (x ++ y) → IsShort N x ∧ IsShort N y := by
+      have : ∀ x y : V, IsShort N (x ++ y) → IsShort N x ∧ IsShort N y := by
         simpa [models_iff] using ax .shortOfAppend
       exact this x y ⟨s, h⟩
     append_injective {x y x' y'} h h' := by
-      have : ∀ x y z w : M, ¬IsShort N (x ++ y) → x ++ y = z ++ w → x = z ∧ y = w := by
+      have : ∀ x y z w : V, ¬IsShort N (x ++ y) → x ++ y = z ++ w → x = z ∧ y = w := by
         simpa [models_iff] using ax .appendInjective
       exact this x y x' y' (fun ⟨s, hs⟩ ↦ h s hs) h'
     exists_append {x} h := by
-      have : ∀ x : M, IsShort N x ∨ ∃ y z, x = y ++ z := by
+      have : ∀ x : V, IsShort N x ∨ ∃ y z, x = y ++ z := by
         simpa [models_iff] using ax .existsAppend
       exact (this x).resolve_left fun ⟨s, hs⟩ ↦ h s hs
     exists_ne_atom := by
-      obtain ⟨x, hx⟩ : ∃ x : M, ¬IsShort N x := by simpa [models_iff] using ax .existsNotShort
+      obtain ⟨x, hx⟩ : ∃ x : V, ¬IsShort N x := by simpa [models_iff] using ax .existsNotShort
       exact ⟨x, fun s hs ↦ hx ⟨s, hs⟩⟩
     acyclic x h := by
       obtain ⟨k, hk⟩ := exists_isFactorAt_of_transGen h
-      exact (models_acyclic_iff k).mp (models_theory_iff.mp hM _ (.inr ⟨k, rfl⟩)) x hk }
+      exact (models_acyclic_iff k).mp (models_theory_iff.mp hV _ (.inr ⟨k, rfl⟩)) x hk }
 
 /-- Every model of `PairingTheory N` satisfies the same sentences as `Pairing N`. -/
-theorem models_iff_models_pairing (M : Type*) [ConcatenationStructure M]
-    [M↓[ℒ⌢] ⊧* PairingTheory N] (σ : Sentence ℒ⌢) : M↓[ℒ⌢] ⊧ σ ↔ (Pairing N)↓[ℒ⌢] ⊧ σ :=
-  models_iff_of_atomicPairing (atomicPairing N M) (atomicPairing N (Pairing N))
+theorem models_iff_models_pairing (V : Type*) [ConcatenationStructure V]
+    [V↓[ℒ⌢] ⊧* PairingTheory N] (σ : Sentence ℒ⌢) : V↓[ℒ⌢] ⊧ σ ↔ (Pairing N)↓[ℒ⌢] ⊧ σ :=
+  models_iff_of_atomicPairing (atomicPairing N V) (atomicPairing N (Pairing N))
     ⟨⟨.of false, by simp⟩, rfl, rfl⟩ ⟨⟨.of true, by simp⟩, rfl, rfl⟩ σ
 
 lemma provable_pairingTheory_iff {σ : Sentence ℒ⌢} :
     PairingTheory N ⊢ σ ↔ (Pairing N)↓[ℒ⌢] ⊧ σ :=
   ⟨fun h ↦ consequence_iff'.mp (Theory.Proof.sound h) (Pairing N),
-    fun h ↦ complete.{0} _ _ fun M _ _ ↦ (models_iff_models_pairing M σ).mpr h⟩
+    fun h ↦ complete.{0} _ _ fun V _ _ ↦ (models_iff_models_pairing V σ).mpr h⟩
 
 instance : Entailment.Complete (PairingTheory N) where
   con σ := by
@@ -802,11 +802,11 @@ open ConcatenationStructure ConcatenationEmptyStructure DirectTranslation
 
 section option
 
-variable {M : Type*} [ConcatenationStructure M] {x y : M}
+variable {V : Type*} [ConcatenationStructure V] {x y : V}
 
 lemma Option.ofList_cons (b : Bool) (l : List Bool) :
-    (ofList (b :: l) : Option M) = some (ofFreeSemigroup ⟨b, l⟩) := by
-  suffices ∀ (l : List Bool) (x : M),
+    (ofList (b :: l) : Option V) = some (ofFreeSemigroup ⟨b, l⟩) := by
+  suffices ∀ (l : List Bool) (x : V),
       l.foldl (fun m b ↦ m ++ if b then 1 else 0) (some x) =
         some (l.foldl (fun m b ↦ m ++ if b then 1 else 0) x) by
     rw [ofFreeSemigroup, stringValue, ← this]
@@ -820,7 +820,7 @@ lemma Option.ofList_cons (b : Bool) (l : List Bool) :
     cases b <;> rfl
 
 @[simp]
-lemma Option.not_isSubstring_none : ¬IsSubstring (some x) (none : Option M) := by
+lemma Option.not_isSubstring_none : ¬IsSubstring (some x) (none : Option V) := by
   rintro (h | ⟨u, h⟩ | ⟨v, h⟩ | ⟨u, v, h⟩ | ⟨u, v, h⟩)
   · simp at h
   · rcases u with _ | u <;> simp at h
@@ -854,31 +854,31 @@ namespace WTCEditor
 
 section models
 
-variable {M : Type*} [ConcatenationStructure M] [M↓[ℒ⌢] ⊧* WTCEditor]
+variable {V : Type*} [ConcatenationStructure V] [V↓[ℒ⌢] ⊧* WTCEditor]
 
-instance : M↓[ℒ⌢] ⊧* 𝗪𝗧𝗖 := ⟨fun _ h ↦ Theory.models M WTCEditor (.wtc _ h)⟩
+instance : V↓[ℒ⌢] ⊧* 𝗪𝗧𝗖 := ⟨fun _ h ↦ Theory.models V WTCEditor (.wtc _ h)⟩
 
-lemma editor {x y z w : M} (h : x ++ y = z ++ w) :
+lemma editor {x y z w : V} (h : x ++ y = z ++ w) :
     (x = z ∧ y = w) ∨ ∃ u, (x ++ u = z ∧ y = u ++ w) ∨ (x = z ++ u ∧ u ++ y = w) := by
-  have := by simpa [models_iff] using Theory.models M _ IsWTCEditorAxiom.editor
+  have := by simpa [models_iff] using Theory.models V _ IsWTCEditorAxiom.editor
   exact this x y z w h
 
 /--
 The strings of a model of $\mathsf{WTC}$ with the editor axiom together with an empty string form a
 model of $\mathsf{WTC}$ with the empty string and the editor axiom.
 -/
-instance : (Option M)↓[ℒ⌢ₑ] ⊧* WTCEmptyEditor := by
+instance : (Option V)↓[ℒ⌢ₑ] ⊧* WTCEmptyEditor := by
   constructor
   rintro _ (⟨_, hσ⟩ | _)
   swap
-  · suffices ∀ x y z w : Option M, x ++ y = z ++ w →
+  · suffices ∀ x y z w : Option V, x ++ y = z ++ w →
         ∃ u, (x ++ u = z ∧ y = u ++ w) ∨ (x = z ++ u ∧ u ++ y = w) by simpa [models_iff]
     exact fun _ _ _ _ ↦ Option.editor fun _ _ _ _ ↦ editor
   cases hσ
   case equal hφ => exact models_theory_iff.mp inferInstance _ hφ
   case emptyUnit => simp [models_iff, Option.empty_eq_none]
   case concatAssoc u =>
-    suffices ∀ x y z : Option M, IsSubstring (x ++ y ++ z) (ofList u) ∨
+    suffices ∀ x y z : Option V, IsSubstring (x ++ y ++ z) (ofList u) ∨
         IsSubstring (x ++ (y ++ z)) (ofList u) → x ++ y ++ z = x ++ (y ++ z) by
       simpa [models_iff]
     rintro (_ | x) (_ | y) (_ | z) <;>
@@ -887,26 +887,26 @@ instance : (Option M)↓[ℒ⌢ₑ] ⊧* WTCEmptyEditor := by
     rcases u with _ | ⟨b, l⟩
     · simp [ofList, Option.empty_eq_none]
     · rw [Option.ofList_cons]
-      have assoc : ∀ x y z : M, IsSubstring (x ++ y ++ z) (ofFreeSemigroup ⟨b, l⟩) ∨
+      have assoc : ∀ x y z : V, IsSubstring (x ++ y ++ z) (ofFreeSemigroup ⟨b, l⟩) ∨
           IsSubstring (x ++ (y ++ z)) (ofFreeSemigroup ⟨b, l⟩) → x ++ y ++ z = x ++ (y ++ z) := by
-        simpa [models_iff] using Theory.models M 𝗪𝗧𝗖 (.concatAssoc ⟨b, l⟩)
+        simpa [models_iff] using Theory.models V 𝗪𝗧𝗖 (.concatAssoc ⟨b, l⟩)
       exact fun h ↦ assoc x y z <|
         h.imp Option.isSubstring_of_some Option.isSubstring_of_some
   case editor u =>
-    suffices ∀ x y z w : Option M, x ++ y = z ++ w → IsSubstring (x ++ y) (ofList u) →
+    suffices ∀ x y z w : Option V, x ++ y = z ++ w → IsSubstring (x ++ y) (ofList u) →
         ∃ u, (x ++ u = z ∧ y = u ++ w) ∨ (x = z ++ u ∧ u ++ y = w) by simpa [models_iff]
     exact fun _ _ _ _ h _ ↦ Option.editor (fun _ _ _ _ ↦ editor) h
   case zeroNeEmpty => simp [models_iff, Option.empty_eq_none, Option.zero_eq_some]
   case oneNeEmpty => simp [models_iff, Option.empty_eq_none, Option.one_eq_some]
   case zeroAtom =>
-    suffices ∀ x y : Option M, x ++ y = 0 → x = ∅ ∨ y = ∅ by simpa [models_iff]
+    suffices ∀ x y : Option V, x ++ y = 0 → x = ∅ ∨ y = ∅ by simpa [models_iff]
     rintro (_ | x) (_ | y) h
     · exact .inl rfl
     · exact .inl rfl
     · exact .inr rfl
     · exact (WTC.append_ne_zero x y (Option.some.inj h)).elim
   case oneAtom =>
-    suffices ∀ x y : Option M, x ++ y = 1 → x = ∅ ∨ y = ∅ by simpa [models_iff]
+    suffices ∀ x y : Option V, x ++ y = 1 → x = ∅ ∨ y = ∅ by simpa [models_iff]
     rintro (_ | x) (_ | y) h
     · exact .inl rfl
     · exact .inl rfl
@@ -919,10 +919,10 @@ end models
 
 section code
 
-variable {M : Type} [ConcatenationStructure M] {x y z : M}
+variable {V : Type} [ConcatenationStructure V] {x y z : V}
 
 /-- `z` is the code of the concatenation of the strings coded by `x` and `y`. -/
-def IsCodeAppend (z x y : M) : Prop :=
+def IsCodeAppend (z x y : V) : Prop :=
   (x = 1 ∧ z = y) ∨ (y = 1 ∧ z = x) ∨ ∃ u v, x = 1 ++ u ∧ y = 1 ++ v ∧ z = 1 ++ (u ++ v)
 
 /-- `z` is the code of the concatenation of the strings coded by `x` and `y`. -/
@@ -930,14 +930,14 @@ def isCodeAppend : Semisentence ℒ⌢ 3 :=
   “z x y. (x = !!(op(1).const) ∧ z = y) ∨ (y = !!(op(1).const) ∧ z = x) ∨
     ∃ u v, x = !!(op(1).const) ⌢ u ∧ y = !!(op(1).const) ⌢ v ∧ z = !!(op(1).const) ⌢ (u ⌢ v)”
 
-instance isCodeAppend_defined : ℒ⌢-relation₃[M] IsCodeAppend via isCodeAppend :=
+instance isCodeAppend_defined : ℒ⌢-relation₃[V] IsCodeAppend via isCodeAppend :=
   ⟨fun v ↦ by simp [isCodeAppend, IsCodeAppend]⟩
 
-instance isCodeAppend_definable : ℒ⌢-relation₃[M] IsCodeAppend := isCodeAppend_defined.to_definable
+instance isCodeAppend_definable : ℒ⌢-relation₃[V] IsCodeAppend := isCodeAppend_defined.to_definable
 
 section
 
-variable [M↓[ℒ⌢] ⊧* WTCEditor]
+variable [V↓[ℒ⌢] ⊧* WTCEditor]
 
 lemma one_append_cancel (h : 1 ++ x = 1 ++ y) : x = y := by
   rcases editor h with ⟨-, h⟩ | ⟨u, ⟨h, -⟩ | ⟨h, -⟩⟩
@@ -945,17 +945,17 @@ lemma one_append_cancel (h : 1 ++ x = 1 ++ y) : x = y := by
   · exact (WTC.append_ne_one 1 u h).elim
   · exact (WTC.append_ne_one 1 u h.symm).elim
 
-lemma emptyCode_injective : Function.Injective (emptyCode (M := M)) := by
+lemma emptyCode_injective : Function.Injective (emptyCode (V := V)) := by
   rintro (_ | x) (_ | y) h
   · rfl
   · exact (WTC.append_ne_one 1 y h.symm).elim
   · exact (WTC.append_ne_one 1 x h).elim
   · exact congrArg some <| one_append_cancel h
 
-lemma isCodeAppend_emptyCode_iff {x y : Option M} :
+lemma isCodeAppend_emptyCode_iff {x y : Option V} :
     IsCodeAppend z (emptyCode x) (emptyCode y) ↔ z = emptyCode (x ++ y) := by
-  have h (x y : M) : 1 ++ x = 1 ++ y ↔ x = y := ⟨one_append_cancel, congrArg _⟩
-  have h' (x : M) : 1 ≠ 1 ++ x := fun h ↦ WTC.append_ne_one 1 x h.symm
+  have h (x y : V) : 1 ++ x = 1 ++ y ↔ x = y := ⟨one_append_cancel, congrArg _⟩
+  have h' (x : V) : 1 ≠ 1 ++ x := fun h ↦ WTC.append_ne_one 1 x h.symm
   rcases x with _ | x <;> rcases y with _ | y <;>
     simp [IsCodeAppend, emptyCode, h, h', WTC.append_ne_one]
 
@@ -974,33 +974,33 @@ def emptyTranslation : DirectTranslation WTCEditor ℒ⌢ₑ where
     | Sum.inl Language.Concatenation.Func.one => ⟨“z. z = !!(op(1).const) ⌢ !!(op(1).const)”⟩
     | Sum.inl Language.Concatenation.Func.concat => ⟨isCodeAppend⟩
     | Sum.inr (Language.Constant.Func.const _) => ⟨“z. z = !!(op(1).const)”⟩
-  domain_nonempty := complete.{0} _ _ fun M _ _ ↦ (models_domainNonempty_iff _).mpr <| by
+  domain_nonempty := complete.{0} _ _ fun V _ _ ↦ (models_domainNonempty_iff _).mpr <| by
     use emptyCode none
     simp [Semiformula.Operator.val]
-  func_defined f := complete.{0} _ _ fun M _ _ ↦ (models_funcDefined_iff _ _).mpr <| by
+  func_defined f := complete.{0} _ _ fun V _ _ ↦ (models_funcDefined_iff _ _).mpr <| by
     intro e he
     have he (i) : IsEmptyCode (e i) := by simpa [Semiformula.Operator.val] using he i
     rcases f with (_ | _ | _) | ⟨⟨⟩⟩
-    · suffices ∃! y : M, IsEmptyCode y ∧ y = emptyCode (some 0) by
+    · suffices ∃! y : V, IsEmptyCode y ∧ y = emptyCode (some 0) by
         simpa [Semiformula.Operator.val]
       use emptyCode (some 0)
       simp
-    · suffices ∃! y : M, IsEmptyCode y ∧ y = emptyCode (some 1) by
+    · suffices ∃! y : V, IsEmptyCode y ∧ y = emptyCode (some 1) by
         simpa [Semiformula.Operator.val]
       use emptyCode (some 1)
       simp
-    · suffices ∃! y : M, IsEmptyCode y ∧ IsCodeAppend y (e 0) (e 1) by
+    · suffices ∃! y : V, IsEmptyCode y ∧ IsCodeAppend y (e 0) (e 1) by
         simpa [Semiformula.Operator.val]
       obtain ⟨x, hx⟩ := isEmptyCode_iff.mp (he 0)
       obtain ⟨y, hy⟩ := isEmptyCode_iff.mp (he 1)
       simp only [← hx, ← hy, isCodeAppend_emptyCode_iff]
       use emptyCode (x ++ y)
       simp
-    · suffices ∃! y : M, IsEmptyCode y ∧ y = emptyCode none by
+    · suffices ∃! y : V, IsEmptyCode y ∧ y = emptyCode none by
         simpa [Semiformula.Operator.val]
       use emptyCode none
       simp
-  preserve_eq := complete.{0} _ _ fun M _ _ ↦ (models_preserveEq_iff _ _).mpr <| by
+  preserve_eq := complete.{0} _ _ fun V _ _ ↦ (models_preserveEq_iff _ _).mpr <| by
     exact fun _ _ _ _ ↦ Iff.rfl
 
 namespace emptyTranslation
@@ -1009,10 +1009,10 @@ namespace emptyTranslation
 lemma dom_iff : emptyTranslation.Dom x ↔ IsEmptyCode x := by
   simp [DirectTranslation.dom_iff, emptyTranslation, Semiformula.Operator.val]
 
-variable [M↓[ℒ⌢] ⊧* WTCEditor]
+variable [V↓[ℒ⌢] ⊧* WTCEditor]
 
-/-- The bijection of the strings of `M` and the empty string with their codes. -/
-noncomputable def equiv : Option M ≃ emptyTranslation.Model M :=
+/-- The bijection of the strings of `V` and the empty string with their codes. -/
+noncomputable def equiv : Option V ≃ emptyTranslation.Model V :=
   Equiv.ofBijective (fun x ↦ ⟨emptyCode x, by simp⟩) <| by
     constructor
     · exact fun x y h ↦ emptyCode_injective <| congrArg Model.val h
@@ -1021,9 +1021,9 @@ noncomputable def equiv : Option M ≃ emptyTranslation.Model M :=
       exact ⟨y, Model.ext hy⟩
 
 @[simp]
-lemma val_equiv (x : Option M) : (equiv x : M) = emptyCode x := rfl
+lemma val_equiv (x : Option V) : (equiv x : V) = emptyCode x := rfl
 
-lemma struc_eq : Model.struc emptyTranslation M = Tarski.Structure.ofEquiv equiv :=
+lemma struc_eq : Model.struc emptyTranslation V = Tarski.Structure.ofEquiv equiv :=
   Tarski.Structure.ext
     (funext₃ fun k f v ↦ by
       symm
@@ -1034,7 +1034,7 @@ lemma struc_eq : Model.struc emptyTranslation M = Tarski.Structure.ofEquiv equiv
         rfl
       · simp [emptyTranslation, Semiformula.Operator.val]
         rfl
-      · have h : M ⊧/![emptyCode (v 0 ++ v 1), emptyCode (v 0), emptyCode (v 1)] isCodeAppend :=
+      · have h : V ⊧/![emptyCode (v 0 ++ v 1), emptyCode (v 0), emptyCode (v 1)] isCodeAppend :=
           (Defined.eval_iff _).mpr <| isCodeAppend_emptyCode_iff.mpr rfl
         change Semiformula.Evalb _ isCodeAppend
         convert h using 2
@@ -1056,11 +1056,11 @@ end emptyTranslation
 The codes of the strings of a model of $\mathsf{WTC}$ with the editor axiom and of the empty string
 form a model of $\mathsf{WTC}$ with the empty string and the editor axiom.
 -/
-instance [M↓[ℒ⌢] ⊧* WTCEditor] : (emptyTranslation.Model M)↓[ℒ⌢ₑ] ⊧* WTCEmptyEditor := by
-  have : Option M ≡ₑ[ℒ⌢ₑ] emptyTranslation.Model M := by
+instance [V↓[ℒ⌢] ⊧* WTCEditor] : (emptyTranslation.Model V)↓[ℒ⌢ₑ] ⊧* WTCEmptyEditor := by
+  have : Option V ≡ₑ[ℒ⌢ₑ] emptyTranslation.Model V := by
     rw [emptyTranslation.struc_eq]
     exact Tarski.Structure.ElementaryEquiv.ofEquiv emptyTranslation.equiv
-  exact (Tarski.Structure.ElementaryEquiv.modelsTheory (M₁ := Option M)).mp inferInstance
+  exact (Tarski.Structure.ElementaryEquiv.modelsTheory (M₁ := Option V)).mp inferInstance
 
 /--
 $\mathsf{WTC}$ with the editor axiom interprets $\mathsf{WTC}$ with the empty string and the editor

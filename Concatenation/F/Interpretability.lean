@@ -20,60 +20,60 @@ open DirectTranslation
 section relativization
 
 /-- `D` contains the letters and the empty string and is closed under concatenation. -/
-structure IsConcatenationClosed {M : Type*} [ConcatenationEmptyStructure M] (D : M → Prop) :
+structure IsConcatenationClosed {V : Type*} [ConcatenationEmptyStructure V] (D : V → Prop) :
     Prop where
   zero : D 0
   one : D 1
   empty : D ∅
-  append {x y : M} : D x → D y → D (x ++ y)
+  append {x y : V} : D x → D y → D (x ++ y)
 
 variable (T : Theory ℒ⌢ₑ) [𝗘𝗤 ℒ⌢ₑ ⪯ T] (δ : Semisentence ℒ⌢ₑ 1)
-  (H : ∀ (M : Type) [ConcatenationEmptyStructure M] [M↓[ℒ⌢ₑ] ⊧* T],
-    IsConcatenationClosed fun x : M ↦ M ⊧/![x] δ)
+  (H : ∀ (V : Type) [ConcatenationEmptyStructure V] [V↓[ℒ⌢ₑ] ⊧* T],
+    IsConcatenationClosed fun x : V ↦ V ⊧/![x] δ)
 
 /-- The translation that restricts the quantifiers to `δ` and leaves the symbols unchanged. -/
 def relativization : DirectTranslation T ℒ⌢ₑ where
   domain := ⟨δ⟩
   rel R := ⟨Semiformula.rel R (#·)⟩
   func f := ⟨“z. z = !!(Semiterm.func f (#·.succ))”⟩
-  domain_nonempty := completeEmpty.{0} _ _ fun M _ _ ↦ (models_domainNonempty_iff _).mpr <| by
+  domain_nonempty := completeEmpty.{0} _ _ fun V _ _ ↦ (models_domainNonempty_iff _).mpr <| by
     use 0
-    simpa [Semiformula.Operator.val] using (H M).zero
-  func_defined f := completeEmpty.{0} _ _ fun M _ _ ↦ (models_funcDefined_iff _ _).mpr <| by
+    simpa [Semiformula.Operator.val] using (H V).zero
+  func_defined f := completeEmpty.{0} _ _ fun V _ _ ↦ (models_funcDefined_iff _ _).mpr <| by
     intro e he
-    have he (i) : M ⊧/![e i] δ := by simpa [Semiformula.Operator.val] using he i
-    suffices ∃! y : M, M ⊧/![y] δ ∧ y = Tarski.Structure.func f e by
+    have he (i) : V ⊧/![e i] δ := by simpa [Semiformula.Operator.val] using he i
+    suffices ∃! y : V, V ⊧/![y] δ ∧ y = Tarski.Structure.func f e by
       simpa [Semiformula.Operator.val, Semiformula.Operator.Eq.sentence_eq]
     use Tarski.Structure.func f e
     simp only [and_true, and_imp, imp_self, implies_true]
     rcases f with (_ | _ | _) | ⟨⟨⟩⟩
-    exacts [(H M).zero, (H M).one, (H M).append (he 0) (he 1), (H M).empty]
-  preserve_eq := completeEmpty.{0} _ _ fun M _ _ ↦ (models_preserveEq_iff _ _).mpr <| by
+    exacts [(H V).zero, (H V).one, (H V).append (he 0) (he 1), (H V).empty]
+  preserve_eq := completeEmpty.{0} _ _ fun V _ _ ↦ (models_preserveEq_iff _ _).mpr <| by
     simp [Semiformula.Operator.val]
 
 namespace relativization
 
-variable {M : Type} [ConcatenationEmptyStructure M] {x : M}
+variable {V : Type} [ConcatenationEmptyStructure V] {x : V}
 
 @[simp]
-lemma dom_iff : (relativization T δ H).Dom x ↔ M ⊧/![x] δ := by
+lemma dom_iff : (relativization T δ H).Dom x ↔ V ⊧/![x] δ := by
   simp [DirectTranslation.dom_iff, relativization, Semiformula.Operator.val]
 
-variable [M↓[ℒ⌢ₑ] ⊧* T]
+variable [V↓[ℒ⌢ₑ] ⊧* T]
 
-/-- The letters, the empty string and the concatenation of `M` restricted to `δ`. -/
-abbrev concatenationStructure : ConcatenationEmptyStructure ((relativization T δ H).Model M) where
-  zero := ⟨0, (dom_iff T δ H).mpr (H M).zero⟩
-  one := ⟨1, (dom_iff T δ H).mpr (H M).one⟩
-  emptyCollection := ⟨∅, (dom_iff T δ H).mpr (H M).empty⟩
+/-- The letters, the empty string and the concatenation of `V` restricted to `δ`. -/
+abbrev concatenationStructure : ConcatenationEmptyStructure ((relativization T δ H).Model V) where
+  zero := ⟨0, (dom_iff T δ H).mpr (H V).zero⟩
+  one := ⟨1, (dom_iff T δ H).mpr (H V).one⟩
+  emptyCollection := ⟨∅, (dom_iff T δ H).mpr (H V).empty⟩
   append x y := ⟨x ++ y, (dom_iff T δ H).mpr <|
-    (H M).append ((dom_iff T δ H).mp x.dom) ((dom_iff T δ H).mp y.dom)⟩
+    (H V).append ((dom_iff T δ H).mp x.dom) ((dom_iff T δ H).mp y.dom)⟩
 
 /--
 The structure of the model of `relativization` is the standard one of the letters, the empty string
 and the concatenation restricted to `δ`.
 -/
-lemma struc_eq : Model.struc (relativization T δ H) M =
+lemma struc_eq : Model.struc (relativization T δ H) V =
     @standardModelEmpty _ (concatenationStructure T δ H) :=
   Tarski.Structure.ext
     (funext₃ fun k f v ↦ by
@@ -89,22 +89,22 @@ section
 
 attribute [local instance] concatenationStructure
 
-variable {y : M} {hx : (relativization T δ H).Dom x} {hy : (relativization T δ H).Dom y}
+variable {y : V} {hx : (relativization T δ H).Dom x} {hy : (relativization T δ H).Dom y}
 
 @[simp]
-lemma zero_eq_mk : (0 : (relativization T δ H).Model M) = ⟨0, (dom_iff T δ H).mpr (H M).zero⟩ :=
+lemma zero_eq_mk : (0 : (relativization T δ H).Model V) = ⟨0, (dom_iff T δ H).mpr (H V).zero⟩ :=
   rfl
 
 @[simp]
-lemma one_eq_mk : (1 : (relativization T δ H).Model M) = ⟨1, (dom_iff T δ H).mpr (H M).one⟩ := rfl
+lemma one_eq_mk : (1 : (relativization T δ H).Model V) = ⟨1, (dom_iff T δ H).mpr (H V).one⟩ := rfl
 
 @[simp]
-lemma empty_eq_mk : (∅ : (relativization T δ H).Model M) = ⟨∅, (dom_iff T δ H).mpr (H M).empty⟩ :=
+lemma empty_eq_mk : (∅ : (relativization T δ H).Model V) = ⟨∅, (dom_iff T δ H).mpr (H V).empty⟩ :=
   rfl
 
 @[simp]
-lemma mk_append_mk : (⟨x, hx⟩ ++ ⟨y, hy⟩ : (relativization T δ H).Model M) =
-    ⟨x ++ y, (dom_iff T δ H).mpr <| (H M).append ((dom_iff T δ H).mp hx) ((dom_iff T δ H).mp hy)⟩ :=
+lemma mk_append_mk : (⟨x, hx⟩ ++ ⟨y, hy⟩ : (relativization T δ H).Model V) =
+    ⟨x ++ y, (dom_iff T δ H).mpr <| (H V).append ((dom_iff T δ H).mp hx) ((dom_iff T δ H).mp hy)⟩ :=
   rfl
 
 end
@@ -115,22 +115,22 @@ end relativization
 
 section
 
-variable {M : Type*} [ConcatenationEmptyStructure M] {x y z w : M}
+variable {V : Type*} [ConcatenationEmptyStructure V] {x y z w : V}
 
 /-- `x` is a suffix of `y`, in the language with the empty string. -/
 def isSuffixEmpty : Semisentence ℒ⌢ₑ 2 := “x y. x = y ∨ ∃ u, y = u ⌢ x”
 
-instance isSuffixEmpty_defined : ℒ⌢ₑ-relation[M] IsSuffix via isSuffixEmpty :=
+instance isSuffixEmpty_defined : ℒ⌢ₑ-relation[V] IsSuffix via isSuffixEmpty :=
   ⟨fun v ↦ by simp [isSuffixEmpty, IsSuffix]⟩
 
-instance isSuffixEmpty_definable : ℒ⌢ₑ-relation[M] IsSuffix := isSuffixEmpty_defined.to_definable
+instance isSuffixEmpty_definable : ℒ⌢ₑ-relation[V] IsSuffix := isSuffixEmpty_defined.to_definable
 
 /--
 `x` is tame: every suffix of a string that ends with `x` is comparable with `x`.
 - [Hor11, §2, Theorem 2.12]
 - [Gan09, §4, Lemma 8]
 -/
-def IsTame (x : M) : Prop := ∀ u y, u ++ x ◧ y → x ◧ y ∨ y ◧ x
+def IsTame (x : V) : Prop := ∀ u y, u ++ x ◧ y → x ◧ y ∨ y ◧ x
 
 /--
 `x` is tame: every suffix of a string that ends with `x` is comparable with `x`.
@@ -140,20 +140,20 @@ def IsTame (x : M) : Prop := ∀ u y, u ++ x ◧ y → x ◧ y ∨ y ◧ x
 def isTame : Semisentence ℒ⌢ₑ 1 :=
   “x. ∀ u y, !isSuffixEmpty y (u ⌢ x) → !isSuffixEmpty y x ∨ !isSuffixEmpty x y”
 
-instance isTame_defined : ℒ⌢ₑ-predicate[M] IsTame via isTame := ⟨fun v ↦ by simp [isTame, IsTame]⟩
+instance isTame_defined : ℒ⌢ₑ-predicate[V] IsTame via isTame := ⟨fun v ↦ by simp [isTame, IsTame]⟩
 
-instance isTame_definable : ℒ⌢ₑ-predicate[M] IsTame := isTame_defined.to_definable
+instance isTame_definable : ℒ⌢ₑ-predicate[V] IsTame := isTame_defined.to_definable
 
 /-- Every suffix of `x` is tame. -/
-def IsHereditarilyTame (x : M) : Prop := ∀ y, x ◧ y → IsTame y
+def IsHereditarilyTame (x : V) : Prop := ∀ y, x ◧ y → IsTame y
 
 /-- Every suffix of `x` is tame. -/
 def isHereditarilyTame : Semisentence ℒ⌢ₑ 1 := “x. ∀ y, !isSuffixEmpty y x → !isTame y”
 
-instance isHereditarilyTame_defined : ℒ⌢ₑ-predicate[M] IsHereditarilyTame via isHereditarilyTame :=
+instance isHereditarilyTame_defined : ℒ⌢ₑ-predicate[V] IsHereditarilyTame via isHereditarilyTame :=
   ⟨fun v ↦ by simp [isHereditarilyTame, IsHereditarilyTame]⟩
 
-instance isHereditarilyTame_definable : ℒ⌢ₑ-predicate[M] IsHereditarilyTame :=
+instance isHereditarilyTame_definable : ℒ⌢ₑ-predicate[V] IsHereditarilyTame :=
   isHereditarilyTame_defined.to_definable
 
 lemma IsHereditarilyTame.isTame (hx : IsHereditarilyTame x) : IsTame x := hx x (IsSuffix.refl x)
@@ -162,7 +162,7 @@ end
 
 namespace F
 
-variable {M : Type*} [ConcatenationEmptyStructure M] [M↓[ℒ⌢ₑ] ⊧* 𝗙] {x y z w : M}
+variable {V : Type*} [ConcatenationEmptyStructure V] [V↓[ℒ⌢ₑ] ⊧* 𝗙] {x y z w : V}
 
 lemma isSuffix_iff : y ◧ x ↔ ∃ u, y = u ++ x := by
   constructor
@@ -178,13 +178,13 @@ lemma isSuffix_trans (hxy : z ◧ y) (hyx : y ◧ x) : z ◧ x := by
   simp [← F.append_assoc]
 
 @[simp]
-lemma isSuffix_empty (x : M) : x ◧ ∅ := isSuffix_iff.mpr ⟨x, by simp⟩
+lemma isSuffix_empty (x : V) : x ◧ ∅ := isSuffix_iff.mpr ⟨x, by simp⟩
 
 lemma isSuffix_append_right_iff : y ++ z ◧ x ++ z ↔ y ◧ x := by
   simp only [isSuffix_iff, ← F.append_assoc]
   exact exists_congr fun u ↦ ⟨F.append_right_cancel, congrArg (· ++ z)⟩
 
-lemma isTame_empty : IsTame (∅ : M) := fun _ y _ ↦ Or.inr <| isSuffix_empty y
+lemma isTame_empty : IsTame (∅ : V) := fun _ y _ ↦ Or.inr <| isSuffix_empty y
 
 lemma isTame_of_isAtom (hx : IsAtom x) : IsTame x := by
   intro u y h
@@ -209,7 +209,7 @@ lemma isTame_append (hx : IsTame x) (hy : IsTame y) : IsTame (x ++ y) := by
 lemma isHereditarilyTame_of_isSuffix (hx : IsHereditarilyTame x) (h : x ◧ y) :
     IsHereditarilyTame y := fun z hz ↦ hx z <| isSuffix_trans h hz
 
-lemma isHereditarilyTame_empty : IsHereditarilyTame (∅ : M) := by
+lemma isHereditarilyTame_empty : IsHereditarilyTame (∅ : V) := by
   intro y hy
   obtain ⟨u, hu⟩ := isSuffix_iff.mp hy
   simpa [eq_empty_of_append_eq_empty hu.symm] using isTame_empty
@@ -230,7 +230,7 @@ lemma isHereditarilyTame_append (hx : IsHereditarilyTame x) (hy : IsHereditarily
     exact isTame_append (hx v <| isSuffix_append_right_iff.mp hz) hy.isTame
 
 lemma isConcatenationClosed_isHereditarilyTame :
-    IsConcatenationClosed fun x : M ↦ M ⊧/![x] isHereditarilyTame where
+    IsConcatenationClosed fun x : V ↦ V ⊧/![x] isHereditarilyTame where
   zero := by simpa using isHereditarilyTame_of_isAtom isAtom_zero
   one := by simpa using isHereditarilyTame_of_isAtom isAtom_one
   empty := by simpa using isHereditarilyTame_empty
@@ -262,27 +262,27 @@ The hereditarily tame strings of a model of $\mathsf{F}$ form a model of $\maths
 empty string.
 - [Gan09, §4, Lemma 8]
 -/
-instance {M : Type} [ConcatenationEmptyStructure M] [M↓[ℒ⌢ₑ] ⊧* 𝗙] :
-    (tameTranslation.Model M)↓[ℒ⌢ₑ] ⊧* 𝗧𝗖ₑ := by
+instance {V : Type} [ConcatenationEmptyStructure V] [V↓[ℒ⌢ₑ] ⊧* 𝗙] :
+    (tameTranslation.Model V)↓[ℒ⌢ₑ] ⊧* 𝗧𝗖ₑ := by
   rw [relativization.struc_eq]
   let := relativization.concatenationStructure 𝗙 isHereditarilyTame
-    (fun _ _ _ ↦ F.isConcatenationClosed_isHereditarilyTame) (M := M)
+    (fun _ _ _ ↦ F.isConcatenationClosed_isHereditarilyTame) (V := V)
   constructor
   intro σ hσ
   cases hσ
   case equal hφ => exact models_theory_iff.mp inferInstance _ hφ
   case editor =>
     simpa [models_iff, Model.forall_iff, Model.exists_iff] using
-      fun (x : M) (hx : IsHereditarilyTame x) (y : M) (hy : IsHereditarilyTame y) (z : M)
-        (hz : IsHereditarilyTame z) (w : M) (_ : IsHereditarilyTame w) (h : x ++ y = z ++ w) ↦
+      fun (x : V) (hx : IsHereditarilyTame x) (y : V) (hy : IsHereditarilyTame y) (z : V)
+        (hz : IsHereditarilyTame z) (w : V) (_ : IsHereditarilyTame w) (h : x ++ y = z ++ w) ↦
       match F.exists_of_append_eq_append hy.isTame h with
       | ⟨u, .inl h'⟩ => ⟨u, F.isHereditarilyTame_of_isSuffix hz <| by simp [← h'.1], .inl h'⟩
       | ⟨u, .inr h'⟩ => ⟨u, F.isHereditarilyTame_of_isSuffix hx <| by simp [h'.1], .inr h'⟩
   case zeroAtom =>
-    simpa [models_iff, Model.forall_iff] using fun (x : M) (_ : IsHereditarilyTame x) (y : M)
+    simpa [models_iff, Model.forall_iff] using fun (x : V) (_ : IsHereditarilyTame x) (y : V)
       (_ : IsHereditarilyTame y) (h : x ++ y = 0) ↦ F.eq_empty_of_append_isAtom (by simp [h])
   case oneAtom =>
-    simpa [models_iff, Model.forall_iff] using fun (x : M) (_ : IsHereditarilyTame x) (y : M)
+    simpa [models_iff, Model.forall_iff] using fun (x : V) (_ : IsHereditarilyTame x) (y : V)
       (_ : IsHereditarilyTame y) (h : x ++ y = 1) ↦ F.eq_empty_of_append_isAtom (by simp [h])
   all_goals simp [models_iff, Model.forall_iff, F.append_assoc, F.isAtom_ne_empty]
 
@@ -298,15 +298,15 @@ instance : 𝗙 ⊳ 𝗧𝗖ₑ where
 
 section
 
-variable {M : Type*} [ConcatenationEmptyStructure M] {x : M}
+variable {V : Type*} [ConcatenationEmptyStructure V] {x : V}
 
 /--
 `x` can be cancelled on both sides.
 - [Hor11, §2, Theorem 2.12]
 -/
-structure IsRadical (x : M) : Prop where
-  right {y z : M} : y ++ x = z ++ x → y = z
-  left {y z : M} : x ++ y = x ++ z → y = z
+structure IsRadical (x : V) : Prop where
+  right {y z : V} : y ++ x = z ++ x → y = z
+  left {y z : V} : x ++ y = x ++ z → y = z
 
 /--
 `x` can be cancelled on both sides.
@@ -315,18 +315,18 @@ structure IsRadical (x : M) : Prop where
 def isRadical : Semisentence ℒ⌢ₑ 1 :=
   “x. (∀ y z, y ⌢ x = z ⌢ x → y = z) ∧ (∀ y z, x ⌢ y = x ⌢ z → y = z)”
 
-instance isRadical_defined : ℒ⌢ₑ-predicate[M] IsRadical via isRadical := .mk fun v ↦ by
+instance isRadical_defined : ℒ⌢ₑ-predicate[V] IsRadical via isRadical := .mk fun v ↦ by
   suffices ((∀ y z, y ++ v 0 = z ++ v 0 → y = z) ∧ ∀ y z, v 0 ++ y = v 0 ++ z → y = z) ↔
       IsRadical (v 0) by simpa [isRadical]
   exact ⟨fun h ↦ ⟨h.1 _ _, h.2 _ _⟩, fun h ↦ ⟨fun _ _ ↦ h.right, fun _ _ ↦ h.left⟩⟩
 
-instance isRadical_definable : ℒ⌢ₑ-predicate[M] IsRadical := isRadical_defined.to_definable
+instance isRadical_definable : ℒ⌢ₑ-predicate[V] IsRadical := isRadical_defined.to_definable
 
 /--
 `x` is empty or ends with a letter.
 - [Hor11, §2, Theorem 2.12]
 -/
-def IsEmptyOrAppendAtom (x : M) : Prop := x = ∅ ∨ ∃ u, x = u ++ 0 ∨ x = u ++ 1
+def IsEmptyOrAppendAtom (x : V) : Prop := x = ∅ ∨ ∃ u, x = u ++ 0 ∨ x = u ++ 1
 
 /--
 `x` is empty or ends with a letter.
@@ -336,14 +336,14 @@ def isEmptyOrAppendAtom : Semisentence ℒ⌢ₑ 1 :=
   “x. x = ⋆ ∨ ∃ u, x = u ⌢ !!(op(0).const) ∨ x = u ⌢ !!(op(1).const)”
 
 instance isEmptyOrAppendAtom_defined :
-    ℒ⌢ₑ-predicate[M] IsEmptyOrAppendAtom via isEmptyOrAppendAtom :=
+    ℒ⌢ₑ-predicate[V] IsEmptyOrAppendAtom via isEmptyOrAppendAtom :=
   ⟨fun v ↦ by simp [isEmptyOrAppendAtom, IsEmptyOrAppendAtom]⟩
 
-instance isEmptyOrAppendAtom_definable : ℒ⌢ₑ-predicate[M] IsEmptyOrAppendAtom :=
+instance isEmptyOrAppendAtom_definable : ℒ⌢ₑ-predicate[V] IsEmptyOrAppendAtom :=
   isEmptyOrAppendAtom_defined.to_definable
 
 /-- Every prefix of `x` is radical, and empty or ends with a letter. -/
-def IsHereditarilyRadical (x : M) : Prop :=
+def IsHereditarilyRadical (x : V) : Prop :=
   ∀ y z, x = y ++ z → IsRadical y ∧ IsEmptyOrAppendAtom y
 
 /-- Every prefix of `x` is radical, and empty or ends with a letter. -/
@@ -351,19 +351,19 @@ def isHereditarilyRadical : Semisentence ℒ⌢ₑ 1 :=
   “x. ∀ y z, x = y ⌢ z → !isRadical y ∧ !isEmptyOrAppendAtom y”
 
 instance isHereditarilyRadical_defined :
-    ℒ⌢ₑ-predicate[M] IsHereditarilyRadical via isHereditarilyRadical :=
+    ℒ⌢ₑ-predicate[V] IsHereditarilyRadical via isHereditarilyRadical :=
   ⟨fun v ↦ by simp [isHereditarilyRadical, IsHereditarilyRadical]⟩
 
-instance isHereditarilyRadical_definable : ℒ⌢ₑ-predicate[M] IsHereditarilyRadical :=
+instance isHereditarilyRadical_definable : ℒ⌢ₑ-predicate[V] IsHereditarilyRadical :=
   isHereditarilyRadical_defined.to_definable
 
 end
 
 namespace TCEmpty
 
-variable {M : Type*} [ConcatenationEmptyStructure M] [M↓[ℒ⌢ₑ] ⊧* 𝗧𝗖ₑ] {x y z : M}
+variable {V : Type*} [ConcatenationEmptyStructure V] [V↓[ℒ⌢ₑ] ⊧* 𝗧𝗖ₑ] {x y z : V}
 
-lemma isRadical_empty : IsRadical (∅ : M) where
+lemma isRadical_empty : IsRadical (∅ : V) where
   right := by simp
   left := by simp
 
@@ -406,7 +406,7 @@ lemma isRadical (hx : IsHereditarilyRadical x) : IsRadical x := (hx x ∅ <| by 
 lemma isEmptyOrAppendAtom (hx : IsHereditarilyRadical x) : IsEmptyOrAppendAtom x :=
   (hx x ∅ <| by simp).2
 
-lemma isHereditarilyRadical_empty : IsHereditarilyRadical (∅ : M) := by
+lemma isHereditarilyRadical_empty : IsHereditarilyRadical (∅ : V) := by
   intro y z h
   obtain ⟨rfl, -⟩ := eq_empty_of_append_eq_empty h.symm
   exact ⟨isRadical_empty, Or.inl rfl⟩
@@ -429,14 +429,14 @@ lemma isHereditarilyRadical_append (hx : IsHereditarilyRadical x) (hy : IsHeredi
     exact ⟨isRadical hz, isEmptyOrAppendAtom hz⟩
 
 lemma isConcatenationClosed_isHereditarilyRadical :
-    IsConcatenationClosed fun x : M ↦ M ⊧/![x] isHereditarilyRadical where
+    IsConcatenationClosed fun x : V ↦ V ⊧/![x] isHereditarilyRadical where
   zero := by simpa using isHereditarilyRadical_of_isAtom isAtom_zero
   one := by simpa using isHereditarilyRadical_of_isAtom isAtom_one
   empty := by simpa using isHereditarilyRadical_empty
   append hx hy := by
     simpa using isHereditarilyRadical_append (by simpa using hx) (by simpa using hy)
 
-lemma append_zero_ne_append_one (x y : M) : x ++ 0 ≠ y ++ 1 := by
+lemma append_zero_ne_append_one (x y : V) : x ++ 0 ≠ y ++ 1 := by
   intro h
   obtain ⟨u, ⟨-, h⟩ | ⟨-, h⟩⟩ := editor h
   · rcases eq_empty_of_append_isAtom (h ▸ isAtom_zero) with rfl | h' <;> simp_all
@@ -458,26 +458,26 @@ The hereditarily radical strings of a model of $\mathsf{TC}$ with the empty stri
 $\mathsf{F}$.
 - [Hor11, §2, Theorem 2.12]
 -/
-instance {M : Type} [ConcatenationEmptyStructure M] [M↓[ℒ⌢ₑ] ⊧* 𝗧𝗖ₑ] :
-    (radicalTranslation.Model M)↓[ℒ⌢ₑ] ⊧* 𝗙 := by
+instance {V : Type} [ConcatenationEmptyStructure V] [V↓[ℒ⌢ₑ] ⊧* 𝗧𝗖ₑ] :
+    (radicalTranslation.Model V)↓[ℒ⌢ₑ] ⊧* 𝗙 := by
   rw [relativization.struc_eq]
   let := relativization.concatenationStructure 𝗧𝗖ₑ isHereditarilyRadical
-    (fun _ _ _ ↦ TCEmpty.isConcatenationClosed_isHereditarilyRadical) (M := M)
+    (fun _ _ _ ↦ TCEmpty.isConcatenationClosed_isHereditarilyRadical) (V := V)
   constructor
   intro σ hσ
   cases hσ
   case equal hφ => exact models_theory_iff.mp inferInstance _ hφ
   case cancelRight =>
-    simpa [models_iff, Model.forall_iff] using fun (x : M) (_ : IsHereditarilyRadical x) (y : M)
-      (_ : IsHereditarilyRadical y) (z : M) (hz : IsHereditarilyRadical z) ↦
+    simpa [models_iff, Model.forall_iff] using fun (x : V) (_ : IsHereditarilyRadical x) (y : V)
+      (_ : IsHereditarilyRadical y) (z : V) (hz : IsHereditarilyRadical z) ↦
       (TCEmpty.isRadical hz).right (y := x) (z := y)
   case cancelLeft =>
-    simpa [models_iff, Model.forall_iff] using fun (x : M) (_ : IsHereditarilyRadical x) (y : M)
-      (_ : IsHereditarilyRadical y) (z : M) (hz : IsHereditarilyRadical z) ↦
+    simpa [models_iff, Model.forall_iff] using fun (x : V) (_ : IsHereditarilyRadical x) (y : V)
+      (_ : IsHereditarilyRadical y) (z : V) (hz : IsHereditarilyRadical z) ↦
       (TCEmpty.isRadical hz).left (y := x) (z := y)
   case emptyOrConcatLetter =>
     simpa [models_iff, Model.forall_iff, Model.exists_iff] using
-      fun (x : M) (hx : IsHereditarilyRadical x) (hx' : x ≠ ∅) ↦
+      fun (x : V) (hx : IsHereditarilyRadical x) (hx' : x ≠ ∅) ↦
       match TCEmpty.isEmptyOrAppendAtom hx with
       | .inl h => (hx' h).elim
       | .inr ⟨u, .inl h⟩ => ⟨u, TCEmpty.isHereditarilyRadical_left (h ▸ hx), .inl h⟩

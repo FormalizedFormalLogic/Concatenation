@@ -233,18 +233,18 @@ end certificate
 
 section model
 
-variable {L : Language} [L.Encodable] {S : Type*} [Nonempty S] [Tarski.Structure L S]
+variable {L : Language} [L.Encodable] {V : Type*} [Nonempty V] [Tarski.Structure L V]
 
 /--
 The facts of the certificate of level `j` that `val` gives; `B` is the bound on the numbers that
 occur in them.
 -/
-def ModelFact (L : Language) [L.Encodable] {S : Type*} [Nonempty S] [Tarski.Structure L S]
-    (val : ℕ → S) (j B : ℕ) : ℕ → ℕ → ℕ → ℕ → Prop
+def ModelFact (L : Language) [L.Encodable] {V : Type*} [Nonempty V] [Tarski.Structure L V]
+    (val : ℕ → V) (j B : ℕ) : ℕ → ℕ → ℕ → ℕ → Prop
   | 2, x, y, z => IsCanonical val x ∧ y = 0 ∧ z = 0
   | 3, x, y, z => x ≤ j + 3 ∧ IsEnv val x y ∧ z = 0
   | 4, x, y, z => ∃ (n : ℕ) (φ : Semisentence L n) (v : Fin n → ℕ), encode φ + n ≤ j ∧
-      x = encode φ ∧ (∀ i, IsCanonical val (v i)) ∧ y = envCode v ∧ S ⊧/(val ∘ v) φ ∧ z = 0
+      x = encode φ ∧ (∀ i, IsCanonical val (v i)) ∧ y = envCode v ∧ V ⊧/(val ∘ v) φ ∧ z = 0
   | 5, x, y, z => x ≤ j ∧ (∃ n ≤ j + 3, IsEnv val n y) ∧ IsCanonical val z ∧
       ∀ (n : ℕ) (t : ClosedSemiterm L n) (v : Fin n → ℕ), x = encode t → y = envCode v →
         val z = t.val (val ∘ v) Empty.elim
@@ -262,8 +262,8 @@ def ModelFact (L : Language) [L.Encodable] {S : Type*} [Nonempty S] [Tarski.Stru
 `c` consists of the facts that `val` gives on the level `j`, and `B` bounds the numbers that occur
 in them.
 -/
-structure IsModelCode (L : Language) [L.Encodable] [L.Eq] {S : Type*} [Nonempty S]
-    [Tarski.Structure L S] (val : ℕ → S) (j B c : ℕ) : Prop where
+structure IsModelCode (L : Language) [L.Encodable] [L.Eq] {V : Type*} [Nonempty V]
+    [Tarski.Structure L V] (val : ℕ → V) (j B c : ℕ) : Prop where
   lt : B < c
   le : j + 4 ≤ B
   eq_le : mkPair 2 (encode (Language.Eq.eq : L.Rel 2)) ≤ B
@@ -273,9 +273,9 @@ structure IsModelCode (L : Language) [L.Encodable] [L.Eq] {S : Type*} [Nonempty 
   fact {k x y z : ℕ} : Fact c (ORingStructure.numeral k) x y z ↔
     x ≤ B ∧ y ≤ B ∧ z ≤ B ∧ ModelFact L val j B k x y z
 
-variable [L.Eq] {val : ℕ → S} {j B c : ℕ}
+variable [L.Eq] {val : ℕ → V} {j B c : ℕ}
 
-lemma exists_isModelCode [Finite S] (val : ℕ → S) (j : ℕ) : ∃ B c, IsModelCode L val j B c := by
+lemma exists_isModelCode [Finite V] (val : ℕ → V) (j : ℕ) : ∃ B c, IsModelCode L val j B c := by
   obtain ⟨D, hD⟩ := exists_isCanonical_le val
   obtain ⟨C, hC⟩ := exists_isEnv_le val (j + 3)
   obtain ⟨B, hB⟩ : ∃ B, B = D + C + (j + 4) + mkPair j j +
@@ -330,7 +330,7 @@ lemma env {n s : ℕ} (hn : n ≤ j + 3) (h : IsEnv val n s) :
   H.fact.mpr ⟨by have := H.le; omega, H.env_le hn h, Nat.zero_le _, hn, h, rfl⟩
 
 lemma sat {n : ℕ} {φ : Semisentence L n} {v : Fin n → ℕ} (h : encode φ + n ≤ j)
-    (hv : ∀ i, IsCanonical val (v i)) (hφ : S ⊧/(val ∘ v) φ) :
+    (hv : ∀ i, IsCanonical val (v i)) (hφ : V ⊧/(val ∘ v) φ) :
     Fact c (ORingStructure.numeral 4) (encode φ) (envCode v) 0 :=
   H.fact.mpr ⟨by have := H.le; omega, H.env_le (n := n) (by omega) ⟨v, hv, rfl⟩, Nat.zero_le _, n,
     φ, v, h, rfl, hv, rfl, hφ, rfl⟩
@@ -349,8 +349,8 @@ lemma values {v n s d k : ℕ} (hv : v ≤ j) (hn : n ≤ j + 3) (hs : IsEnv val
   H.fact.mpr ⟨by have := H.le; omega, H.env_le hn hs, H.env_le (by omega) hd, hv, ⟨n, hn, hs⟩,
     ⟨k, hk, hd⟩, h⟩
 
-lemma isCertificate₁ [Tarski.Structure.Eq L S] {A : ArithmeticSemisentence 2}
-    (hA : ∀ p ≤ j, ∀ w ≤ j, ℕ ⊧/![p, w] A → ∃ σ : Sentence L, encode σ = p ∧ S↓[L] ⊧ σ) :
+lemma isCertificate₁ [Tarski.Structure.Eq L V] {A : ArithmeticSemisentence 2}
+    (hA : ∀ p ≤ j, ∀ w ≤ j, ℕ ⊧/![p, w] A → ∃ σ : Sentence L, encode σ = p ∧ V↓[L] ⊧ σ) :
     IsCertificate₁ A (encode (Language.Eq.eq : L.Rel 2)) c j := by
   have hjB := H.le
   have hBc := H.lt
@@ -473,7 +473,7 @@ lemma isCertificate₃ (hval : IsNaming L val) : IsCertificate₃ c := by
     have hp := nat_isNode_iff.mp hp
     obtain ⟨φ₁, φ₂, rfl, rfl, rfl⟩ := Semiformula.exists_eq_and_of_encode_eq hp
     have := le_pair (k := ORingStructure.numeral 4) (q := encode φ₁) (r := encode φ₂)
-    have hφ : S ⊧/(val ∘ v) φ₁ ∧ S ⊧/(val ∘ v) φ₂ := by simpa using hφ
+    have hφ : V ⊧/(val ∘ v) φ₁ ∧ V ⊧/(val ∘ v) φ₂ := by simpa using hφ
     exact ⟨H.sat (by omega) hv hφ.1, H.sat (by omega) hv hφ.2⟩
   · intro p _ x _ q _ r _ s _ hp hx h
     obtain rfl := nat_eval_pairDef.mp hx
@@ -481,7 +481,7 @@ lemma isCertificate₃ (hval : IsNaming L val) : IsCertificate₃ c := by
     have hp := nat_isNode_iff.mp hp
     obtain ⟨φ₁, φ₂, rfl, rfl, rfl⟩ := Semiformula.exists_eq_or_of_encode_eq hp
     have := le_pair (k := ORingStructure.numeral 5) (q := encode φ₁) (r := encode φ₂)
-    have hφ : S ⊧/(val ∘ v) φ₁ ∨ S ⊧/(val ∘ v) φ₂ := by simpa using hφ
+    have hφ : V ⊧/(val ∘ v) φ₁ ∨ V ⊧/(val ∘ v) φ₂ := by simpa using hφ
     exact hφ.imp (H.sat (by omega) hv) (H.sat (by omega) hv)
   · intro p _ q _ s _ a _ hp h ha
     obtain ⟨-, -, -, ha, -⟩ := H.fact.mp ha
@@ -489,7 +489,7 @@ lemma isCertificate₃ (hval : IsNaming L val) : IsCertificate₃ c := by
     have hp := nat_isNode_iff.mp hp
     obtain ⟨φ, rfl, rfl⟩ := Semiformula.exists_eq_all_of_encode_eq hp
     have := Nat.right_le_pair (ORingStructure.numeral 6) (encode φ)
-    have hφ : ∀ x, S ⊧/(x :> val ∘ v) φ := by simpa using hφ
+    have hφ : ∀ x, V ⊧/(x :> val ∘ v) φ := by simpa using hφ
     rw [← envCode_cons]
     apply H.sat (by omega)
     · simpa [Fin.forall_fin_succ] using ⟨ha, hv⟩
@@ -543,10 +543,10 @@ lemma isCertificate₃ (hval : IsNaming L val) : IsCertificate₃ c := by
 
 end IsModelCode
 
-lemma exists_isCertificate [Tarski.Structure.Eq L S] [Finite S] (A : ArithmeticSemisentence 2)
-    (j : ℕ) (hA : ∀ p ≤ j, ∀ w ≤ j, ℕ ⊧/![p, w] A → ∃ σ : Sentence L, encode σ = p ∧ S↓[L] ⊧ σ) :
+lemma exists_isCertificate [Tarski.Structure.Eq L V] [Finite V] (A : ArithmeticSemisentence 2)
+    (j : ℕ) (hA : ∀ p ≤ j, ∀ w ≤ j, ℕ ⊧/![p, w] A → ∃ σ : Sentence L, encode σ = p ∧ V↓[L] ⊧ σ) :
     ∃ c : ℕ, IsCertificate A (encode (Language.Eq.eq : L.Rel 2)) c j := by
-  obtain ⟨val, hval⟩ := exists_isNaming L S
+  obtain ⟨val, hval⟩ := exists_isNaming L V
   obtain ⟨B, c, H⟩ := exists_isModelCode (L := L) val j
   exact ⟨c, H.isCertificate₁ hA, H.isCertificate₂ hval, H.isCertificate₃ hval⟩
 

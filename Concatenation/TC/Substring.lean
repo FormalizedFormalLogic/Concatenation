@@ -19,7 +19,7 @@ open DirectTranslation
 
 section substring
 
-variable {M : Type*} [ConcatenationStructure M] [M↓[ℒ⌢] ⊧* 𝗧𝗖] {c c' d t u v x y y' z : M}
+variable {V : Type*} [ConcatenationStructure V] [V↓[ℒ⌢] ⊧* 𝗧𝗖] {c c' d t u v x y y' z : V}
 
 lemma isSubstring_iff : IsSubstring x y ↔ x = y ∨ (∃ u, y = u ++ x) ∨ (∃ v, y = x ++ v) ∨
     ∃ u v, y = u ++ x ++ v := by
@@ -88,13 +88,13 @@ lemma IsAtom.eq_of_isSubstring (hc : IsAtom c) (h : IsSubstring x c) : x = c := 
 
 lemma isTally_self (hc : IsAtom c) : IsTally c c := fun _ _ h ↦ hc.eq_of_isSubstring h
 
-lemma not_isTally_one_zero : ¬IsTally (1 : M) 0 := fun h ↦
+lemma not_isTally_one_zero : ¬IsTally (1 : V) 0 := fun h ↦
   Concatenation.zero_ne_one <| h 0 isAtom_zero (IsSubstring.refl _)
 
-lemma not_isTally_zero_one : ¬IsTally (0 : M) 1 := fun h ↦
+lemma not_isTally_zero_one : ¬IsTally (0 : V) 1 := fun h ↦
   Concatenation.zero_ne_one (h 1 isAtom_one (IsSubstring.refl _)).symm
 
-lemma isTally_one_one : IsTally (1 : M) 1 := isTally_self isAtom_one
+lemma isTally_one_one : IsTally (1 : V) 1 := isTally_self isAtom_one
 
 lemma IsTally.of_isSubstring (hx : IsTally c x) (h : IsSubstring y x) : IsTally c y :=
   fun z hz hzy ↦ hx z hz (hzy.trans h)
@@ -120,7 +120,7 @@ lemma IsTally.ne_zero_append_zero (hx : IsTally 1 x) : x ≠ 0 ++ 0 := by
   rintro rfl
   exact hx.not_isSubstring_zero <| isSubstring_append_left 0 0
 
-lemma append_one_ne_zero_append_zero (x : M) : x ++ 1 ≠ 0 ++ 0 := fun h ↦
+lemma append_one_ne_zero_append_zero (x : V) : x ++ 1 ≠ 0 ++ 0 := fun h ↦
   Concatenation.zero_ne_one (isAtom_one.eq_of_append_eq_append isAtom_zero h).1.symm
 
 lemma IsSuffix.append_left (h : y ◧ x) : u ++ y ◧ x := by
@@ -161,7 +161,7 @@ lemma eq_and_eq_of_append_eq_append_isAtom (hc : IsAtom c) (hd : IsAtom d) (h : 
     x = c ∧ y = d := by
   rcases editor h with h | ⟨u, ⟨h, -⟩ | ⟨-, h⟩⟩ <;> grind
 
-lemma eq_zero_or_eq_zero_zero_of_isSubstring (h : IsSubstring t (0 ++ 0 : M)) :
+lemma eq_zero_or_eq_zero_zero_of_isSubstring (h : IsSubstring t (0 ++ 0 : V)) :
     t = 0 ∨ t = 0 ++ 0 := by
   rcases h.append_cases with h | h | ⟨t₁, t₂, rfl, h₁, h₂⟩
   · exact Or.inl <| isAtom_zero.eq_of_isSubstring h
@@ -181,10 +181,10 @@ lemma eq_of_isSuffix_isAtom_zero_zero (hc : IsAtom c) (h : c ++ 0 ++ 0 ◧ t) :
       · exact absurd h' isAtom_zero.ne_append
       · exact absurd h' hc.ne_append
 
-lemma isTally_zero_zero : IsTally (0 : M) (0 ++ 0) :=
+lemma isTally_zero_zero : IsTally (0 : V) (0 ++ 0) :=
   (isTally_self isAtom_zero).append (isTally_self isAtom_zero)
 
-lemma zero_zero_append_ne_zero_zero : (0 ++ 0 ++ x : M) ≠ 0 ++ 0 := by
+lemma zero_zero_append_ne_zero_zero : (0 ++ 0 ++ x : V) ≠ 0 ++ 0 := by
   intro h
   rcases editor h with ⟨h, -⟩ | ⟨u, ⟨h, -⟩ | ⟨-, h⟩⟩ <;> simp at h
 
@@ -196,27 +196,27 @@ lemma IsPrefix.of_append_left_isAtom (hc : IsAtom c) (h : c ++ x ◨ c ++ y) : x
 
 end substring
 
-lemma TC.infinite_of_models (M : Type*) [ConcatenationStructure M] [M↓[ℒ⌢] ⊧* 𝗧𝗖] : Infinite M :=
+lemma TC.infinite_of_models (V : Type*) [ConcatenationStructure V] [V↓[ℒ⌢] ⊧* 𝗧𝗖] : Infinite V :=
   not_finite_iff_infinite.mp fun _ ↦
     let ⟨x, hx⟩ := Finite.surjective_of_injective
-      (fun _ _ ↦ isAtom_zero.append_right_cancel : (· ++ (0 : M)).Injective) 0
+      (fun _ _ ↦ isAtom_zero.append_right_cancel : (· ++ (0 : V)).Injective) 0
     zero_ne_append x 0 hx.symm
 
 theorem TC.not_hasFiniteModel : ¬(𝗧𝗖 : ConcatenationTheory).HasFiniteModel := by
   intro h
-  obtain ⟨M, _, _, s, _, hM⟩ := h.exists_eq
-  obtain ⟨c, rfl⟩ := exists_eq_standardModel M s
-  exact not_finite_iff_infinite.mpr (TC.infinite_of_models M) inferInstance
+  obtain ⟨V, _, _, s, _, hV⟩ := h.exists_eq
+  obtain ⟨c, rfl⟩ := exists_eq_standardModel V s
+  exact not_finite_iff_infinite.mpr (TC.infinite_of_models V) inferInstance
 
 section thin
 
-variable {M : Type*} [ConcatenationStructure M] {x y : M}
+variable {V : Type*} [ConcatenationStructure V] {x y : V}
 
 /--
 `x` is an atom, or begins with an atom and ends with an atom.
 - [Gan09, §3]
 -/
-def IsBounded (x : M) : Prop :=
+def IsBounded (x : V) : Prop :=
   IsAtom x ∨ ((∃ c z, IsAtom c ∧ x = c ++ z) ∧ ∃ c z, IsAtom c ∧ x = z ++ c)
 
 /--
@@ -226,10 +226,10 @@ def IsBounded (x : M) : Prop :=
 def isBounded : Semisentence ℒ⌢ 1 :=
   “x. !isAtom x ∨ ((∃ c z, !isAtom c ∧ x = c ⌢ z) ∧ (∃ c z, !isAtom c ∧ x = z ⌢ c))”
 
-instance isBounded_defined : ℒ⌢-predicate[M] IsBounded via isBounded :=
+instance isBounded_defined : ℒ⌢-predicate[V] IsBounded via isBounded :=
   ⟨fun v ↦ by simp [isBounded, IsBounded]⟩
 
-instance isBounded_definable : ℒ⌢-predicate[M] IsBounded := isBounded_defined.to_definable
+instance isBounded_definable : ℒ⌢-predicate[V] IsBounded := isBounded_defined.to_definable
 
 /--
 Every string is an atom, or begins with an atom and ends with an atom.
@@ -256,7 +256,7 @@ instance : 𝗘𝗤 ℒ⌢ ⪯ 𝗧𝗖⁺ :=
 `x` is thin: every substring of `x` is an atom, or begins with an atom and ends with an atom.
 - [Gan09, §3]
 -/
-def IsThin (x : M) : Prop := ∀ y, IsSubstring y x → IsBounded y
+def IsThin (x : V) : Prop := ∀ y, IsSubstring y x → IsBounded y
 
 /--
 `x` is thin: every substring of `x` is an atom, or begins with an atom and ends with an atom.
@@ -264,15 +264,15 @@ def IsThin (x : M) : Prop := ∀ y, IsSubstring y x → IsBounded y
 -/
 def isThin : Semisentence ℒ⌢ 1 := “x. ∀ y, !isSubstring y x → !isBounded y”
 
-instance isThin_defined : ℒ⌢-predicate[M] IsThin via isThin := ⟨fun v ↦ by simp [isThin, IsThin]⟩
+instance isThin_defined : ℒ⌢-predicate[V] IsThin via isThin := ⟨fun v ↦ by simp [isThin, IsThin]⟩
 
-instance isThin_definable : ℒ⌢-predicate[M] IsThin := isThin_defined.to_definable
+instance isThin_definable : ℒ⌢-predicate[V] IsThin := isThin_defined.to_definable
 
-lemma TCPlus.isBounded [M↓[ℒ⌢] ⊧* 𝗧𝗖⁺] (x : M) : IsBounded x := by
-  have := by simpa [models_iff, tc6] using Theory.models M _ (Set.mem_insert tc6 𝗧𝗖)
+lemma TCPlus.isBounded [V↓[ℒ⌢] ⊧* 𝗧𝗖⁺] (x : V) : IsBounded x := by
+  have := by simpa [models_iff, tc6] using Theory.models V _ (Set.mem_insert tc6 𝗧𝗖)
   exact this x
 
-instance [M↓[ℒ⌢] ⊧* 𝗧𝗖⁺] : M↓[ℒ⌢] ⊧* 𝗧𝗖 :=
+instance [V↓[ℒ⌢] ⊧* 𝗧𝗖⁺] : V↓[ℒ⌢] ⊧* 𝗧𝗖 :=
   models_of_ss (U := 𝗧𝗖⁺) inferInstance <| Set.subset_insert _ _
 
 lemma IsAtom.isBounded (h : IsAtom x) : IsBounded x := Or.inl h
@@ -281,7 +281,7 @@ lemma IsThin.isBounded (h : IsThin x) : IsBounded x := h x (IsSubstring.refl x)
 
 section TC
 
-variable [M↓[ℒ⌢] ⊧* 𝗧𝗖]
+variable [V↓[ℒ⌢] ⊧* 𝗧𝗖]
 
 lemma IsBounded.append (hx : IsBounded x) (hy : IsBounded y) : IsBounded (x ++ y) := by
   right
@@ -300,9 +300,9 @@ lemma IsThin.of_isSubstring (hx : IsThin x) (h : IsSubstring y x) : IsThin y :=
 
 lemma IsAtom.isThin (h : IsAtom x) : IsThin x := fun _ hy ↦ (h.eq_of_isSubstring hy ▸ h).isBounded
 
-lemma isThin_zero : IsThin (0 : M) := isAtom_zero.isThin
+lemma isThin_zero : IsThin (0 : V) := isAtom_zero.isThin
 
-lemma isThin_one : IsThin (1 : M) := isAtom_one.isThin
+lemma isThin_one : IsThin (1 : V) := isAtom_one.isThin
 
 /--
 The concatenation of thin strings is thin.
@@ -331,26 +331,26 @@ def thinTranslation : DirectTranslation 𝗧𝗖 ℒ⌢ where
   domain := ⟨isThin⟩
   rel R := ⟨Semiformula.rel R (#·)⟩
   func f := ⟨“z. z = !!(Semiterm.func f (#·.succ))”⟩
-  domain_nonempty := complete.{0} _ _ fun M _ _ ↦ (models_domainNonempty_iff _).mpr <| by
+  domain_nonempty := complete.{0} _ _ fun V _ _ ↦ (models_domainNonempty_iff _).mpr <| by
     use 0
     simpa [Semiformula.Operator.val] using isThin_zero
-  func_defined f := complete.{0} _ _ fun M _ _ ↦ (models_funcDefined_iff _ _).mpr <| by
+  func_defined f := complete.{0} _ _ fun V _ _ ↦ (models_funcDefined_iff _ _).mpr <| by
     intro e he
     have he (i) : IsThin (e i) := by simpa [Semiformula.Operator.val] using he i
     cases f
-    · suffices ∃! y : M, IsThin y ∧ y = 0 by
+    · suffices ∃! y : V, IsThin y ∧ y = 0 by
         simpa [Semiformula.Operator.val, Semiformula.Operator.Eq.sentence_eq]
       use 0
       simp [isThin_zero]
-    · suffices ∃! y : M, IsThin y ∧ y = 1 by
+    · suffices ∃! y : V, IsThin y ∧ y = 1 by
         simpa [Semiformula.Operator.val, Semiformula.Operator.Eq.sentence_eq]
       use 1
       simp [isThin_one]
-    · suffices ∃! y : M, IsThin y ∧ y = e 0 ++ e 1 by
+    · suffices ∃! y : V, IsThin y ∧ y = e 0 ++ e 1 by
         simpa [Semiformula.Operator.val, Semiformula.Operator.Eq.sentence_eq]
       use e 0 ++ e 1
       simp [(he 0).append (he 1)]
-  preserve_eq := complete.{0} _ _ fun M _ _ ↦ (models_preserveEq_iff _ _).mpr <| by
+  preserve_eq := complete.{0} _ _ fun V _ _ ↦ (models_preserveEq_iff _ _).mpr <| by
     simp [Semiformula.Operator.val]
 
 @[simp]
@@ -359,11 +359,11 @@ lemma thinTranslation_dom_iff : thinTranslation.Dom x ↔ IsThin x := by
 
 section model
 
-variable [M↓[ℒ⌢] ⊧* 𝗧𝗖]
+variable [V↓[ℒ⌢] ⊧* 𝗧𝗖]
 
-/-- The letters and the concatenation of `M` restricted to the thin strings. -/
+/-- The letters and the concatenation of `V` restricted to the thin strings. -/
 abbrev thinTranslation.concatenationStructure :
-    ConcatenationStructure (thinTranslation.Model M) where
+    ConcatenationStructure (thinTranslation.Model V) where
   zero := ⟨0, by simpa using isThin_zero⟩
   one := ⟨1, by simpa using isThin_one⟩
   append x y := ⟨x ++ y, by
@@ -374,7 +374,7 @@ The structure of the model of `thinTranslation` is the standard one of the lette
 concatenation restricted to the thin strings.
 -/
 lemma thinTranslation.struc_eq :
-    Model.struc thinTranslation M = @standardModel _ thinTranslation.concatenationStructure :=
+    Model.struc thinTranslation V = @standardModel _ thinTranslation.concatenationStructure :=
   Tarski.Structure.ext
     (funext₃ fun k f v ↦ by
       symm
@@ -390,20 +390,20 @@ section
 
 attribute [local instance] concatenationStructure
 
-variable {x y : M} {hx : thinTranslation.Dom x} {hy : thinTranslation.Dom y}
+variable {x y : V} {hx : thinTranslation.Dom x} {hy : thinTranslation.Dom y}
 
 @[simp]
-lemma zero_eq_mk : (0 : thinTranslation.Model M) = ⟨0, by simpa using isThin_zero⟩ := rfl
+lemma zero_eq_mk : (0 : thinTranslation.Model V) = ⟨0, by simpa using isThin_zero⟩ := rfl
 
 @[simp]
-lemma one_eq_mk : (1 : thinTranslation.Model M) = ⟨1, by simpa using isThin_one⟩ := rfl
+lemma one_eq_mk : (1 : thinTranslation.Model V) = ⟨1, by simpa using isThin_one⟩ := rfl
 
 @[simp]
-lemma mk_append_mk : (⟨x, hx⟩ ++ ⟨y, hy⟩ : thinTranslation.Model M) = ⟨x ++ y, by
+lemma mk_append_mk : (⟨x, hx⟩ ++ ⟨y, hy⟩ : thinTranslation.Model V) = ⟨x ++ y, by
     simpa using (thinTranslation_dom_iff.mp hx).append (thinTranslation_dom_iff.mp hy)⟩ := rfl
 
 @[simp]
-lemma isAtom_mk : IsAtom (⟨x, hx⟩ : thinTranslation.Model M) ↔ IsAtom x := by simp [IsAtom]
+lemma isAtom_mk : IsAtom (⟨x, hx⟩ : thinTranslation.Model V) ↔ IsAtom x := by simp [IsAtom]
 
 end
 
@@ -413,21 +413,21 @@ end thinTranslation
 The thin strings of a model of $\mathsf{TC}$ form a model of $\mathsf{TC}^+$.
 - [Gan09, §3, Lemma 6]
 -/
-instance : (thinTranslation.Model M)↓[ℒ⌢] ⊧* 𝗧𝗖⁺ := by
+instance : (thinTranslation.Model V)↓[ℒ⌢] ⊧* 𝗧𝗖⁺ := by
   rw [thinTranslation.struc_eq]
-  let := thinTranslation.concatenationStructure (M := M)
+  let := thinTranslation.concatenationStructure (V := V)
   constructor
   intro σ hσ
   rcases hσ with rfl | hσ
   · simpa [models_iff, tc6, Model.forall_iff, Model.exists_iff, IsBounded] using
-      fun (x : M) (hx : IsThin x) ↦ hx.isBounded.imp id fun ⟨⟨c, z, hc, h⟩, ⟨c', z', hc', h'⟩⟩ ↦
+      fun (x : V) (hx : IsThin x) ↦ hx.isBounded.imp id fun ⟨⟨c, z, hc, h⟩, ⟨c', z', hc', h'⟩⟩ ↦
         ⟨⟨c, hc, hc.isThin, z, hx.of_isSubstring <| by simp [h], h⟩,
           ⟨c', hc', hc'.isThin, z', hx.of_isSubstring <| by simp [h'], h'⟩⟩
   · cases hσ
     case equal hφ => exact models_theory_iff.mp inferInstance _ hφ
     case editor =>
       simpa [models_iff, Model.forall_iff, Model.exists_iff] using
-        fun (x : M) (hx : IsThin x) (y : M) (_ : IsThin y) (z : M) (hz : IsThin z) (w : M)
+        fun (x : V) (hx : IsThin x) (y : V) (_ : IsThin y) (z : V) (hz : IsThin z) (w : V)
           (_ : IsThin w) (h : x ++ y = z ++ w) ↦ (editor h).imp id fun ⟨u, hu⟩ ↦
             ⟨u, hu.elim (fun h ↦ hz.of_isSubstring <| by simp [← h.1])
               fun h ↦ hx.of_isSubstring <| by simp [h.1], hu⟩

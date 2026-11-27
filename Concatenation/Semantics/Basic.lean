@@ -16,7 +16,7 @@ the languages of concatenation, with the substrings, prefixes, suffixes and tall
 namespace FFL.FirstOrder
 
 /-- The value of a nonempty string whose letters have the values `f`, associated to the left. -/
-def Concatenation.stringValue {α M : Type*} [Append M] (f : α → M) (x : FreeSemigroup α) : M :=
+def Concatenation.stringValue {α V : Type*} [Append V] (f : α → V) (x : FreeSemigroup α) : V :=
   x.tail.foldl (fun m a ↦ m ++ f a) (f x.head)
 
 /-- A type with two letters `0`, `1` and a concatenation `++`. -/
@@ -62,12 +62,12 @@ def ofList : List Bool → α
 end ConcatenationEmptyStructure
 
 /-- A type with a letter for every element of `α` and a concatenation `++`. -/
-class LetterStructure (α : Type) (M : Type*) extends Append M where
-  ofLetter : α → M
+class LetterStructure (α : Type) (V : Type*) extends Append V where
+  ofLetter : α → V
 
 /-- The structure with two letters that the letters `a` and `b` give. -/
-abbrev LetterStructure.concatenationStructure {α : Type} {M : Type*} [LetterStructure α M]
-    (a b : α) : ConcatenationStructure M where
+abbrev LetterStructure.concatenationStructure {α : Type} {V : Type*} [LetterStructure α V]
+    (a b : α) : ConcatenationStructure V where
   zero := ofLetter a
   one := ofLetter b
 
@@ -77,9 +77,9 @@ open Language
 
 section semantics
 
-variable (M : Type*) [ConcatenationStructure M]
+variable (V : Type*) [ConcatenationStructure V]
 
-instance standardModel : Tarski.Structure ℒ⌢ M where
+instance standardModel : Tarski.Structure ℒ⌢ V where
   func := fun _ f ↦
     match f with
     | Concatenation.Func.zero => fun _ ↦ 0
@@ -89,17 +89,17 @@ instance standardModel : Tarski.Structure ℒ⌢ M where
     match r with
     | Concatenation.Rel.eq => fun v ↦ v 0 = v 1
 
-instance : Tarski.Structure.Eq ℒ⌢ M := ⟨fun _ _ ↦ iff_of_eq rfl⟩
+instance : Tarski.Structure.Eq ℒ⌢ V := ⟨fun _ _ ↦ iff_of_eq rfl⟩
 
-instance : Tarski.Structure.Zero ℒ⌢ M := ⟨rfl⟩
+instance : Tarski.Structure.Zero ℒ⌢ V := ⟨rfl⟩
 
-instance : Tarski.Structure.One ℒ⌢ M := ⟨rfl⟩
+instance : Tarski.Structure.One ℒ⌢ V := ⟨rfl⟩
 
-instance : Tarski.Structure.Concat ℒ⌢ M := ⟨fun _ _ ↦ rfl⟩
+instance : Tarski.Structure.Concat ℒ⌢ V := ⟨fun _ _ ↦ rfl⟩
 
-lemma standardModel_unique (s : Tarski.Structure ℒ⌢ M) [Tarski.Structure.Zero ℒ⌢ M]
-    [Tarski.Structure.One ℒ⌢ M] [Tarski.Structure.Concat ℒ⌢ M] [Tarski.Structure.Eq ℒ⌢ M] :
-    s = standardModel M :=
+lemma standardModel_unique (s : Tarski.Structure ℒ⌢ V) [Tarski.Structure.Zero ℒ⌢ V]
+    [Tarski.Structure.One ℒ⌢ V] [Tarski.Structure.Concat ℒ⌢ V] [Tarski.Structure.Eq ℒ⌢ V] :
+    s = standardModel V :=
   Tarski.Structure.ext
     (funext₃ fun k f _ ↦
       match k, f with
@@ -110,8 +110,8 @@ lemma standardModel_unique (s : Tarski.Structure ℒ⌢ M) [Tarski.Structure.Zer
       match k, r with
       | _, Language.Eq.eq => by simp)
 
-variable {M} in
-lemma standardModel_ofEquiv {α : Type*} (e : α ≃ M) :
+variable {V} in
+lemma standardModel_ofEquiv {α : Type*} (e : α ≃ V) :
     @standardModel α (.ofEquiv e) = Tarski.Structure.ofEquiv e.symm :=
   Tarski.Structure.ext
     (funext₃ fun k f v ↦ by cases f <;> rfl)
@@ -122,24 +122,24 @@ lemma standardModel_ofEquiv {α : Type*} (e : α ≃ M) :
 end semantics
 
 /-- Every structure with equality is the one of two letters and a concatenation. -/
-lemma exists_eq_standardModel (M : Type*) [Nonempty M] (s : Tarski.Structure ℒ⌢ M)
-    [Tarski.Structure.Eq ℒ⌢ M] : ∃ c : ConcatenationStructure M, s = @standardModel M c := by
-  let c : ConcatenationStructure M :=
+lemma exists_eq_standardModel (V : Type*) [Nonempty V] (s : Tarski.Structure ℒ⌢ V)
+    [Tarski.Structure.Eq ℒ⌢ V] : ∃ c : ConcatenationStructure V, s = @standardModel V c := by
+  let c : ConcatenationStructure V :=
     { zero := s.func Language.Zero.zero ![]
       one := s.func Language.One.one ![]
       append a b := s.func Language.Concat.concat ![a, b] }
-  have : Tarski.Structure.Zero ℒ⌢ M := ⟨by
+  have : Tarski.Structure.Zero ℒ⌢ V := ⟨by
     simp [Semiterm.Operator.val, Semiterm.Operator.Zero.term_eq, Matrix.empty_eq]; rfl⟩
-  have : Tarski.Structure.One ℒ⌢ M := ⟨by
+  have : Tarski.Structure.One ℒ⌢ V := ⟨by
     simp [Semiterm.Operator.val, Semiterm.Operator.One.term_eq, Matrix.empty_eq]; rfl⟩
-  have : Tarski.Structure.Concat ℒ⌢ M := ⟨fun a b ↦ rfl⟩
-  exact ⟨c, standardModel_unique M s⟩
+  have : Tarski.Structure.Concat ℒ⌢ V := ⟨fun a b ↦ rfl⟩
+  exact ⟨c, standardModel_unique V s⟩
 
 lemma complete (T : ConcatenationTheory) [𝗘𝗤 ℒ⌢ ⪯ T] (φ : ConcatenationSentence)
-    (H : ∀ (M : Type*) [ConcatenationStructure M] [M↓[ℒ⌢] ⊧* T], M↓[ℒ⌢] ⊧ φ) : T ⊢ φ :=
-  Theory.Proof.complete_on_eq_models φ fun M _ s _ hT ↦ by
-    obtain ⟨c, rfl⟩ := exists_eq_standardModel M s
-    exact H M
+    (H : ∀ (V : Type*) [ConcatenationStructure V] [V↓[ℒ⌢] ⊧* T], V↓[ℒ⌢] ⊧ φ) : T ⊢ φ :=
+  Theory.Proof.complete_on_eq_models φ fun V _ s _ hT ↦ by
+    obtain ⟨c, rfl⟩ := exists_eq_standardModel V s
+    exact H V
 
 lemma provable_iff_of_models_iff {T : ConcatenationTheory} [𝗘𝗤 ℒ⌢ ⪯ T] {n}
     {φ ψ : ConcatenationSemisentence n}
@@ -159,12 +159,12 @@ lemma models_iff_of_provable_iff {T : ConcatenationTheory} [𝗘𝗤 ℒ⌢ ⪯ 
   simpa using h' e
 
 lemma weakerThan_of_models (T S : ConcatenationTheory) [𝗘𝗤 ℒ⌢ ⪯ S]
-    (H : ∀ (M : Type*) [ConcatenationStructure M] [M↓[ℒ⌢] ⊧* S], M↓[ℒ⌢] ⊧* T) : T ⪯ S :=
-  Entailment.weakerThan_iff.mpr fun h ↦ complete _ _ fun M _ _ ↦ Theory.Proof.sound h (H M)
+    (H : ∀ (V : Type*) [ConcatenationStructure V] [V↓[ℒ⌢] ⊧* S], V↓[ℒ⌢] ⊧* T) : T ⪯ S :=
+  Entailment.weakerThan_iff.mpr fun h ↦ complete _ _ fun V _ _ ↦ Theory.Proof.sound h (H V)
 
 @[simp]
-lemma val_stringTerm {L : Language} [L.Concat] {α ξ M : Type*} {n : ℕ} [Tarski.Structure L M]
-    [Append M] [Tarski.Structure.Concat L M] {e : Fin n → M} {ε : ξ → M}
+lemma val_stringTerm {L : Language} [L.Concat] {α ξ V : Type*} {n : ℕ} [Tarski.Structure L V]
+    [Append V] [Tarski.Structure.Concat L V] {e : Fin n → V} {ε : ξ → V}
     (f : α → Semiterm L ξ n) (x : FreeSemigroup α) :
     (stringTerm f x).val e ε = stringValue (fun a ↦ (f a).val e ε) x := by
   suffices ∀ (l : List α) (t : Semiterm L ξ n), (l.foldl (fun t a ↦ ‘!!t ⌢ !!(f a)’) t).val e ε =
@@ -174,14 +174,14 @@ lemma val_stringTerm {L : Language} [L.Concat] {α ξ M : Type*} {n : ℕ} [Tars
   | nil => simp
   | cons a l ih => simp [ih]
 
-lemma map_stringValue {α M N : Type*} [Append M] [Append N] (g : M → N)
-    (hg : ∀ x y, g (x ++ y) = g x ++ g y) (f : α → M) (x : FreeSemigroup α) :
+lemma map_stringValue {α V W : Type*} [Append V] [Append W] (g : V → W)
+    (hg : ∀ x y, g (x ++ y) = g x ++ g y) (f : α → V) (x : FreeSemigroup α) :
     g (stringValue f x) = stringValue (g ∘ f) x :=
   (List.foldl_hom g fun m a ↦ (hg m (f a)).symm).symm
 
 section eval
 
-variable {M : Type*} [ConcatenationStructure M] {ξ : Type*} {n : ℕ} {e : Fin n → M} {ε : ξ → M}
+variable {V : Type*} [ConcatenationStructure V] {ξ : Type*} {n : ℕ} {e : Fin n → V} {ε : ξ → V}
 
 @[simp]
 lemma val_letter (b : Bool) : (letter b : Semiterm ℒ⌢ ξ n).val e ε = if b then 1 else 0 := by
@@ -193,73 +193,73 @@ lemma val_biteral (x : FreeSemigroup Bool) :
   simp [biteral, ConcatenationStructure.ofFreeSemigroup]
 
 instance isOneOf_defined {l : List (FreeSemigroup Bool)} :
-    ℒ⌢-predicate[M] (fun x ↦ ∃ γ ∈ l, x = ConcatenationStructure.ofFreeSemigroup γ) via isOneOf l :=
+    ℒ⌢-predicate[V] (fun x ↦ ∃ γ ∈ l, x = ConcatenationStructure.ofFreeSemigroup γ) via isOneOf l :=
   ⟨fun v ↦ by simp [isOneOf]⟩
 
 instance isOneOf_definable {l : List (FreeSemigroup Bool)} :
-    ℒ⌢-predicate[M] (fun x ↦ ∃ γ ∈ l, x = ConcatenationStructure.ofFreeSemigroup γ) :=
+    ℒ⌢-predicate[V] (fun x ↦ ∃ γ ∈ l, x = ConcatenationStructure.ofFreeSemigroup γ) :=
   isOneOf_defined.to_definable
 
 end eval
 
 section isSubstring
 
-variable {M : Type*} [Append M] {x y : M}
+variable {V : Type*} [Append V] {x y : V}
 
 /--
 `x` is a substring of `y`. Both associations of `u ++ x ++ v` are listed, so that the relation is
 the one `isSubstring` defines in any structure with a concatenation.
 - [Gan09, §1, Definition 1]
 -/
-def IsSubstring (x y : M) : Prop :=
+def IsSubstring (x y : V) : Prop :=
   x = y ∨ (∃ u, y = u ++ x) ∨ (∃ v, y = x ++ v) ∨ (∃ u v, y = (u ++ x) ++ v) ∨
     ∃ u v, y = u ++ (x ++ v)
 
-lemma IsSubstring.map {N : Type*} [Append N] (g : M → N) (hg : ∀ x y, g (x ++ y) = g x ++ g y)
+lemma IsSubstring.map {W : Type*} [Append W] (g : V → W) (hg : ∀ x y, g (x ++ y) = g x ++ g y)
     (h : IsSubstring x y) : IsSubstring (g x) (g y) := by
   grind [IsSubstring]
 
 /-- A property that passes from a concatenation to its parts passes to substrings. -/
-lemma IsSubstring.of_forall_append {P : M → Prop} (hP : ∀ x y, P (x ++ y) → P x ∧ P y)
+lemma IsSubstring.of_forall_append {P : V → Prop} (hP : ∀ x y, P (x ++ y) → P x ∧ P y)
     (h : IsSubstring x y) (hy : P y) : P x := by
   grind [IsSubstring]
 
-instance isSubstring_defined {L : Language} [L.Concat] [L.Eq] [Tarski.Structure L M]
-    [Tarski.Structure.Concat L M] [Tarski.Structure.Eq L M] :
-    L-relation[M] IsSubstring via isSubstring := ⟨fun v ↦ by
-  have : Nonempty M := ⟨v 0⟩
+instance isSubstring_defined {L : Language} [L.Concat] [L.Eq] [Tarski.Structure L V]
+    [Tarski.Structure.Concat L V] [Tarski.Structure.Eq L V] :
+    L-relation[V] IsSubstring via isSubstring := ⟨fun v ↦ by
+  have : Nonempty V := ⟨v 0⟩
   simp [isSubstring, IsSubstring, exists_or, eq_comm (b := v 1)]⟩
 
-instance isSubstring_definable {L : Language} [L.Concat] [L.Eq] [Tarski.Structure L M]
-    [Tarski.Structure.Concat L M] [Tarski.Structure.Eq L M] : L-relation[M] IsSubstring :=
+instance isSubstring_definable {L : Language} [L.Concat] [L.Eq] [Tarski.Structure L V]
+    [Tarski.Structure.Concat L V] [Tarski.Structure.Eq L V] : L-relation[V] IsSubstring :=
   isSubstring_defined.to_definable
 
 end isSubstring
 
 section substring
 
-variable {M : Type*} [ConcatenationStructure M] {c x y : M}
+variable {V : Type*} [ConcatenationStructure V] {c x y : V}
 
 @[simp]
-lemma val_substringOperator {v : Fin 2 → M} :
+lemma val_substringOperator {v : Fin 2 → V} :
     (substringOperator ℒ⌢).val v ↔ IsSubstring (v 0) (v 1) := by
   simp [substringOperator, Semiformula.Operator.val]
 
 /-- `x` is one of the letters `0` and `1`. -/
-def IsAtom (x : M) : Prop := x = 0 ∨ x = 1
+def IsAtom (x : V) : Prop := x = 0 ∨ x = 1
 
 /-- `x` is one of the letters `0` and `1`. -/
 def isAtom : Semisentence ℒ⌢ 1 := “x. x = !!(op(0).const) ∨ x = !!(op(1).const)”
 
-instance isAtom_defined : ℒ⌢-predicate[M] IsAtom via isAtom := ⟨fun v ↦ by simp [isAtom, IsAtom]⟩
+instance isAtom_defined : ℒ⌢-predicate[V] IsAtom via isAtom := ⟨fun v ↦ by simp [isAtom, IsAtom]⟩
 
-instance isAtom_definable : ℒ⌢-predicate[M] IsAtom := isAtom_defined.to_definable
+instance isAtom_definable : ℒ⌢-predicate[V] IsAtom := isAtom_defined.to_definable
 
 /--
 `x` is a prefix of `y`.
 - [Gan09, §1, Definition 1]
 -/
-def IsPrefix (x y : M) : Prop := x = y ∨ ∃ v, y = x ++ v
+def IsPrefix (x y : V) : Prop := x = y ∨ ∃ v, y = x ++ v
 
 /-- `x ◨ y`: `x` is a prefix of `y`. -/
 scoped infix:50 " ◨ " => IsPrefix
@@ -267,16 +267,16 @@ scoped infix:50 " ◨ " => IsPrefix
 /-- `x` is a prefix of `y`. -/
 def isPrefix : Semisentence ℒ⌢ 2 := “x y. x = y ∨ ∃ v, y = x ⌢ v”
 
-instance isPrefix_defined : ℒ⌢-relation[M] IsPrefix via isPrefix :=
+instance isPrefix_defined : ℒ⌢-relation[V] IsPrefix via isPrefix :=
   ⟨fun v ↦ by simp [isPrefix, IsPrefix]⟩
 
-instance isPrefix_definable : ℒ⌢-relation[M] IsPrefix := isPrefix_defined.to_definable
+instance isPrefix_definable : ℒ⌢-relation[V] IsPrefix := isPrefix_defined.to_definable
 
 /--
 `x` is a suffix of `y`.
 - [Gan09, §1, Definition 1]
 -/
-def IsSuffix (x y : M) : Prop := x = y ∨ ∃ u, y = u ++ x
+def IsSuffix (x y : V) : Prop := x = y ∨ ∃ u, y = u ++ x
 
 /-- `x ◧ y`: `y` is a suffix of `x`. -/
 scoped notation:50 x:51 " ◧ " y:51 => IsSuffix y x
@@ -284,58 +284,58 @@ scoped notation:50 x:51 " ◧ " y:51 => IsSuffix y x
 /-- `x` is a suffix of `y`. -/
 def isSuffix : Semisentence ℒ⌢ 2 := “x y. x = y ∨ ∃ u, y = u ⌢ x”
 
-instance isSuffix_defined : ℒ⌢-relation[M] IsSuffix via isSuffix :=
+instance isSuffix_defined : ℒ⌢-relation[V] IsSuffix via isSuffix :=
   ⟨fun v ↦ by simp [isSuffix, IsSuffix]⟩
 
-instance isSuffix_definable : ℒ⌢-relation[M] IsSuffix := isSuffix_defined.to_definable
+instance isSuffix_definable : ℒ⌢-relation[V] IsSuffix := isSuffix_defined.to_definable
 
 /--
 `x` is a `c`-tally: every atom that is a substring of `x` is `c`.
 - [Gan09, §1, Definition 1]
 -/
-def IsTally (c x : M) : Prop := ∀ y, IsAtom y → IsSubstring y x → y = c
+def IsTally (c x : V) : Prop := ∀ y, IsAtom y → IsSubstring y x → y = c
 
 /-- `x` is a `c`-tally. -/
 def isTally : Semisentence ℒ⌢ 2 := “c x. ∀ y, !isAtom y → !isSubstring y x → y = c”
 
-instance isTally_defined : ℒ⌢-relation[M] IsTally via isTally :=
+instance isTally_defined : ℒ⌢-relation[V] IsTally via isTally :=
   ⟨fun v ↦ by simp [isTally, IsTally]⟩
 
-instance isTally_definable : ℒ⌢-relation[M] IsTally := isTally_defined.to_definable
+instance isTally_definable : ℒ⌢-relation[V] IsTally := isTally_defined.to_definable
 
 @[simp]
-lemma isAtom_zero : IsAtom (0 : M) := Or.inl rfl
+lemma isAtom_zero : IsAtom (0 : V) := Or.inl rfl
 
 @[simp]
-lemma isAtom_one : IsAtom (1 : M) := Or.inr rfl
+lemma isAtom_one : IsAtom (1 : V) := Or.inr rfl
 
 @[refl, simp]
-lemma IsSubstring.refl (x : M) : IsSubstring x x := Or.inl rfl
+lemma IsSubstring.refl (x : V) : IsSubstring x x := Or.inl rfl
 
 @[simp]
-lemma isSubstring_append_left (x y : M) : IsSubstring x (x ++ y) := by
+lemma isSubstring_append_left (x y : V) : IsSubstring x (x ++ y) := by
   right; right; left; use y
 
 @[simp]
-lemma isSubstring_append_right (x y : M) : IsSubstring y (x ++ y) := by
+lemma isSubstring_append_right (x y : V) : IsSubstring y (x ++ y) := by
   right; left; use x
 
 @[simp]
-lemma isSubstring_append_append (u x v : M) : IsSubstring x (u ++ x ++ v) := by
+lemma isSubstring_append_append (u x v : V) : IsSubstring x (u ++ x ++ v) := by
   right; right; right; left; use u, v
 
 @[refl, simp]
-lemma IsPrefix.refl (x : M) : x ◨ x := Or.inl rfl
+lemma IsPrefix.refl (x : V) : x ◨ x := Or.inl rfl
 
 @[simp]
-lemma isPrefix_append (x y : M) : x ◨ x ++ y := by
+lemma isPrefix_append (x y : V) : x ◨ x ++ y := by
   right; use y
 
 @[refl, simp]
-lemma IsSuffix.refl (x : M) : x ◧ x := Or.inl rfl
+lemma IsSuffix.refl (x : V) : x ◧ x := Or.inl rfl
 
 @[simp]
-lemma isSuffix_append (x y : M) : x ++ y ◧ y := by
+lemma isSuffix_append (x y : V) : x ++ y ◧ y := by
   right; use x
 
 lemma IsPrefix.isSubstring (h : x ◨ y) : IsSubstring x y := by
@@ -364,7 +364,7 @@ lemma stringValue_of {α : Type*} (x : FreeSemigroup α) : stringValue FreeSemig
     simp [FreeSemigroup.of, HMul.hMul, Mul.mul]
 
 /-- The only map from the strings that respects concatenation and sends the letters to `f`. -/
-lemma stringValue_eq_of_map_append {α M : Type*} [Append M] {f : α → M} {c : FreeSemigroup α → M}
+lemma stringValue_eq_of_map_append {α V : Type*} [Append V] {f : α → V} {c : FreeSemigroup α → V}
     (hf : ∀ a, c (FreeSemigroup.of a) = f a) (hc : ∀ x y, c (x ++ y) = c x ++ c y)
     (x : FreeSemigroup α) : stringValue f x = c x := by
   rw [← funext hf, ← stringValue_of x, ← Function.comp_def, ← map_stringValue c hc, stringValue_of,
@@ -391,16 +391,16 @@ section ofFreeSemigroup
 
 open ConcatenationStructure
 
-variable {M : Type*} [ConcatenationStructure M] {c : FreeSemigroup Bool}
+variable {V : Type*} [ConcatenationStructure V] {c : FreeSemigroup Bool}
 
 @[simp]
-lemma ofFreeSemigroup_zero : (ofFreeSemigroup (0 : FreeSemigroup Bool) : M) = 0 := rfl
+lemma ofFreeSemigroup_zero : (ofFreeSemigroup (0 : FreeSemigroup Bool) : V) = 0 := rfl
 
 @[simp]
-lemma ofFreeSemigroup_one : (ofFreeSemigroup (1 : FreeSemigroup Bool) : M) = 1 := rfl
+lemma ofFreeSemigroup_one : (ofFreeSemigroup (1 : FreeSemigroup Bool) : V) = 1 := rfl
 
 lemma ofFreeSemigroup_append_of_isAtom (u : FreeSemigroup Bool) (hc : IsAtom c) :
-    (ofFreeSemigroup (u ++ c) : M) = ofFreeSemigroup u ++ ofFreeSemigroup c := by
+    (ofFreeSemigroup (u ++ c) : V) = ofFreeSemigroup u ++ ofFreeSemigroup c := by
   rcases hc with rfl | rfl <;>
     simp [ofFreeSemigroup, stringValue, HMul.hMul, Mul.mul, zero_eq_of_false, one_eq_of_true,
       FreeSemigroup.of]
@@ -419,9 +419,9 @@ end ofFreeSemigroup
 
 section semantics
 
-variable (M : Type*) [ConcatenationEmptyStructure M]
+variable (V : Type*) [ConcatenationEmptyStructure V]
 
-instance standardModelEmpty : Tarski.Structure ℒ⌢ₑ M where
+instance standardModelEmpty : Tarski.Structure ℒ⌢ₑ V where
   func := fun _ f ↦
     match f with
     | Sum.inl Concatenation.Func.zero => fun _ ↦ 0
@@ -432,20 +432,20 @@ instance standardModelEmpty : Tarski.Structure ℒ⌢ₑ M where
     match r with
     | Sum.inl Concatenation.Rel.eq => fun v ↦ v 0 = v 1
 
-instance : Tarski.Structure.Eq ℒ⌢ₑ M := ⟨fun _ _ ↦ iff_of_eq rfl⟩
+instance : Tarski.Structure.Eq ℒ⌢ₑ V := ⟨fun _ _ ↦ iff_of_eq rfl⟩
 
-instance : Tarski.Structure.Zero ℒ⌢ₑ M := ⟨rfl⟩
+instance : Tarski.Structure.Zero ℒ⌢ₑ V := ⟨rfl⟩
 
-instance : Tarski.Structure.One ℒ⌢ₑ M := ⟨rfl⟩
+instance : Tarski.Structure.One ℒ⌢ₑ V := ⟨rfl⟩
 
-instance : Tarski.Structure.Concat ℒ⌢ₑ M := ⟨fun _ _ ↦ rfl⟩
+instance : Tarski.Structure.Concat ℒ⌢ₑ V := ⟨fun _ _ ↦ rfl⟩
 
-variable {M}
+variable {V}
 
 @[simp]
-lemma val_star : (Semiterm.Operator.Star.star : Semiterm.Operator ℒ⌢ₑ 0).val ![] = (∅ : M) := rfl
+lemma val_star : (Semiterm.Operator.Star.star : Semiterm.Operator ℒ⌢ₑ 0).val ![] = (∅ : V) := rfl
 
-lemma standardModelEmpty_ofEquiv {α : Type*} (e : α ≃ M) :
+lemma standardModelEmpty_ofEquiv {α : Type*} (e : α ≃ V) :
     @standardModelEmpty α (.ofEquiv e) = Tarski.Structure.ofEquiv e.symm :=
   Tarski.Structure.ext
     (funext₃ fun k f v ↦ by rcases f with (_ | _ | _) | ⟨⟨⟩⟩ <;> rfl)
@@ -459,8 +459,8 @@ section eval
 
 open ConcatenationStructure ConcatenationEmptyStructure
 
-variable {M : Type*} [ConcatenationEmptyStructure M] {ξ : Type*} {n : ℕ} {e : Fin n → M} {ε : ξ → M}
-  {x y : M}
+variable {V : Type*} [ConcatenationEmptyStructure V] {ξ : Type*} {n : ℕ} {e : Fin n → V} {ε : ξ → V}
+  {x y : V}
 
 lemma val_biteral_empty (u : FreeSemigroup Bool) :
     (biteral u : Semiterm ℒ⌢ₑ ξ n).val e ε = ofFreeSemigroup u := by
@@ -489,36 +489,36 @@ instance : ConcatenationEmptyStructure (List Bool) where
   zero := [false]
   one := [true]
 
-variable {M : Type*} [ConcatenationEmptyStructure M] {u : List Bool}
+variable {V : Type*} [ConcatenationEmptyStructure V] {u : List Bool}
 
 @[simp]
-lemma ofList_nil : (ofList [] : M) = ∅ := rfl
+lemma ofList_nil : (ofList [] : V) = ∅ := rfl
 
 @[simp]
-lemma ofList_false : (ofList [false] : M) = 0 := rfl
+lemma ofList_false : (ofList [false] : V) = 0 := rfl
 
 @[simp]
-lemma ofList_true : (ofList [true] : M) = 1 := rfl
+lemma ofList_true : (ofList [true] : V) = 1 := rfl
 
 lemma ofList_append_singleton (hu : u ≠ []) (b : Bool) :
-    (ofList (u ++ [b]) : M) = ofList u ++ ofList [b] := by
+    (ofList (u ++ [b]) : V) = ofList u ++ ofList [b] := by
   cases u <;> simp_all [ofList, ofFreeSemigroup, stringValue]
 
 @[simp]
-lemma isAtom_ofList_singleton (b : Bool) : IsAtom (ofList [b] : M) := by
+lemma isAtom_ofList_singleton (b : Bool) : IsAtom (ofList [b] : V) := by
   cases b <;> simp
 
 end ofList
 
 lemma completeEmpty (T : Theory ℒ⌢ₑ) [𝗘𝗤 ℒ⌢ₑ ⪯ T] (φ : Sentence ℒ⌢ₑ)
-    (H : ∀ (M : Type*) [ConcatenationEmptyStructure M] [M↓[ℒ⌢ₑ] ⊧* T], M↓[ℒ⌢ₑ] ⊧ φ) : T ⊢ φ :=
-  Theory.Proof.complete_on_eq_models φ fun M _ s _ hT ↦ by
-    let c : ConcatenationEmptyStructure M :=
+    (H : ∀ (V : Type*) [ConcatenationEmptyStructure V] [V↓[ℒ⌢ₑ] ⊧* T], V↓[ℒ⌢ₑ] ⊧ φ) : T ⊢ φ :=
+  Theory.Proof.complete_on_eq_models φ fun V _ s _ hT ↦ by
+    let c : ConcatenationEmptyStructure V :=
       { zero := s.func (Sum.inl Concatenation.Func.zero) ![]
         one := s.func (Sum.inl Concatenation.Func.one) ![]
         append a b := s.func (Sum.inl Concatenation.Func.concat) ![a, b]
         emptyCollection := s.func (Sum.inr <| Constant.Func.const ⟨⟩) ![] }
-    have e : s = standardModelEmpty M :=
+    have e : s = standardModelEmpty V :=
       Tarski.Structure.ext
         (funext₃ fun k f v ↦
           match k, f with
@@ -529,13 +529,13 @@ lemma completeEmpty (T : Theory ℒ⌢ₑ) [𝗘𝗤 ℒ⌢ₑ ⪯ T] (φ : Sent
         (funext₃ fun k r v ↦
           match k, r with
           | _, Sum.inl Concatenation.Rel.eq =>
-            (Tarski.Structure.eq_lang (L := ℒ⌢ₑ) (M := M) (v := v)).eq)
+            (Tarski.Structure.eq_lang (L := ℒ⌢ₑ) (M := V) (v := v)).eq)
     rw [e] at hT ⊢
-    exact H M
+    exact H V
 
 lemma weakerThan_of_models_empty (T S : Theory ℒ⌢ₑ) [𝗘𝗤 ℒ⌢ₑ ⪯ S]
-    (H : ∀ (M : Type*) [ConcatenationEmptyStructure M] [M↓[ℒ⌢ₑ] ⊧* S], M↓[ℒ⌢ₑ] ⊧* T) : T ⪯ S :=
-  Entailment.weakerThan_iff.mpr fun h ↦ completeEmpty _ _ fun M _ _ ↦ Theory.Proof.sound h (H M)
+    (H : ∀ (V : Type*) [ConcatenationEmptyStructure V] [V↓[ℒ⌢ₑ] ⊧* S], V↓[ℒ⌢ₑ] ⊧* T) : T ⪯ S :=
+  Entailment.weakerThan_iff.mpr fun h ↦ completeEmpty _ _ fun V _ _ ↦ Theory.Proof.sound h (H V)
 
 section letters
 
@@ -548,9 +548,9 @@ def letterTerm {ξ : Type*} {n : ℕ} (a : α) : Semiterm ℒ⌢[α] ξ n := .fu
 
 section semantics
 
-variable (M : Type*) [LetterStructure α M]
+variable (V : Type*) [LetterStructure α V]
 
-instance lettersModel : Tarski.Structure ℒ⌢[α] M where
+instance lettersModel : Tarski.Structure ℒ⌢[α] V where
   func := fun _ f ↦
     match f with
     | .letter a => fun _ ↦ ofLetter a
@@ -559,26 +559,26 @@ instance lettersModel : Tarski.Structure ℒ⌢[α] M where
     match r with
     | .eq => fun v ↦ v 0 = v 1
 
-instance : Tarski.Structure.Eq ℒ⌢[α] M := ⟨fun _ _ ↦ iff_of_eq rfl⟩
+instance : Tarski.Structure.Eq ℒ⌢[α] V := ⟨fun _ _ ↦ iff_of_eq rfl⟩
 
-instance : Tarski.Structure.Concat ℒ⌢[α] M := ⟨fun _ _ ↦ rfl⟩
+instance : Tarski.Structure.Concat ℒ⌢[α] V := ⟨fun _ _ ↦ rfl⟩
 
-variable {M}
+variable {V}
 
 @[simp]
-lemma val_letterTerm {ξ : Type*} {n : ℕ} {e : Fin n → M} {ε : ξ → M} (a : α) :
+lemma val_letterTerm {ξ : Type*} {n : ℕ} {e : Fin n → V} {ε : ξ → V} (a : α) :
     (letterTerm a : Semiterm ℒ⌢[α] ξ n).val e ε = ofLetter a := rfl
 
 end semantics
 
 lemma completeLetters (T : Theory ℒ⌢[α]) [𝗘𝗤 ℒ⌢[α] ⪯ T] (φ : Sentence ℒ⌢[α])
-    (H : ∀ (M : Type*) [Nonempty M] [LetterStructure α M] [M↓[ℒ⌢[α]] ⊧* T], M↓[ℒ⌢[α]] ⊧ φ) :
+    (H : ∀ (V : Type*) [Nonempty V] [LetterStructure α V] [V↓[ℒ⌢[α]] ⊧* T], V↓[ℒ⌢[α]] ⊧ φ) :
     T ⊢ φ :=
-  Theory.Proof.complete_on_eq_models φ fun M _ s _ hT ↦ by
-    let c : LetterStructure α M :=
+  Theory.Proof.complete_on_eq_models φ fun V _ s _ hT ↦ by
+    let c : LetterStructure α V :=
       { ofLetter a := s.func (.letter a) ![]
         append x y := s.func .concat ![x, y] }
-    have e : s = lettersModel M :=
+    have e : s = lettersModel V :=
       Tarski.Structure.ext
         (funext₃ fun k f v ↦
           match k, f with
@@ -586,9 +586,9 @@ lemma completeLetters (T : Theory ℒ⌢[α]) [𝗘𝗤 ℒ⌢[α] ⪯ T] (φ : 
           | _, .concat => congrArg _ <| Matrix.fun_eq_vec_two v)
         (funext₃ fun k r v ↦
           match k, r with
-          | _, .eq => (Tarski.Structure.eq_lang (L := ℒ⌢[α]) (M := M) (v := v)).eq)
+          | _, .eq => (Tarski.Structure.eq_lang (L := ℒ⌢[α]) (M := V) (v := v)).eq)
     rw [e] at hT ⊢
-    exact H M
+    exact H V
 
 /-- The nonempty strings of the letters `α` under concatenation. -/
 instance : LetterStructure α (FreeSemigroup α) where

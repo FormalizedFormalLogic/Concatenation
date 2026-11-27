@@ -29,6 +29,7 @@ public import Concatenation.TC.TallyArithmetic
 public import Concatenation.TC.TallyMultiplication
 public import Concatenation.ToFoundation.Arithmetic.BijectiveBinary
 public import Concatenation.ToFoundation.Arithmetic.Pairing
+public import Concatenation.ToFoundation.Arithmetic.Peano
 public import Concatenation.ToFoundation.Arithmetic.PeanoMinus
 public import Concatenation.ToFoundation.Arithmetic.Q
 public import Concatenation.ToFoundation.Arithmetic.R

@@ -1,14 +1,18 @@
 module
 
 public import Concatenation.TC.ISigma
-public import Concatenation.ToFoundation.BoundingHierarchy
+public import Concatenation.TC.TallyArithmetic
+public import Concatenation.ToFoundation.Arithmetic.Peano
 
 /-!
-# $\mathsf{PA}$ interprets $\mathsf{TCI}$
+# $\mathsf{TCI}$ and $\mathsf{PA}$ are mutually interpretable
 
 The translation by the bijective binary numerals that interprets $\Sigma_n\text{-}\mathsf{TCI}$ in
 $\mathsf{I}\Sigma_n$ does not depend on `n`, and every formula lies in some level of the bounded
-hierarchy, so the same translation interprets $\mathsf{TCI}$ in $\mathsf{PA}$.
+hierarchy, so the same translation interprets $\mathsf{TCI}$ in $\mathsf{PA}$. Likewise the
+translation by the tallies that interprets $\mathsf{I}\Sigma_{n+1}$ in
+$\Sigma_{n+1}\text{-}\mathsf{TCI}$ does not depend on `n`, so it interprets $\mathsf{PA}$ in
+$\mathsf{TCI}$.
 -/
 
 @[expose] public section
@@ -48,5 +52,32 @@ noncomputable instance binaryInterpretationPA : 𝗣𝗔 ⊳ 𝗧𝗖𝗜 where
   trln := binaryTranslation 𝗣𝗔
   interpret_theory _ hφ := Arithmetic.complete.{0} _ _ fun _ _ _ ↦
     DirectTranslation.models_translate_of_mem hφ
+
+/--
+$\mathsf{TCI}$ interprets $\mathsf{PA}$ by the tallies.
+- [Gan09, §1]
+-/
+instance tallyInterpretationPA : 𝗧𝗖𝗜 ⊳ 𝗣𝗔 where
+  trln := (tallyTranslation 0).ofWeakerThan
+  interpret_theory _ hφ := completeEmpty.{0} _ _ fun V _ _ ↦ by
+    have : Nonempty V := ⟨∅⟩
+    have h (s : ℕ) : V↓[ℒ⌢ₑ] ⊧* TCISigma s := models_of_subtheory (U := 𝗧𝗖𝗜) inferInstance
+    have : V↓[ℒ⌢ₑ] ⊧* TCISigma 1 := h 1
+    have : (TallyNumber V)↓[ℒₒᵣ] ⊧* 𝗣𝗔 := models_Peano_of_models_ISigma fun s ↦
+      have : V↓[ℒ⌢ₑ] ⊧* TCISigma (s + 1) := h (s + 1)
+      have := TallyNumber.models_ISigma (V := V) s
+      mod_ISigma_of_le (Nat.le_succ s)
+    have : TallyNumber V ≡ₑ[ℒₒᵣ] (tallyTranslation 0).Model V := by
+      rw [tallyTranslation.struc_eq]
+      exact Tarski.Structure.ElementaryEquiv.ofEquiv _
+    have : ((tallyTranslation 0).Model V)↓[ℒₒᵣ] ⊧* 𝗣𝗔 :=
+      (Tarski.Structure.ElementaryEquiv.modelsTheory (M₁ := TallyNumber V)).mp inferInstance
+    simpa using DirectTranslation.models_translate_of_mem (τ := tallyTranslation 0) hφ
+
+/--
+$\mathsf{TCI}$ and $\mathsf{PA}$ are mutually interpretable.
+- [Gan09, §1]
+-/
+noncomputable instance : 𝗧𝗖𝗜 ⋈ 𝗣𝗔 := ⟨tallyInterpretationPA, binaryInterpretationPA⟩
 
 end FFL.FirstOrder.Concatenation

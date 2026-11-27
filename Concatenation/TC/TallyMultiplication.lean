@@ -47,6 +47,14 @@ lemma val_append (x y : NonemptyPart V) : (x ++ y).1 = x.1 ++ y.1 := rfl
 omit [V↓[ℒ⌢ₑ] ⊧* 𝗧𝗖ₑ] in
 lemma ext_iff' : x = y ↔ x.1 = y.1 := Subtype.ext_iff
 
+omit [V↓[ℒ⌢ₑ] ⊧* 𝗧𝗖ₑ] in
+lemma forall_iff {P : NonemptyPart V → Prop} : (∀ x, P x) ↔ ∀ x (hx : x ≠ ∅), P ⟨x, hx⟩ :=
+  Subtype.forall
+
+omit [V↓[ℒ⌢ₑ] ⊧* 𝗧𝗖ₑ] in
+lemma exists_iff {P : NonemptyPart V → Prop} : (∃ x, P x) ↔ ∃ x, ∃ hx : x ≠ ∅, P ⟨x, hx⟩ :=
+  Subtype.exists
+
 lemma isAtom_iff : IsAtom x ↔ IsAtom x.1 := by
   simp [IsAtom, ext_iff']
 
@@ -275,6 +283,111 @@ instance isPairSeqₑ_defined [V↓[ℒ⌢ₑ] ⊧* 𝗧𝗖ₑ] :
     𝚺-[ℬₛ, 0]-Predicate[V] IsPairSeqₑ via isPairSeqₑDef :=
   .mk fun v ↦ by simp [isPairSeqₑDef, IsPairSeqₑ, pairOf]
 
+/--
+`r` is a multiplication sequence for the nonempty `1`-tallies `x` and `y`.
+- [Gan09, §1, Definition 1(g)]
+- [Sve09, §3]
+-/
+def IsMulSeqₑ (x y r : V) : Prop :=
+  x ≠ ∅ ∧ y ≠ ∅ ∧ r ≠ ∅ ∧ IsTally 1 x ∧ IsTally 1 y ∧ IsPairSeqₑ r ∧
+    IsPrefix (0 ++ 0 ++ pairOf x 1 ++ 0 ++ 0) r ∧
+    (∃ w, IsSubstring w r ∧ w ≠ ∅ ∧ IsTally 1 w ∧ IsSuffix (0 ++ 0 ++ pairOf w y ++ 0 ++ 0) r) ∧
+    ∀ s, IsSubstring s r → ∀ u', IsSubstring u' r → ∀ v', IsSubstring v' r →
+      s ≠ ∅ → u' ≠ ∅ → v' ≠ ∅ → IsTally 1 u' → IsTally 1 v' →
+      IsPrefix (s ++ 0 ++ 0 ++ pairOf u' v' ++ 0 ++ 0) r →
+      ∃ u, IsSubstring u u' ∧ ∃ v, IsSubstring v v' ∧ u ≠ ∅ ∧ v ≠ ∅ ∧
+        IsTally 1 u ∧ IsTally 1 v ∧ u' = u ++ x ∧ v' = v ++ 1 ∧
+        IsSuffix (0 ++ 0 ++ pairOf u v) s
+
+/-- `r` is a multiplication sequence for the nonempty `1`-tallies `x` and `y`. -/
+def isMulSeqₑDef : 𝚺-[ℬₛ, 0].Semisentence 3 :=
+  .mkSigma “x y r. x ≠ ⋆ ∧ y ≠ ⋆ ∧ r ≠ ⋆ ∧ !isTallyBoundedDef.val !!(op(1).const) x ∧
+    !isTallyBoundedDef.val !!(op(1).const) y ∧ !isPairSeqₑDef.val r ∧
+    !isPrefixBoundedDef.val (!!(op(0).const) ⌢ !!(op(0).const) ⌢
+      (x ⌢ !!(op(0).const) ⌢ !!(op(1).const)) ⌢ !!(op(0).const) ⌢ !!(op(0).const)) r ∧
+    (∃¹[%(substringOperator _) #0 r] (#0 ≠ ⋆ ∧ !isTallyBoundedDef.val !!(op(1).const) #0 ∧
+      !isSuffixBoundedDef.val (!!(op(0).const) ⌢ !!(op(0).const) ⌢
+        (#0 ⌢ !!(op(0).const) ⌢ y) ⌢ !!(op(0).const) ⌢ !!(op(0).const)) r)) ∧
+    ∀¹[%(substringOperator _) #0 r] ∀¹[%(substringOperator _) #0 r] ∀¹[%(substringOperator _) #0 r]
+      (#2 ≠ ⋆ → #1 ≠ ⋆ → #0 ≠ ⋆ → !isTallyBoundedDef.val !!(op(1).const) #1 →
+        !isTallyBoundedDef.val !!(op(1).const) #0 →
+        !isPrefixBoundedDef.val (#2 ⌢ !!(op(0).const) ⌢ !!(op(0).const) ⌢
+          (#1 ⌢ !!(op(0).const) ⌢ #0) ⌢ !!(op(0).const) ⌢ !!(op(0).const)) r →
+        ∃¹[%(substringOperator _) #0 #2] ∃¹[%(substringOperator _) #0 #2]
+          (#1 ≠ ⋆ ∧ #0 ≠ ⋆ ∧ !isTallyBoundedDef.val !!(op(1).const) #1 ∧
+            !isTallyBoundedDef.val !!(op(1).const) #0 ∧ #3 = #1 ⌢ x ∧
+            #2 = #0 ⌢ !!(op(1).const) ∧
+            !isSuffixBoundedDef.val (!!(op(0).const) ⌢ !!(op(0).const) ⌢
+              (#1 ⌢ !!(op(0).const) ⌢ #0)) #4))”
+
+instance isMulSeqₑ_defined [V↓[ℒ⌢ₑ] ⊧* 𝗧𝗖ₑ] :
+    𝚺-[ℬₛ, 0]-Relation₃[V] IsMulSeqₑ via isMulSeqₑDef :=
+  .mk fun v ↦ by simp [isMulSeqₑDef, IsMulSeqₑ, pairOf]
+
 end boundedDefinitions
+
+section transfer
+
+variable {V : Type*} [ConcatenationEmptyStructure V] [V↓[ℒ⌢ₑ] ⊧* 𝗧𝗖ₑ]
+
+namespace NonemptyPart
+
+variable {x y z r : NonemptyPart V}
+
+lemma isSeq_iff_isSeqₑ : IsSeq r ↔ IsSeqₑ r.1 := by
+  simp only [Concatenation.isSeq_iff, IsSeqₑ, isPrefix_iff, isSuffix_iff, isTally_iff, isSubstring_iff,
+    ext_iff', val_append, val_zero, forall_iff]
+  exact and_congr Iff.rfl <| and_congr Iff.rfl
+    ⟨fun h t ht hn hT ↦ h t hn hT ht, fun h t hn hT ht ↦ h t ht hn hT⟩
+
+lemma mem_iff_memₑ : Mem y r ↔ Memₑ y.1 r.1 := by
+  simp only [Mem, Memₑ, isSeq_iff_isSeqₑ, isSubstring_iff, val_append, val_zero]
+
+lemma isSubstring_of_memₑ {y r : V} (h : Memₑ y r) : IsSubstring y r :=
+  TCEmpty.isSubstring_trans (TCEmpty.isSubstring_append_right_of
+    (isSubstring_append_append (0 ++ 0) y 0) 0) h.2.2
+
+lemma isPairSeq_iff_isPairSeqₑ : IsPairSeq r ↔ IsPairSeqₑ r.1 := by
+  simp only [Concatenation.isPairSeq_iff, IsPairSeqₑ, isSeq_iff_isSeqₑ, mem_iff_memₑ, IsPair, isTally_iff, ext_iff',
+    val_pairOf, val_one, forall_iff, exists_iff]
+  refine and_congr Iff.rfl ⟨fun h y hyr hy hm ↦ ?_, fun h y hy hm ↦ ?_⟩
+  · obtain ⟨a, ha, b, hb, hta, htb, rfl⟩ := h y hy hm
+    exact ⟨a, TCEmpty.isSubstring_append_right_of (isSubstring_append_left a 0) b, b,
+      isSubstring_append_right _ b, ha, hb, hta, htb, rfl⟩
+  · obtain ⟨a, -, b, -, ha, hb, hta, htb, rfl⟩ := h y (isSubstring_of_memₑ hm) hy hm
+    exact ⟨a, ha, b, hb, hta, htb, rfl⟩
+
+lemma isMulSeq_iff_isMulSeqₑ : IsMulSeq x y r ↔ IsMulSeqₑ x.1 y.1 r.1 := by
+  have hsub {a b : V} (u v : V) (h : IsSubstring (u ++ a ++ v) b) : IsSubstring a b :=
+    TCEmpty.isSubstring_trans (isSubstring_append_append u a v) h
+  simp only [Concatenation.isMulSeq_iff, IsMulSeqₑ, isTally_iff, isPairSeq_iff_isPairSeqₑ,
+    IsFirst, IsLast, isPrefix_iff, isSuffix_iff, val_append, val_pairOf, val_zero, val_one,
+    forall_iff, exists_iff, ext_iff']
+  constructor
+  · rintro ⟨tx, ty, ps, first, ⟨w, hw, tw, last⟩, pred⟩
+    refine ⟨x.2, y.2, r.2, tx, ty, ps, first, ⟨w, ?_, hw, tw, last⟩, ?_⟩
+    · exact hsub (0 ++ 0) (0 ++ y.1 ++ 0 ++ 0) <| by
+        simpa [pairOf, TCEmpty.append_assoc] using last.isSubstring
+    · intro s _ u' _ v' _ hs hu' hv' tu' tv' pre
+      obtain ⟨u, hu, v, hv, tu, tv, rfl, rfl, suf⟩ := pred s hs u' hu' v' hv' tu' tv' pre
+      exact ⟨u, isSubstring_append_left u x.1, v, isSubstring_append_left v 1, hu, hv, tu, tv,
+        rfl, rfl, suf⟩
+  · rintro ⟨-, -, -, tx, ty, ps, first, ⟨w, -, hw, tw, last⟩, pred⟩
+    refine ⟨tx, ty, ps, first, ⟨w, hw, tw, last⟩, ?_⟩
+    intro s hs u' hu' v' hv' tu' tv' pre
+    have hpre := pre.isSubstring
+    obtain ⟨u, -, v, -, hu, hv, tu, tv, h₁, h₂, suf⟩ := pred
+      s (hsub ∅ (0 ++ 0 ++ pairOf u' v' ++ 0 ++ 0) <| by
+        simpa [TCEmpty.append_assoc] using hpre)
+      u' (hsub (s ++ 0 ++ 0) (0 ++ v' ++ 0 ++ 0) <| by
+        simpa [pairOf, TCEmpty.append_assoc] using hpre)
+      v' (hsub (s ++ 0 ++ 0 ++ u' ++ 0) (0 ++ 0) <| by
+        simpa [pairOf, TCEmpty.append_assoc] using hpre)
+      hs hu' hv' tu' tv' pre
+    exact ⟨u, hu, v, hv, tu, tv, h₁, h₂, suf⟩
+
+end NonemptyPart
+
+end transfer
 
 end FFL.FirstOrder.Concatenation

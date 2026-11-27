@@ -162,7 +162,7 @@ def arithmeticTranslation : DirectTranslation 𝗪𝗧𝗖 ℒₒᵣ where
     simp [Semiformula.Operator.val, Semiformula.Operator.Eq.sentence_eq]
 
 @[simp]
-lemma arithmeticTranslation_dom (x : V) [V↓[ℒ⌢] ⊧* 𝗪𝗧𝗖] : arithmeticTranslation.Dom x := by
+lemma arithmeticTranslation.dom (x : V) : arithmeticTranslation.Dom x := by
   simp [dom_iff, arithmeticTranslation, Semiformula.Operator.val]
 
 section TCPlus
@@ -227,14 +227,14 @@ lemma tallyOf_add_one_append (m : ℕ) :
   intro n
   simpa using congrArg (ofFreeSemigroup (α := V)) (h n)
 
-lemma eq_tallyOf_of_tallyOf_eq_append_one (h : tallyOf (n + 2) = v ++ 1) :
+private lemma eq_tallyOf_of_tallyOf_eq_append_one (h : tallyOf (n + 2) = v ++ 1) :
     v = tallyOf (n + 1) := by
   rw [← ofFreeSemigroup_tallyOf] at h
   obtain ⟨a, b, rfl, hb, h⟩ := exists_of_append_eq_ofFreeSemigroup h.symm
   obtain rfl : 1 = b := ofFreeSemigroup_injective (V := V) hb
   rw [← isAtom_one.append_right_cancel (x := tallyOf (n + 1)) h, ofFreeSemigroup_tallyOf]
 
-lemma exists_eq_tallyOf_of_tallyOf_eq_append (h : tallyOf n = x ++ y) :
+private lemma exists_eq_tallyOf_of_tallyOf_eq_append (h : tallyOf n = x ++ y) :
     ∃ i < n, x = tallyOf i := by
   fun_induction tallyOf n (V := V) generalizing y with
   | case1 => exact absurd h.symm <| append_ne_zero x y
@@ -273,7 +273,7 @@ lemma isEntry_ofFreeSemigroup_iff {a b c : FreeSemigroup Bool} :
       ofFreeSemigroup (0 ++ 0 ++ pairOf a b ++ 0 ++ 0) := by simp [pairOf]
   rw [IsEntry, h, isSubstring_ofFreeSemigroup_ofFreeSemigroup_iff, IsEntry]
 
-lemma IsEntry.exists_eq_ofFreeSemigroup {c : FreeSemigroup Bool}
+private lemma IsEntry.exists_eq_ofFreeSemigroup {c : FreeSemigroup Bool}
     (h : IsEntry u v (ofFreeSemigroup c)) :
     ∃ a b, u = ofFreeSemigroup a ∧ v = ofFreeSemigroup b := by
   obtain ⟨t, ht, -⟩ := isSubstring_ofFreeSemigroup_iff.mp h
@@ -298,7 +298,7 @@ lemma IsMulTable.ofFreeSemigroup {a c : FreeSemigroup Bool} (h : IsMulTable a c)
       isEntry_ofFreeSemigroup_iff]
     simp [hu', hv', he']
 
-lemma isProduct_tallyOf_iff :
+private lemma isProduct_tallyOf_iff :
     IsProduct z (tallyOf (m + 1)) (tallyOf (n + 1)) ↔ z = tallyOf ((m + 1) * (n + 1)) := by
   have h (z) (hz : IsProduct z (tallyOf (m + 1) : V) (tallyOf (n + 1))) :
       z = tallyOf ((m + 1) * (n + 1)) := by
@@ -334,14 +334,15 @@ lemma addGraph_tallyOf (m n : ℕ) : AddGraph (tallyOf (m + n) : V) (tallyOf m) 
   | m + 1, n + 1 => exact .inr <| .inr <|
       ⟨tallyOf_add_one_ne_zero n, tallyOf_add_one_ne_zero m, (tallyOf_add_one_append m n).symm⟩
 
-lemma mulGraph_tallyOf (m n : ℕ) : MulGraph (tallyOf (m * n) : V) (tallyOf m) (tallyOf n) := by
+private lemma mulGraph_tallyOf (m n : ℕ) :
+    MulGraph (tallyOf (m * n) : V) (tallyOf m) (tallyOf n) := by
   have h0 : ¬IsTally (1 : V) 0 := fun h ↦ WTC.zero_ne_one <| h 0 isAtom_zero <| .refl 0
   match m, n with
   | m, 0 => simp [MulGraph, IsProduct, h0]
   | 0, n + 1 => simp [MulGraph, IsProduct, h0]
   | m + 1, n + 1 => simp [MulGraph, isProduct_tallyOf_iff]
 
-lemma ltGraph_tallyOf_iff : LtGraph x (tallyOf n) ↔ ∃ i < n, x = tallyOf i := by
+private lemma ltGraph_tallyOf_iff : LtGraph x (tallyOf n) ↔ ∃ i < n, x = tallyOf i := by
   constructor
   · rintro (⟨rfl, hn⟩ | ⟨v, h⟩)
     · use 0
@@ -364,31 +365,32 @@ namespace arithmeticTranslation
 
 /-- The constants, the operations and the order of the strings of a model of $\mathsf{WTC}$. -/
 noncomputable abbrev oRingStructure : ORingStructure (arithmeticTranslation.Model V) where
-  zero := ⟨0, arithmeticTranslation_dom 0⟩
-  one := ⟨1, arithmeticTranslation_dom 1⟩
+  zero := ⟨0, dom 0⟩
+  one := ⟨1, dom 1⟩
   add a b := Tarski.Structure.func (L := ℒₒᵣ) Language.ORing.Func.add ![a, b]
   mul a b := Tarski.Structure.func (L := ℒₒᵣ) Language.ORing.Func.mul ![a, b]
   lt a b := LtGraph (a : V) b
 
 /-- The structure of the model of `arithmeticTranslation` is the one of `oRingStructure`. -/
-lemma struc_eq : Model.struc arithmeticTranslation V = @Arithmetic.standardModel _ oRingStructure :=
-  Tarski.Structure.ext
-    (funext₃ fun k f v ↦ by
-      cases f
-      case zero | one =>
-        symm
-        apply Model.func_iff.mpr
-        simp [arithmeticTranslation, Semiformula.Operator.val, Semiformula.Operator.Eq.sentence_eq]
-        rfl
-      case add | mul =>
-        conv_lhs => rw [Matrix.fun_eq_vec_two v]
-        rfl)
-    (funext₃ fun k r v ↦ by
-      cases r
-      · exact propext <| Model.eq_iff v
-      · change (arithmeticTranslation.rel .lt).val (fun i ↦ (v i : V)) = LtGraph (v 0 : V) (v 1)
-        rw [Matrix.fun_eq_vec_two (fun i ↦ (v i : V))]
-        simp [arithmeticTranslation, Semiformula.Operator.val])
+lemma struc_eq :
+    Model.struc arithmeticTranslation V = @Arithmetic.standardModel _ oRingStructure := by
+  apply Tarski.Structure.ext
+  · funext k f v
+    cases f
+    case zero | one =>
+      symm
+      apply Model.func_iff.mpr
+      simp [arithmeticTranslation, Semiformula.Operator.val, Semiformula.Operator.Eq.sentence_eq]
+      rfl
+    case add | mul =>
+      conv_lhs => rw [Matrix.fun_eq_vec_two v]
+      rfl
+  · funext k r v
+    cases r
+    · exact propext <| Model.eq_iff v
+    · change (arithmeticTranslation.rel .lt).val (fun i ↦ (v i : V)) = LtGraph (v 0 : V) (v 1)
+      rw [Matrix.fun_eq_vec_two (fun i ↦ (v i : V))]
+      simp [arithmeticTranslation, Semiformula.Operator.val]
 
 section
 
@@ -535,7 +537,8 @@ lemma append_ne_letter (a : α) : x ++ y ≠ ofLetter a := by
   exact FreeSemigroup.of_ne_mul a u v h.symm
 
 /-- A structure with an initial embedding of the nonempty strings is a model of `𝗪𝗧𝗖[α]`. -/
-lemma models_WTCLetters [Nonempty V] : V↓[ℒ⌢[α]] ⊧* 𝗪𝗧𝗖[α] := ⟨by
+lemma models_WTCLetters [Nonempty V] : V↓[ℒ⌢[α]] ⊧* 𝗪𝗧𝗖[α] := by
+  constructor
   intro σ h
   cases h
   case equal hφ =>
@@ -550,7 +553,7 @@ lemma models_WTCLetters [Nonempty V] : V↓[ℒ⌢[α]] ⊧* 𝗪𝗧𝗖[α] :=
   case concatNeLetter a =>
     simpa [models_iff] using fun x y : V ↦ hc.append_ne_letter (x := x) (y := y) a
   case letterNeLetter a b h =>
-    simpa [models_iff, ← hc.map_letter, hc.injective.eq_iff, FreeSemigroup.of] using h⟩
+    simpa [models_iff, ← hc.map_letter, hc.injective.eq_iff, FreeSemigroup.of] using h
 
 end IsInitialEmbedding
 
@@ -647,19 +650,19 @@ noncomputable abbrev letterStructure : LetterStructure α ((codeTranslation α).
   append x y := Tarski.Structure.func (L := ℒ⌢[α]) .concat ![x, y]
 
 /-- The structure of the model of `codeTranslation` is the one of `letterStructure`. -/
-lemma struc_eq : Model.struc (codeTranslation α) V = @lettersModel α _ letterStructure :=
-  Tarski.Structure.ext
-    (funext₃ fun k f v ↦ by
-      cases f
-      · symm
-        apply Model.func_iff.mpr
-        simp [codeTranslation, Semiformula.Operator.val]
-        rfl
-      · conv_lhs => rw [Matrix.fun_eq_vec_two v]
-        rfl)
-    (funext₃ fun k r v ↦ by
-      cases r
-      exact propext <| Model.eq_iff v)
+lemma struc_eq : Model.struc (codeTranslation α) V = @lettersModel α _ letterStructure := by
+  apply Tarski.Structure.ext
+  · funext k f v
+    cases f
+    · symm
+      apply Model.func_iff.mpr
+      simp [codeTranslation, Semiformula.Operator.val]
+      rfl
+    · conv_lhs => rw [Matrix.fun_eq_vec_two v]
+      rfl
+  · funext k r v
+    cases r
+    exact propext <| Model.eq_iff v
 
 section
 
@@ -673,7 +676,7 @@ lemma append_eq_iff {x y z : (codeTranslation α).Model V} :
   exact eq_comm.trans this
 
 /-- The strings are embedded onto an initial part of the model of `codeTranslation`. -/
-lemma isInitialEmbedding_ofString :
+private lemma isInitialEmbedding_ofString :
     IsInitialEmbedding (ofString : FreeSemigroup α → (codeTranslation α).Model V) where
   injective u v h := by simpa [ofString] using h
   map_letter _ := rfl
@@ -780,18 +783,6 @@ noncomputable instance : 𝗪𝗧𝗖[α] ⋈ 𝗪𝗧𝗖[β] :=
   MutualDirectInterpretation.trans (inferInstance : 𝗪𝗧𝗖[α] ⋈ 𝗪𝗧𝗖)
     (MutualDirectInterpretation.symm inferInstance)
 
-/--
-For all $m, n \ge 2$, $\mathsf{WTC}_m$ and $\mathsf{WTC}_n$ are mutually interpretable.
-- [Hor11, §3, Theorem 3.18]
-- [Hor12, §4, Theorem 4.13]
-- [HH14, Theorem 10]
--/
-noncomputable abbrev WTCLetters.mutualInterpretation {m n : ℕ} (hm : 2 ≤ m) (hn : 2 ≤ n) :
-    𝗪𝗧𝗖[Fin m] ⋈ 𝗪𝗧𝗖[Fin n] :=
-  have : Nontrivial (Fin m) := Fin.nontrivial_iff_two_le.mpr hm
-  have : Nontrivial (Fin n) := Fin.nontrivial_iff_two_le.mpr hn
-  inferInstance
-
 instance {α : Type} [Nonempty α] : Entailment.Consistent 𝗪𝗧𝗖[α] :=
   let : (FreeSemigroup α)↓[ℒ⌢[α]] ⊧* 𝗪𝗧𝗖[α] := inferInstance
   Sound.consistent_of_satisfiable ⟨_, this⟩
@@ -856,15 +847,6 @@ theorem WTC.nonempty_interpretation_iff_locallyFinitelySatisfiable (hT : REPred 
   Iff.trans ⟨fun ⟨π⟩ ↦ ⟨π.comp (inferInstance : 𝗥₀ ⊳ 𝗪𝗧𝗖)⟩,
       fun ⟨π⟩ ↦ ⟨π.comp (inferInstance : 𝗪𝗧𝗖 ⊳ 𝗥₀)⟩⟩
     (R0.nonempty_interpretation_iff_locallyFinitelySatisfiable hT)
-
-/--
-A recursively enumerable theory of a finite language is not interpretable in $\mathsf{WTC}$ if and
-only if it is not locally finitely satisfiable.
-- [Hor12, §4, Corollary 4.12]
--/
-theorem WTC.notInterprets_iff_not_locallyFinitelySatisfiable (hT : REPred (· ∈ T)) :
-    𝗪𝗧𝗖 ⋫ T ↔ ¬T.LocallyFinitelySatisfiable :=
-  notInterprets_iff.trans (nonempty_interpretation_iff_locallyFinitelySatisfiable hT).not
 
 end interpretability
 

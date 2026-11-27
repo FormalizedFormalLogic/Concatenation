@@ -16,48 +16,14 @@ namespace FFL.FirstOrder.Concatenation
 
 open ConcatenationStructure ConcatenationEmptyStructure DirectTranslation
 
-/--
-Axioms of the weak theory of concatenation with the empty string, without the neutrality of the
-empty string.
-- [HH14, §3.2]
--/
-inductive IsWTCEmptyMinusUnitAxiom : Sentence ℒ⌢ₑ → Prop
-  | equal : ∀ φ ∈ 𝗘𝗤 ℒ⌢ₑ, IsWTCEmptyMinusUnitAxiom φ
-  | concatAssoc (u : List Bool) : IsWTCEmptyMinusUnitAxiom
-      “∀ x y z, !isSubstring ((x ⌢ y) ⌢ z) !!(biteralEmpty u) ∨
-      !isSubstring (x ⌢ (y ⌢ z)) !!(biteralEmpty u) → (x ⌢ y) ⌢ z = x ⌢ (y ⌢ z)”
-  | editor (u : List Bool) : IsWTCEmptyMinusUnitAxiom
-      “∀ x y s t, x ⌢ y = s ⌢ t ∧ !isSubstring (x ⌢ y) !!(biteralEmpty u) →
-      ∃ w, (x ⌢ w = s ∧ y = w ⌢ t) ∨ (x = s ⌢ w ∧ w ⌢ y = t)”
-  | zeroNeEmpty : IsWTCEmptyMinusUnitAxiom “!!(op(0).const) ≠ ⋆”
-  | zeroAtom : IsWTCEmptyMinusUnitAxiom “∀ x y, x ⌢ y = !!(op(0).const) → x = ⋆ ∨ y = ⋆”
-  | oneNeEmpty : IsWTCEmptyMinusUnitAxiom “!!(op(1).const) ≠ ⋆”
-  | oneAtom : IsWTCEmptyMinusUnitAxiom “∀ x y, x ⌢ y = !!(op(1).const) → x = ⋆ ∨ y = ⋆”
-  | zeroNeOne : IsWTCEmptyMinusUnitAxiom “!!(op(0).const) ≠ !!(op(1).const)”
-
-/--
-The weak theory of concatenation with the empty string, without the neutrality of the empty string.
-- [HH14, §3.2]
--/
-abbrev WTCEmptyMinusUnit : Theory ℒ⌢ₑ := Set.ofPred IsWTCEmptyMinusUnitAxiom
-
-@[inherit_doc]
-notation "𝗪𝗧𝗖ₑ⁻" => WTCEmptyMinusUnit
-
-instance : 𝗘𝗤 ℒ⌢ₑ ⪯ 𝗪𝗧𝗖ₑ⁻ :=
-  Entailment.WeakerThan.ofSubset fun φ hφ ↦ IsWTCEmptyMinusUnitAxiom.equal φ hφ
-
 lemma IsWTCEmptyMinusUnitAxiom.isWTCEmptyAxiom {σ : Sentence ℒ⌢ₑ}
     (h : IsWTCEmptyMinusUnitAxiom σ) : IsWTCEmptyAxiom σ := by
   cases h
   case equal hφ => exact .equal _ hφ
   case concatAssoc u => exact .concatAssoc u
   case editor u => exact .editor u
-  case zeroNeEmpty => exact .zeroNeEmpty
-  case zeroAtom => exact .zeroAtom
-  case oneNeEmpty => exact .oneNeEmpty
-  case oneAtom => exact .oneAtom
-  case zeroNeOne => exact .zeroNeOne
+  all_goals first
+    | exact .zeroNeEmpty | exact .zeroAtom | exact .oneNeEmpty | exact .oneAtom | exact .zeroNeOne
 
 instance : 𝗪𝗧𝗖ₑ⁻ ⪯ 𝗪𝗧𝗖ₑ :=
   Entailment.WeakerThan.ofSubset fun _ ↦ IsWTCEmptyMinusUnitAxiom.isWTCEmptyAxiom
@@ -168,7 +134,7 @@ lemma models_WTCEmpty : V↓[ℒ⌢ₑ] ⊧* 𝗪𝗧𝗖ₑ := by
 
 end IsInitialEmptyEmbedding
 
-namespace WTCEmpty
+namespace WTCEmptyMinusUnit
 
 lemma exists_ofList_append_isAtom (hc : IsAtom c) (hs : IsAtom s) :
     ∃ u : List Bool, c ++ s = ofList u := by
@@ -178,7 +144,7 @@ lemma exists_ofList_append_isAtom (hc : IsAtom c) (hs : IsAtom s) :
   · exact ⟨[true, false], rfl⟩
   · exact ⟨[true, true], rfl⟩
 
-lemma exists_ofList_isAtom (hc : IsAtom c) : ∃ u : List Bool, c = ofList u := by
+private lemma exists_ofList_isAtom (hc : IsAtom c) : ∃ u : List Bool, c = ofList u := by
   rcases hc with rfl | rfl
   · exact ⟨[false], rfl⟩
   · exact ⟨[true], rfl⟩
@@ -237,7 +203,7 @@ lemma isAtom_append_empty (hc : IsAtom c) : c ++ ∅ = c := by
   obtain ⟨u, hu⟩ := exists_ofList_append_isAtom hc hc
   exact append_empty_of_append_eq_ofList hc hu
 
-lemma eq_of_empty_append_isAtom (hc : IsAtom c) (h : ∅ ++ x = c) : x = c := by
+private lemma eq_of_empty_append_isAtom (hc : IsAtom c) (h : ∅ ++ x = c) : x = c := by
   obtain ⟨u, hu⟩ := exists_ofList_append_isAtom hc hc
   have h₁ : c ++ ∅ ++ x = c ++ (∅ ++ x) := append_assoc u <| Or.inr <| by rw [h, hu]
   rw [isAtom_append_empty hc, h] at h₁
@@ -265,7 +231,7 @@ lemma eq_empty_of_append_eq_empty (h : x ++ y = ∅) : x = ∅ ∧ y = ∅ := by
       rw [h, empty_append_isAtom hc] at e
       have hy := (eq_empty_of_append_isAtom (e ▸ hc)).resolve_left hx
       exact eq_of_append_empty_isAtom hc <| by rw [e.trans (congrArg _ hy)]
-    exact WTCEmpty.zero_ne_one <| (key isAtom_zero).symm.trans (key isAtom_one)
+    exact WTCEmptyMinusUnit.zero_ne_one <| (key isAtom_zero).symm.trans (key isAtom_one)
   subst hx
   refine ⟨rfl, ?_⟩
   have e : (0 : V) ++ ∅ ++ y = 0 ++ (∅ ++ y) := append_assoc [false] <| Or.inr <| by
@@ -333,7 +299,8 @@ lemma ofList_injective : Function.Injective (ofList : List Bool → V) := by
     · have hd := isAtom_ofList_singleton (V := V) d
       have hb := isAtom_ofList_singleton (V := V) b
       have hbd : (ofList [b] : V) = ofList [d] → b = d := by
-        cases b <;> cases d <;> simp [WTCEmpty.zero_ne_one, WTCEmpty.zero_ne_one.symm]
+        cases b <;> cases d <;>
+          simp [WTCEmptyMinusUnit.zero_ne_one, WTCEmptyMinusUnit.zero_ne_one.symm]
       rw [ofList_append_singleton] at h
       simp only [List.concat_eq_append, ofList_append_singleton] at h
       rcases editor (v ++ [d]) (h.trans (ofList_append_singleton v d).symm)
@@ -378,34 +345,20 @@ lemma isInitialEmptyEmbedding_ofList : IsInitialEmptyEmbedding (ofList : List Bo
   map_append := ofList_append
   exists_of_append_eq := exists_of_append_eq_ofList
 
-lemma isSubstring_ofList_iff : IsSubstring x (ofList u) ↔ ∃ v, x = ofList v ∧ v <:+: u := by
-  constructor
-  · intro h
-    apply h.of_forall_append (P := fun x ↦ ∃ v, x = ofList v ∧ v <:+: u) _
-      ⟨u, rfl, List.infix_refl u⟩
-    rintro x y ⟨v, h, hv⟩
-    obtain ⟨a, b, rfl, rfl⟩ := exists_of_append_eq_ofList h
-    rw [← ofList_append, ofList_injective.eq_iff] at h
-    subst h
-    exact ⟨⟨a, rfl, (List.prefix_append a b).isInfix.trans hv⟩,
-      ⟨b, rfl, (List.suffix_append a b).isInfix.trans hv⟩⟩
-  · rintro ⟨v, rfl, s, t, rfl⟩
-    simp only [ofList_append, isSubstring_append_append]
-
-end WTCEmpty
+end WTCEmptyMinusUnit
 
 /--
 Every model of $\mathsf{WTC}$ with the empty string, without the neutrality of the empty string, is
 a model of $\mathsf{WTC}$ with the empty string.
 -/
 lemma WTCEmptyMinusUnit.models_WTCEmpty [V↓[ℒ⌢ₑ] ⊧* 𝗪𝗧𝗖ₑ⁻] : V↓[ℒ⌢ₑ] ⊧* 𝗪𝗧𝗖ₑ :=
-  (WTCEmpty.isInitialEmptyEmbedding_ofList V).models_WTCEmpty
+  (WTCEmptyMinusUnit.isInitialEmptyEmbedding_ofList V).models_WTCEmpty
 
 end models
 
 /--
-$\mathsf{WTC}$ with the empty string is a subtheory of its subtheory without the neutrality of the
-empty string.
+$\mathsf{WTC}$ with the empty string is weaker than its variant without the neutrality of the empty
+string.
 -/
 instance : 𝗪𝗧𝗖ₑ ⪯ 𝗪𝗧𝗖ₑ⁻ :=
   weakerThan_of_models_empty.{0} _ _ fun _ _ _ ↦ WTCEmptyMinusUnit.models_WTCEmpty
@@ -436,6 +389,8 @@ end standard
 
 namespace WTCEmpty
 
+open WTCEmptyMinusUnit
+
 variable {V : Type} [ConcatenationEmptyStructure V] {x : V}
 
 instance : NonemptyClosed 𝗪𝗧𝗖ₑ where
@@ -461,8 +416,13 @@ lemma val_ofFreeSemigroup (u : FreeSemigroup Bool) :
 lemma isSubstring_ofList_of_isSubstring {x : (nonemptyTranslation 𝗪𝗧𝗖ₑ).Model V}
     {u : FreeSemigroup Bool} (h : IsSubstring x (ofFreeSemigroup u)) :
     IsSubstring (x : V) (ofList u.toList) := by
-  have h := h.map Model.val fun _ _ ↦ rfl
-  rwa [val_ofFreeSemigroup] at h
+  suffices IsSubstring (x : V) ((ofFreeSemigroup u : (nonemptyTranslation 𝗪𝗧𝗖ₑ).Model V) : V) by
+    rwa [val_ofFreeSemigroup] at this
+  rcases h with rfl | ⟨a, h⟩ | ⟨b, h⟩ | ⟨a, b, h⟩ | ⟨a, b, h⟩
+  exacts [.inl rfl, .inr <| .inl ⟨a, congrArg Model.val h⟩,
+    .inr <| .inr <| .inl ⟨b, congrArg Model.val h⟩,
+    .inr <| .inr <| .inr <| .inl ⟨a, b, congrArg Model.val h⟩,
+    .inr <| .inr <| .inr <| .inr ⟨a, b, congrArg Model.val h⟩]
 
 end
 
@@ -515,7 +475,7 @@ instance [V↓[ℒ⌢ₑ] ⊧* 𝗪𝗧𝗖ₑ] : ((nonemptyTranslation 𝗪𝗧
   case concatNeOne =>
     simpa [models_iff, Model.forall_iff] using fun (x : V) (hx : x ≠ ∅) (y : V) (hy : y ≠ ∅)
       (h : x ++ y = 1) ↦ (eq_empty_of_append_isAtom <| by simp [h]).elim hx hy
-  case zeroNeOne => simp [models_iff, WTCEmpty.zero_ne_one]
+  case zeroNeOne => simp [models_iff, WTCEmptyMinusUnit.zero_ne_one]
 
 end WTCEmpty
 
@@ -576,7 +536,7 @@ section model
 
 variable [V↓[ℒ⌢] ⊧* 𝗪𝗧𝗖]
 
-lemma not_isDecode_one : ¬IsDecode w (1 : V) := fun h ↦ append_ne_one _ _ h.1.symm
+private lemma not_isDecode_one : ¬IsDecode w (1 : V) := fun h ↦ append_ne_one _ _ h.1.symm
 
 lemma existsUnique_isCodeAppend (x y : V) : ∃! z, IsCodeAppend z x y := by
   by_cases h₁ : y = 1
@@ -591,11 +551,20 @@ lemma existsUnique_isCodeAppend (x y : V) : ∃! z, IsCodeAppend z x y := by
   · use 0
     simp_all [IsCodeAppend]
 
+/-- The code of the concatenation of the strings coded by `x` and `y`. -/
+noncomputable def codeAppend (x y : V) : V := (existsUnique_isCodeAppend x y).choose
+
+lemma isCodeAppend_codeAppend (x y : V) : IsCodeAppend (codeAppend x y) x y :=
+  (existsUnique_isCodeAppend x y).choose_spec.1
+
+lemma eq_codeAppend_of_isCodeAppend (h : IsCodeAppend z x y) : z = codeAppend x y :=
+  (existsUnique_isCodeAppend x y).unique h (isCodeAppend_codeAppend x y)
+
 lemma emptyCode_cons (b : Bool) (l : List Bool) :
     (emptyCode (b :: l) : V) = 1 ++ ofFreeSemigroup ⟨b, l⟩ :=
   ofFreeSemigroup_mul 1 ⟨b, l⟩
 
-lemma isDecode_emptyCode (b : Bool) (l : List Bool) :
+private lemma isDecode_emptyCode (b : Bool) (l : List Bool) :
     IsDecode (ofFreeSemigroup ⟨b, l⟩ : V) (emptyCode (b :: l)) := by
   refine ⟨emptyCode_cons b l, ?_⟩
   intro v h
@@ -606,7 +575,7 @@ lemma isDecode_emptyCode (b : Bool) (l : List Bool) :
   apply FreeSemigroup.toList_injective
   simpa [FreeSemigroup.toList, one_eq_of_true, FreeSemigroup.of] using e.symm
 
-lemma isCodeAppend_emptyCode (u v : List Bool) :
+private lemma isCodeAppend_emptyCode (u v : List Bool) :
     IsCodeAppend (emptyCode (u ++ v) : V) (emptyCode u) (emptyCode v) := by
   rcases v with _ | ⟨b, l⟩
   · left
@@ -614,7 +583,8 @@ lemma isCodeAppend_emptyCode (u v : List Bool) :
   · right; left
     use ofFreeSemigroup ⟨b, l⟩, isDecode_emptyCode b l, ofFreeSemigroup_mul ⟨true, u⟩ ⟨b, l⟩
 
-lemma exists_of_isCodeAppend_emptyCode {u : List Bool} (h : IsCodeAppend (emptyCode u) x y) :
+private lemma exists_of_isCodeAppend_emptyCode {u : List Bool}
+    (h : IsCodeAppend (emptyCode u) x y) :
     ∃ p q, x = emptyCode p ∧ y = emptyCode q := by
   rcases h with ⟨rfl, rfl⟩ | ⟨w, ⟨rfl, -⟩, h⟩ | ⟨-, -, h⟩
   · use u, []
@@ -667,7 +637,7 @@ noncomputable abbrev concatenationEmptyStructure :
     ConcatenationEmptyStructure (emptyTranslation.Model V) where
   zero := ⟨1 ++ 0, dom _⟩
   one := ⟨1 ++ 1, dom _⟩
-  append x y := ⟨(existsUnique_isCodeAppend (x : V) y).choose, dom _⟩
+  append x y := ⟨codeAppend (x : V) y, dom _⟩
   emptyCollection := ⟨1, dom _⟩
 
 /--
@@ -675,24 +645,23 @@ The structure of the model of `emptyTranslation` is the standard one of
 `concatenationEmptyStructure`.
 -/
 lemma struc_eq :
-    Model.struc emptyTranslation V = @standardModelEmpty _ concatenationEmptyStructure :=
-  Tarski.Structure.ext
-    (funext₃ fun k f v ↦ by
-      symm
-      apply Model.func_iff.mpr
-      rcases f with (_ | _ | _) | ⟨⟨⟩⟩
-      · simp [emptyTranslation, Semiformula.Operator.val]
-        rfl
-      · simp [emptyTranslation, Semiformula.Operator.val]
-        rfl
-      · rw [Matrix.fun_eq_vec_two fun i ↦ (v i : V)]
-        exact (Defined.eval_iff (φ := isCodeAppend) _).mpr
-          (existsUnique_isCodeAppend (v 0 : V) (v 1)).choose_spec.1
-      · simp [emptyTranslation, Semiformula.Operator.val]
-        rfl)
-    (funext₃ fun k r v ↦ by
-      rcases r with ⟨⟨⟩⟩ | ⟨⟨⟩⟩
-      exact propext <| Model.eq_iff v)
+    Model.struc emptyTranslation V = @standardModelEmpty _ concatenationEmptyStructure := by
+  apply Tarski.Structure.ext
+  · funext k f v
+    symm
+    apply Model.func_iff.mpr
+    rcases f with (_ | _ | _) | ⟨⟨⟩⟩
+    · simp [emptyTranslation, Semiformula.Operator.val]
+      rfl
+    · simp [emptyTranslation, Semiformula.Operator.val]
+      rfl
+    · rw [Matrix.fun_eq_vec_two fun i ↦ (v i : V)]
+      exact (Defined.eval_iff (φ := isCodeAppend) _).mpr (isCodeAppend_codeAppend (v 0 : V) (v 1))
+    · simp [emptyTranslation, Semiformula.Operator.val]
+      rfl
+  · funext k r v
+    rcases r with ⟨⟨⟩⟩ | ⟨⟨⟩⟩
+    exact propext <| Model.eq_iff v
 
 end emptyTranslation
 
@@ -704,7 +673,7 @@ instance [V↓[ℒ⌢] ⊧* 𝗪𝗧𝗖] : (emptyTranslation.Model V)↓[ℒ⌢
   rw [emptyTranslation.struc_eq]
   let := emptyTranslation.concatenationEmptyStructure (V := V)
   have isCodeAppend (x y : emptyTranslation.Model V) : IsCodeAppend ((x ++ y : _) : V) x y :=
-    (existsUnique_isCodeAppend (x : V) y).choose_spec.1
+    isCodeAppend_codeAppend (x : V) y
   let c (u : List Bool) : emptyTranslation.Model V := ⟨emptyCode u, emptyTranslation.dom _⟩
   apply IsInitialEmptyEmbedding.models_WTCEmpty (c := c)
   constructor
@@ -715,8 +684,7 @@ instance [V↓[ℒ⌢] ⊧* 𝗪𝗧𝗖] : (emptyTranslation.Model V)↓[ℒ⌢
   case map_false => rfl
   case map_true => rfl
   case map_append =>
-    exact fun u v ↦ Model.ext <| (existsUnique_isCodeAppend _ _).unique
-      (isCodeAppend_emptyCode u v) (isCodeAppend (c u) (c v))
+    exact fun u v ↦ Model.ext <| eq_codeAppend_of_isCodeAppend (isCodeAppend_emptyCode u v)
   case exists_of_append_eq =>
     intro x y u h
     obtain ⟨p, q, hp, hq⟩ : ∃ p q, (x : V) = emptyCode p ∧ (y : V) = emptyCode q :=

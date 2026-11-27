@@ -2,6 +2,7 @@ module
 
 public import Concatenation.TC.Substring
 public import Concatenation.WTC.Basic
+public import Foundation.FirstOrder.Tarski.HierarchicalDefinability.Absoluteness
 
 /-!
 # Standard strings and $\Sigma_1$-completeness of $\mathsf{WTC}$
@@ -150,111 +151,55 @@ end WTC
 
 section sigma1
 
-open ConcatenationStructure
+open ConcatenationStructure Bounding
 
-variable {V : Type*} [ConcatenationStructure V] {ξ : Type*} {n : ℕ}
+variable {V : Type*} [ConcatenationStructure V] [V↓[ℒ⌢] ⊧* 𝗪𝗧𝗖]
 
 namespace WTC
 
-variable [V↓[ℒ⌢] ⊧* 𝗪𝗧𝗖] {e : Fin n → FreeSemigroup Bool} {ε : ξ → FreeSemigroup Bool}
-  {φ : Semiformula ℒ⌢ ξ n}
+/-- The values of the standard strings are an initial copy of the standard model. -/
+def ofFreeSemigroupEmbedding (V : Type*) [ConcatenationStructure V] [V↓[ℒ⌢] ⊧* 𝗪𝗧𝗖] :
+    (FreeSemigroup Bool) ↪ₛ[ℒ⌢] V where
+  toFun := ofFreeSemigroup
+  func' f v := by
+    cases f
+    · rfl
+    · rfl
+    · exact ofFreeSemigroup_mul (v 0) (v 1)
+  rel' r v := by
+    cases r
+    exact congrArg ofFreeSemigroup
+  toFun_inj := ofFreeSemigroup_injective
+  rel_inv' r v := by
+    cases r
+    exact fun h ↦ ofFreeSemigroup_injective h
 
-lemma val_ofFreeSemigroup (t : Semiterm ℒ⌢ ξ n) :
-    t.val (ofFreeSemigroup ∘ e) (ofFreeSemigroup ∘ ε) = (ofFreeSemigroup (t.val e ε) : V) := by
-  induction t with
-  | bvar => simp
-  | fvar => simp
-  | @func k f v ih =>
-    match k, f with
-    | _, Language.Zero.zero => simp
-    | _, Language.One.one => simp
-    | _, Language.Concat.concat => simp [ih]
+@[simp]
+lemma ofFreeSemigroupEmbedding_apply (u : FreeSemigroup Bool) :
+    ofFreeSemigroupEmbedding V u = ofFreeSemigroup u := rfl
 
-/-- $\Sigma_0$ formulas are absolute for the standard strings. -/
-lemma eval_ofFreeSemigroup_iff_of_closure (hφ : ℬ[⊑, ℒ⌢].Closure φ) :
-    φ.Eval (M := V) (ofFreeSemigroup ∘ e) (ofFreeSemigroup ∘ ε) ↔ φ.Eval e ε := by
-  induction hφ with
-  | verum => simp
-  | falsum => simp
-  | @rel _ k r v =>
-    match k, r with
-    | _, Language.Eq.eq => simp [val_ofFreeSemigroup]
-  | @nrel _ k r v =>
-    match k, r with
-    | _, Language.Eq.eq => simp [val_ofFreeSemigroup]
-  | and _ _ ihφ ihψ => simp [ihφ, ihψ]
-  | or _ _ ihφ ihψ => simp [ihφ, ihψ]
-  | ball hR ht _ ih =>
+instance : ℬ[⊑, ℒ⌢].IsInitial (ofFreeSemigroupEmbedding V) where
+  operator_iff hR a b := by
     obtain rfl := mem_substringBounding_iff.mp hR
-    obtain ⟨t, rfl⟩ := Rew.positive_iff.mp ht
-    simp [val_ofFreeSemigroup, isSubstring_ofFreeSemigroup_iff, ← ih, Matrix.comp_vecCons'']
-    grind
-  | bexs hR ht _ ih =>
+    simp
+  initial hR a b h := by
     obtain rfl := mem_substringBounding_iff.mp hR
-    obtain ⟨t, rfl⟩ := Rew.positive_iff.mp ht
-    simp [val_ofFreeSemigroup, isSubstring_ofFreeSemigroup_iff, ← ih, Matrix.comp_vecCons'']
-
-/--
-A $\Sigma_1$ formula true of some strings in the standard model is true of their values in every
-model of $\mathsf{WTC}$.
-- [Hor12, §3, Theorem 3.13]
--/
-lemma eval_ofFreeSemigroup_of_hierarchy (hφ : ℬ[⊑, ℒ⌢].Hierarchy 𝚺 1 φ) (h : φ.Eval e ε) :
-    φ.Eval (M := V) (ofFreeSemigroup ∘ e) (ofFreeSemigroup ∘ ε) := by
-  revert e
-  apply Bounding.Hierarchy.sigma_succ_induction (s := 0) (P := fun n φ ↦ ∀ {e : Fin n → _},
-    φ.Eval e ε → φ.Eval (M := V) (ofFreeSemigroup ∘ e) (ofFreeSemigroup ∘ ε))
-  case a => exact hφ
-  case hPi =>
-    intro n φ hφ e
-    exact (eval_ofFreeSemigroup_iff_of_closure <| Bounding.Hierarchy.zero_iff_bounded.mp hφ).mpr
-  case hAnd => simp; grind
-  case hOr => simp; grind
-  case hBall =>
-    rintro R rfl n t φ _ ih e h
-    have h : ∀ v, IsSubstring v (t.val e ε) → φ.Eval (v :> e) ε := by simpa using h
-    suffices ∀ x : V, IsSubstring x (ofFreeSemigroup (t.val e ε)) →
-        φ.Eval (x :> ofFreeSemigroup ∘ e) (ofFreeSemigroup ∘ ε) by
-      simpa [val_ofFreeSemigroup]
-    intro x hx
-    obtain ⟨v, rfl, hv⟩ := isSubstring_ofFreeSemigroup_iff.mp hx
-    simpa [Matrix.comp_vecCons''] using ih <| h v hv
-  case hBexs =>
-    rintro R rfl n t φ _ ih e h
-    obtain ⟨v, hv, h⟩ : ∃ v, IsSubstring v (t.val e ε) ∧ φ.Eval (v :> e) ε := by simpa using h
-    suffices ∃ x : V, IsSubstring x (ofFreeSemigroup (t.val e ε)) ∧
-        φ.Eval (x :> ofFreeSemigroup ∘ e) (ofFreeSemigroup ∘ ε) by
-      simpa [val_ofFreeSemigroup]
-    use ofFreeSemigroup v
-    simpa [Matrix.comp_vecCons'', hv] using ih h
-  case hExs =>
-    intro n φ _ ih e h
-    obtain ⟨v, h⟩ : ∃ v, φ.Eval (v :> e) ε := by simpa using h
-    suffices ∃ x : V, φ.Eval (x :> ofFreeSemigroup ∘ e) (ofFreeSemigroup ∘ ε) by simpa
-    use ofFreeSemigroup v
-    simpa [Matrix.comp_vecCons''] using ih h
+    obtain ⟨v, rfl, -⟩ := isSubstring_ofFreeSemigroup_iff.mp (by simpa using h)
+    exact ⟨v, rfl⟩
 
 end WTC
 
-lemma sigma1_completeness_of_hierarchy {T : ConcatenationTheory} [𝗪𝗧𝗖 ⪯ T]
-    {σ : ConcatenationSentence}
-    (hσ : ℬ[⊑, ℒ⌢].Hierarchy 𝚺 1 σ) (h : (FreeSemigroup Bool)↓[ℒ⌢] ⊧ σ) : T ⊢ σ := by
-  have : 𝗘𝗤 ℒ⌢ ⪯ T := Entailment.WeakerThan.trans (𝓣 := 𝗪𝗧𝗖) inferInstance inferInstance
-  apply complete.{0}
-  intro V _ _
-  have : V↓[ℒ⌢] ⊧* 𝗪𝗧𝗖 := ModelsTheory.of_provably_subtheory V 𝗪𝗧𝗖 T inferInstance
-  simpa [models_iff, Matrix.empty_eq, Empty.eq_elim] using
-    WTC.eval_ofFreeSemigroup_of_hierarchy (V := V) hσ (models_iff.mp h)
-
 /--
-$\mathsf{WTC}$, and hence every extension of it, proves the $\Sigma_1$ sentences true of the
-nonempty binary strings.
+$\mathsf{WTC}$ proves the $\Sigma_1$ sentences true of the nonempty binary strings.
 - [Hor11, §3, Theorem 3.8]
 - [Hor12, §3, Theorem 3.13]
 -/
-theorem sigma1_completeness {T : ConcatenationTheory} [𝗪𝗧𝗖 ⪯ T] {σ : ConcatenationSentence}
-    (hσ : ℬ[⊑, ℒ⌢].PrenexHierarchy 𝚺 1 σ) (h : (FreeSemigroup Bool)↓[ℒ⌢] ⊧ σ) : T ⊢ σ :=
-  sigma1_completeness_of_hierarchy hσ.hierarchy h
+theorem sigma1_completeness {σ : ConcatenationSentence} (hσ : ℬ[⊑, ℒ⌢].Hierarchy 𝚺 1 σ)
+    (h : (FreeSemigroup Bool)↓[ℒ⌢] ⊧ σ) : 𝗪𝗧𝗖 ⊢ σ := by
+  apply complete.{0}
+  intro V _ _
+  simpa [models_iff, Matrix.empty_eq, Empty.eq_elim] using
+    sigma_one_upward (WTC.ofFreeSemigroupEmbedding V) hσ ![] Empty.elim (models_iff.mp h)
 
 end sigma1
 

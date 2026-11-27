@@ -492,8 +492,8 @@ namespace IsInitialEmbedding
 variable {c : FreeSemigroup α → V} (hc : IsInitialEmbedding c) {x y : V} {w : FreeSemigroup α}
 include hc
 
-lemma stringValue_eq (w : FreeSemigroup α) : stringValue ofLetter w = c w :=
-  stringValue_eq_of_map_append hc.map_letter hc.map_append w
+lemma stringValue_eq (w : FreeSemigroup α) : FreeSemigroup.stringValue ofLetter w = c w :=
+  FreeSemigroup.stringValue_eq_of_map_append hc.map_letter hc.map_append w
 
 lemma exists_of_isSubstring (h : IsSubstring x (c w)) : ∃ u, x = c u :=
   h.of_forall_append (P := fun x ↦ ∃ u, x = c u)
@@ -515,7 +515,7 @@ lemma append_assoc_of_isSubstring {z : V}
     · obtain ⟨u, a, rfl, ha⟩ := hc.exists_of_isSubstring_append h
       obtain ⟨v, e, rfl, rfl⟩ := hc.exists_of_append_eq ha
       use u, v, e
-  simp only [← hc.map_append, append_eq_mul, mul_assoc]
+  simp only [← hc.map_append, FreeSemigroup.append_eq_mul, mul_assoc]
 
 lemma editor_of_isSubstring {s t : V} (h : x ++ y = s ++ t) (hw : IsSubstring (x ++ y) (c w)) :
     (x = s ∧ y = t) ∨ ∃ u, (x ++ u = s ∧ y = u ++ t) ∨ (x = s ++ u ∧ u ++ y = t) := by

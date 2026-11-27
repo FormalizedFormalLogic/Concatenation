@@ -15,10 +15,6 @@ the languages of concatenation, with the substrings, prefixes, suffixes and tall
 
 namespace FFL.FirstOrder
 
-/-- The value of a nonempty string whose letters have the values `f`, associated to the left. -/
-def Concatenation.stringValue {α V : Type*} [Append V] (f : α → V) (x : FreeSemigroup α) : V :=
-  x.tail.foldl (fun m a ↦ m ++ f a) (f x.head)
-
 /-- A type with two letters `0`, `1` and a concatenation `++`. -/
 class ConcatenationStructure (α : Type*) extends Zero α, One α, Append α
 
@@ -30,7 +26,7 @@ variable {α : Type*} [ConcatenationStructure α]
 
 /-- The value of a nonempty binary string, associated to the left. -/
 def ofFreeSemigroup (x : FreeSemigroup Bool) : α :=
-  Concatenation.stringValue (fun b ↦ if b then 1 else 0) x
+  FreeSemigroup.stringValue (fun b ↦ if b then 1 else 0) x
 
 end ConcatenationStructure
 
@@ -70,6 +66,16 @@ abbrev LetterStructure.concatenationStructure {α : Type} {V : Type*} [LetterStr
     (a b : α) : ConcatenationStructure V where
   zero := ofLetter a
   one := ofLetter b
+
+lemma LetterStructure.ofFreeSemigroup_concatenationStructure {α : Type} {V : Type*}
+    [LetterStructure α V] {a b : α} (u : FreeSemigroup Bool) :
+    let := concatenationStructure (V := V) a b
+    (ConcatenationStructure.ofFreeSemigroup u : V) =
+      FreeSemigroup.stringValue ofLetter
+        ⟨if u.head then b else a, u.tail.map fun i ↦ if i then b else a⟩ := by
+  simp only [ConcatenationStructure.ofFreeSemigroup, FreeSemigroup.stringValue, List.foldl_map,
+    apply_ite ofLetter]
+  rfl
 
 namespace Concatenation
 
@@ -145,18 +151,13 @@ lemma complete (T : ConcatenationTheory) [𝗘𝗤 ℒ⌢ ⪯ T] (φ : Concatena
 lemma val_stringTerm {L : Language} [L.Concat] {α ξ V : Type*} {n : ℕ} [Tarski.Structure L V]
     [Append V] [Tarski.Structure.Concat L V] {e : Fin n → V} {ε : ξ → V}
     (f : α → Semiterm L ξ n) (x : FreeSemigroup α) :
-    (stringTerm f x).val e ε = stringValue (fun a ↦ (f a).val e ε) x := by
+    (stringTerm f x).val e ε = FreeSemigroup.stringValue (fun a ↦ (f a).val e ε) x := by
   suffices ∀ (l : List α) (t : Semiterm L ξ n), (l.foldl (fun t a ↦ ‘!!t ⌢ !!(f a)’) t).val e ε =
       l.foldl (fun m a ↦ m ++ (f a).val e ε) (t.val e ε) from this x.tail (f x.head)
   intro l
   induction l with
   | nil => simp
   | cons a l ih => simp [ih]
-
-lemma map_stringValue {α V W : Type*} [Append V] [Append W] (g : V → W)
-    (hg : ∀ x y, g (x ++ y) = g x ++ g y) (f : α → V) (x : FreeSemigroup α) :
-    g (stringValue f x) = stringValue (g ∘ f) x :=
-  (List.foldl_hom g fun m a ↦ (hg m (f a)).symm).symm
 
 section eval
 
@@ -321,30 +322,6 @@ lemma IsSuffix.isSubstring (h : y ◧ x) : IsSubstring x y := by
 
 end substring
 
-/-- The concatenation of nonempty strings. -/
-instance {α : Type*} : Append (FreeSemigroup α) := ⟨(· * ·)⟩
-
-@[simp]
-lemma append_eq_mul {α : Type*} (x y : FreeSemigroup α) : x ++ y = x * y := rfl
-
-lemma stringValue_of {α : Type*} (x : FreeSemigroup α) : stringValue FreeSemigroup.of x = x := by
-  suffices ∀ (l : List α) (y : FreeSemigroup α),
-      l.foldl (fun m a ↦ m ++ FreeSemigroup.of a) y = ⟨y.head, y.tail ++ l⟩ from this x.tail _
-  intro l
-  induction l with
-  | nil => simp
-  | cons a l ih =>
-    intro y
-    rw [List.foldl_cons, ih]
-    simp [FreeSemigroup.of, HMul.hMul, Mul.mul]
-
-/-- The only map from the strings that respects concatenation and sends the letters to `f`. -/
-lemma stringValue_eq_of_map_append {α V : Type*} [Append V] {f : α → V} {c : FreeSemigroup α → V}
-    (hf : ∀ a, c (FreeSemigroup.of a) = f a) (hc : ∀ x y, c (x ++ y) = c x ++ c y)
-    (x : FreeSemigroup α) : stringValue f x = c x := by
-  rw [← funext hf, ← stringValue_of x, ← Function.comp_def, ← map_stringValue c hc, stringValue_of,
-    stringValue_of]
-
 /--
 The nonempty binary strings under concatenation.
 - [GZ08, §1]
@@ -377,8 +354,8 @@ lemma ofFreeSemigroup_one : (ofFreeSemigroup (1 : FreeSemigroup Bool) : V) = 1 :
 lemma ofFreeSemigroup_append_of_isAtom (u : FreeSemigroup Bool) (hc : IsAtom c) :
     (ofFreeSemigroup (u ++ c) : V) = ofFreeSemigroup u ++ ofFreeSemigroup c := by
   rcases hc with rfl | rfl <;>
-    simp [ofFreeSemigroup, stringValue, HMul.hMul, Mul.mul, zero_eq_of_false, one_eq_of_true,
-      FreeSemigroup.of]
+    simp [ofFreeSemigroup, FreeSemigroup.stringValue, HMul.hMul, Mul.mul, zero_eq_of_false,
+      one_eq_of_true, FreeSemigroup.of]
 
 /-- Induction on a nonempty binary string by its last letter. -/
 @[elab_as_elim]
@@ -471,7 +448,7 @@ lemma ofList_true : (ofList [true] : V) = 1 := rfl
 
 lemma ofList_append_singleton (hu : u ≠ []) (b : Bool) :
     (ofList (u ++ [b]) : V) = ofList u ++ ofList [b] := by
-  cases u <;> simp_all [ofList, ofFreeSemigroup, stringValue]
+  cases u <;> simp_all [ofList, ofFreeSemigroup, FreeSemigroup.stringValue]
 
 @[simp]
 lemma isAtom_ofList_singleton (b : Bool) : IsAtom (ofList [b] : V) := by

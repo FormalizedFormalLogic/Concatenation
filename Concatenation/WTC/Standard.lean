@@ -61,8 +61,9 @@ lemma ofFreeSemigroup_mul (u v : FreeSemigroup Bool) :
   | atom c hc => exact ofFreeSemigroup_append_of_isAtom u hc
   | append v c hc ih =>
     have h := ofFreeSemigroup_append_of_isAtom (V := V) (u * v) hc
-    rw [append_eq_mul, ih] at h
-    rw [append_eq_mul, ← mul_assoc, h, ← append_eq_mul v, ofFreeSemigroup_append_of_isAtom v hc]
+    rw [FreeSemigroup.append_eq_mul, ih] at h
+    rw [FreeSemigroup.append_eq_mul, ← mul_assoc, h, ← FreeSemigroup.append_eq_mul v,
+      ofFreeSemigroup_append_of_isAtom v hc]
     apply append_assoc (u * v * c)
     left
     rw [h]
@@ -81,7 +82,7 @@ lemma ofFreeSemigroup_injective :
     induction v using atom_append_induction with
     | atom d hd => exact absurd (by simpa using h) (append_ne_ofFreeSemigroup (V := V) hd)
     | append v d hd =>
-      simp only [append_eq_mul, ofFreeSemigroup_mul] at h
+      simp only [FreeSemigroup.append_eq_mul, ofFreeSemigroup_mul] at h
       rcases editor (u * c) h (by simp) with ⟨h₁, h₂⟩ | ⟨w, ⟨-, h⟩ | ⟨-, h⟩⟩
       · rw [ih h₁]
         rcases hc with rfl | rfl <;> rcases hd with rfl | rfl <;> simp_all
@@ -101,7 +102,7 @@ lemma exists_of_append_eq_ofFreeSemigroup (h : x ++ y = ofFreeSemigroup u) :
   induction u using atom_append_induction generalizing y with
   | atom c hc => exact absurd h (append_ne_ofFreeSemigroup hc)
   | append u c hc ih =>
-    simp only [append_eq_mul, ofFreeSemigroup_mul] at h
+    simp only [FreeSemigroup.append_eq_mul, ofFreeSemigroup_mul] at h
     rcases editor (u * c) h (by simp [h]) with ⟨rfl, rfl⟩ | ⟨w, ⟨hw, rfl⟩ | ⟨-, hw⟩⟩
     · use u, c
       simp

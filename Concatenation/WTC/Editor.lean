@@ -284,7 +284,7 @@ lemma ofFreeSemigroup_eq (hu : u.length ≤ N + 1) :
         ih _ hxb (by simpa [FreeSemigroup.of] using hxl)]
       congr 2
       simp [FreeSemigroup.of]
-  rw [ConcatenationStructure.ofFreeSemigroup, stringValue, h₀,
+  rw [ConcatenationStructure.ofFreeSemigroup, FreeSemigroup.stringValue, h₀,
     h _ _ (by simp) (by simpa [FreeSemigroup.of])]
   simp [FreeSemigroup.of]
 
@@ -396,7 +396,8 @@ lemma zero_ne_one : (0 : Pairing N) ≠ 1 := fun h ↦
 lemma ofFreeSemigroup_eq (hu : u.length ≤ N + 1) :
     (ConcatenationStructure.ofFreeSemigroup u : Pairing N) = string u hu := by
   apply Pairing.ext
-  rw [ConcatenationStructure.ofFreeSemigroup, map_stringValue Pairing.val fun _ _ ↦ rfl]
+  rw [ConcatenationStructure.ofFreeSemigroup,
+    FreeSemigroup.map_stringValue Pairing.val fun _ _ ↦ rfl]
   change _ = PrePairing.string u hu
   rw [← PrePairing.ofFreeSemigroup_eq hu]
   congr
@@ -775,7 +776,7 @@ private lemma Option.ofList_cons (b : Bool) (l : List Bool) :
   suffices ∀ (l : List Bool) (x : V),
       l.foldl (fun m b ↦ m ++ if b then 1 else 0) (some x) =
         some (l.foldl (fun m b ↦ m ++ if b then 1 else 0) x) by
-    rw [ofFreeSemigroup, stringValue, ← this]
+    rw [ofFreeSemigroup, FreeSemigroup.stringValue, ← this]
     cases b <;> rfl
   intro l
   induction l with

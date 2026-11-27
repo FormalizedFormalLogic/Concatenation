@@ -186,15 +186,6 @@ section reduct
 
 variable {V : Type*} [Nonempty V] [LetterStructure α V] [V↓[ℒ⌢[α]] ⊧* 𝗪𝗧𝗖[α]] {a b : α}
 
-omit [Nonempty V] [V↓[ℒ⌢[α]] ⊧* 𝗪𝗧𝗖[α]] in
-lemma ofFreeSemigroup_concatenationStructure (u : FreeSemigroup Bool) :
-    let := concatenationStructure (V := V) a b
-    (ConcatenationStructure.ofFreeSemigroup u : V) =
-      stringValue ofLetter ⟨if u.head then b else a, u.tail.map fun i ↦ if i then b else a⟩ := by
-  simp only [ConcatenationStructure.ofFreeSemigroup, stringValue, List.foldl_map,
-    apply_ite ofLetter]
-  rfl
-
 /-- Two letters of a model of `𝗪𝗧𝗖[α]` give a model of $\mathsf{WTC}$. -/
 lemma models_WTC_concatenationStructure (h : a ≠ b) :
     let := concatenationStructure (V := V) a b

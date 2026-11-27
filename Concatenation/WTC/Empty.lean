@@ -408,7 +408,7 @@ attribute [local instance] Concatenation.nonemptyTranslation.concatenationStruct
 
 lemma val_ofFreeSemigroup (u : FreeSemigroup Bool) :
     ((ofFreeSemigroup u : (nonemptyTranslation 𝗪𝗧𝗖ₑ).Model V) : V) = ofFreeSemigroup u :=
-  (map_stringValue Model.val (fun _ _ ↦ rfl) _ u).trans <| by
+  (FreeSemigroup.map_stringValue Model.val (fun _ _ ↦ rfl) _ u).trans <| by
     congr
     funext b
     cases b <;> rfl

@@ -84,6 +84,39 @@ lemma finite_length_le [Finite α] (n : ℕ) : {x : FreeSemigroup α | x.length 
 
 lemma toList_inj : x.toList = y.toList ↔ x = y := toList_injective.eq_iff
 
+/-- The concatenation of nonempty strings. -/
+instance : Append (FreeSemigroup α) := ⟨(· * ·)⟩
+
+@[simp]
+lemma append_eq_mul (x y : FreeSemigroup α) : x ++ y = x * y := rfl
+
+/-- The value of a nonempty string whose letters have the values `f`, associated to the left. -/
+def stringValue {V : Type*} [Append V] (f : α → V) (x : FreeSemigroup α) : V :=
+  x.tail.foldl (fun m a ↦ m ++ f a) (f x.head)
+
+lemma map_stringValue {V W : Type*} [Append V] [Append W] (g : V → W)
+    (hg : ∀ x y, g (x ++ y) = g x ++ g y) (f : α → V) (x : FreeSemigroup α) :
+    g (stringValue f x) = stringValue (g ∘ f) x :=
+  (List.foldl_hom g fun m a ↦ (hg m (f a)).symm).symm
+
+lemma stringValue_of (x : FreeSemigroup α) : stringValue of x = x := by
+  suffices ∀ (l : List α) (y : FreeSemigroup α),
+      l.foldl (fun m a ↦ m ++ of a) y = ⟨y.head, y.tail ++ l⟩ from this x.tail _
+  intro l
+  induction l with
+  | nil => simp
+  | cons a l ih =>
+    intro y
+    rw [List.foldl_cons, ih]
+    simp [of, HMul.hMul, Mul.mul]
+
+/-- The only map from the strings that respects concatenation and sends the letters to `f`. -/
+lemma stringValue_eq_of_map_append {V : Type*} [Append V] {f : α → V} {c : FreeSemigroup α → V}
+    (hf : ∀ a, c (of a) = f a) (hc : ∀ x y, c (x ++ y) = c x ++ c y) (x : FreeSemigroup α) :
+    stringValue f x = c x := by
+  rw [← funext hf, ← stringValue_of x, ← Function.comp_def, ← map_stringValue c hc, stringValue_of,
+    stringValue_of]
+
 lemma of_ne_mul (a : α) (x y : FreeSemigroup α) : of a ≠ x * y := fun h ↦ by
   simpa [length_mul, length_of, length] using congrArg length h
 
